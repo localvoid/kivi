@@ -1,0 +1,42 @@
+{
+  "name": "kivi",
+  "version": "0.0.1",
+  "description": "Virtual DOM library",
+  "license": "BSD",
+  "repository": "https://github.com/localvoid/kivi",
+  "author": {
+    "name": "Boris Kaul",
+    "email": "localvoid@gmail.com",
+    "url": "https://github.com/localvoid"
+  },
+  "keywords": [
+    "virtual",
+    "dom",
+    "virtualdom",
+    "vdom",
+    "diff",
+    "browser"
+  ],
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "main": "lib/kivi.js",
+  "scripts": {
+    "test": "karma start --single-run --browsers PhantomJS"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "chai": "^1.10.0",
+    "karma": "^0.12.31",
+    "karma-chai": "^0.1.0",
+    "karma-chrome-launcher": "^0.1.7",
+    "karma-cli": "0.0.4",
+    "karma-commonjs": "0.0.13",
+    "karma-firefox-launcher": "^0.1.4",
+    "karma-mocha": "^0.1.10",
+    "karma-phantomjs-launcher": "^0.1.4",
+    "karma-sinon": "^1.0.4",
+    "mocha": "^2.1.0",
+    "sinon": "^1.12.2"
+  }
+}
