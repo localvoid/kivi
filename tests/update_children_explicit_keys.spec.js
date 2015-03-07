@@ -1,15 +1,16 @@
 'use strict';
 
-var v = require('../lib/kivi.js');
+var kivi = require('../lib/kivi.js');
+var VNode = kivi.VNode;
 
 function injectBefore(parent, node, nextRef) {
-  v.create(node, null);
+  VNode.create(node, null);
   parent.insertBefore(node.ref, nextRef);
-  v.render(node, null);
+  VNode.render(node, null);
 }
 
 function e(key, c) {
-  var e = v.element('div');
+  var e = VNode.element('div');
   e.key = key;
   if (c != null) {
     e.children = c;
@@ -19,7 +20,7 @@ function e(key, c) {
 
 function gen(item) {
   if (typeof item === 'number') {
-    return v.text('text_' + item, item.toString());
+    return VNode.text('text_' + item, item.toString());
   } else if (Array.isArray(item)) {
     var result = [];
     for (var i = 0; i < item.length; i++) {
@@ -27,7 +28,7 @@ function gen(item) {
     }
     return result;
   } else {
-    var e = v.element('div', item.key);
+    var e = VNode.element('div', item.key);
     e.children = gen(item.children);
     return e;
   }
@@ -42,7 +43,7 @@ function checkSync(ax, bx) {
   injectBefore(aDiv, a, null);
   injectBefore(bDiv, b, null);
 
-  v.update(a, b, null);
+  VNode.update(a, b, null);
 
   expect(aDiv.innerHTML).to.be.equal(bDiv.innerHTML);
 }
