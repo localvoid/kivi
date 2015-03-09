@@ -142,7 +142,7 @@ describe('update classes', function() {
     expect(f.firstChild.classList[1]).to.be.equal('20');
   });
 
-  it.only('[1, 2, 3, 4, 5] => [10, 20, 30, 40, 50]', function() {
+  it('[1, 2, 3, 4, 5] => [10, 20, 30, 40, 50]', function() {
     var f = document.createDocumentFragment();
     var a = vdom.e('div');
     var b = vdom.e('div');
