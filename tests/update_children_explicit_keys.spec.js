@@ -16,7 +16,7 @@ function e(key, c) {
 
 function gen(item) {
   if (typeof item === 'number') {
-    return vdom.$t(item.toString(), 'text_' + item);
+    return vdom.$t(item.toString(), item.toString());
   } else if (Array.isArray(item)) {
     var result = [];
     for (var i = 0; i < item.length; i++) {
