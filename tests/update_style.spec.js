@@ -2,10 +2,12 @@
 
 var vdom = require('../lib/vdom');
 
+var ATTACHED_CONTEXT = {flags: vdom.Component.ATTACHED};
+
 function injectBefore(parent, node, nextRef) {
-  vdom.create(node, null);
+  vdom.create(node, ATTACHED_CONTEXT);
   parent.insertBefore(node.ref, nextRef);
-  vdom.render(node, null);
+  vdom.render(node, ATTACHED_CONTEXT);
 }
 
 describe('update style', function() {
@@ -14,7 +16,7 @@ describe('update style', function() {
     var a = vdom.e('div');
     var b = vdom.e('div');
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.style.cssText).to.be.empty();
   });
 
@@ -24,7 +26,7 @@ describe('update style', function() {
     var b = vdom.e('div');
     b.style = {};
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.style.cssText).to.be.empty();
   });
 
@@ -35,7 +37,7 @@ describe('update style', function() {
     a.style = {};
     b.style = {};
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.style.cssText).to.be.empty();
   });
 
@@ -45,7 +47,7 @@ describe('update style', function() {
     var b = vdom.e('div');
     a.style = {};
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.style.cssText).to.be.empty();
   });
 
@@ -55,7 +57,7 @@ describe('update style', function() {
     var b = vdom.e('div');
     b.style = {top: '10px'};
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.style.top).to.be.equal('10px');
   });
 
@@ -66,7 +68,7 @@ describe('update style', function() {
     a.style = {};
     b.style = {top: '10px'};
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.style.top).to.be.equal('10px');
   });
 
@@ -77,7 +79,7 @@ describe('update style', function() {
     a.style = {};
     b.style = {top: '10px', left: '5px'};
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.style.top).to.be.equal('10px');
     expect(f.firstChild.style.left).to.be.equal('5px');
   });
@@ -88,7 +90,7 @@ describe('update style', function() {
     var b = vdom.e('div');
     a.style = {top: '10px'};
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.style.top).to.be.equal('');
   });
 
@@ -99,7 +101,7 @@ describe('update style', function() {
     a.style = {top: '10px'};
     b.style = {};
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.style.top).to.be.equal('');
   });
 
@@ -110,7 +112,7 @@ describe('update style', function() {
     a.style = {top: '10px', left: '5px'};
     b.style = {};
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.style.top).to.be.equal('');
     expect(f.firstChild.style.left).to.be.equal('');
   });
@@ -122,7 +124,7 @@ describe('update style', function() {
     a.style = {top: '10px'};
     b.style = {left: '20px'};
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.style.top).to.be.equal('');
     expect(f.firstChild.style.left).to.be.equal('20px');
   });
@@ -134,7 +136,7 @@ describe('update style', function() {
     a.style = {top: '10px', left: '20px'};
     b.style = {right: '30px', bottom: '40px'};
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.style.top).to.be.equal('');
     expect(f.firstChild.style.left).to.be.equal('');
     expect(f.firstChild.style.right).to.be.equal('30px');
@@ -148,7 +150,7 @@ describe('update style', function() {
     a.style = {top: '10px'};
     b.style = {top: '100px'};
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.style.top).to.be.equal('100px');
   });
 
@@ -159,7 +161,7 @@ describe('update style', function() {
     a.style = {top: '10px', left: '20px'};
     b.style = {top: '100px', left: '200px'};
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.style.top).to.be.equal('100px');
     expect(f.firstChild.style.left).to.be.equal('200px');
   });

@@ -2,10 +2,12 @@
 
 var vdom = require('../lib/vdom');
 
+var ATTACHED_CONTEXT = {flags: vdom.Component.ATTACHED};
+
 function injectBefore(parent, node, nextRef) {
-  vdom.create(node, null);
+  vdom.create(node, ATTACHED_CONTEXT);
   parent.insertBefore(node.ref, nextRef);
-  vdom.render(node, null);
+  vdom.render(node, ATTACHED_CONTEXT);
 }
 
 describe('update attrs', function() {
@@ -14,7 +16,7 @@ describe('update attrs', function() {
     var a = vdom.e('div');
     var b = vdom.e('div');
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.hasAttributes()).to.be.false();
   });
 
@@ -24,7 +26,7 @@ describe('update attrs', function() {
     var b = vdom.e('div');
     b.attrs = {};
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.hasAttributes()).to.be.false();
   });
 
@@ -34,7 +36,7 @@ describe('update attrs', function() {
     var b = vdom.e('div');
     a.attrs = {};
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.hasAttributes()).to.be.false();
   });
 
@@ -45,7 +47,7 @@ describe('update attrs', function() {
     a.attrs = {};
     b.attrs = {};
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.hasAttributes()).to.be.false();
   });
 
@@ -55,7 +57,7 @@ describe('update attrs', function() {
     var b = vdom.e('div');
     b.attrs = {a: '1'};
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.hasAttributes()).to.be.true();
     expect(f.firstChild.getAttribute('a')).to.be.equal('1');
   });
@@ -67,7 +69,7 @@ describe('update attrs', function() {
     a.attrs = {};
     b.attrs = {a: '1'};
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.hasAttributes()).to.be.true();
     expect(f.firstChild.getAttribute('a')).to.be.equal('1');
   });
@@ -79,7 +81,7 @@ describe('update attrs', function() {
     a.attrs = {};
     b.attrs = {a: '1', b: '2'};
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.hasAttributes()).to.be.true();
     expect(f.firstChild.getAttribute('a')).to.be.equal('1');
     expect(f.firstChild.getAttribute('b')).to.be.equal('2');
@@ -92,7 +94,7 @@ describe('update attrs', function() {
     a.attrs = {};
     b.attrs = {a: '1', b: '2', c: '3'};
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.hasAttributes()).to.be.true();
     expect(f.firstChild.getAttribute('a')).to.be.equal('1');
     expect(f.firstChild.getAttribute('b')).to.be.equal('2');
@@ -105,7 +107,7 @@ describe('update attrs', function() {
     var b = vdom.e('div');
     a.attrs = {a: '1'};
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.hasAttributes()).to.be.false();
   });
 
@@ -116,7 +118,7 @@ describe('update attrs', function() {
     a.attrs = {a: '1'};
     b.attrs = {};
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.hasAttributes()).to.be.false();
   });
 
@@ -127,7 +129,7 @@ describe('update attrs', function() {
     a.attrs = {a: '1', b: '2'};
     b.attrs = {};
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.hasAttributes()).to.be.false();
   });
 
@@ -138,7 +140,7 @@ describe('update attrs', function() {
     a.attrs = {a: '1'};
     b.attrs = {b: '2'};
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.hasAttributes()).to.be.true();
     expect(f.firstChild.hasAttribute('a')).to.be.false();
     expect(f.firstChild.getAttribute('b')).to.be.equal('2');
@@ -151,7 +153,7 @@ describe('update attrs', function() {
     a.attrs = {a: '1', b: '2'};
     b.attrs = {c: '3', d: '4'};
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.hasAttributes()).to.be.true();
     expect(f.firstChild.hasAttribute('a')).to.be.false();
     expect(f.firstChild.hasAttribute('b')).to.be.false();
@@ -166,7 +168,7 @@ describe('update attrs', function() {
     a.attrs = {a: '1'};
     b.attrs = {a: '10'};
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.hasAttributes()).to.be.true();
     expect(f.firstChild.getAttribute('a')).to.be.equal('10');
   });
@@ -178,7 +180,7 @@ describe('update attrs', function() {
     a.attrs = {a: '1', b: '2'};
     b.attrs = {a: '10', b: '20'};
     injectBefore(f, a, null);
-    vdom.update(a, b, null);
+    vdom.update(a, b, ATTACHED_CONTEXT);
     expect(f.firstChild.hasAttributes()).to.be.true();
     expect(f.firstChild.getAttribute('a')).to.be.equal('10');
     expect(f.firstChild.getAttribute('b')).to.be.equal('20');

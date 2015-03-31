@@ -2,10 +2,12 @@
 
 var vdom = require('../lib/vdom.js');
 
+var ATTACHED_CONTEXT = {flags: vdom.Component.ATTACHED};
+
 function injectBefore(parent, node, nextRef) {
-  vdom.create(node, null);
+  vdom.create(node, ATTACHED_CONTEXT);
   parent.insertBefore(node.ref, nextRef);
-  vdom.render(node, null);
+  vdom.render(node, ATTACHED_CONTEXT);
 }
 
 function e(key, c) {
@@ -42,7 +44,7 @@ function checkSync(ax, bx) {
   injectBefore(aDiv, a, null);
   injectBefore(bDiv, b, null);
 
-  vdom.update(a, b, null);
+  vdom.update(a, b, ATTACHED_CONTEXT);
 
   expect(aDiv.innerHTML).to.be.equal(bDiv.innerHTML);
 }

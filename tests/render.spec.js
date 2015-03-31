@@ -2,10 +2,12 @@
 
 var vdom = require('../lib/vdom');
 
+var ATTACHED_CONTEXT = {flags: vdom.Component.ATTACHED};
+
 function injectBefore(parent, node, nextRef) {
-  vdom.create(node, null);
+  vdom.create(node, ATTACHED_CONTEXT);
   parent.insertBefore(node.ref, nextRef);
-  vdom.render(node, null);
+  vdom.render(node, ATTACHED_CONTEXT);
 }
 
 describe('render', function() {
