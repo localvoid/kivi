@@ -1,38 +1,29 @@
-'use strict';
+goog.provide('vdom');
 
-var Scheduler = require('./scheduler');
-var ENV = require('./env');
-
-/** Flag indicating that [VNode] is [Text]. */
-var V_TEXT = 1;
-/** Flag indicating that [VNode] is [Element]. */
-var V_ELEMENT = 2;
-/** Flag indicating that [VNode] is [Component]. */
-var V_COMPONENT = 4;
-/** Flag indicating that [VNode] is root element of the [Component]. */
-var V_ROOT = 8;
-/** Flag indicating that [VNode] represents node that is in svg namespace. */
-var V_SVG = 16;
+goog.require('kivi.Scheduler');
+goog.require('kivi.env');
 
 /**
  * Virtual DOM Node.
  *
- * @param flags Flags.
- * @param key Key that should be unique among its siblings. If the key is
+ * @param {number} flags Flags.
+ * @param {number|string|null} key Key that should be unique among its siblings. If the key is
  *   `null`, it means that the key is implicit. When [key] is implicit, all
  *   siblings should also have implicit keys, otherwise it will result in
  *   undefined behaviour in "production" mode, or runtime error in
  *   "development" mode.
- * @param tag Tag should contain tag name if [VNode] represents an element, or
+ * @param {string|vdom.CDescriptor|null} tag Tag should contain tag name if [VNode] represents an element, or
  *   reference to the [componentConstructor] if it represents a
  *   [Component].
- * @param data Data that should be passed to [Component]s. Data is transferred
+ * @param {Object|string|null} data Data that should be passed to [Component]s. Data is transferred
  *   to the [Component] using `set data(P data)` setter. When [VNode]
  *   represents an element, [data] is used as a cache for className string
  *   that was built from [type] and [classes] properties.
  * @constructor
+ * @struct
+ * @final
  */
-function VNode(flags, key, tag, data) {
+vdom.VNode = function(flags, key, tag, data) {
   this.flags = flags;
   this.key = key;
   this.tag = tag;
@@ -40,237 +31,329 @@ function VNode(flags, key, tag, data) {
 
   /**
    * Immutable class name
-   * @type {string}
+   * @type {?string}
    */
   this.type = null;
+
   /**
    * Attributes
    * @type {Object<string,string>}
    */
   this.attrs = null;
+
+  /**
+   * Custom Attributes
+   * @type {Object<string,string>}
+   */
+  this.customAttrs = null;
+
   /**
    * Style
    * @type {Object<string,string>}
    */
   this.style = null;
+
   /**
    * Classes
    * @type {Array<string>}
    */
   this.classes = null;
+
   /**
    * List of children nodes. When [VNode] represents a [Component], children
    * nodes are transferred to the [Component] with
-   * `Component.updateChildren(c)` method.
-   * @type {Array<VNode>}
+   * `Component._updateChildren(c)` method.
+   *
+   * @type {Array<!vdom.VNode>}
    */
   this.children = null;
+
   /**
    * Reference to the [Node]. It will be available after [VNode] is
-   * [vNodeCreate]d or [vNodeUpdate]d. Each time [VNode] is updated, reference to the
+   * [createVNode]d or [updateVNode]d. Each time [VNode] is updated, reference to the
    * [Node] is passed from the previous node to the new one.
+   *
    * @type {Node}
    */
   this.ref = null;
+
   /**
    * Reference to the [Component]. It will be available after [VNode] is
-   * [vNodeCreate]d or [vNodeUpdate]d. Each time [VNode] is updated, reference to the
+   * [createVNode]d or [updateVNode]d. Each time [VNode] is updated, reference to the
    * [Component] is passed from the previous node to the new one.
-   * @type {Component}
+   *
+   * @type {vdom.Component}
    */
   this.cref = null;
-}
+};
 
-VNode.TEXT = V_TEXT;
-VNode.ELEMENT = V_ELEMENT;
-VNode.COMPONENT = V_COMPONENT;
-VNode.ROOT = V_ROOT;
-VNode.SVG = V_SVG;
+/**
+ * VNode Flags
+ *
+ * @enum {number}
+ */
+vdom.VNodeFlags = {
+  /** Flag indicating that [VNode] is [Text]. */
+  text:      0x0001,
+  /** Flag indicating that [VNode] is [Element]. */
+  element:   0x0002,
+  /** Flag indicating that [VNode] is [Component]. */
+  component: 0x0004,
+  /** Flag indicating that [VNode] is root element of the [Component]. */
+  root:      0x0008,
+  /** Flag indicating that [VNode] represents node that is in svg namespace. */
+  svg:       0x0010
+};
 
-function text(content) {
-  return new VNode(V_TEXT, null, null, content);
-}
+/**
+ * @enum {string}
+ */
+vdom.Namespace = {
+  svg: 'http://www.w3.org/2000/svg'
+};
 
-function $text(key, content) {
-  return new VNode(V_TEXT, key, null, content);
-}
+/**
+ *
+ * @param {string} content
+ * @returns {vdom.VNode}
+ */
+vdom.createText = function(content) {
+  return new vdom.VNode(vdom.VNodeFlags.text, null, null, content);
+};
 
-function element(tag) {
-  return new VNode(V_ELEMENT, null, tag, null);
-}
+/**
+ *
+ * @param {string|number} key
+ * @param {string} content
+ * @returns {vdom.VNode}
+ */
+vdom.createIText = function(key, content) {
+  return new vdom.VNode(vdom.VNodeFlags.text, key, null, content);
+};
 
-function $element(key, tag) {
-  return new VNode(V_ELEMENT, key, tag, null);
-}
+/**
+ *
+ * @param {string} tag
+ * @returns {vdom.VNode}
+ */
+vdom.createElement = function(tag) {
+  return new vdom.VNode(vdom.VNodeFlags.element, null, tag, null);
+};
 
-function svg(tag) {
-  return new VNode(V_ELEMENT | V_SVG, null, tag, null);
-}
+/**
+ *
+ * @param {string|number} key
+ * @param {string} tag
+ * @returns {vdom.VNode}
+ */
+vdom.createIElement = function(key, tag) {
+  return new vdom.VNode(vdom.VNodeFlags.element, key, tag, null);
+};
 
-function $svg(key, tag) {
-  return new VNode(V_ELEMENT | V_SVG, key, tag, null);
-}
+/**
+ *
+ * @param {string} tag
+ * @returns {vdom.VNode}
+ */
+vdom.createSvgElement = function(tag) {
+  return new vdom.VNode(vdom.VNodeFlags.element | vdom.VNodeFlags.svg, null, tag, null);
+};
 
-function component(descriptor, data) {
+/**
+ *
+ * @param {string|number} key
+ * @param {string} tag
+ * @returns {vdom.VNode}
+ */
+vdom.createISvgElement = function(key, tag) {
+  return new vdom.VNode(vdom.VNodeFlags.element | vdom.VNodeFlags.svg, key, tag, null);
+};
+
+/**
+ *
+ * @param {!vdom.CDescriptor} descriptor
+ * @param {Object} data
+ * @returns {vdom.VNode}
+ */
+vdom.createComponent = function(descriptor, data) {
   if (data === void 0) data = null;
-  return new VNode(V_COMPONENT, null, descriptor, data);
-}
+  return new vdom.VNode(vdom.VNodeFlags.component, null, descriptor, data);
+};
 
-function $component(key, descriptor, data) {
+/**
+ *
+ * @param {string|number} key
+ * @param {!vdom.CDescriptor} descriptor
+ * @param {Object} data
+ * @returns {vdom.VNode}
+ */
+vdom.createIComponent = function(key, descriptor, data) {
   if (data === void 0) data = null;
-  return new VNode(V_COMPONENT, key, descriptor, data);
-}
+  return new vdom.VNode(vdom.VNodeFlags.component, key, descriptor, data);
+};
 
-function root() {
-  return new VNode(V_ROOT, null, null, null);
-}
+/**
+ *
+ * @returns {vdom.VNode}
+ */
+vdom.createRoot = function() {
+  return new vdom.VNode(vdom.VNodeFlags.root, null, null, null);
+};
 
 /**
  * Checks if two VNodes have the same type and they can be updated.
  *
- * @param {VNode} a
- * @param {VNode} b
+ * @param {!vdom.VNode} b
  * @return {boolean}
+ * @private
  */
-function vNodeSameType(a, b) {
-  return (a.flags === b.flags && a.tag === b.tag);
-}
+vdom.VNode.prototype._sameType = function(b) {
+  return (this.flags === b.flags && this.tag === b.tag);
+};
 
 /**
  * Create root level element of the [VNode] object, or [Component] for
  * component nodes.
  *
- * @param {VNode} node
- * @param {Component} context
+ * @param {!vdom.Component} context
  */
-function vNodeCreate(node, context) {
-  var flags = node.flags;
+vdom.VNode.prototype.create = function(context) {
+  var flags = this.flags;
 
-  if ((flags & V_TEXT) !== 0) {
-    node.ref = document.createTextNode(node.data);
-  } else if ((flags & V_ELEMENT) !== 0) {
-    if ((flags & V_SVG) === 0) {
-      node.ref = document.createElement(node.tag);
+  if ((flags & vdom.VNodeFlags.text) !== 0) {
+    this.ref = document.createTextNode(/** @type {string} */ (this.data));
+  } else if ((flags & vdom.VNodeFlags.element) !== 0) {
+    if ((flags & vdom.VNodeFlags.svg) === 0) {
+      this.ref = document.createElement(/** @type {string} */ (this.tag));
     } else {
-      node.ref = document.createElementNS('http://www.w3.org/2000/svg', node.tag);
+      this.ref = document.createElementNS(vdom.Namespace.svg, /** @type {string} */ (this.tag));
     }
-  } else if ((flags & V_COMPONENT) !== 0) {
-    var component = new node.tag(context, node.data, node.children);
-    component.create();
-    component.init();
-    node.ref = component.element;
-    node.cref = component;
+  } else if ((flags & vdom.VNodeFlags.component) !== 0) {
+    var component = vdom.Component.create(/** @type {!vdom.CDescriptor} */ (this.tag), this.data, this.children,
+        context);
+    this.ref = component.element;
+    this.cref = component;
   }
-}
+};
 
 /**
  * Render internal representation of the VNode.
  *
- * @param {VNode} node
- * @param {Component} context
+ * @param {!vdom.Component} context
  */
-function vNodeRender(node, context) {
-  var i, il;
+vdom.VNode.prototype.render = function(context) {
+  /** @type {number} */
+  var i;
+  /** @type {number} */
+  var il;
+  /** @type {string|number} */
   var key;
   var keys;
-  var flags = node.flags;
+  var flags = this.flags;
+
+  /** @type {HTMLElement} */
   var ref;
+  /** @type {!CSSStyleDeclaration} */
   var style;
+  /** @type {?string} */
   var className;
+  /** @type {DOMTokenList} */
   var classList;
 
-  if ((flags & (V_ELEMENT | V_COMPONENT | V_ROOT)) !== 0) {
-    ref = node.ref;
-    if (node.attrs != null) {
-      keys = Object.keys(node.attrs);
+  if ((flags & (vdom.VNodeFlags.element | vdom.VNodeFlags.component | vdom.VNodeFlags.root)) !== 0) {
+    ref = /** @type {!HTMLElement} */ (this.ref);
+    if (this.attrs != null) {
+      keys = Object.keys(this.attrs);
       for (i = 0, il = keys.length; i < il; i++) {
         key = keys[i];
-        ref.setAttribute(key, node.attrs[key]);
+        ref.setAttribute(key, this.attrs[key]);
       }
     }
 
-    if (node.style != null) {
+    if (this.style != null) {
       style = ref.style;
-      keys = Object.keys(node.style);
+      keys = Object.keys(this.style);
       for (i = 0, il = keys.length; i < il; i++) {
         key = keys[i];
-        style.setProperty(key, node.style[key]);
+        style.setProperty(key, this.style[key], '');
       }
     }
 
-    if ((flags & (V_ELEMENT | V_COMPONENT)) !== 0) {
+    if ((flags & (vdom.VNodeFlags.element | vdom.VNodeFlags.component)) !== 0) {
       className = null;
-      if (node.type != null) {
-        className = node.type;
+      if (this.type != null) {
+        className = this.type;
       }
-      if (node.classes != null) {
-        var classes = node.classes.join(' ');
+      if (this.classes != null) {
+        var classes = this.classes.join(' ');
         className = (className == null) ? classes : className + ' ' + classes;
       }
       if (className != null) {
-        node.data = className;
+        this.data = className;
         ref.className = className;
       }
     } else {
-      classList = null;
-      if (node.type != null) {
-        classList = ref.classList;
-        classList.add(node.type);
+      if (this.type != null) {
+        classList = (ref.classList);
+        classList.add(this.type);
       }
 
-      if (node.classes != null) {
-        if (classList == null) {
+      if (this.classes != null) {
+        if (classList === void 0) {
           classList = ref.classList;
         }
 
-        for (i = 0, il = node.classes.length; i < il; i++) {
-          classList.add(node.classes[i]);
+        for (i = 0, il = this.classes.length; i < il; i++) {
+          classList.add(this.classes[i]);
         }
       }
     }
 
-    if ((flags & V_COMPONENT) !== 0) {
-      node.cref.update();
-    } else if (node.children != null) {
-      for (i = 0, il = node.children.length; i < il; i++) {
-        vNodeInsertChild(node, node.children[i], null, context);
+    if ((flags & vdom.VNodeFlags.component) !== 0) {
+      vdom.Component._update(/** @type {!vdom.Component} */ (this.cref));
+    } else if (this.children != null) {
+      for (i = 0, il = this.children.length; i < il; i++) {
+        this._insertChild(this.children[i], null, context);
       }
     }
   }
-}
+};
 
 /**
  * Update VNode. When VNode a is updated with VNode b, VNode a should
  * be considered as destroyed, and any access to it is an undefined
  * behaviour.
  *
- * @param {!VNode} a Old VNode
- * @param {!VNode} b New VNode
- * @param {Context} context
+ * @param {!vdom.VNode} b New VNode
+ * @param {!vdom.Component} context
  */
-function vNodeUpdate(a, b, context) {
-  var ref = a.ref;
-  var flags = a.flags;
+vdom.VNode.prototype.update = function(b, context) {
+  /** @type {HTMLElement} */
+  var ref = /** @type {HTMLElement} */ (this.ref);
+  var flags = this.flags;
+  /** @type {string} */
   var classes;
+  /** @type {?string} */
   var className;
+  /** @type {!vdom.Component} */
   var component;
 
   b.ref = ref;
 
-  if ((flags & V_TEXT) !== 0) {
-    if (a.data != b.data) {
-      a.ref.nodeValue = b.data;
+  if ((flags & vdom.VNodeFlags.text) !== 0) {
+    if (this.data != b.data) {
+      this.ref.nodeValue = /** @type {string} */ (b.data);
     }
-  } else if ((flags & (V_ELEMENT | V_COMPONENT | V_ROOT)) !== 0) {
-    if (a.attrs !== b.attrs) {
-      updateAttrs(a.attrs, b.attrs, ref);
+  } else if ((flags & (vdom.VNodeFlags.element | vdom.VNodeFlags.component | vdom.VNodeFlags.root)) !== 0) {
+    if (this.attrs !== b.attrs) {
+      vdom._updateAttrs(this.attrs, b.attrs, /** @type {!Element} */ (ref));
     }
-    if (a.style !== b.style) {
-      updateStyle(a.style, b.style, ref.style);
+    if (this.style !== b.style) {
+      vdom._updateStyle(this.style, b.style, ref.style);
     }
 
-    if ((flags & V_ELEMENT) !== 0) {
-      if (a.classes !== b.classes) {
+    if ((flags & vdom.VNodeFlags.element) !== 0) {
+      if (this.classes !== b.classes) {
         if (b.data == null) {
           className = b.type;
           if (b.classes != null) {
@@ -279,7 +362,7 @@ function vNodeUpdate(a, b, context) {
           }
           b.data = className;
         }
-        if (a.data !== b.data) {
+        if (this.data !== b.data) {
           if (b.data == null) {
             ref.className = '';
           } else {
@@ -287,31 +370,50 @@ function vNodeUpdate(a, b, context) {
           }
         }
       } else {
-        b.data = a.data;
+        b.data = this.data;
       }
-    } else if (a.classes !== b.classes) {
-      updateClasses(a.classes, b.classes, ref.classList);
+    } else if (this.classes !== b.classes) {
+      vdom._updateClasses(this.classes, b.classes, ref.classList);
     }
 
-    if ((flags & V_COMPONENT) !== 0) {
-      component = b.cref = a.cref;
-      component.updateData(b.data);
-      component.updateChildren(b.children);
-      component.update();
+    if ((flags & vdom.VNodeFlags.component) !== 0) {
+      component = b.cref = /** @type {!vdom.Component} */ (this.cref);
+      if (this.data !== b.data) {
+        component.descriptor.setData(component, b.data);
+      }
+      //if (component.descriptor.setChildren != null) {
+      //  component.descriptor.setChildren(component, b.children);
+      //}
+      vdom.Component._update(/** @type {!vdom.Component} */ (component));
     } else {
-      updateChildren(a, a.children, b.children, context);
+      this._updateChildren(this.children, b.children, context);
     }
   }
-}
+};
 
 /**
- * Update HTMLElement attributes.
+ * Dispose VNode
  *
- * @param a Old attributes.
- * @param b New attributes.
- * @param node
  */
-function updateAttrs(a, b, node) {
+vdom.VNode.prototype.dispose = function() {
+  if ((this.flags & vdom.VNodeFlags.component) !== 0) {
+    /** @type {!vdom.Component} */ (this.cref).dispose();
+  } else if (this.children != null) {
+    for (var i = 0; i < this.children.length; i++) {
+      this.children[i].dispose();
+    }
+  }
+};
+
+/**
+ * Update attributes.
+ *
+ * @param {Object<string, string>} a Old attributes.
+ * @param {Object<string, string>} b New attributes.
+ * @param {!Element} node
+ * @protected
+ */
+vdom._updateAttrs = function(a, b, node) {
   var i, il;
   var key;
   var keys;
@@ -326,7 +428,7 @@ function updateAttrs(a, b, node) {
         node.removeAttribute(keys[i]);
       }
     } else {
-      // Remove and vNodeUpdate attributes.
+      // Remove and updateVNode attributes.
       keys = Object.keys(a);
       for (i = 0, il = keys.length; i < il; i++) {
         key = keys[i];
@@ -358,18 +460,27 @@ function updateAttrs(a, b, node) {
       node.setAttribute(key, b[key]);
     }
   }
-}
+};
 
 /**
- * Update HTMLElement styles.
+ * Update styles.
  *
- * @param {Object.<string,string>} a Old style.
- * @param {Object.<string,string>} b New style.
- * @param {CSSStyleDeclaration} style
+ * @param {Object<string, string>} a Old style.
+ * @param {Object<string, string>} b New style.
+ * @param {!CSSStyleDeclaration} style
+ * @protected
  */
-function updateStyle(a, b, style) {
+vdom._updateStyle = function(a, b, style) {
   var i, il;
+
+  /**
+   * @type {string}
+   */
   var key;
+
+  /**
+   * @type {!Array<string>}
+   */
   var keys;
 
   if (a != null) {
@@ -380,7 +491,7 @@ function updateStyle(a, b, style) {
         style.removeProperty(keys[i]);
       }
     } else {
-      // Remove and vNodeUpdate styles.
+      // Remove and updateVNode styles.
       keys = Object.keys(a);
       for (i = 0, il = keys.length; i < il; i++) {
         key = keys[i];
@@ -408,16 +519,17 @@ function updateStyle(a, b, style) {
       style.setProperty(key, b[key], '');
     }
   }
-}
+};
 
 /**
- * Update HTMLElement classes.
+ * Update classes in the classList.
  *
- * @param {Array.<string>} a Old classes.
- * @param {Array.<string>} b New classes.
+ * @param {Array<string>} a Old classes.
+ * @param {Array<string>} b New classes.
  * @param {DOMTokenList} classList
+ * @protected
  */
-function updateClasses(a, b, classList) {
+vdom._updateClasses = function(a, b, classList) {
   var i;
   var aCls, bCls;
   var unchangedPosition;
@@ -539,93 +651,50 @@ function updateClasses(a, b, classList) {
       classList.add(b[i]);
     }
   }
-}
+};
 
 /**
- * Insert VNode.
+ * Insert VNode
  *
- * @param {VNode} parent Parent node.
- * @param {VNode} node Node to insert.
+ * @param {!vdom.VNode} node Node to insert.
  * @param {Node} nextRef Reference to the next html element.
- * @param {Component} context Current context.
+ * @param {!vdom.Component} context Current context.
+ * @private
  */
-function vNodeInsertChild(parent, node, nextRef, context) {
-  vNodeCreate(node, context);
-  parent.ref.insertBefore(node.ref, nextRef);
-  if ((context.flags & C_ATTACHED) !== 0) {
-    vNodeAttached(node);
-  }
-  vNodeRender(node, context);
-}
+vdom.VNode.prototype._insertChild = function(node, nextRef, context) {
+  node.create(context);
+  this.ref.insertBefore(node.ref, nextRef);
+  node.render(context);
+};
 
 /**
- * Move VNode.
+ * Move VNode
  *
- * @param {VNode} parent Parent node.
- * @param {VNode} node Node to move.
+ * @param {!vdom.VNode} node Node to move.
  * @param {Node} nextRef Reference to the next html element.
+ * @private
  */
-function vNodeMoveChild(parent, node, nextRef) {
-  parent.ref.insertBefore(node.ref, nextRef);
-}
+vdom.VNode.prototype._moveChild = function(node, nextRef) {
+  this.ref.insertBefore(node.ref, nextRef);
+};
 
 /**
  * Remove VNode.
  *
- * @param {VNode} parent Parent node.
- * @param {VNode} node Node to remove.
+ * @param {!vdom.VNode} node Node to remove.
+ * @private
  */
-function vNodeRemoveChild(parent, node) {
-  parent.ref.removeChild(node.ref);
-  vNodeDispose(node);
-}
-
-function vNodeDispose(node) {
-  if ((node.flags & V_COMPONENT) !== 0) {
-    node.cref.dispose();
-  } else if (node.children != null) {
-    for (var i = 0; i < node.children.length; i++) {
-      vNodeDispose(node.children[i]);
-    }
-  }
-}
-
-function vNodeAttach(node) {
-  vNodeAttached(node);
-  if (((node.flags & V_COMPONENT) === 0) && (node.children != null)) {
-    for (var i = 0; i < node.children.length; i++) {
-      vNodeAttach(node.children[i]);
-    }
-  }
-}
-
-function vNodeDetach(node) {
-  if (((node.flags & V_COMPONENT) === 0) && (node.children != null)) {
-    for (var i = 0; i < node.children.length; i++) {
-      vNodeAttach(node.children[i]);
-    }
-  }
-  vNodeDetached(node);
-}
-
-function vNodeAttached(node) {
-  if ((node.flags & V_COMPONENT) !== 0) {
-    node.cref.attach();
-  }
-}
-
-function vNodeDetached(node) {
-  if ((node.flags & V_COMPONENT) !== 0) {
-    node.cref.detach();
-  }
-}
+vdom.VNode.prototype._removeChild = function(node) {
+  this.ref.removeChild(node.ref);
+  node.dispose();
+};
 
 /**
  * Update children [a] and [b] in the [parent].
  *
- * If one of the children has [:null:] key, it will run vNodeUpdate
+ * If one of the children has [:null:] key, it will run updateVNode
  * algorithm for children with implicit keys, otherwise it will run
- * vNodeUpdate algorithm for children with explicit keys.
+ * updateVNode algorithm for children with explicit keys.
  *
  * Mixing children with explicit and implicit keys in one children
  * list will result in undefined behaviour. In development mode it
@@ -633,12 +702,12 @@ function vNodeDetached(node) {
  * there are children with implicit and explicit keys, it will result
  * in runtime error.
  *
- * @param {VNode} parent Parent.
- * @param {Array.<VNode>} a Old children list.
- * @param {Array.<VNode>} b New children list.
- * @param {Context} context Current context.
+ * @param {Array<!vdom.VNode>} a Old children list.
+ * @param {Array<!vdom.VNode>} b New children list.
+ * @param {!vdom.Component} context Current context.
+ * @private
  */
-function updateChildren(parent, a, b, context) {
+vdom.VNode.prototype._updateChildren = function(a, b, context) {
   var aNode;
   var bNode;
   var i = 0;
@@ -648,7 +717,7 @@ function updateChildren(parent, a, b, context) {
     if (b == null || b.length === 0) {
       // b is empty, remove all children from a.
       while(i < a.length) {
-        vNodeRemoveChild(parent, a[i++]);
+        this._removeChild(a[i++]);
       }
     } else {
       if (a.length === 1 && b.length === 1) {
@@ -657,12 +726,12 @@ function updateChildren(parent, a, b, context) {
         bNode = b[0];
 
         // Implicit key with same type or explicit key with same key.
-        if ((aNode.key == null && vNodeSameType(aNode, bNode)) ||
+        if ((aNode.key == null && aNode._sameType(bNode)) ||
             (aNode.key != null && aNode.key === bNode.key)) {
-          vNodeUpdate(aNode, bNode, context);
+          aNode.update(bNode, context);
         } else {
-          vNodeRemoveChild(parent, aNode);
-          vNodeInsertChild(parent, bNode, null, context);
+          this._removeChild(aNode);
+          this._insertChild(bNode, null, context);
         }
       } else if (a.length === 1) {
         // Fast path when a have 1 child.
@@ -670,30 +739,30 @@ function updateChildren(parent, a, b, context) {
         if (aNode.key == null) {
           while (i < b.length) {
             bNode = b[i++];
-            if (vNodeSameType(aNode, bNode)) {
-              vNodeUpdate(aNode, bNode, context);
+            if (aNode._sameType(bNode)) {
+              aNode.update(bNode, context);
               updated = true;
               break;
             }
-            vNodeInsertChild(parent, bNode, aNode.ref, context);
+            this._insertChild(bNode, aNode.ref, context);
           }
         } else {
           while (i < b.length) {
             bNode = b[i++];
             if (aNode.key === bNode.key) {
-              vNodeUpdate(aNode, bNode, context);
+              aNode.update(bNode, context);
               updated = true;
               break;
             }
-            vNodeInsertChild(parent, bNode, aNode.ref, context);
+            this._insertChild(bNode, aNode.ref, context);
           }
         }
         if (updated) {
           while (i < b.length) {
-            vNodeInsertChild(parent, b[i++], null, context);
+            this._insertChild(b[i++], null, context);
           }
         } else {
-          vNodeRemoveChild(parent, aNode);
+          this._removeChild(aNode);
         }
       } else if (b.length === 1) {
         // Fast path when b have 1 child.
@@ -701,48 +770,48 @@ function updateChildren(parent, a, b, context) {
         if (bNode.key == null) {
           while (i < a.length) {
             aNode = a[i++];
-            if (vNodeSameType(aNode, bNode)) {
-              vNodeUpdate(aNode, bNode, context);
+            if (aNode._sameType(bNode)) {
+              aNode.update(bNode, context);
               updated = true;
               break;
             }
-            vNodeRemoveChild(parent, aNode);
+            this._removeChild(aNode);
           }
         } else {
           while (i < a.length) {
             aNode = a[i++];
             if (aNode.key === bNode.key) {
-              vNodeUpdate(aNode, bNode, context);
+              aNode.update(bNode, context);
               updated = true;
               break;
             }
-            vNodeRemoveChild(parent, aNode);
+            this._removeChild(aNode);
           }
         }
 
         if (updated) {
           while (i < a.length) {
-            vNodeRemoveChild(parent, a[i++]);
+            this._removeChild(a[i++]);
           }
         } else {
-          vNodeInsertChild(parent, bNode, null, context);
+          this._insertChild(bNode, null, context);
         }
       } else {
         // a and b have more than 1 child.
         if (a[0].key == null) {
-          updateImplicitChildren(parent, a, b, context);
+          this._updateImplicitChildren(a, b, context);
         } else {
-          updateExplicitChildren(parent, a, b, context);
+          this._updateExplicitChildren(a, b, context);
         }
       }
     }
   } else if (b != null && b.length > 0) {
     // a is empty, insert all children from b
     for (i = 0; i < b.length; i++) {
-      vNodeInsertChild(parent, b[i], null, context);
+      this._insertChild(b[i], null, context);
     }
   }
-}
+};
 
 /**
  * Update children with implicit keys [a] and [b] in the [parent].
@@ -752,12 +821,12 @@ function updateChildren(parent, a, b, context) {
  * knowledge about this algorithm, because it can be changed in any
  * time.
  *
- * @param {VNode} parent Parent.
- * @param {Array.<VNode>} a Old children list.
- * @param {Array.<VNode>} b New children list.
- * @param {Context} context Current context.
+ * @param {!Array<!vdom.VNode>} a Old children list.
+ * @param {!Array<!vdom.VNode>} b New children list.
+ * @param {!vdom.Component} context Current context.
+ * @private
  */
-function updateImplicitChildren(parent, a, b, context) {
+vdom.VNode.prototype._updateImplicitChildren = function(a, b, context) {
   var aStart = 0;
   var bStart = 0;
   var aEnd = a.length - 1;
@@ -772,14 +841,14 @@ function updateImplicitChildren(parent, a, b, context) {
     aNode = a[aStart];
     bNode = b[bStart];
 
-    if (!vNodeSameType(aNode, bNode)) {
+    if (!aNode._sameType(bNode)) {
       break;
     }
 
     aStart++;
     bStart++;
 
-    vNodeUpdate(aNode, bNode, context);
+    aNode.update(bNode, context);
   }
 
   // Update nodes with the same type at the end.
@@ -787,33 +856,33 @@ function updateImplicitChildren(parent, a, b, context) {
     aNode = a[aEnd];
     bNode = b[bEnd];
 
-    if (!vNodeSameType(aNode, bNode)) {
+    if (!aNode._sameType(bNode)) {
       break;
     }
 
     aEnd--;
     bEnd--;
 
-    vNodeUpdate(aNode, bNode, context);
+    aNode.update(bNode, context);
   }
 
   // Iterate through the remaining nodes and if they have the same
-  // type, then vNodeUpdate, otherwise just remove the old node and insert
+  // type, then updateVNode, otherwise just remove the old node and insert
   // the new one.
   while (aStart <= aEnd && bStart <= bEnd) {
     aNode = a[aStart++];
     bNode = b[bStart++];
-    if (vNodeSameType(aNode, bNode)) {
-      vNodeUpdate(aNode, bNode, context);
+    if (aNode._sameType(bNode)) {
+      aNode.update(bNode, context);
     } else {
-      vNodeInsertChild(parent, bNode, aNode.ref, context);
-      vNodeRemoveChild(parent, aNode);
+      this._insertChild(bNode, aNode.ref, context);
+      this._removeChild(aNode);
     }
   }
 
   // All nodes from a are updated, insert the rest from b.
   while (aStart <= aEnd) {
-    vNodeRemoveChild(parent, a[aStart++]);
+    this._removeChild(a[aStart++]);
   }
 
   nextPos = bEnd + 1;
@@ -821,19 +890,19 @@ function updateImplicitChildren(parent, a, b, context) {
 
   // All nodes from b are updated, remove the rest from a.
   while (bStart <= bEnd) {
-    vNodeInsertChild(parent, b[bStart++], next, context);
+    this._insertChild(b[bStart++], next, context);
   }
-}
+};
 
 /**
  * Update children with explicit keys [a] and [b] in the [parent].
  *
- * @param {VNode} parent Parent.
- * @param {Array.<VNode>} a Old children list.
- * @param {Array.<VNode>} b New children list.
- * @param {Context} context Current context.
+ * @param {!Array<!vdom.VNode>} a Old children list.
+ * @param {!Array<!vdom.VNode>} b New children list.
+ * @param {!vdom.Component} context Current context.
+ * @private
  */
-function updateExplicitChildren(parent, a, b, context) {
+vdom.VNode.prototype._updateExplicitChildren = function(a, b, context) {
   var aStart = 0;
   var bStart = 0;
   var aEnd = a.length - 1;
@@ -842,14 +911,29 @@ function updateExplicitChildren(parent, a, b, context) {
   var bStartNode = b[bStart];
   var aEndNode = a[aEnd];
   var bEndNode = b[bEnd];
+  /**
+   * @type {number}
+   */
   var i;
+  /**
+   * @type {number}
+   */
   var j;
   var stop = false;
   var nextPos;
   var next;
+  /**
+   * @type {vdom.VNode}
+   */
   var aNode;
+  /**
+   * @type {vdom.VNode}
+   */
   var bNode;
   var lastTarget = 0;
+  /**
+   * @type {number}
+   */
   var pos;
   var node;
 
@@ -866,7 +950,7 @@ function updateExplicitChildren(parent, a, b, context) {
 
     // Update nodes with the same key at the beginning.
     while (aStartNode.key === bStartNode.key) {
-      vNodeUpdate(aStartNode, bStartNode, context);
+      aStartNode.update(bStartNode, context);
       aStart++;
       bStart++;
       if (aStart > aEnd || bStart > bEnd) {
@@ -879,7 +963,7 @@ function updateExplicitChildren(parent, a, b, context) {
 
     // Update nodes with the same key at the end.
     while (aEndNode.key === bEndNode.key) {
-      vNodeUpdate(aEndNode, bEndNode, context);
+      aEndNode.update(bEndNode, context);
       aEnd--;
       bEnd--;
       if (aStart > aEnd || bStart > bEnd) {
@@ -892,10 +976,10 @@ function updateExplicitChildren(parent, a, b, context) {
 
     // Move nodes from left to right.
     while (aStartNode.key === bEndNode.key) {
-      vNodeUpdate(aStartNode, bEndNode, context);
+      aStartNode.update(bEndNode, context);
       nextPos = bEnd + 1;
       next = nextPos < b.length ? b[nextPos].ref : null;
-      vNodeMoveChild(parent, bEndNode, next);
+      this._moveChild(bEndNode, next);
       aStart++;
       bEnd--;
       if (aStart > aEnd || bStart > bEnd) {
@@ -909,8 +993,8 @@ function updateExplicitChildren(parent, a, b, context) {
 
     // Move nodes from right to left.
     while (aEndNode.key === bStartNode.key) {
-      vNodeUpdate(aEndNode, bStartNode, context);
-      vNodeMoveChild(parent, bStartNode, aStartNode.ref);
+      aEndNode.update(bStartNode, context);
+      this._moveChild(bStartNode, aStartNode.ref);
       aEnd--;
       bStart++;
       if (aStart > aEnd || bStart > bEnd) {
@@ -927,15 +1011,15 @@ function updateExplicitChildren(parent, a, b, context) {
     nextPos = bEnd + 1;
     next = nextPos < b.length ? b[nextPos].ref : null;
     while (bStart <= bEnd) {
-      vNodeInsertChild(parent, b[bStart++], next, context);
+      this._insertChild(b[bStart++], next, context);
     }
   } else if (bStart > bEnd) {
     // All nodes from b are updated, remove the rest from a.
     while (aStart <= aEnd) {
-      vNodeRemoveChild(parent, a[aStart++]);
+      this._removeChild(a[aStart++]);
     }
   } else {
-    // Perform more complex vNodeUpdate algorithm on the remaining nodes.
+    // Perform more complex updateVNode algorithm on the remaining nodes.
     //
     // We start by marking all nodes from b as inserted, then we try
     // to find all removed nodes and simultaneously perform updates on
@@ -973,17 +1057,18 @@ function updateExplicitChildren(parent, a, b, context) {
             } else {
               lastTarget = j;
             }
-            vNodeUpdate(aNode, bNode, context);
+            aNode.update(bNode, context);
             removed = false;
             break;
           }
         }
         if (removed) {
-          vNodeRemoveChild(parent, aNode);
+          this._removeChild(aNode);
           removeOffset++;
         }
       }
     } else {
+      /** @type {Object<(string|number|null), number>} */
       var keyIndex = {};
 
       for (i = bStart; i <= bEnd; i++) {
@@ -1003,16 +1088,16 @@ function updateExplicitChildren(parent, a, b, context) {
           } else {
             lastTarget = j;
           }
-          vNodeUpdate(aNode, bNode, context);
+          aNode.update(bNode, context);
         } else {
-          vNodeRemoveChild(parent, aNode);
+          this._removeChild(aNode);
           removeOffset++;
         }
       }
     }
 
     if (moved) {
-      var seq = _lis(sources);
+      var seq = vdom._lis(sources);
       // All modifications are performed from the right to left, so we
       // can use insertBefore method and use reference to the html
       // element from the next VNode. All Nodes from the right side
@@ -1024,14 +1109,14 @@ function updateExplicitChildren(parent, a, b, context) {
           node = b[pos];
           nextPos = pos + 1;
           next = nextPos < b.length ? b[nextPos].ref : null;
-          vNodeInsertChild(parent, node, next, context);
+          this._insertChild(node, next, context);
         } else {
           if (j < 0 || i != seq[j]) {
             pos = i + bStart;
             node = b[pos];
             nextPos = pos + 1;
             next = nextPos < b.length ? b[nextPos].ref : null;
-            vNodeMoveChild(parent, node, next);
+            this._moveChild(node, next);
           } else {
             j--;
           }
@@ -1044,12 +1129,12 @@ function updateExplicitChildren(parent, a, b, context) {
           node = b[pos];
           nextPos = pos + 1;
           next = nextPos < b.length ? b[nextPos].ref : null;
-          vNodeInsertChild(parent, node, next, context);
+          this._insertChild(node, next, context);
         }
       }
     }
   }
-}
+};
 
 /**
  * Slightly modified Longest Increased Subsequence algorithm, it
@@ -1060,13 +1145,16 @@ function updateExplicitChildren(parent, a, b, context) {
  *
  * http://en.wikipedia.org/wiki/Longest_increasing_subsequence
  *
- * @param {Array.<number>} a
- * @return {Array.<number>}
+ * @param {!Array<number>} a
+ * @returns {!Array<number>}
+ * @protected
  */
-function _lis(a) {
+vdom._lis = function(a) {
   var p = a.slice(0);
+  /** @type {!Array<number>} */
   var result = [0];
-  var i, il;
+  var i;
+  var il;
   var j;
   var u;
   var v;
@@ -1113,347 +1201,233 @@ function _lis(a) {
   }
 
   return result;
-}
+};
 
 /**
- * Components
- */
-var C_DIRTY = 1;
-var C_ATTACHED = 2;
-var C_SVG = 3;
-var C_MOUNTING = 4;
-var C_SHOULD_UPDATE_VIEW_FLAGS = C_DIRTY | C_ATTACHED;
-
-/**
- * Component is a basic block to build user interfaces.
+ * Component Descriptor
  *
- * @param {!Component} parent Parent component.
- * @param {Object} data Component data.
- * @param {Array<VNode>} children
  * @constructor
+ * @template D, S
+ * @struct
+ * @final
  */
-function Component(parent, data, children) {
-  /**
-   * Flags.
-   * @type {number}
-   */
-  this.flags = C_DIRTY;
+vdom.CDescriptor = function() {
+  this.flags = 0;
+  this.tag = 'div';
 
   /**
-   * Revision.
-   * @type {number}
+   * @type {?function (!vdom.Component<D, S>)}
    */
-  this.rev = -1;
+  this.init = null;
 
   /**
-   * Depth relative to other Components.
+   * @type {?function (!vdom.Component<D, S>, D)}
+   */
+  this.setData = vdom.CDescriptor._defaultSetData;
+
+  /**
+   * @type {?function (!vdom.Component<D, S>, !Array<!vdom.VNode>)}
+   */
+  this.setChildren = null;
+
+  /**
+   * @type {?function (!vdom.Component<D, S>)}
+   */
+  this.update = null;
+
+  /**
+   * @type {?function (!vdom.Component<D, S>)}
+   */
+  this.invalidated = null;
+
+  /**
+   * @type {?function (!vdom.Component<D, S>)}
+   */
+  this.disposed = null;
+};
+
+/**
+ * @enum {number}
+ */
+vdom.ComponentFlags = {
+  dirty:             0x0001,
+  attached:          0x0002,
+  svg:               0x0004,
+  mounting:          0x0008,
+  shouldUpdateFlags: 0x0003
+};
+
+/**
+ * Component
+ *
+ * @constructor
+ * @template D, S
+ * @param {!vdom.CDescriptor<D, S>} descriptor
+ * @param {vdom.Component} parent
+ * @param {*} data
+ * @param {Array<!vdom.VNode>} children
+ * @struct
+ * @final
+ */
+vdom.Component = function(descriptor, parent, data, children) {
+  /**
+   * @type {vdom.ComponentFlags|number}
+   */
+  this.flags = vdom.ComponentFlags.shouldUpdateFlags;
+
+  /**
+   *
+   * @type {!vdom.CDescriptor<D, S>}
+   */
+  this.descriptor = descriptor;
+
+  /**
+   *
+   * @type {vdom.Component}
+   */
+  this.parent = parent;
+
+  /**
    * @type {number}
    */
   this.depth = parent == null ? 0 : parent.depth + 1;
 
   /**
-   * Parent Component.
-   * @type {Component}
+   * Data
+   *
+   * @type {D}
    */
-  this.parent = parent;
-
   this.data = data;
+
+  /**
+   * State
+   * @type {S}
+   */
+  this.state = null;
+
   this.children = children;
 
   /**
    * Root node in the Components virtual tree.
-   * @type {VNode}
+   * @type {vdom.VNode}
    */
   this.root = null;
 
   /**
    * Reference to the Html Element.
-   * @type {HTMLElement}
+   * @type {Element}
    */
-  this.element = null;
+  this.element = document.createElement(descriptor.tag);
 
   /**
-   * vNodeUpdate bound method.
-   * @type {function(this:!Component)}
+   * @type {?function (vdom.Component<D, S>)}
+   * @private
    */
   this._update = null;
-
-  /**
-   * invalidate bound method.
-   * @type {function(this:!Component)}
-   */
-  this._invalidate = null;
-}
-
-Component.DIRTY = C_DIRTY;
-Component.ATTACHED = C_ATTACHED;
-Component.SVG = C_SVG;
-Component.MOUNTING = C_MOUNTING;
-Component.SHOULD_UPDATE_VIEW_FLAGS = C_SHOULD_UPDATE_VIEW_FLAGS;
-
-/**
- * Tag name of the root [element].
- */
-Component.prototype.tag = 'div';
-
-/**
- * Lifecycle method [create].
- *
- * [create] method should create root [element] of the [Component].
- *
- * Invoked during the [Scheduler] writeDom phase.
- */
-Component.prototype.create = function() {
-  this.element = document.createElement(this.tag);
 };
-
-/**
- * Lifecycle method [mount].
- *
- * [mount] method should mount [Component] on top of [e] element.
- *
- * Invoked during the [Scheduler] writeDom phase.
- */
-Component.prototype.mount = function(element) {
-  this.flags |= C_MOUNTING;
-  this.element = element;
-};
-
-/**
- * Lifecycle method [init].
- *
- * Initialize component. This method is called after [create],
- * or [mount] methods.
- *
- * Invoked during the [Scheduler] writeDom phase.
- */
-Component.prototype.init = function() {};
-
-Component.prototype.updateData = function(data) {
-  if (this.data !== data) {
-    this.data = data;
-    this.invalidate();
-  }
-};
-
-Component.prototype.updateChildren = function(children) {
-  if (this.children !== children) {
-    this.children = children;
-    this.invalidate();
-  }
-};
-
-/**
- * Lifecycle method [vNodeUpdate].
- *
- * This method updates [Component] state, and if state is changed,
- * it will vNodeUpdate view.
- *
- * Invoked during the [Scheduler] writeDom phase.
- */
-Component.prototype.update = function() {
-  if ((this.flags & C_SHOULD_UPDATE_VIEW_FLAGS) == C_SHOULD_UPDATE_VIEW_FLAGS) {
-    if (this.updateState()) {
-      this.updateView();
-    }
-    this.rev = ENV.scheduler.clock;
-    this.flags &= ~C_DIRTY;
-    this.updated();
-  }
-};
-
-/**
- * Lifecycle method [updateState].
- *
- * vNodeUpdate internal state, it should return [:bool:] value that indicates
- * that the internal state changes will result in modified view
- * representation of the component.
- *
- * Invoked during the [Scheduler] writeDom phase.
- */
-Component.prototype.updateState = function() { return true; };
-
-/**
- * Lifecycle method [updateView].
- *
- * vNodeUpdate view.
- *
- * Invoked during the [Scheduler] writeDom phase.
- */
-Component.prototype.updateView = function() {};
 
 /**
  * Update internal tree using virtual dom representation.
  *
  * If this method is called during [isMounting] phase, then virtual dom
  * will be mounted on top of existing html tree.
+ *
+ * @param {!vdom.VNode} newRoot
  */
-Component.prototype.updateRoot = function(newRoot) {
+vdom.Component.prototype.updateRoot = function(newRoot) {
   if (this.root == null) {
     newRoot.cref = this;
-    if ((this.flags & C_MOUNTING) !== 0) {
-      vNodeMount(this.element, this);
-      this.flags &= ~C_MOUNTING;
+    if ((this.flags & vdom.ComponentFlags.mounting) !== 0) {
+      //vNodeMount(this.element, this);
+      this.flags &= ~vdom.ComponentFlags.mounting;
     } else {
       newRoot.ref = this.element;
-      vNodeRender(newRoot, this);
+      newRoot.render(this);
     }
   } else {
-    vNodeUpdate(this.root, newRoot, this);
+    this.root.update(newRoot, this);
   }
   this.root = newRoot;
 };
 
 /**
- * Invalidate [Component].
- *
- * Component will be marked as dirty and added to the vNodeUpdate queue. All
- * transient subscriptions will be canceled immediately.
+ * Invalidate Component.
  */
-Component.prototype.invalidate = function() {
-  if ((this.flags & C_DIRTY) === 0) {
-    var scheduler = ENV.scheduler;
+vdom.Component.prototype.invalidate = function() {
+  if ((this.flags & vdom.ComponentFlags.dirty) === 0) {
+    this.flags |= vdom.ComponentFlags.dirty;
 
-    this.flags |= C_DIRTY;
     if (this._update == null) {
-      this._update = this.update.bind(this);
+      var self = this;
+      this._update = function() { vdom.Component._update(self); };
     }
 
-    //if ((scheduler.flags & S_FRAME_RUNNING) === 0) {
-      scheduler.nextFrame().write(this._update, this.depth);
-    //}
-
-    this.cancelTransientSubs();
-    this.invalidated();
+    kivi.env.scheduler.nextFrame().write(this._update, this.depth);
   }
 };
 
 /**
- * Dispose [Component]
- *
- * This method should be called when [Component] is no longer in use.
- *
- * NOTE: Use it only when you want to manually control the lifecycle of the
- * [Component], otherwise just use helper methods like [injectComponent]
- * that will call lifecycle methods in the right order.
+ * Dispose Component
  */
-Component.prototype.dispose = function() {
+vdom.Component.prototype.dispose = function() {
+  this.flags &= ~vdom.ComponentFlags.attached;
   if (this.root != null) {
     this.root.dispose();
   }
-  if ((this.flags & C_ATTACHED) !== 0) {
-    this.flags |= C_ATTACHED;
-    this.detached();
-  }
-  this.cancelTransientSubs();
-  this.cancelSubs();
-  this.disposed();
-};
-
-/**
- * Attach [Component]
- *
- * This method should be called when [Component] is attached to the
- * html document.
- *
- * NOTE: Use it only when you want to manually control the lifecycle of the
- * [Component], otherwise just use helper methods like [injectComponent]
- * that will call lifecycle methods in the right order.
- */
-Component.prototype.attach = function() {
-  this.flags |= C_ATTACHED;
-  this.attached();
-  if (this.root != null) {
-    vNodeAttach(this.root);
+  var descriptor = this.descriptor;
+  if (descriptor.disposed != null) {
+    descriptor.disposed(this);
   }
 };
 
 /**
- * Detach [Component]
- *
- * This method should be called when [Component] is detached to the
- * html document.
- *
- * NOTE: Use it only when you want to manually control the lifecycle of the
- * [Component], otherwise just use helper methods like [injectComponent]
- * that will call lifecycle methods in the right order.
+ * @param {!vdom.Component<*, *>} component
+ * @param {*} data
+ * @protected
  */
-Component.prototype.detach = function() {
-  if (this.root != null) {
-    vNodeDetach(this.root);
+vdom.CDescriptor._defaultSetData = function(component, data) {
+  if (component.data !== data) {
+    component.data = data;
+    component.flags |= vdom.ComponentFlags.dirty;
   }
-  this.flags &= ~C_ATTACHED;
-  this.detached();
 };
 
 /**
- * Lifecycle method [invalidated].
  *
- * Invoked after [invalidate] method is called.
+ * @param {!vdom.CDescriptor} descriptor
+ * @param {*} data
+ * @param {Array<!vdom.VNode>} children
+ * @param {vdom.Component} context
+ * @returns {!vdom.Component}
  */
-Component.prototype.invalidated = function() {};
+vdom.Component.create = function(descriptor, data, children, context) {
+  var c = new vdom.Component(descriptor, context, data, children);
+  if (descriptor.init != null) {
+    descriptor.init(c);
+  }
+  return c;
+};
 
 /**
- * Lifecycle method [updated].
- *
- * Invoked during the [Scheduler] writeDom phase after [vNodeUpdate] method is
- * finished.
+ * @param {!vdom.Component} component
+ * @protected
  */
-Component.prototype.updated = function() {};
+vdom.Component._update = function(component) {
+  if ((component.flags & vdom.ComponentFlags.shouldUpdateFlags) == vdom.ComponentFlags.shouldUpdateFlags) {
+    component.descriptor.update(component);
+    component.flags &= ~vdom.ComponentFlags.dirty;
+  }
+};
 
 /**
- * Lifecycle method [attached].
+ * Instantiate and inject component into container.
  *
- * Invoked during the [Scheduler] writeDom phase when [Component] is
- * attached to the html document.
+ * @param {!vdom.CDescriptor} descriptor
+ * @param {Object} data
+ * @param {Element} container
  */
-Component.prototype.attached = function() {};
-
-/**
- * Lifecycle method [detached].
- *
- * Invoked during the [Scheduler] writeDom phase when [Component] is
- * detached from the html document.
- */
-Component.prototype.detached = function() {};
-
-/**
- * Lifecycle method [disposed].
- *
- * Invoked during the [Scheduler] writeDom phase when [Component] is
- * disposed.
- */
-Component.prototype.disposed = function() {};
-
-Component.prototype.cancelSubs = function() {};
-Component.prototype.cancelTransientSubs = function() {};
-
-function injectComponent(component, parent) {
-  component.create();
-  component.init();
-  parent.appendChild(component.element);
-  component.attach();
-  component.update();
-}
-
-module.exports = {
-  VNode: VNode,
-  Component: Component,
-  create: vNodeCreate,
-  render: vNodeRender,
-  update: vNodeUpdate,
-  attach: vNodeAttach,
-  detach: vNodeDetach,
-  attached: vNodeAttached,
-  detached: vNodeDetached,
-  t: text,
-  $t: $text,
-  e: element,
-  $e: $element,
-  s: svg,
-  $s: $svg,
-  c: component,
-  $c: $component,
-  r: root,
-  injectComponent: injectComponent
+vdom.injectComponent = function(descriptor, data, container) {
+  var c = vdom.Component.create(descriptor, data, null, null);
+  container.appendChild(c.element);
+  vdom.Component._update(c);
 };

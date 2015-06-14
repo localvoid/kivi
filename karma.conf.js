@@ -1,19 +1,17 @@
 module.exports = function(config) {
   config.set({
     basePath: '',
-    frameworks: ['mocha', 'chai', 'commonjs'],
+    frameworks: ['closure', 'mocha', 'chai'],
 
     files: [
-      'lib/*.js',
-      'tests/*.spec.js'
-    ],
-
-    exclude: [
+      'node_modules/google-closure-library/closure/goog/base.js',
+      'tests/*.spec.js',
+      {pattern: 'src/*.js', included: false}
     ],
 
     preprocessors: {
-      'lib/*.js': ['commonjs'],
-      'tests/*.spec.js': ['commonjs']
+      'tests/*.spec.js': ['closure'],
+      'src/*.js': ['closure']
     },
 
     reporters: ['progress'],
