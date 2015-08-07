@@ -111,6 +111,53 @@ vdom.Namespace = {
   svg: 'http://www.w3.org/2000/svg'
 };
 
+/** @typedef {{set: function(!Element, string), remove: function(!Element)}} */
+vdom._SpecialAttr;
+
+/** @const {Object<string, !vdom._SpecialAttr>} */
+vdom._specialAttrs = {
+  '$svg.xlink:href': {
+    /**
+     * @param {!Element} node
+     * @param {string} value
+     */
+    set: function(node, value) {
+      node.setAttributeNS(vdom.Namespace.svg, 'xlink:href', value);
+    },
+    /**
+     * @param {!Element} node
+     */
+    remove: function(node) {
+      node.removeAttributeNS(vdom.Namespace.svg, 'xlink:href');
+    }
+  }
+};
+
+/**
+ * @param {!Element} node
+ * @param {string} key
+ * @param {string} value
+ */
+vdom._setAttr = function(node, key, value) {
+  if (key[0] !== '$') {
+    node.setAttribute(key, value);
+  } else {
+    vdom._specialAttrs[key].set(node, value);
+  }
+};
+
+/**
+ * @param {!Element} node
+ * @param {string} key
+ */
+vdom._removeAttr = function(node, key) {
+  if (key[0] !== '$') {
+    node.removeAttribute(key);
+  } else {
+    vdom._specialAttrs[key].remove(node);
+  }
+};
+
 /**
  *
  * @param {string} content
@@ -435,10 +482,10 @@ vdom._updateAttrs = function(a, b, node) {
           aValue = a[key];
           bValue = b[key];
           if (aValue !== bValue) {
-            node.setAttribute(key, bValue);
+            vdom._setAttr(node, key, bValue);
           }
         } else {
-          node.removeAttribute(key);
+          vdom._removeAttr(node, key);
         }
       }
 
@@ -447,7 +494,7 @@ vdom._updateAttrs = function(a, b, node) {
       for (i = 0, il = keys.length; i < il; i++) {
         key = keys[i];
         if (!a.hasOwnProperty(key)) {
-          node.setAttribute(key, b[key]);
+          vdom._setAttr(node, key, b[key]);
         }
       }
     }
@@ -456,7 +503,7 @@ vdom._updateAttrs = function(a, b, node) {
     keys = Object.keys(b);
     for (i = 0, il = keys.length; i < il; i++) {
       key = keys[i];
-      node.setAttribute(key, b[key]);
+      vdom._setAttr(node, key, b[key]);
     }
   }
 };
@@ -1424,9 +1471,11 @@ vdom.Component._update = function(component) {
  * @param {!vdom.CDescriptor} descriptor
  * @param {Object} data
  * @param {Element} container
+ * @returns {!vdom.Component}
  */
 vdom.injectComponent = function(descriptor, data, container) {
   var c = vdom.Component.create(descriptor, data, null, null);
   container.appendChild(c.element);
   vdom.Component._update(c);
+  return c;
 };
