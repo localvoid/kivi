@@ -21,6 +21,7 @@ goog.require('kivi.env');
  *   that was built from [type] and [classes] properties.
  * @param {?string} type
  * @param {Object<string,string>} attrs
+ * @param {Object<string,*>} props
  * @param {Object<string,string>} style
  * @param {Array<string>} classes
  * @param {Array<!vdom.VNode>} children
@@ -28,7 +29,7 @@ goog.require('kivi.env');
  * @struct
  * @final
  */
-vdom.VNode = function(flags, key, tag, data, type, attrs, style, classes, children) {
+vdom.VNode = function(flags, key, tag, data, type, attrs, props, style, classes, children) {
   this.flags = flags;
   this.key = key;
   this.tag = tag;
@@ -45,6 +46,12 @@ vdom.VNode = function(flags, key, tag, data, type, attrs, style, classes, childr
    * @type {Object<string,string>}
    */
   this.attrs = attrs;
+
+  /**
+   * Properties
+   * @type {Object<string,*>}
+   */
+  this.props = props;
 
   /**
    * Style
@@ -111,10 +118,16 @@ vdom.Namespace = {
   svg: 'http://www.w3.org/2000/svg'
 };
 
-/** @typedef {{set: function(!Element, string), remove: function(!Element)}} */
+/**
+ * @typedef {{set: function(!Element, string), remove: function(!Element)}}
+ * @protected
+ */
 vdom._SpecialAttr;
 
-/** @const {Object<string, !vdom._SpecialAttr>} */
+/**
+ * @const {Object<string, !vdom._SpecialAttr>}
+ * @protected
+ */
 vdom._specialAttrs = {
   '$svg.xlink:href': {
     /**
@@ -134,9 +147,12 @@ vdom._specialAttrs = {
 };
 
 /**
+ * Set Attribute
+ *
  * @param {!Element} node
  * @param {string} key
  * @param {string} value
+ * @protected
  */
 vdom._setAttr = function(node, key, value) {
   if (key[0] !== '$') {
@@ -147,8 +163,11 @@ vdom._setAttr = function(node, key, value) {
 };
 
 /**
+ * Remove Attribute
+ *
  * @param {!Element} node
  * @param {string} key
+ * @protected
  */
 vdom._removeAttr = function(node, key) {
   if (key[0] !== '$') {
@@ -164,7 +183,7 @@ vdom._removeAttr = function(node, key) {
  * @returns {vdom.VNode}
  */
 vdom.createText = function(content) {
-  return new vdom.VNode(vdom.VNodeFlags.text, null, null, content, null, null, null, null, null);
+  return new vdom.VNode(vdom.VNodeFlags.text, null, null, content, null, null, null, null, null, null);
 };
 
 /**
@@ -174,7 +193,7 @@ vdom.createText = function(content) {
  * @returns {vdom.VNode}
  */
 vdom.createIText = function(key, content) {
-  return new vdom.VNode(vdom.VNodeFlags.text, key, null, content, null, null, null, null, null);
+  return new vdom.VNode(vdom.VNodeFlags.text, key, null, content, null, null, null, null, null, null);
 };
 
 /**
@@ -183,7 +202,7 @@ vdom.createIText = function(key, content) {
  * @returns {vdom.VNode}
  */
 vdom.createElement = function(tag) {
-  return new vdom.VNode(vdom.VNodeFlags.element, null, tag, null, null, null, null, null, null);
+  return new vdom.VNode(vdom.VNodeFlags.element, null, tag, null, null, null, null, null, null, null);
 };
 
 /**
@@ -193,7 +212,7 @@ vdom.createElement = function(tag) {
  * @returns {vdom.VNode}
  */
 vdom.createIElement = function(key, tag) {
-  return new vdom.VNode(vdom.VNodeFlags.element, key, tag, null, null, null, null, null, null);
+  return new vdom.VNode(vdom.VNodeFlags.element, key, tag, null, null, null, null, null, null, null);
 };
 
 /**
@@ -202,7 +221,7 @@ vdom.createIElement = function(key, tag) {
  * @returns {vdom.VNode}
  */
 vdom.createSvgElement = function(tag) {
-  return new vdom.VNode(vdom.VNodeFlags.element | vdom.VNodeFlags.svg, null, tag, null, null, null, null, null, null);
+  return new vdom.VNode(vdom.VNodeFlags.element | vdom.VNodeFlags.svg, null, tag, null, null, null, null, null, null, null);
 };
 
 /**
@@ -212,7 +231,7 @@ vdom.createSvgElement = function(tag) {
  * @returns {vdom.VNode}
  */
 vdom.createISvgElement = function(key, tag) {
-  return new vdom.VNode(vdom.VNodeFlags.element | vdom.VNodeFlags.svg, key, tag, null, null, null, null, null, null);
+  return new vdom.VNode(vdom.VNodeFlags.element | vdom.VNodeFlags.svg, key, tag, null, null, null, null, null, null, null);
 };
 
 /**
@@ -223,7 +242,7 @@ vdom.createISvgElement = function(key, tag) {
  */
 vdom.createComponent = function(descriptor, data) {
   if (data === void 0) data = null;
-  return new vdom.VNode(vdom.VNodeFlags.component, null, descriptor, data, null, null, null, null, null);
+  return new vdom.VNode(vdom.VNodeFlags.component, null, descriptor, data, null, null, null, null, null, null);
 };
 
 /**
@@ -235,7 +254,7 @@ vdom.createComponent = function(descriptor, data) {
  */
 vdom.createIComponent = function(key, descriptor, data) {
   if (data === void 0) data = null;
-  return new vdom.VNode(vdom.VNodeFlags.component, key, descriptor, data, null, null, null, null, null);
+  return new vdom.VNode(vdom.VNodeFlags.component, key, descriptor, data, null, null, null, null, null, null);
 };
 
 /**
@@ -243,7 +262,7 @@ vdom.createIComponent = function(key, descriptor, data) {
  * @returns {vdom.VNode}
  */
 vdom.createRoot = function() {
-  return new vdom.VNode(vdom.VNodeFlags.root, null, null, null, null, null, null, null, null);
+  return new vdom.VNode(vdom.VNodeFlags.root, null, null, null, null, null, null, null, null, null);
 };
 
 /**
@@ -312,7 +331,15 @@ vdom.VNode.prototype.render = function(context) {
       keys = Object.keys(this.attrs);
       for (i = 0, il = keys.length; i < il; i++) {
         key = keys[i];
-        ref.setAttribute(key, this.attrs[key]);
+        vdom._setAttr(ref, key, this.attrs[key]);
+      }
+    }
+
+    if (this.props != null) {
+      keys = Object.keys(this.props);
+      for (i = 0, il = keys.length; i < il; i++) {
+        key = keys[i];
+        ref[key] = this.props[key];
       }
     }
 
@@ -394,6 +421,9 @@ vdom.VNode.prototype.update = function(b, context) {
     if (this.attrs !== b.attrs) {
       vdom._updateAttrs(this.attrs, b.attrs, /** @type {!Element} */ (ref));
     }
+    if (this.props !== b.props) {
+      vdom._updateProps(this.props, b.props, /** @type {!Element} */ (ref));
+    }
     if (this.style !== b.style) {
       vdom._updateStyle(this.style, b.style, ref.style);
     }
@@ -471,7 +501,7 @@ vdom._updateAttrs = function(a, b, node) {
       // b is empty, remove all attributes from a.
       keys = Object.keys(a);
       for (i = 0, il = keys.length; i < il; i++) {
-        node.removeAttribute(keys[i]);
+        vdom._removeAttr(node, keys[i]);
       }
     } else {
       // Remove and updateVNode attributes.
@@ -504,6 +534,63 @@ vdom._updateAttrs = function(a, b, node) {
     for (i = 0, il = keys.length; i < il; i++) {
       key = keys[i];
       vdom._setAttr(node, key, b[key]);
+    }
+  }
+};
+
+/**
+ * Update properties.
+ *
+ * @param {Object<string, *>} a Old properties.
+ * @param {Object<string, *>} b New properties.
+ * @param {!Element} node
+ * @protected
+ */
+vdom._updateProps = function(a, b, node) {
+  var i, il;
+  var key;
+  var keys;
+  var aValue;
+  var bValue;
+
+  if (a != null) {
+    if (b == null) {
+      // b is empty, remove all attributes from a.
+      keys = Object.keys(a);
+      for (i = 0, il = keys.length; i < il; i++) {
+        node[keys[i]] = undefined;
+      }
+    } else {
+      // Remove and updateVNode attributes.
+      keys = Object.keys(a);
+      for (i = 0, il = keys.length; i < il; i++) {
+        key = keys[i];
+        if (b.hasOwnProperty(key)) {
+          aValue = a[key];
+          bValue = b[key];
+          if (aValue !== bValue) {
+            node[key] = bValue;
+          }
+        } else {
+          node[key] = undefined;
+        }
+      }
+
+      // Insert new attributes.
+      keys = Object.keys(b);
+      for (i = 0, il = keys.length; i < il; i++) {
+        key = keys[i];
+        if (!a.hasOwnProperty(key)) {
+          node[key] = b[key];
+        }
+      }
+    }
+  } else if (b != null) {
+    // a is empty, insert all attributes from b.
+    keys = Object.keys(b);
+    for (i = 0, il = keys.length; i < il; i++) {
+      key = keys[i];
+      node[key] = b[key];
     }
   }
 };
