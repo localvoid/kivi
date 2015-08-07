@@ -19,11 +19,16 @@ goog.require('kivi.env');
  *   to the [Component] using `set data(P data)` setter. When [VNode]
  *   represents an element, [data] is used as a cache for className string
  *   that was built from [type] and [classes] properties.
+ * @param {?string} type
+ * @param {Object<string,string>} attrs
+ * @param {Object<string,string>} style
+ * @param {Array<string>} classes
+ * @param {Array<!vdom.VNode>} children
  * @constructor
  * @struct
  * @final
  */
-vdom.VNode = function(flags, key, tag, data) {
+vdom.VNode = function(flags, key, tag, data, type, attrs, style, classes, children) {
   this.flags = flags;
   this.key = key;
   this.tag = tag;
@@ -33,31 +38,25 @@ vdom.VNode = function(flags, key, tag, data) {
    * Immutable class name
    * @type {?string}
    */
-  this.type = null;
+  this.type = type;
 
   /**
    * Attributes
    * @type {Object<string,string>}
    */
-  this.attrs = null;
-
-  /**
-   * Custom Attributes
-   * @type {Object<string,string>}
-   */
-  this.customAttrs = null;
+  this.attrs = attrs;
 
   /**
    * Style
    * @type {Object<string,string>}
    */
-  this.style = null;
+  this.style = style;
 
   /**
    * Classes
    * @type {Array<string>}
    */
-  this.classes = null;
+  this.classes = classes;
 
   /**
    * List of children nodes. When [VNode] represents a [Component], children
@@ -66,7 +65,7 @@ vdom.VNode = function(flags, key, tag, data) {
    *
    * @type {Array<!vdom.VNode>}
    */
-  this.children = null;
+  this.children = children;
 
   /**
    * Reference to the [Node]. It will be available after [VNode] is
@@ -118,7 +117,7 @@ vdom.Namespace = {
  * @returns {vdom.VNode}
  */
 vdom.createText = function(content) {
-  return new vdom.VNode(vdom.VNodeFlags.text, null, null, content);
+  return new vdom.VNode(vdom.VNodeFlags.text, null, null, content, null, null, null, null, null);
 };
 
 /**
@@ -128,7 +127,7 @@ vdom.createText = function(content) {
  * @returns {vdom.VNode}
  */
 vdom.createIText = function(key, content) {
-  return new vdom.VNode(vdom.VNodeFlags.text, key, null, content);
+  return new vdom.VNode(vdom.VNodeFlags.text, key, null, content, null, null, null, null, null);
 };
 
 /**
@@ -137,7 +136,7 @@ vdom.createIText = function(key, content) {
  * @returns {vdom.VNode}
  */
 vdom.createElement = function(tag) {
-  return new vdom.VNode(vdom.VNodeFlags.element, null, tag, null);
+  return new vdom.VNode(vdom.VNodeFlags.element, null, tag, null, null, null, null, null, null);
 };
 
 /**
@@ -147,7 +146,7 @@ vdom.createElement = function(tag) {
  * @returns {vdom.VNode}
  */
 vdom.createIElement = function(key, tag) {
-  return new vdom.VNode(vdom.VNodeFlags.element, key, tag, null);
+  return new vdom.VNode(vdom.VNodeFlags.element, key, tag, null, null, null, null, null, null);
 };
 
 /**
@@ -156,7 +155,7 @@ vdom.createIElement = function(key, tag) {
  * @returns {vdom.VNode}
  */
 vdom.createSvgElement = function(tag) {
-  return new vdom.VNode(vdom.VNodeFlags.element | vdom.VNodeFlags.svg, null, tag, null);
+  return new vdom.VNode(vdom.VNodeFlags.element | vdom.VNodeFlags.svg, null, tag, null, null, null, null, null, null);
 };
 
 /**
@@ -166,7 +165,7 @@ vdom.createSvgElement = function(tag) {
  * @returns {vdom.VNode}
  */
 vdom.createISvgElement = function(key, tag) {
-  return new vdom.VNode(vdom.VNodeFlags.element | vdom.VNodeFlags.svg, key, tag, null);
+  return new vdom.VNode(vdom.VNodeFlags.element | vdom.VNodeFlags.svg, key, tag, null, null, null, null, null, null);
 };
 
 /**
@@ -177,7 +176,7 @@ vdom.createISvgElement = function(key, tag) {
  */
 vdom.createComponent = function(descriptor, data) {
   if (data === void 0) data = null;
-  return new vdom.VNode(vdom.VNodeFlags.component, null, descriptor, data);
+  return new vdom.VNode(vdom.VNodeFlags.component, null, descriptor, data, null, null, null, null, null);
 };
 
 /**
@@ -189,7 +188,7 @@ vdom.createComponent = function(descriptor, data) {
  */
 vdom.createIComponent = function(key, descriptor, data) {
   if (data === void 0) data = null;
-  return new vdom.VNode(vdom.VNodeFlags.component, key, descriptor, data);
+  return new vdom.VNode(vdom.VNodeFlags.component, key, descriptor, data, null, null, null, null, null);
 };
 
 /**
@@ -197,7 +196,7 @@ vdom.createIComponent = function(key, descriptor, data) {
  * @returns {vdom.VNode}
  */
 vdom.createRoot = function() {
-  return new vdom.VNode(vdom.VNodeFlags.root, null, null, null);
+  return new vdom.VNode(vdom.VNodeFlags.root, null, null, null, null, null, null, null, null);
 };
 
 /**
