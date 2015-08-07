@@ -7,24 +7,21 @@ goog.require('kivi.env');
  * Virtual DOM Node.
  *
  * @param {number} flags Flags.
- * @param {number|string|null} key Key that should be unique among its siblings. If the key is
- *   `null`, it means that the key is implicit. When [key] is implicit, all
- *   siblings should also have implicit keys, otherwise it will result in
- *   undefined behaviour in "production" mode, or runtime error in
+ * @param {number|string|null} key Key that should be unique among its siblings. If the key is `null`, it
+ *   means that the key is implicit. When [key] is implicit, all siblings should also have implicit keys,
+ *   otherwise it will result in undefined behaviour in "production" mode, or runtime error in
  *   "development" mode.
- * @param {string|vdom.CDescriptor|null} tag Tag should contain tag name if [VNode] represents an element, or
- *   reference to the [componentConstructor] if it represents a
- *   [Component].
- * @param {Object|string|null} data Data that should be passed to [Component]s. Data is transferred
- *   to the [Component] using `set data(P data)` setter. When [VNode]
- *   represents an element, [data] is used as a cache for className string
- *   that was built from [type] and [classes] properties.
- * @param {?string} type
- * @param {Object<string,string>} attrs
- * @param {Object<string,*>} props
- * @param {Object<string,string>} style
- * @param {Array<string>} classes
- * @param {Array<!vdom.VNode>} children
+ * @param {string|vdom.CDescriptor|null} tag Tag should contain html tag name if VNode represents an element,
+ *   or reference to the [vdom.CDescriptor] if it represents a Component.
+ * @param {*} data Data that will be transffered to Components. If VNode represents an element, [data] is
+ *   used as a cache for className string that was built from [type] and [classes] properties.
+ * @param {?string} type Immutable class name
+ * @param {Object<string,string>} attrs HTMLElement attributes
+ * @param {Object<string,*>} props HTMLElement properties
+ * @param {Object<string,string>} style HTMLElement styles
+ * @param {Array<string>} classes HTMLElement classes
+ * @param {Array<!vdom.VNode>} children List of children nodes. If VNode is a Component, children nodes will be
+ *   transferred to the Component.
  * @constructor
  * @struct
  * @final
@@ -34,59 +31,25 @@ vdom.VNode = function(flags, key, tag, data, type, attrs, props, style, classes,
   this.key = key;
   this.tag = tag;
   this.data = data;
-
-  /**
-   * Immutable class name
-   * @type {?string}
-   */
   this.type = type;
-
-  /**
-   * Attributes
-   * @type {Object<string,string>}
-   */
   this.attrs = attrs;
-
-  /**
-   * Properties
-   * @type {Object<string,*>}
-   */
   this.props = props;
-
-  /**
-   * Style
-   * @type {Object<string,string>}
-   */
   this.style = style;
-
-  /**
-   * Classes
-   * @type {Array<string>}
-   */
   this.classes = classes;
-
-  /**
-   * List of children nodes. When [VNode] represents a [Component], children
-   * nodes are transferred to the [Component] with
-   * `Component._updateChildren(c)` method.
-   *
-   * @type {Array<!vdom.VNode>}
-   */
   this.children = children;
 
   /**
-   * Reference to the [Node]. It will be available after [VNode] is
-   * [createVNode]d or [updateVNode]d. Each time [VNode] is updated, reference to the
-   * [Node] is passed from the previous node to the new one.
+   * Reference to the [Node]. It will be available after [vdom.VNode] is created or updated. Each time
+   * [vdom.VNode] is updated, reference to the [Node] is transferred from the previous node to the new one.
    *
    * @type {Node}
    */
   this.ref = null;
 
   /**
-   * Reference to the [Component]. It will be available after [VNode] is
-   * [createVNode]d or [updateVNode]d. Each time [VNode] is updated, reference to the
-   * [Component] is passed from the previous node to the new one.
+   * Reference to the [vdom.Component]. It will be available after [vdom.VNode] is created or updated. Each
+   * time [vdom.VNode] is updated, reference to the [vdom.Component] is transferred from the previous node to
+   * the new one.
    *
    * @type {vdom.Component}
    */
@@ -99,19 +62,21 @@ vdom.VNode = function(flags, key, tag, data, type, attrs, props, style, classes,
  * @enum {number}
  */
 vdom.VNodeFlags = {
-  /** Flag indicating that [VNode] is [Text]. */
+  /** Flag indicating that [vdom.VNode] is a [Text] node. */
   text:      0x0001,
-  /** Flag indicating that [VNode] is [Element]. */
+  /** Flag indicating that [vdom.VNode] is an [Element] node. */
   element:   0x0002,
-  /** Flag indicating that [VNode] is [Component]. */
+  /** Flag indicating that [vdom.VNode] is a [vdom.Component] node. */
   component: 0x0004,
-  /** Flag indicating that [VNode] is root element of the [Component]. */
+  /** Flag indicating that [vdom.VNode] is a root element of the [vdom.Component]. */
   root:      0x0008,
-  /** Flag indicating that [VNode] represents node that is in svg namespace. */
+  /** Flag indicating that [vdom.VNode] represents node in svg namespace. */
   svg:       0x0010
 };
 
 /**
+ * Html Namespaces
+ *
  * @enum {string}
  */
 vdom.Namespace = {
@@ -119,12 +84,20 @@ vdom.Namespace = {
 };
 
 /**
+ * Special Attribute is used to set and remove attributes that isn't possible with simple setAttribute and
+ * removeAttribute calls, for example setting attributes in svg namespace.
+ *
  * @typedef {{set: function(!Element, string), remove: function(!Element)}}
  * @protected
  */
 vdom._SpecialAttr;
 
 /**
+ * Special Attributes.
+ *
+ * Special attribute names should start with '$' symbol, so we can easily recognize them from simple
+ * attributes.
+ *
  * @const {Object<string, !vdom._SpecialAttr>}
  * @protected
  */
@@ -147,7 +120,9 @@ vdom._specialAttrs = {
 };
 
 /**
- * Set Attribute
+ * Set Attribute.
+ *
+ * If attribute name starts with '$', treat it as a special attribute.
  *
  * @param {!Element} node
  * @param {string} key
@@ -163,7 +138,9 @@ vdom._setAttr = function(node, key, value) {
 };
 
 /**
- * Remove Attribute
+ * Remove Attribute.
+ *
+ * If attribute name starts with '$', treat it as a special attribute.
  *
  * @param {!Element} node
  * @param {string} key
@@ -178,67 +155,74 @@ vdom._removeAttr = function(node, key) {
 };
 
 /**
+ * Create a [vdom.VNode] representing a [Text] node.
  *
  * @param {string} content
- * @returns {vdom.VNode}
+ * @return {!vdom.VNode}
  */
 vdom.createText = function(content) {
   return new vdom.VNode(vdom.VNodeFlags.text, null, null, content, null, null, null, null, null, null);
 };
 
 /**
+ * Create a [vdom.VNode] representing a [Text] node.
  *
  * @param {string|number} key
  * @param {string} content
- * @returns {vdom.VNode}
+ * @return {!vdom.VNode}
  */
 vdom.createIText = function(key, content) {
   return new vdom.VNode(vdom.VNodeFlags.text, key, null, content, null, null, null, null, null, null);
 };
 
 /**
+ * Create a [vdom.VNode] representing a [HTMLElement] node.
  *
  * @param {string} tag
- * @returns {vdom.VNode}
+ * @return {!vdom.VNode}
  */
 vdom.createElement = function(tag) {
   return new vdom.VNode(vdom.VNodeFlags.element, null, tag, null, null, null, null, null, null, null);
 };
 
 /**
+ * Create a [vdom.VNode] representing a [HTMLElement] node.
  *
  * @param {string|number} key
  * @param {string} tag
- * @returns {vdom.VNode}
+ * @return {!vdom.VNode}
  */
 vdom.createIElement = function(key, tag) {
   return new vdom.VNode(vdom.VNodeFlags.element, key, tag, null, null, null, null, null, null, null);
 };
 
 /**
+ * Create a [vdom.VNode] representing a [SVGElement] node.
  *
  * @param {string} tag
- * @returns {vdom.VNode}
+ * @return {!vdom.VNode}
  */
 vdom.createSvgElement = function(tag) {
   return new vdom.VNode(vdom.VNodeFlags.element | vdom.VNodeFlags.svg, null, tag, null, null, null, null, null, null, null);
 };
 
 /**
+ * Create a [vdom.VNode] representing a [SVGElement] node.
  *
  * @param {string|number} key
  * @param {string} tag
- * @returns {vdom.VNode}
+ * @return {!vdom.VNode}
  */
 vdom.createISvgElement = function(key, tag) {
   return new vdom.VNode(vdom.VNodeFlags.element | vdom.VNodeFlags.svg, key, tag, null, null, null, null, null, null, null);
 };
 
 /**
+ * Create a [vdom.VNode] representing a [vdom.Component] node.
  *
  * @param {!vdom.CDescriptor} descriptor
- * @param {Object} data
- * @returns {vdom.VNode}
+ * @param {*} data
+ * @return {!vdom.VNode}
  */
 vdom.createComponent = function(descriptor, data) {
   if (data === void 0) data = null;
@@ -246,11 +230,12 @@ vdom.createComponent = function(descriptor, data) {
 };
 
 /**
+ * Create a [vdom.VNode] representing a [vdom.Component] node.
  *
  * @param {string|number} key
  * @param {!vdom.CDescriptor} descriptor
- * @param {Object} data
- * @returns {vdom.VNode}
+ * @param {*} data
+ * @return {!vdom.VNode}
  */
 vdom.createIComponent = function(key, descriptor, data) {
   if (data === void 0) data = null;
@@ -258,27 +243,27 @@ vdom.createIComponent = function(key, descriptor, data) {
 };
 
 /**
+ * Create a [vdom.VNode] representing a root node.
  *
- * @returns {vdom.VNode}
+ * @return {!vdom.VNode}
  */
 vdom.createRoot = function() {
   return new vdom.VNode(vdom.VNodeFlags.root, null, null, null, null, null, null, null, null, null);
 };
 
 /**
- * Checks if two VNodes have the same type and they can be updated.
+ * Checks if two nodes have the same type and they can be updated.
  *
  * @param {!vdom.VNode} b
  * @return {boolean}
  * @private
  */
 vdom.VNode.prototype._sameType = function(b) {
-  return (this.flags === b.flags && this.tag === b.tag);
+  return (this.flags === b.flags && this.tag === b.tag && this.type === b.type);
 };
 
 /**
- * Create root level element of the [VNode] object, or [Component] for
- * component nodes.
+ * Create root element of the object, or [vdom.Component] for component nodes.
  *
  * @param {!vdom.Component} context
  */
@@ -286,15 +271,18 @@ vdom.VNode.prototype.create = function(context) {
   var flags = this.flags;
 
   if ((flags & vdom.VNodeFlags.text) !== 0) {
-    this.ref = document.createTextNode(/** @type {string} */ (this.data));
+    this.ref = document.createTextNode(/** @type {string} */(this.data));
   } else if ((flags & vdom.VNodeFlags.element) !== 0) {
     if ((flags & vdom.VNodeFlags.svg) === 0) {
-      this.ref = document.createElement(/** @type {string} */ (this.tag));
+      this.ref = document.createElement(/** @type {string} */(this.tag));
     } else {
-      this.ref = document.createElementNS(vdom.Namespace.svg, /** @type {string} */ (this.tag));
+      this.ref = document.createElementNS(vdom.Namespace.svg, /** @type {string} */(this.tag));
     }
   } else if ((flags & vdom.VNodeFlags.component) !== 0) {
-    var component = vdom.Component.create(/** @type {!vdom.CDescriptor} */ (this.tag), this.data, this.children,
+    var component = vdom.Component.create(
+        /** @type {!vdom.CDescriptor} */(this.tag),
+        this.data,
+        this.children,
         context);
     this.ref = component.element;
     this.cref = component;
@@ -302,7 +290,7 @@ vdom.VNode.prototype.create = function(context) {
 };
 
 /**
- * Render internal representation of the VNode.
+ * Render internal representation of the Virtual Node.
  *
  * @param {!vdom.Component} context
  */
@@ -326,7 +314,7 @@ vdom.VNode.prototype.render = function(context) {
   var classList;
 
   if ((flags & (vdom.VNodeFlags.element | vdom.VNodeFlags.component | vdom.VNodeFlags.root)) !== 0) {
-    ref = /** @type {!HTMLElement} */ (this.ref);
+    ref = /** @type {!HTMLElement} */(this.ref);
     if (this.attrs != null) {
       keys = Object.keys(this.attrs);
       for (i = 0, il = keys.length; i < il; i++) {
@@ -383,7 +371,7 @@ vdom.VNode.prototype.render = function(context) {
     }
 
     if ((flags & vdom.VNodeFlags.component) !== 0) {
-      vdom.Component._update(/** @type {!vdom.Component} */ (this.cref));
+      vdom.Component._update(/** @type {!vdom.Component} */(this.cref));
     } else if (this.children != null) {
       for (i = 0, il = this.children.length; i < il; i++) {
         this._insertChild(this.children[i], null, context);
@@ -393,11 +381,12 @@ vdom.VNode.prototype.render = function(context) {
 };
 
 /**
- * Update VNode. When VNode a is updated with VNode b, VNode a should
- * be considered as destroyed, and any access to it is an undefined
- * behaviour.
+ * Update Virtual Node.
  *
- * @param {!vdom.VNode} b New VNode
+ * When `this` node is updated with node `b`, `this` node should be considered as destroyed, and any access
+ * to it after update is an undefined behaviour.
+ *
+ * @param {!vdom.VNode} b New node
  * @param {!vdom.Component} context
  */
 vdom.VNode.prototype.update = function(b, context) {
@@ -457,9 +446,9 @@ vdom.VNode.prototype.update = function(b, context) {
       if (this.data !== b.data) {
         component.descriptor.setData(component, b.data);
       }
-      //if (component.descriptor.setChildren != null) {
-      //  component.descriptor.setChildren(component, b.children);
-      //}
+      if (component.descriptor.setChildren != null) {
+        component.descriptor.setChildren(component, b.children);
+      }
       vdom.Component._update(/** @type {!vdom.Component} */ (component));
     } else {
       this._updateChildren(this.children, b.children, context);
@@ -468,8 +457,7 @@ vdom.VNode.prototype.update = function(b, context) {
 };
 
 /**
- * Dispose VNode
- *
+ * Dispose Virtual Node.
  */
 vdom.VNode.prototype.dispose = function() {
   if ((this.flags & vdom.VNodeFlags.component) !== 0) {
@@ -823,17 +811,11 @@ vdom.VNode.prototype._removeChild = function(node) {
 };
 
 /**
- * Update children [a] and [b] in the [parent].
+ * Update old children list [a] with the new one [b].
  *
- * If one of the children has [:null:] key, it will run updateVNode
- * algorithm for children with implicit keys, otherwise it will run
- * updateVNode algorithm for children with explicit keys.
- *
- * Mixing children with explicit and implicit keys in one children
- * list will result in undefined behaviour. In development mode it
- * will be checked for this conditions and if it is detected that
- * there are children with implicit and explicit keys, it will result
- * in runtime error.
+ * Mixing children with explicit and implicit keys in one children list will result in undefined behaviour
+ * in production mode. In development mode it will be checked for this conditions and if it is detected
+ * that there are children with implicit and explicit keys, it will result in runtime error.
  *
  * @param {Array<!vdom.VNode>} a Old children list.
  * @param {Array<!vdom.VNode>} b New children list.
@@ -947,12 +929,10 @@ vdom.VNode.prototype._updateChildren = function(a, b, context) {
 };
 
 /**
- * Update children with implicit keys [a] and [b] in the [parent].
+ * Update children with implicit keys.
  *
- * Any heuristics that is used in this algorithm is an undefined
- * behaviour, and external dependencies should not relay on the
- * knowledge about this algorithm, because it can be changed in any
- * time.
+ * Any heuristics that is used in this algorithm is an undefined behaviour, and external dependencies should
+ * not rely on the knowledge about this algorithm, because it can be changed in any time.
  *
  * @param {!Array<!vdom.VNode>} a Old children list.
  * @param {!Array<!vdom.VNode>} b New children list.
@@ -999,9 +979,8 @@ vdom.VNode.prototype._updateImplicitChildren = function(a, b, context) {
     aNode.update(bNode, context);
   }
 
-  // Iterate through the remaining nodes and if they have the same
-  // type, then updateVNode, otherwise just remove the old node and insert
-  // the new one.
+  // Iterate through the remaining nodes and if they have the same type, then updateVNode, otherwise just
+  // remove the old node and insert the new one.
   while (aStart <= aEnd && bStart <= bEnd) {
     aNode = a[aStart++];
     bNode = b[bStart++];
@@ -1028,7 +1007,7 @@ vdom.VNode.prototype._updateImplicitChildren = function(a, b, context) {
 };
 
 /**
- * Update children with explicit keys [a] and [b] in the [parent].
+ * Update children with explicit keys.
  *
  * @param {!Array<!vdom.VNode>} a Old children list.
  * @param {!Array<!vdom.VNode>} b New children list.
@@ -1044,40 +1023,28 @@ vdom.VNode.prototype._updateExplicitChildren = function(a, b, context) {
   var bStartNode = b[bStart];
   var aEndNode = a[aEnd];
   var bEndNode = b[bEnd];
-  /**
-   * @type {number}
-   */
+  /** @type {number} */
   var i;
-  /**
-   * @type {number}
-   */
+  /** @type {number} */
   var j;
   var stop = false;
   var nextPos;
   var next;
-  /**
-   * @type {vdom.VNode}
-   */
+  /** @type {vdom.VNode} */
   var aNode;
-  /**
-   * @type {vdom.VNode}
-   */
+  /** @type {vdom.VNode} */
   var bNode;
   var lastTarget = 0;
-  /**
-   * @type {number}
-   */
+  /** @type {number} */
   var pos;
   var node;
 
-  // Algorithm that works on simple cases with basic list
-  // transformations.
+  // Algorithm that works on simple cases with basic list transformations.
   //
-  // It tries to reduce the diff problem by simultaneously iterating
-  // from the beginning and the end of both lists, if keys are the
-  // same, they're updated, if node is moved from the beginning to the
-  // end of the current cursor positions or vice versa it just
-  // performs move operation and continues to reduce the diff problem.
+  // It tries to reduce the diff problem by simultaneously iterating from the beginning and the end of both
+  // lists, if keys are the same, they're updated, if node is moved from the beginning to the end of the
+  // current cursor positions or vice versa it just performs move operation and continues to reduce the diff
+  // problem.
   outer: do {
     stop = true;
 
@@ -1154,14 +1121,11 @@ vdom.VNode.prototype._updateExplicitChildren = function(a, b, context) {
   } else {
     // Perform more complex updateVNode algorithm on the remaining nodes.
     //
-    // We start by marking all nodes from b as inserted, then we try
-    // to find all removed nodes and simultaneously perform updates on
-    // the nodes that exists in both lists and replacing "inserted"
-    // marks with the position of the node from the list b in list a.
-    // Then we just need to perform slightly modified LIS algorithm,
-    // that ignores "inserted" marks and find common subsequence and
-    // move all nodes that doesn't belong to this subsequence, or
-    // insert if they have "inserted" mark.
+    // We start by marking all nodes from b as inserted, then we try to find all removed nodes and
+    // simultaneously perform updates on the nodes that exists in both lists and replacing "inserted"
+    // marks with the position of the node from the list b in list a. Then we just need to perform
+    // slightly modified LIS algorithm, that ignores "inserted" marks and find common subsequence and
+    // move all nodes that doesn't belong to this subsequence, or insert if they have "inserted" mark.
     var aLength = aEnd - aStart + 1;
     var bLength = bEnd - bStart + 1;
     var sources = new Array(bLength);
@@ -1174,8 +1138,7 @@ vdom.VNode.prototype._updateExplicitChildren = function(a, b, context) {
     var moved = false;
     var removeOffset = 0;
 
-    // When lists a and b are small, we are using naive O(M*N) algorithm
-    // to find removed children.
+    // When lists a and b are small, we are using naive O(M*N) algorithm to find removed children.
     if (aLength * bLength <= 16) {
       for (i = aStart; i <= aEnd; i++) {
         var removed = true;
@@ -1231,10 +1194,9 @@ vdom.VNode.prototype._updateExplicitChildren = function(a, b, context) {
 
     if (moved) {
       var seq = vdom._lis(sources);
-      // All modifications are performed from the right to left, so we
-      // can use insertBefore method and use reference to the html
-      // element from the next VNode. All Nodes from the right side
-      // should always be in the correct state.
+      // All modifications are performed from the right to left, so we can use insertBefore method and use
+      // reference to the html element from the next VNode. All Nodes from the right side should always be
+      // in the correct state.
       j = seq.length - 1;
       for (i = bLength - 1; i >= 0; i--) {
         if (sources[i] === -1) {
@@ -1270,11 +1232,11 @@ vdom.VNode.prototype._updateExplicitChildren = function(a, b, context) {
 };
 
 /**
- * Slightly modified Longest Increased Subsequence algorithm, it
- * ignores items that have -1 value. They're representing new items.
+ * Slightly modified Longest Increased Subsequence algorithm, it ignores items that have -1 value.
+ * They're representing new items.
  *
- * This algorithm is used to find minimum number of move operations
- * when updating children with explicit keys.
+ * This algorithm is used to find minimum number of move operations when updating children with explicit
+ * keys.
  *
  * http://en.wikipedia.org/wiki/Longest_increasing_subsequence
  *
@@ -1337,7 +1299,7 @@ vdom._lis = function(a) {
 };
 
 /**
- * Component Descriptor
+ * Component Descriptor.
  *
  * @constructor
  * @template D, S
@@ -1348,38 +1310,28 @@ vdom.CDescriptor = function() {
   this.flags = 0;
   this.tag = 'div';
 
-  /**
-   * @type {?function (!vdom.Component<D, S>)}
-   */
+  /** @type {?function (!vdom.Component<D, S>)} */
   this.init = null;
 
-  /**
-   * @type {?function (!vdom.Component<D, S>, D)}
-   */
+  /** @type {?function (!vdom.Component<D, S>, D)} */
   this.setData = vdom.CDescriptor._defaultSetData;
 
-  /**
-   * @type {?function (!vdom.Component<D, S>, !Array<!vdom.VNode>)}
-   */
+  /** @type {?function (!vdom.Component<D, S>, Array<!vdom.VNode>)} */
   this.setChildren = null;
 
-  /**
-   * @type {?function (!vdom.Component<D, S>)}
-   */
+  /** @type {?function (!vdom.Component<D, S>)} */
   this.update = null;
 
-  /**
-   * @type {?function (!vdom.Component<D, S>)}
-   */
+  /** @type {?function (!vdom.Component<D, S>)} */
   this.invalidated = null;
 
-  /**
-   * @type {?function (!vdom.Component<D, S>)}
-   */
+  /** @type {?function (!vdom.Component<D, S>)} */
   this.disposed = null;
 };
 
 /**
+ * Component Flags.
+ *
  * @enum {number}
  */
 vdom.ComponentFlags = {
@@ -1391,7 +1343,7 @@ vdom.ComponentFlags = {
 };
 
 /**
- * Component
+ * Component.
  *
  * @constructor
  * @template D, S
@@ -1403,39 +1355,22 @@ vdom.ComponentFlags = {
  * @final
  */
 vdom.Component = function(descriptor, parent, data, children) {
-  /**
-   * @type {vdom.ComponentFlags|number}
-   */
+  /** @type {vdom.ComponentFlags|number} */
   this.flags = vdom.ComponentFlags.shouldUpdateFlags;
 
-  /**
-   *
-   * @type {!vdom.CDescriptor<D, S>}
-   */
+  /** @type {!vdom.CDescriptor<D, S>} */
   this.descriptor = descriptor;
 
-  /**
-   *
-   * @type {vdom.Component}
-   */
+  /** @type {vdom.Component} */
   this.parent = parent;
 
-  /**
-   * @type {number}
-   */
+  /** @type {number} */
   this.depth = parent == null ? 0 : parent.depth + 1;
 
-  /**
-   * Data
-   *
-   * @type {D}
-   */
+  /** @type {D} */
   this.data = data;
 
-  /**
-   * State
-   * @type {S}
-   */
+  /** @type {S} */
   this.state = null;
 
   this.children = children;
@@ -1462,8 +1397,8 @@ vdom.Component = function(descriptor, parent, data, children) {
 /**
  * Update internal tree using virtual dom representation.
  *
- * If this method is called during [isMounting] phase, then virtual dom
- * will be mounted on top of existing html tree.
+ * If this method is called during mounting phase, then virtual dom will be mounted on top of the existing
+ * html tree.
  *
  * @param {!vdom.VNode} newRoot
  */
@@ -1500,7 +1435,7 @@ vdom.Component.prototype.invalidate = function() {
 };
 
 /**
- * Dispose Component
+ * Dispose Component.
  */
 vdom.Component.prototype.dispose = function() {
   this.flags &= ~vdom.ComponentFlags.attached;
@@ -1514,6 +1449,8 @@ vdom.Component.prototype.dispose = function() {
 };
 
 /**
+ * Default setData method.
+ *
  * @param {!vdom.Component<*, *>} component
  * @param {*} data
  * @protected
@@ -1526,6 +1463,7 @@ vdom.CDescriptor._defaultSetData = function(component, data) {
 };
 
 /**
+ * Create a [vdom.Component].
  *
  * @param {!vdom.CDescriptor} descriptor
  * @param {*} data
