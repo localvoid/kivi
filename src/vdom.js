@@ -80,7 +80,8 @@ vdom.VNodeFlags = {
  * @enum {string}
  */
 vdom.Namespace = {
-  svg: 'http://www.w3.org/2000/svg'
+  svg: 'http://www.w3.org/2000/svg',
+  xlink: 'http://www.w3.org/1999/xlink'
 };
 
 /**
@@ -102,19 +103,19 @@ vdom._SpecialAttr;
  * @protected
  */
 vdom._specialAttrs = {
-  '$svg.xlink:href': {
+  '$xlink:href': {
     /**
      * @param {!Element} node
      * @param {string} value
      */
     set: function(node, value) {
-      node.setAttributeNS(vdom.Namespace.svg, 'xlink:href', value);
+      node.setAttributeNS(vdom.Namespace.xlink, 'xlink:href', value);
     },
     /**
      * @param {!Element} node
      */
     remove: function(node) {
-      node.removeAttributeNS(vdom.Namespace.svg, 'xlink:href');
+      node.removeAttributeNS(vdom.Namespace.xlink, 'xlink:href');
     }
   }
 };
