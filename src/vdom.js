@@ -81,42 +81,67 @@ vdom.VNodeFlags = {
  */
 vdom.Namespace = {
   svg: 'http://www.w3.org/2000/svg',
-  xlink: 'http://www.w3.org/1999/xlink'
+  xlink: 'http://www.w3.org/1999/xlink',
+  xml: 'http://www.w3.org/XML/1998/namespace'
 };
 
 /**
- * Special Attribute is used to set and remove attributes that isn't possible with simple setAttribute and
- * removeAttribute calls, for example setting attributes in svg namespace.
+ * Namespaced Attribute should be set with setAttributeNS call.
  *
- * @typedef {{set: function(!Element, string), remove: function(!Element)}}
+ * @typedef {{name: string, namespace: vdom.Namespace}}
  * @protected
  */
-vdom._SpecialAttr;
+vdom._NamespacedAttr;
 
 /**
- * Special Attributes.
+ * Namespaced Attributes.
  *
- * Special attribute names should start with '$' symbol, so we can easily recognize them from simple
+ * Namespaced attribute names should start with '$' symbol, so we can easily recognize them from simple
  * attributes.
  *
- * @const {Object<string, !vdom._SpecialAttr>}
+ * @const {Object<string, !vdom._NamespacedAttr>}
  * @protected
  */
-vdom._specialAttrs = {
+vdom._namespacedAttrs = {
+  '$xlink:actuate': {
+    name: 'xlink:actuate',
+    namespace: vdom.Namespace.xlink
+  },
+  '$xlink:arcrole': {
+    name: 'xlink:arcrole',
+    namespace: vdom.Namespace.xlink
+  },
   '$xlink:href': {
-    /**
-     * @param {!Element} node
-     * @param {string} value
-     */
-    set: function(node, value) {
-      node.setAttributeNS(vdom.Namespace.xlink, 'xlink:href', value);
-    },
-    /**
-     * @param {!Element} node
-     */
-    remove: function(node) {
-      node.removeAttributeNS(vdom.Namespace.xlink, 'xlink:href');
-    }
+    name: 'xlink:href',
+    namespace: vdom.Namespace.xlink
+  },
+  '$xlink:role': {
+    name: 'xlink:role',
+    namespace: vdom.Namespace.xlink
+  },
+  '$xlink:show': {
+    name: 'xlink:show',
+    namespace: vdom.Namespace.xlink
+  },
+  '$xlink:title': {
+    name: 'xlink:title',
+    namespace: vdom.Namespace.xlink
+  },
+  '$xlink:type': {
+    name: 'xlink:type',
+    namespace: vdom.Namespace.xlink
+  },
+  '$xml:base': {
+    name: 'xml:base',
+    namespace: vdom.Namespace.xml
+  },
+  '$xml:lang': {
+    name: 'xml:lang',
+    namespace: vdom.Namespace.xml
+  },
+  '$xml:space': {
+    name: 'xml:space',
+    namespace: vdom.Namespace.xml
   }
 };
 
@@ -134,7 +159,8 @@ vdom._setAttr = function(node, key, value) {
   if (key[0] !== '$') {
     node.setAttribute(key, value);
   } else {
-    vdom._specialAttrs[key].set(node, value);
+    var details = vdom._namespacedAttrs[key];
+    node.setAttributeNS(details.namespace, details.name, value);
   }
 };
 
@@ -151,7 +177,8 @@ vdom._removeAttr = function(node, key) {
   if (key[0] !== '$') {
     node.removeAttribute(key);
   } else {
-    vdom._specialAttrs[key].remove(node);
+    var details = vdom._namespacedAttrs[key];
+    node.removeAttributeNS(details.namespace, details.name);
   }
 };
 
