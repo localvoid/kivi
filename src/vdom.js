@@ -414,6 +414,33 @@ vdom.VNode.prototype.render = function(context) {
 };
 
 /**
+ * Mount Virtual Node on top of existing html.
+ *
+ * @param {!Node} node
+ * @param {!vdom.Component} context
+ */
+vdom.VNode.prototype.mount = function(node, context) {
+  var flags = this.flags;
+  var children = this.children;
+
+  this.ref = node;
+
+  if ((flags & vdom.VNodeFlags.component) !== 0) {
+    var cref = this.cref = vdom.Component.mount(/** @type {!vdom.CDescriptor} */(this.tag), this.data, children, context, /** @type {!Element} */(node));
+    vdom.Component._update(cref);
+  } else {
+    if (children != null && children.length > 0) {
+      /** @type {Node} */
+      var child = node.firstChild;
+      for (var i = 0; i < children.length; i++) {
+        children[i].mount(/** @type {!Node} */(child), context);
+        child = child.nextSibling;
+      }
+    }
+  }
+};
+
+/**
  * Update Virtual Node.
  *
  * When `this` node is updated with node `b`, `this` node should be considered as destroyed, and any access
@@ -1380,16 +1407,18 @@ vdom.ComponentFlags = {
  *
  * @constructor
  * @template D, S
+ * @param {number} flags
  * @param {!vdom.CDescriptor<D, S>} descriptor
  * @param {vdom.Component} parent
  * @param {*} data
  * @param {Array<!vdom.VNode>} children
+ * @param {!Element} element
  * @struct
  * @final
  */
-vdom.Component = function(descriptor, parent, data, children) {
-  /** @type {vdom.ComponentFlags|number} */
-  this.flags = vdom.ComponentFlags.shouldUpdateFlags;
+vdom.Component = function(flags, descriptor, parent, data, children, element) {
+  /** @type {number} */
+  this.flags = flags;
 
   /** @type {!vdom.CDescriptor<D, S>} */
   this.descriptor = descriptor;
@@ -1408,17 +1437,14 @@ vdom.Component = function(descriptor, parent, data, children) {
 
   this.children = children;
 
+  /** @type {!Element} */
+  this.element = element;
+
   /**
    * Root node in the Components virtual tree.
    * @type {vdom.VNode}
    */
   this.root = null;
-
-  /**
-   * Reference to the Html Element.
-   * @type {Element}
-   */
-  this.element = document.createElement(descriptor.tag);
 
   /**
    * @type {?function (vdom.Component<D, S>)}
@@ -1439,7 +1465,7 @@ vdom.Component.prototype.updateRoot = function(newRoot) {
   if (this.root == null) {
     newRoot.cref = this;
     if ((this.flags & vdom.ComponentFlags.mounting) !== 0) {
-      //vNodeMount(this.element, this);
+      newRoot.mount(this.element, this);
       this.flags &= ~vdom.ComponentFlags.mounting;
     } else {
       newRoot.ref = this.element;
@@ -1505,7 +1531,26 @@ vdom.CDescriptor._defaultSetData = function(component, data) {
  * @returns {!vdom.Component}
  */
 vdom.Component.create = function(descriptor, data, children, context) {
-  var c = new vdom.Component(descriptor, context, data, children);
+  var element = document.createElement(descriptor.tag);
+  var c = new vdom.Component(vdom.ComponentFlags.shouldUpdateFlags, descriptor, context, data, children, element);
+  if (descriptor.init != null) {
+    descriptor.init(c);
+  }
+  return c;
+};
+
+/**
+ * Mount a [vdom.Component] on top of existing html.
+ *
+ * @param {!vdom.CDescriptor} descriptor
+ * @param {*} data
+ * @param {Array<!vdom.VNode>} children
+ * @param {vdom.Component} context
+ * @param {!Element} element
+ * @return {!vdom.Component}
+ */
+vdom.Component.mount = function(descriptor, data, children, context, element) {
+  var c = new vdom.Component(vdom.ComponentFlags.shouldUpdateFlags | vdom.ComponentFlags.mounting, descriptor, context, data, children, element);
   if (descriptor.init != null) {
     descriptor.init(c);
   }
@@ -1527,13 +1572,27 @@ vdom.Component._update = function(component) {
  * Instantiate and inject component into container.
  *
  * @param {!vdom.CDescriptor} descriptor
- * @param {Object} data
+ * @param {*} data
  * @param {Element} container
- * @returns {!vdom.Component}
+ * @return {!vdom.Component}
  */
 vdom.injectComponent = function(descriptor, data, container) {
   var c = vdom.Component.create(descriptor, data, null, null);
   container.appendChild(c.element);
+  vdom.Component._update(c);
+  return c;
+};
+
+/**
+ * Instantiate and mount component on top of existing html.
+ *
+ * @param {!vdom.CDescriptor} descriptor
+ * @param {*} data
+ * @param {Element} element
+ * @return {!vdom.Component}
+ */
+vdom.mountComponent = function(descriptor, data, element) {
+  var c = vdom.Component.mount(descriptor, data, null, null, /** @type {!Element} */(element));
   vdom.Component._update(c);
   return c;
 };
