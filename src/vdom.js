@@ -340,9 +340,12 @@ vdom.VNode.prototype.render = function(context) {
   var className;
   /** @type {DOMTokenList} */
   var classList;
+  /** @type {?string} */
+  var classes;
 
   if ((flags & (vdom.VNodeFlags.element | vdom.VNodeFlags.component | vdom.VNodeFlags.root)) !== 0) {
     ref = /** @type {!HTMLElement} */(this.ref);
+
     if (this.attrs != null) {
       keys = Object.keys(this.attrs);
       for (i = 0, il = keys.length; i < il; i++) {
@@ -374,26 +377,28 @@ vdom.VNode.prototype.render = function(context) {
         className = this.type;
       }
       if (this.classes != null) {
-        var classes = this.classes.join(' ');
+        classes = this.classes.join(' ');
         className = (className == null) ? classes : className + ' ' + classes;
       }
       if (className != null) {
         this.data = className;
         ref.className = className;
       }
-    } else {
+    } else if ((flags & (vdom.VNodeFlags.root)) !== 0) {
+      className = null;
       if (this.type != null) {
-        classList = (ref.classList);
-        classList.add(this.type);
+        className = this.type;
       }
-
       if (this.classes != null) {
-        if (classList === void 0) {
-          classList = ref.classList;
-        }
-
-        for (i = 0, il = this.classes.length; i < il; i++) {
-          classList.add(this.classes[i]);
+        classes = this.classes.join(' ');
+        className = (className == null) ? classes : className + ' ' + classes;
+      }
+      if (className != null) {
+        var oldClassName = ref.className;
+        if (oldClassName === '') {
+          ref.className = className;
+        } else {
+          ref.className = oldClassName + ' ' + className;
         }
       }
     }
