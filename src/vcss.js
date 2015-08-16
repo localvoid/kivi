@@ -242,7 +242,7 @@ vcss.build._collectDependencies = function(stylesheet, result, visited) {
  * @const {RegExp}
  * @private
  */
-vcss.build._SELECTOR_ID_REGEXP = new RegExp('\.[a-zA-Z0-9]+|#[a-zA-Z0-9]+', 'g');
+vcss.build._SELECTOR_ID_REGEXP = new RegExp('\\.[a-zA-Z0-9]+|#[a-zA-Z0-9]+', 'g');
 
 /**
  * Minify ids.
@@ -261,11 +261,14 @@ vcss.build._minifyIds = function(string, context) {
 /**
  * vcss Selector rule.
  *
- * @param {Array<string>} selectors
+ * @param {Array<string>|string} selectors
  * @param {Array<vcss.Property>} children
  * @returns {!vcss.Rule}
  */
 vcss.select = function(selectors, children) {
+  if (selectors.constructor !== Array) {
+    selectors = [selectors];
+  }
   return new vcss.Rule(vcss.RuleType.selector, selectors, children);
 };
 
