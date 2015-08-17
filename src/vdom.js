@@ -437,9 +437,15 @@ vdom.VNode.prototype.mount = function(node, context) {
     if (children != null && typeof children !== 'string' && children.length > 0) {
       /** @type {Node} */
       var child = node.firstChild;
+      while (child.constructor === Comment) {
+        child = child.nextSibling;
+      }
       for (var i = 0; i < children.length; i++) {
         children[i].mount(/** @type {!Node} */(child), context);
         child = child.nextSibling;
+        while (child.constructor === Comment) {
+          child = child.nextSibling;
+        }
       }
     }
   }
