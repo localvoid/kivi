@@ -20,8 +20,8 @@ goog.require('kivi.env');
  * @param {Object<string,*>} props HTMLElement properties
  * @param {Object<string,string>} style HTMLElement styles
  * @param {Array<string>} classes HTMLElement classes
- * @param {Array<!vdom.VNode>} children List of children nodes. If VNode is a Component, children nodes will be
- *   transferred to the Component.
+ * @param {Array<!vdom.VNode>|string} children List of children nodes. If VNode is a Component, children
+ *   nodes will be transferred to the Component.
  * @constructor
  * @struct
  * @final
@@ -406,8 +406,13 @@ vdom.VNode.prototype.render = function(context) {
     if ((flags & vdom.VNodeFlags.component) !== 0) {
       vdom.Component._update(/** @type {!vdom.Component} */(this.cref));
     } else if (this.children != null) {
-      for (i = 0, il = this.children.length; i < il; i++) {
-        this._insertChild(this.children[i], null, context);
+      var children = this.children;
+      if (typeof children === 'string') {
+        ref.textContent = children;
+      } else {
+        for (i = 0, il = this.children.length; i < il; i++) {
+          this._insertChild(this.children[i], null, context);
+        }
       }
     }
   }
@@ -429,7 +434,7 @@ vdom.VNode.prototype.mount = function(node, context) {
     var cref = this.cref = vdom.Component.mount(/** @type {!vdom.CDescriptor} */(this.tag), this.data, children, context, /** @type {!Element} */(node));
     vdom.Component._update(cref);
   } else {
-    if (children != null && children.length > 0) {
+    if (children != null && typeof children !== 'string' && children.length > 0) {
       /** @type {Node} */
       var child = node.firstChild;
       for (var i = 0; i < children.length; i++) {
@@ -523,8 +528,11 @@ vdom.VNode.prototype.dispose = function() {
   if ((this.flags & vdom.VNodeFlags.component) !== 0) {
     /** @type {!vdom.Component} */ (this.cref).dispose();
   } else if (this.children != null) {
-    for (var i = 0; i < this.children.length; i++) {
-      this.children[i].dispose();
+    var children = this.children;
+    if (typeof children !== 'string') {
+      for (var i = 0; i < children.length; i++) {
+        children[i].dispose();
+      }
     }
   }
 };
@@ -877,8 +885,8 @@ vdom.VNode.prototype._removeChild = function(node) {
  * in production mode. In development mode it will be checked for this conditions and if it is detected
  * that there are children with implicit and explicit keys, it will result in runtime error.
  *
- * @param {Array<!vdom.VNode>} a Old children list.
- * @param {Array<!vdom.VNode>} b New children list.
+ * @param {Array<!vdom.VNode>|string} a Old children list.
+ * @param {Array<!vdom.VNode>|string} b New children list.
  * @param {!vdom.Component} context Current context.
  * @private
  */
@@ -888,102 +896,113 @@ vdom.VNode.prototype._updateChildren = function(a, b, context) {
   var i = 0;
   var updated = false;
 
-  if (a != null && a.length !== 0) {
-    if (b == null || b.length === 0) {
-      // b is empty, remove all children from a.
-      while(i < a.length) {
-        this._removeChild(a[i++]);
-      }
-    } else {
-      if (a.length === 1 && b.length === 1) {
-        // Fast path when a and b have only one child.
-        aNode = a[0];
-        bNode = b[0];
+  if (typeof a === 'string') {
+    if (a !== b) {
+      var c = this.ref.firstChild;
+      if (c) c.nodeValue = /** @type {string} */(b);
+      else this.ref.textContent = b;
+    }
+  } else {
+    a = /** @type {Array<!vdom.VNode>} */(a);
+    b = /** @type {Array<!vdom.VNode>} */(b);
 
-        // Implicit key with same type or explicit key with same key.
-        if ((aNode.key == null && aNode._sameType(bNode)) ||
-            (aNode.key != null && aNode.key === bNode.key)) {
-          aNode.update(bNode, context);
-        } else {
-          this._removeChild(aNode);
-          this._insertChild(bNode, null, context);
-        }
-      } else if (a.length === 1) {
-        // Fast path when a have 1 child.
-        aNode = a[0];
-        if (aNode.key == null) {
-          while (i < b.length) {
-            bNode = b[i++];
-            if (aNode._sameType(bNode)) {
-              aNode.update(bNode, context);
-              updated = true;
-              break;
-            }
-            this._insertChild(bNode, aNode.ref, context);
-          }
-        } else {
-          while (i < b.length) {
-            bNode = b[i++];
-            if (aNode.key === bNode.key) {
-              aNode.update(bNode, context);
-              updated = true;
-              break;
-            }
-            this._insertChild(bNode, aNode.ref, context);
-          }
-        }
-        if (updated) {
-          while (i < b.length) {
-            this._insertChild(b[i++], null, context);
-          }
-        } else {
-          this._removeChild(aNode);
-        }
-      } else if (b.length === 1) {
-        // Fast path when b have 1 child.
-        bNode = b[0];
-        if (bNode.key == null) {
-          while (i < a.length) {
-            aNode = a[i++];
-            if (aNode._sameType(bNode)) {
-              aNode.update(bNode, context);
-              updated = true;
-              break;
-            }
-            this._removeChild(aNode);
-          }
-        } else {
-          while (i < a.length) {
-            aNode = a[i++];
-            if (aNode.key === bNode.key) {
-              aNode.update(bNode, context);
-              updated = true;
-              break;
-            }
-            this._removeChild(aNode);
-          }
-        }
-
-        if (updated) {
-          while (i < a.length) {
-            this._removeChild(a[i++]);
-          }
-        } else {
-          this._insertChild(bNode, null, context);
+    if (a != null && a.length !== 0) {
+      if (b == null || b.length === 0) {
+        // b is empty, remove all children from a.
+        while(i < a.length) {
+          this._removeChild(a[i++]);
         }
       } else {
-        // a and b have more than 1 child.
-        if (a[0].key == null) {
-          this._updateImplicitChildren(a, b, context);
+        if (a.length === 1 && b.length === 1) {
+          // Fast path when a and b have only one child.
+          aNode = a[0];
+          bNode = b[0];
+
+          // Implicit key with same type or explicit key with same key.
+          if ((aNode.key == null && aNode._sameType(bNode)) ||
+              (aNode.key != null && aNode.key === bNode.key)) {
+            aNode.update(bNode, context);
+          } else {
+            this._removeChild(aNode);
+            this._insertChild(bNode, null, context);
+          }
+        } else if (a.length === 1) {
+          // Fast path when a have 1 child.
+          aNode = a[0];
+          if (aNode.key == null) {
+            while (i < b.length) {
+              bNode = b[i++];
+              if (aNode._sameType(bNode)) {
+                aNode.update(bNode, context);
+                updated = true;
+                break;
+              }
+              this._insertChild(bNode, aNode.ref, context);
+            }
+          } else {
+            while (i < b.length) {
+              bNode = b[i++];
+              if (aNode.key === bNode.key) {
+                aNode.update(bNode, context);
+                updated = true;
+                break;
+              }
+              this._insertChild(bNode, aNode.ref, context);
+            }
+          }
+          if (updated) {
+            while (i < b.length) {
+              this._insertChild(b[i++], null, context);
+            }
+          } else {
+            this._removeChild(aNode);
+          }
+        } else if (b.length === 1) {
+          // Fast path when b have 1 child.
+          bNode = b[0];
+          if (bNode.key == null) {
+            while (i < a.length) {
+              aNode = a[i++];
+              if (aNode._sameType(bNode)) {
+                aNode.update(bNode, context);
+                updated = true;
+                break;
+              }
+              this._removeChild(aNode);
+            }
+          } else {
+            while (i < a.length) {
+              aNode = a[i++];
+              if (aNode.key === bNode.key) {
+                aNode.update(bNode, context);
+                updated = true;
+                break;
+              }
+              this._removeChild(aNode);
+            }
+          }
+
+          if (updated) {
+            while (i < a.length) {
+              this._removeChild(a[i++]);
+            }
+          } else {
+            this._insertChild(bNode, null, context);
+          }
         } else {
-          this._updateExplicitChildren(a, b, context);
+          // a and b have more than 1 child.
+          if (a[0].key == null) {
+            this._updateImplicitChildren(a, b, context);
+          } else {
+            this._updateExplicitChildren(a, b, context);
+          }
         }
       }
-    }
-  } else if (b != null && b.length > 0) {
-    // a is empty, insert all children from b
-    for (i = 0; i < b.length; i++) {
-      this._insertChild(b[i], null, context);
+    } else if (b != null && b.length > 0) {
+      // a is empty, insert all children from b
+      for (i = 0; i < b.length; i++) {
+        this._insertChild(b[i], null, context);
+      }
     }
   }
 };
@@ -1376,7 +1395,7 @@ vdom.CDescriptor = function() {
   /** @type {?function (!vdom.Component<D, S>, D)} */
   this.setData = vdom.CDescriptor._defaultSetData;
 
-  /** @type {?function (!vdom.Component<D, S>, Array<!vdom.VNode>)} */
+  /** @type {?function (!vdom.Component<D, S>, (Array<!vdom.VNode>|string))} */
   this.setChildren = null;
 
   /** @type {?function (!vdom.Component<D, S>)} */
@@ -1411,7 +1430,7 @@ vdom.ComponentFlags = {
  * @param {!vdom.CDescriptor<D, S>} descriptor
  * @param {vdom.Component} parent
  * @param {*} data
- * @param {Array<!vdom.VNode>} children
+ * @param {Array<!vdom.VNode>|string} children
  * @param {!Element} element
  * @struct
  * @final
@@ -1526,7 +1545,7 @@ vdom.CDescriptor._defaultSetData = function(component, data) {
  *
  * @param {!vdom.CDescriptor} descriptor
  * @param {*} data
- * @param {Array<!vdom.VNode>} children
+ * @param {Array<!vdom.VNode>|string} children
  * @param {vdom.Component} context
  * @returns {!vdom.Component}
  */
@@ -1544,7 +1563,7 @@ vdom.Component.create = function(descriptor, data, children, context) {
  *
  * @param {!vdom.CDescriptor} descriptor
  * @param {*} data
- * @param {Array<!vdom.VNode>} children
+ * @param {Array<!vdom.VNode>|string} children
  * @param {vdom.Component} context
  * @param {!Element} element
  * @return {!vdom.Component}
