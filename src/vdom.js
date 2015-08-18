@@ -28,15 +28,15 @@ goog.require('kivi.env');
  */
 vdom.VNode = function(flags, key, tag, data, type, attrs, props, style, classes, children) {
   this.flags = flags;
-  this.key = key;
+  this.key_ = key;
   this.tag = tag;
-  this.data = data;
-  this.type = type;
-  this.attrs = attrs;
-  this.props = props;
-  this.style = style;
-  this.classes = classes;
-  this.children = children;
+  this.data_ = data;
+  this.type_ = type;
+  this.attrs_ = attrs;
+  this.props_ = props;
+  this.style_ = style;
+  this.classes_ = classes;
+  this.children_ = children;
 
   /**
    * Reference to the [Node]. It will be available after [vdom.VNode] is created or updated. Each time
@@ -193,17 +193,6 @@ vdom.createText = function(content) {
 };
 
 /**
- * Create a [vdom.VNode] representing a [Text] node.
- *
- * @param {string|number} key
- * @param {string} content
- * @return {!vdom.VNode}
- */
-vdom.createIText = function(key, content) {
-  return new vdom.VNode(vdom.VNodeFlags.text, key, null, content, null, null, null, null, null, null);
-};
-
-/**
  * Create a [vdom.VNode] representing a [HTMLElement] node.
  *
  * @param {string} tag
@@ -214,17 +203,6 @@ vdom.createElement = function(tag) {
 };
 
 /**
- * Create a [vdom.VNode] representing a [HTMLElement] node.
- *
- * @param {string|number} key
- * @param {string} tag
- * @return {!vdom.VNode}
- */
-vdom.createIElement = function(key, tag) {
-  return new vdom.VNode(vdom.VNodeFlags.element, key, tag, null, null, null, null, null, null, null);
-};
-
-/**
  * Create a [vdom.VNode] representing a [SVGElement] node.
  *
  * @param {string} tag
@@ -232,17 +210,6 @@ vdom.createIElement = function(key, tag) {
  */
 vdom.createSvgElement = function(tag) {
   return new vdom.VNode(vdom.VNodeFlags.element | vdom.VNodeFlags.svg, null, tag, null, null, null, null, null, null, null);
-};
-
-/**
- * Create a [vdom.VNode] representing a [SVGElement] node.
- *
- * @param {string|number} key
- * @param {string} tag
- * @return {!vdom.VNode}
- */
-vdom.createISvgElement = function(key, tag) {
-  return new vdom.VNode(vdom.VNodeFlags.element | vdom.VNodeFlags.svg, key, tag, null, null, null, null, null, null, null);
 };
 
 /**
@@ -258,25 +225,100 @@ vdom.createComponent = function(descriptor, data) {
 };
 
 /**
- * Create a [vdom.VNode] representing a [vdom.Component] node.
- *
- * @param {string|number} key
- * @param {!vdom.CDescriptor} descriptor
- * @param {*} data
- * @return {!vdom.VNode}
- */
-vdom.createIComponent = function(key, descriptor, data) {
-  if (data === void 0) data = null;
-  return new vdom.VNode(vdom.VNodeFlags.component, key, descriptor, data, null, null, null, null, null, null);
-};
-
-/**
  * Create a [vdom.VNode] representing a root node.
  *
  * @return {!vdom.VNode}
  */
 vdom.createRoot = function() {
   return new vdom.VNode(vdom.VNodeFlags.root, null, null, null, null, null, null, null, null, null);
+};
+
+/**
+ * Set key.
+ *
+ * @param {null|number|string} key
+ * @returns {!vdom.VNode}
+ */
+vdom.VNode.prototype.key = function(key) {
+  this.key_ = key;
+  return this;
+};
+
+/**
+ * Set data.
+ *
+ * @param {*} data
+ * @returns {!vdom.VNode}
+ */
+vdom.VNode.prototype.data = function(data) {
+  this.data_ = data;
+  return this;
+};
+
+/**
+ * Set type.
+ *
+ * @param {string} type
+ * @returns {!vdom.VNode}
+ */
+vdom.VNode.prototype.type = function(type) {
+  this.type_ = type;
+  return this;
+};
+
+/**
+ * Set attrs.
+ *
+ * @param {Object<string,string>} attrs
+ * @returns {!vdom.VNode}
+ */
+vdom.VNode.prototype.attrs = function(attrs) {
+  this.attrs_ = attrs;
+  return this;
+};
+
+/**
+ * Set props.
+ *
+ * @param {Object<string,string>} props
+ * @returns {!vdom.VNode}
+ */
+vdom.VNode.prototype.props = function(props) {
+  this.props_ = props;
+  return this;
+};
+
+/**
+ * Set style.
+ *
+ * @param {Object<string,string>} style
+ * @returns {!vdom.VNode}
+ */
+vdom.VNode.prototype.style = function(style) {
+  this.style_ = style;
+  return this;
+};
+
+/**
+ * Set classes.
+ *
+ * @param {Array<string>} classes
+ * @returns {!vdom.VNode}
+ */
+vdom.VNode.prototype.classes = function(classes) {
+  this.classes_ = classes;
+  return this;
+};
+
+/**
+ * Set children.
+ *
+ * @param {Array<vdom.VNode>|string} children
+ * @returns {!vdom.VNode}
+ */
+vdom.VNode.prototype.children = function(children) {
+  this.children_ = children;
+  return this;
 };
 
 /**
@@ -287,7 +329,7 @@ vdom.createRoot = function() {
  * @private
  */
 vdom.VNode.prototype._sameType = function(b) {
-  return (this.flags === b.flags && this.tag === b.tag && this.type === b.type);
+  return (this.flags === b.flags && this.tag === b.tag && this.type_ === b.type_);
 };
 
 /**
@@ -299,7 +341,7 @@ vdom.VNode.prototype.create = function(context) {
   var flags = this.flags;
 
   if ((flags & vdom.VNodeFlags.text) !== 0) {
-    this.ref = document.createTextNode(/** @type {string} */(this.data));
+    this.ref = document.createTextNode(/** @type {string} */(this.data_));
   } else if ((flags & vdom.VNodeFlags.element) !== 0) {
     if ((flags & vdom.VNodeFlags.svg) === 0) {
       this.ref = document.createElement(/** @type {string} */(this.tag));
@@ -309,8 +351,8 @@ vdom.VNode.prototype.create = function(context) {
   } else if ((flags & vdom.VNodeFlags.component) !== 0) {
     var component = vdom.Component.create(
         /** @type {!vdom.CDescriptor} */(this.tag),
-        this.data,
-        this.children,
+        this.data_,
+        this.children_,
         context);
     this.ref = component.element;
     this.cref = component;
@@ -338,59 +380,57 @@ vdom.VNode.prototype.render = function(context) {
   var style;
   /** @type {?string} */
   var className;
-  /** @type {DOMTokenList} */
-  var classList;
   /** @type {?string} */
   var classes;
 
   if ((flags & (vdom.VNodeFlags.element | vdom.VNodeFlags.component | vdom.VNodeFlags.root)) !== 0) {
     ref = /** @type {!HTMLElement} */(this.ref);
 
-    if (this.attrs != null) {
-      keys = Object.keys(this.attrs);
+    if (this.attrs_ != null) {
+      keys = Object.keys(this.attrs_);
       for (i = 0, il = keys.length; i < il; i++) {
         key = keys[i];
-        vdom._setAttr(ref, key, this.attrs[key]);
+        vdom._setAttr(ref, key, this.attrs_[key]);
       }
     }
 
-    if (this.props != null) {
-      keys = Object.keys(this.props);
+    if (this.props_ != null) {
+      keys = Object.keys(this.props_);
       for (i = 0, il = keys.length; i < il; i++) {
         key = keys[i];
-        ref[key] = this.props[key];
+        ref[key] = this.props_[key];
       }
     }
 
-    if (this.style != null) {
+    if (this.style_ != null) {
       style = ref.style;
-      keys = Object.keys(this.style);
+      keys = Object.keys(this.style_);
       for (i = 0, il = keys.length; i < il; i++) {
         key = keys[i];
-        style.setProperty(key, this.style[key], '');
+        style.setProperty(key, this.style_[key], '');
       }
     }
 
     if ((flags & (vdom.VNodeFlags.element | vdom.VNodeFlags.component)) !== 0) {
       className = null;
-      if (this.type != null) {
-        className = this.type;
+      if (this.type_ != null) {
+        className = this.type_;
       }
-      if (this.classes != null) {
-        classes = this.classes.join(' ');
+      if (this.classes_ != null) {
+        classes = this.classes_.join(' ');
         className = (className == null) ? classes : className + ' ' + classes;
       }
       if (className != null) {
-        this.data = className;
+        this.data_ = className;
         ref.className = className;
       }
     } else if ((flags & (vdom.VNodeFlags.root)) !== 0) {
       className = null;
-      if (this.type != null) {
-        className = this.type;
+      if (this.type_ != null) {
+        className = this.type_;
       }
-      if (this.classes != null) {
-        classes = this.classes.join(' ');
+      if (this.classes_ != null) {
+        classes = this.classes_.join(' ');
         className = (className == null) ? classes : className + ' ' + classes;
       }
       if (className != null) {
@@ -405,13 +445,13 @@ vdom.VNode.prototype.render = function(context) {
 
     if ((flags & vdom.VNodeFlags.component) !== 0) {
       vdom.Component._update(/** @type {!vdom.Component} */(this.cref));
-    } else if (this.children != null) {
-      var children = this.children;
+    } else if (this.children_ != null) {
+      var children = this.children_;
       if (typeof children === 'string') {
         ref.textContent = children;
       } else {
-        for (i = 0, il = this.children.length; i < il; i++) {
-          this._insertChild(this.children[i], null, context);
+        for (i = 0, il = this.children_.length; i < il; i++) {
+          this._insertChild(this.children_[i], null, context);
         }
       }
     }
@@ -426,25 +466,31 @@ vdom.VNode.prototype.render = function(context) {
  */
 vdom.VNode.prototype.mount = function(node, context) {
   var flags = this.flags;
-  var children = this.children;
+  var children = this.children_;
 
   this.ref = node;
 
   if ((flags & vdom.VNodeFlags.component) !== 0) {
-    var cref = this.cref = vdom.Component.mount(/** @type {!vdom.CDescriptor} */(this.tag), this.data, children, context, /** @type {!Element} */(node));
+    var cref = this.cref = vdom.Component.mount(/** @type {!vdom.CDescriptor} */(this.tag), this.data_, children, context, /** @type {!Element} */(node));
     vdom.Component._update(cref);
   } else {
     if (children != null && typeof children !== 'string' && children.length > 0) {
+      children = /** @type {!Array<!vdom.VNode>} */(children);
       /** @type {Node} */
       var child = node.firstChild;
+      var commentNode;
       while (child.constructor === Comment) {
+        commentNode = child;
         child = child.nextSibling;
+        node.removeChild(commentNode);
       }
       for (var i = 0; i < children.length; i++) {
         children[i].mount(/** @type {!Node} */(child), context);
         child = child.nextSibling;
         while (child.constructor === Comment) {
+          commentNode = child;
           child = child.nextSibling;
+          node.removeChild(commentNode);
         }
       }
     }
@@ -474,55 +520,55 @@ vdom.VNode.prototype.update = function(b, context) {
   b.ref = ref;
 
   if ((flags & vdom.VNodeFlags.text) !== 0) {
-    if (this.data != b.data) {
-      this.ref.nodeValue = /** @type {string} */ (b.data);
+    if (this.data_ != b.data_) {
+      this.ref.nodeValue = /** @type {string} */ (b.data_);
     }
   } else if ((flags & (vdom.VNodeFlags.element | vdom.VNodeFlags.component | vdom.VNodeFlags.root)) !== 0) {
-    if (this.attrs !== b.attrs) {
-      vdom._updateAttrs(this.attrs, b.attrs, /** @type {!Element} */ (ref));
+    if (this.attrs_ !== b.attrs_) {
+      vdom._updateAttrs(this.attrs_, b.attrs_, /** @type {!Element} */ (ref));
     }
-    if (this.props !== b.props) {
-      vdom._updateProps(this.props, b.props, /** @type {!Element} */ (ref));
+    if (this.props_ !== b.props_) {
+      vdom._updateProps(this.props_, b.props_, /** @type {!Element} */ (ref));
     }
-    if (this.style !== b.style) {
-      vdom._updateStyle(this.style, b.style, ref.style);
+    if (this.style_ !== b.style_) {
+      vdom._updateStyle(this.style_, b.style_, ref.style);
     }
 
     if ((flags & vdom.VNodeFlags.element) !== 0) {
-      if (this.classes !== b.classes) {
-        if (b.data == null) {
-          className = b.type;
-          if (b.classes != null) {
-            classes = b.classes.join(' ');
+      if (this.classes_ !== b.classes_) {
+        if (b.data_ == null) {
+          className = b.type_;
+          if (b.classes_ != null) {
+            classes = b.classes_.join(' ');
             className = (className == null) ? classes : className + ' ' + classes;
           }
-          b.data = className;
+          b.data_ = className;
         }
-        if (this.data !== b.data) {
-          if (b.data == null) {
+        if (this.data_ !== b.data_) {
+          if (b.data_ == null) {
             ref.className = '';
           } else {
             ref.className = className;
           }
         }
       } else {
-        b.data = this.data;
+        b.data_ = this.data_;
       }
-    } else if (this.classes !== b.classes) {
-      vdom._updateClasses(this.classes, b.classes, ref.classList);
+    } else if (this.classes_ !== b.classes_) {
+      vdom._updateClasses(this.classes_, b.classes_, ref.classList);
     }
 
     if ((flags & vdom.VNodeFlags.component) !== 0) {
       component = b.cref = /** @type {!vdom.Component} */ (this.cref);
-      if (this.data !== b.data) {
-        component.descriptor.setData(component, b.data);
+      if (this.data_ !== b.data_) {
+        component.descriptor.setData(component, b.data_);
       }
       if (component.descriptor.setChildren != null) {
-        component.descriptor.setChildren(component, b.children);
+        component.descriptor.setChildren(component, b.children_);
       }
       vdom.Component._update(/** @type {!vdom.Component} */ (component));
     } else {
-      this._updateChildren(this.children, b.children, context);
+      this._updateChildren(this.children_, b.children_, context);
     }
   }
 };
@@ -533,9 +579,10 @@ vdom.VNode.prototype.update = function(b, context) {
 vdom.VNode.prototype.dispose = function() {
   if ((this.flags & vdom.VNodeFlags.component) !== 0) {
     /** @type {!vdom.Component} */ (this.cref).dispose();
-  } else if (this.children != null) {
-    var children = this.children;
+  } else if (this.children_ != null) {
+    var children = this.children_;
     if (typeof children !== 'string') {
+      children = /** @type {!Array<!vdom.VNode>} */(children);
       for (var i = 0; i < children.length; i++) {
         children[i].dispose();
       }
@@ -925,8 +972,8 @@ vdom.VNode.prototype._updateChildren = function(a, b, context) {
           bNode = b[0];
 
           // Implicit key with same type or explicit key with same key.
-          if ((aNode.key == null && aNode._sameType(bNode)) ||
-              (aNode.key != null && aNode.key === bNode.key)) {
+          if ((aNode.key_ == null && aNode._sameType(bNode)) ||
+              (aNode.key_ != null && aNode.key_ === bNode.key_)) {
             aNode.update(bNode, context);
           } else {
             this._removeChild(aNode);
@@ -935,7 +982,7 @@ vdom.VNode.prototype._updateChildren = function(a, b, context) {
         } else if (a.length === 1) {
           // Fast path when a have 1 child.
           aNode = a[0];
-          if (aNode.key == null) {
+          if (aNode.key_ == null) {
             while (i < b.length) {
               bNode = b[i++];
               if (aNode._sameType(bNode)) {
@@ -948,7 +995,7 @@ vdom.VNode.prototype._updateChildren = function(a, b, context) {
           } else {
             while (i < b.length) {
               bNode = b[i++];
-              if (aNode.key === bNode.key) {
+              if (aNode.key_ === bNode.key_) {
                 aNode.update(bNode, context);
                 updated = true;
                 break;
@@ -966,7 +1013,7 @@ vdom.VNode.prototype._updateChildren = function(a, b, context) {
         } else if (b.length === 1) {
           // Fast path when b have 1 child.
           bNode = b[0];
-          if (bNode.key == null) {
+          if (bNode.key_ == null) {
             while (i < a.length) {
               aNode = a[i++];
               if (aNode._sameType(bNode)) {
@@ -979,7 +1026,7 @@ vdom.VNode.prototype._updateChildren = function(a, b, context) {
           } else {
             while (i < a.length) {
               aNode = a[i++];
-              if (aNode.key === bNode.key) {
+              if (aNode.key_ === bNode.key_) {
                 aNode.update(bNode, context);
                 updated = true;
                 break;
@@ -997,7 +1044,7 @@ vdom.VNode.prototype._updateChildren = function(a, b, context) {
           }
         } else {
           // a and b have more than 1 child.
-          if (a[0].key == null) {
+          if (a[0].key_ == null) {
             this._updateImplicitChildren(a, b, context);
           } else {
             this._updateExplicitChildren(a, b, context);
@@ -1134,7 +1181,7 @@ vdom.VNode.prototype._updateExplicitChildren = function(a, b, context) {
     stop = true;
 
     // Update nodes with the same key at the beginning.
-    while (aStartNode.key === bStartNode.key) {
+    while (aStartNode.key_ === bStartNode.key_) {
       aStartNode.update(bStartNode, context);
       aStart++;
       bStart++;
@@ -1147,7 +1194,7 @@ vdom.VNode.prototype._updateExplicitChildren = function(a, b, context) {
     }
 
     // Update nodes with the same key at the end.
-    while (aEndNode.key === bEndNode.key) {
+    while (aEndNode.key_ === bEndNode.key_) {
       aEndNode.update(bEndNode, context);
       aEnd--;
       bEnd--;
@@ -1160,7 +1207,7 @@ vdom.VNode.prototype._updateExplicitChildren = function(a, b, context) {
     }
 
     // Move nodes from left to right.
-    while (aStartNode.key === bEndNode.key) {
+    while (aStartNode.key_ === bEndNode.key_) {
       aStartNode.update(bEndNode, context);
       nextPos = bEnd + 1;
       next = nextPos < b.length ? b[nextPos].ref : null;
@@ -1177,7 +1224,7 @@ vdom.VNode.prototype._updateExplicitChildren = function(a, b, context) {
     }
 
     // Move nodes from right to left.
-    while (aEndNode.key === bStartNode.key) {
+    while (aEndNode.key_ === bStartNode.key_) {
       aEndNode.update(bStartNode, context);
       this._moveChild(bStartNode, aStartNode.ref);
       aEnd--;
@@ -1230,7 +1277,7 @@ vdom.VNode.prototype._updateExplicitChildren = function(a, b, context) {
         aNode = a[i];
         for (j = bStart; j <= bEnd; j++) {
           bNode = b[j];
-          if (aNode.key === bNode.key) {
+          if (aNode.key_ === bNode.key_) {
             sources[j - bStart] = i;
 
             if (lastTarget > j) {
@@ -1254,12 +1301,12 @@ vdom.VNode.prototype._updateExplicitChildren = function(a, b, context) {
 
       for (i = bStart; i <= bEnd; i++) {
         node = b[i];
-        keyIndex[node.key] = i;
+        keyIndex[node.key_] = i;
       }
 
       for (i = aStart; i <= aEnd; i++) {
         aNode = a[i];
-        j = keyIndex[aNode.key];
+        j = keyIndex[aNode.key_];
 
         if (j !== void 0) {
           bNode = b[j];

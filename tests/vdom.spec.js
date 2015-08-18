@@ -7,24 +7,16 @@ function injectVNode(parent, node, nextRef) {
 }
 
 function ee(key, c) {
-  var r = vdom.createIElement(key, 'div');
-  if (c !== void 0) {
-    r.children = c;
-  }
-  return r;
+  return vdom.createElement('div').key(key).children(c === void 0 ? null : c);
 }
 
 function ei(c) {
-  var r = vdom.createElement('div');
-  if (c !== void 0) {
-    r.children = c;
-  }
-  return r;
+  return vdom.createElement('div').children(c === void 0 ? null : c);
 }
 
 function gen(item, keys) {
   if (typeof item === 'number') {
-    return keys ? vdom.createIText(item.toString(), item.toString()) : vdom.createText(item.toString());
+    return keys ? vdom.createText(item.toString()).key(item.toString()) : vdom.createText(item.toString());
   } else if (Array.isArray(item)) {
     var result = [];
     for (var i = 0; i < item.length; i++) {
@@ -32,15 +24,15 @@ function gen(item, keys) {
     }
     return result;
   } else {
-    var e = keys ? vdom.createIElement(item.key, 'div') : vdom.createElement('div');
-    e.children = gen(item.children);
+    var e = keys ? vdom.createElement('div').key(item.key) : vdom.createElement('div');
+    e.children(gen(item.children));
     return e;
   }
 }
 
 function checkInnerHtmlEquals(ax, bx) {
-  var a = vdom.createIElement(0, 'div');
-  var b = vdom.createIElement(0, 'div');
+  var a = vdom.createElement('div').key(0);
+  var b = vdom.createElement('div').key(0);
   a.children = ax;
   b.children = bx;
 
@@ -72,9 +64,9 @@ describe('render', function() {
   it('should create div with 1 attribute', function() {
     var f = document.createDocumentFragment();
     var a = vdom.createElement('div');
-    a.attrs = {
+    a.attrs({
       a: '1'
-    };
+    });
     injectVNode(f, a, null);
     expect(f.firstChild.hasAttributes()).to.be.true();
     expect(f.firstChild.getAttribute('a')).to.be.equal('1');
@@ -82,11 +74,10 @@ describe('render', function() {
 
   it('should create div with 2 attributes', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    a.attrs = {
+    var a = vdom.createElement('div').attrs({
       a: '1',
       b: '2'
-    };
+    });
     injectVNode(f, a, null);
     expect(f.firstChild.hasAttributes()).to.be.true();
     expect(f.firstChild.getAttribute('a')).to.be.equal('1');
@@ -95,21 +86,19 @@ describe('render', function() {
 
   it('should create div with 1 style', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    a.style = {
+    var a = vdom.createElement('div').style({
       top: '10px'
-    };
+    });
     injectVNode(f, a, null);
     expect(f.firstChild.style.top).to.be.equal('10px');
   });
 
   it('should create div with 2 styles', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    a.style = {
+    var a = vdom.createElement('div').style({
       top: '10px',
       left: '20px'
-    };
+    });
     injectVNode(f, a, null);
     expect(f.firstChild.style.top).to.be.equal('10px');
     expect(f.firstChild.style.left).to.be.equal('20px');
@@ -117,8 +106,7 @@ describe('render', function() {
 
   it('should create div with 1 class', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    a.classes = ['a'];
+    var a = vdom.createElement('div').classes(['a']);
     injectVNode(f, a, null);
     expect(f.firstChild.classList.length).to.be.equal(1);
     expect(f.firstChild.classList[0]).to.be.equal('a');
@@ -126,8 +114,7 @@ describe('render', function() {
 
   it('should create div with 2 classes', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    a.classes = ['a', 'b'];
+    var a = vdom.createElement('div').classes(['a', 'b']);
     injectVNode(f, a, null);
     expect(f.firstChild.classList.length).to.be.equal(2);
     expect(f.firstChild.classList[0]).to.be.equal('a');
@@ -136,19 +123,17 @@ describe('render', function() {
 
   it('should create div with 1 child', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('span');
-    a.children = [b];
+    var a = vdom.createElement('div').children([vdom.createElement('span')]);
     injectVNode(f, a, null);
     expect(f.firstChild.childNodes.length).to.be.equal(1);
   });
 
   it('should create div with 2 children', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('span');
-    var c = vdom.createElement('span');
-    a.children = [b, c];
+    var a = vdom.createElement('div').children([
+      vdom.createElement('span'),
+      vdom.createElement('span')
+    ]);
     injectVNode(f, a, null);
     expect(f.firstChild.childNodes.length).to.be.equal(2);
   });
@@ -167,8 +152,7 @@ describe('update attrs', function() {
   it('null => {}', function() {
     var f = document.createDocumentFragment();
     var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    b.attrs = {};
+    var b = vdom.createElement('div').attrs({});
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.hasAttributes()).to.be.false();
@@ -176,9 +160,8 @@ describe('update attrs', function() {
 
   it('{} => null', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
+    var a = vdom.createElement('div').attrs({});
     var b = vdom.createElement('div');
-    a.attrs = {};
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.hasAttributes()).to.be.false();
@@ -186,10 +169,8 @@ describe('update attrs', function() {
 
   it('{} => {}', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    a.attrs = {};
-    b.attrs = {};
+    var a = vdom.createElement('div').attrs({});
+    var b = vdom.createElement('div').attrs({});
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.hasAttributes()).to.be.false();
@@ -198,8 +179,7 @@ describe('update attrs', function() {
   it('null => {a: 1}', function() {
     var f = document.createDocumentFragment();
     var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    b.attrs = {a: '1'};
+    var b = vdom.createElement('div').attrs({a: '1'});
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.hasAttributes()).to.be.true();
@@ -208,10 +188,8 @@ describe('update attrs', function() {
 
   it('{} => {a: 1}', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    a.attrs = {};
-    b.attrs = {a: '1'};
+    var a = vdom.createElement('div').attrs({});
+    var b = vdom.createElement('div').attrs({a: '1'});
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.hasAttributes()).to.be.true();
@@ -220,10 +198,8 @@ describe('update attrs', function() {
 
   it('{} => {a: 1, b: 2}', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    a.attrs = {};
-    b.attrs = {a: '1', b: '2'};
+    var a = vdom.createElement('div').attrs({});
+    var b = vdom.createElement('div').attrs({a: '1', b: '2'});
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.hasAttributes()).to.be.true();
@@ -233,10 +209,8 @@ describe('update attrs', function() {
 
   it('{} => {a: 1, b: 2, c: 3}', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    a.attrs = {};
-    b.attrs = {a: '1', b: '2', c: '3'};
+    var a = vdom.createElement('div').attrs({});
+    var b = vdom.createElement('div').attrs({a: '1', b: '2', c: '3'});
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.hasAttributes()).to.be.true();
@@ -247,9 +221,8 @@ describe('update attrs', function() {
 
   it('{a: 1} => null', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
+    var a = vdom.createElement('div').attrs({a: '1'});
     var b = vdom.createElement('div');
-    a.attrs = {a: '1'};
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.hasAttributes()).to.be.false();
@@ -257,10 +230,8 @@ describe('update attrs', function() {
 
   it('{a: 1} => {}', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    a.attrs = {a: '1'};
-    b.attrs = {};
+    var a = vdom.createElement('div').attrs({a: '1'});
+    var b = vdom.createElement('div').attrs({});
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.hasAttributes()).to.be.false();
@@ -268,10 +239,8 @@ describe('update attrs', function() {
 
   it('{a: 1, b: 2} => {}', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    a.attrs = {a: '1', b: '2'};
-    b.attrs = {};
+    var a = vdom.createElement('div').attrs({a: '1', b: '2'});
+    var b = vdom.createElement('div').attrs({});
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.hasAttributes()).to.be.false();
@@ -279,10 +248,8 @@ describe('update attrs', function() {
 
   it('{a: 1} => {b: 2}', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    a.attrs = {a: '1'};
-    b.attrs = {b: '2'};
+    var a = vdom.createElement('div').attrs({a: '1'});
+    var b = vdom.createElement('div').attrs({b: '2'});
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.hasAttributes()).to.be.true();
@@ -292,10 +259,8 @@ describe('update attrs', function() {
 
   it('{a: 1, b: 2} => {c: 3: d: 4}', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    a.attrs = {a: '1', b: '2'};
-    b.attrs = {c: '3', d: '4'};
+    var a = vdom.createElement('div').attrs({a: '1', b: '2'});
+    var b = vdom.createElement('div').attrs({c: '3', d: '4'});
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.hasAttributes()).to.be.true();
@@ -307,10 +272,8 @@ describe('update attrs', function() {
 
   it('{a: 1} => {a: 10}', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    a.attrs = {a: '1'};
-    b.attrs = {a: '10'};
+    var a = vdom.createElement('div').attrs({a: '1'});
+    var b = vdom.createElement('div').attrs({a: '10'});
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.hasAttributes()).to.be.true();
@@ -319,10 +282,8 @@ describe('update attrs', function() {
 
   it('{a: 1, b: 2} => {a: 10, b: 20}', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    a.attrs = {a: '1', b: '2'};
-    b.attrs = {a: '10', b: '20'};
+    var a = vdom.createElement('div').attrs({a: '1', b: '2'});
+    var b = vdom.createElement('div').attrs({a: '10', b: '20'});
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.hasAttributes()).to.be.true();
@@ -344,8 +305,7 @@ describe('update classes', function() {
   it('null => []', function() {
     var f = document.createDocumentFragment();
     var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    b.classes = [];
+    var b = vdom.createElement('div').classes([]);
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.classList.length).to.be.equal(0);
@@ -353,9 +313,8 @@ describe('update classes', function() {
 
   it('[] => null', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
+    var a = vdom.createElement('div').classes([]);
     var b = vdom.createElement('div');
-    a.classes = [];
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.classList.length).to.be.equal(0);
@@ -363,10 +322,8 @@ describe('update classes', function() {
 
   it('[] => []', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    a.classes = [];
-    b.classes = [];
+    var a = vdom.createElement('div').classes([]);
+    var b = vdom.createElement('div').classes([]);
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.classList.length).to.be.equal(0);
@@ -375,8 +332,7 @@ describe('update classes', function() {
   it('null => [1]', function() {
     var f = document.createDocumentFragment();
     var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    b.classes = ['1'];
+    var b = vdom.createElement('div').classes(['1']);
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.classList.length).to.be.equal(1);
@@ -385,10 +341,8 @@ describe('update classes', function() {
 
   it('[] => [1]', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    a.classes = [];
-    b.classes = ['1'];
+    var a = vdom.createElement('div').classes([]);
+    var b = vdom.createElement('div').classes(['1']);
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.classList.length).to.be.equal(1);
@@ -397,10 +351,8 @@ describe('update classes', function() {
 
   it('[] => [1, 2]', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    a.classes = [];
-    b.classes = ['1', '2'];
+    var a = vdom.createElement('div').classes([]);
+    var b = vdom.createElement('div').classes(['1', '2']);
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.classList.length).to.be.equal(2);
@@ -410,9 +362,8 @@ describe('update classes', function() {
 
   it('[1] => null', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
+    var a = vdom.createElement('div').classes(['1']);
     var b = vdom.createElement('div');
-    a.classes = ['1'];
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.classList.length).to.be.equal(0);
@@ -420,10 +371,8 @@ describe('update classes', function() {
 
   it('[1] => []', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    a.classes = ['1'];
-    b.classes = [];
+    var a = vdom.createElement('div').classes(['1']);
+    var b = vdom.createElement('div').classes([]);
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.classList.length).to.be.equal(0);
@@ -431,10 +380,8 @@ describe('update classes', function() {
 
   it('[1, 2] => []', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    a.classes = ['1', '2'];
-    b.classes = [];
+    var a = vdom.createElement('div').classes(['1', '2']);
+    var b = vdom.createElement('div').classes([]);
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.classList.length).to.be.equal(0);
@@ -442,10 +389,8 @@ describe('update classes', function() {
 
   it('[1] => [10]', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    a.classes = ['1'];
-    b.classes = ['10'];
+    var a = vdom.createElement('div').classes(['1']);
+    var b = vdom.createElement('div').classes(['10']);
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.classList.length).to.be.equal(1);
@@ -454,10 +399,8 @@ describe('update classes', function() {
 
   it('[1, 2] => [10, 20]', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    a.classes = ['1', '2'];
-    b.classes = ['10', '20'];
+    var a = vdom.createElement('div').classes(['1', '2']);
+    var b = vdom.createElement('div').classes(['10', '20']);
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.classList.length).to.be.equal(2);
@@ -467,10 +410,8 @@ describe('update classes', function() {
 
   it('[1, 2, 3, 4, 5] => [10, 20, 30, 40, 50]', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    a.classes = ['1', '2', '3', '4', '5'];
-    b.classes = ['10', '20', '30', '40', '50'];
+    var a = vdom.createElement('div').classes(['1', '2', '3', '4', '5']);
+    var b = vdom.createElement('div').classes(['10', '20', '30', '40', '50']);
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.classList.length).to.be.equal(5);
@@ -495,8 +436,7 @@ describe('update style', function() {
   it('null => {}', function() {
     var f = document.createDocumentFragment();
     var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    b.style = {};
+    var b = vdom.createElement('div').style({});
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.style.cssText).to.be.empty();
@@ -504,10 +444,8 @@ describe('update style', function() {
 
   it('{} => {}', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    a.style = {};
-    b.style = {};
+    var a = vdom.createElement('div').style({});
+    var b = vdom.createElement('div').style({});
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.style.cssText).to.be.empty();
@@ -515,9 +453,8 @@ describe('update style', function() {
 
   it('{} => null', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
+    var a = vdom.createElement('div').style({});
     var b = vdom.createElement('div');
-    a.style = {};
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.style.cssText).to.be.empty();
@@ -526,8 +463,7 @@ describe('update style', function() {
   it('null => {top: 10px}', function() {
     var f = document.createDocumentFragment();
     var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    b.style = {top: '10px'};
+    var b = vdom.createElement('div').style({top: '10px'});
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.style.top).to.be.equal('10px');
@@ -535,10 +471,8 @@ describe('update style', function() {
 
   it('{} => {top: 10px}', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    a.style = {};
-    b.style = {top: '10px'};
+    var a = vdom.createElement('div').style({});
+    var b = vdom.createElement('div').style({top: '10px'});
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.style.top).to.be.equal('10px');
@@ -546,10 +480,8 @@ describe('update style', function() {
 
   it('{} => {top: 10px, left: 10px}', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    a.style = {};
-    b.style = {top: '10px', left: '5px'};
+    var a = vdom.createElement('div').style({});
+    var b = vdom.createElement('div').style({top: '10px', left: '5px'});
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.style.top).to.be.equal('10px');
@@ -560,7 +492,7 @@ describe('update style', function() {
     var f = document.createDocumentFragment();
     var a = vdom.createElement('div');
     var b = vdom.createElement('div');
-    a.style = {top: '10px'};
+    a.style_ = {top: '10px'};
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.style.top).to.be.equal('');
@@ -568,10 +500,8 @@ describe('update style', function() {
 
   it('{top: 10px} => {}', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    a.style = {top: '10px'};
-    b.style = {};
+    var a = vdom.createElement('div').style({top: '10px'});
+    var b = vdom.createElement('div').style({});
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.style.top).to.be.equal('');
@@ -579,10 +509,8 @@ describe('update style', function() {
 
   it('{top: 10px, left: 5px} => {}', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    a.style = {top: '10px', left: '5px'};
-    b.style = {};
+    var a = vdom.createElement('div').style({top: '10px', left: '5px'});
+    var b = vdom.createElement('div').style({});
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.style.top).to.be.equal('');
@@ -591,10 +519,8 @@ describe('update style', function() {
 
   it('{top: 10px} => {left: 20px}', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    a.style = {top: '10px'};
-    b.style = {left: '20px'};
+    var a = vdom.createElement('div').style({top: '10px'});
+    var b = vdom.createElement('div').style({left: '20px'});
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.style.top).to.be.equal('');
@@ -603,10 +529,8 @@ describe('update style', function() {
 
   it('{top: 10px, left: 20px} => {right: 30px, bottom: 40px}', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    a.style = {top: '10px', left: '20px'};
-    b.style = {right: '30px', bottom: '40px'};
+    var a = vdom.createElement('div').style({top: '10px', left: '20px'});
+    var b = vdom.createElement('div').style({right: '30px', bottom: '40px'});
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.style.top).to.be.equal('');
@@ -617,10 +541,8 @@ describe('update style', function() {
 
   it('{top: 10px} => {top: 100px}', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    a.style = {top: '10px'};
-    b.style = {top: '100px'};
+    var a = vdom.createElement('div').style({top: '10px'});
+    var b = vdom.createElement('div').style({top: '100px'});
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.style.top).to.be.equal('100px');
@@ -628,10 +550,8 @@ describe('update style', function() {
 
   it('{top: 10px, left: 20px} => {top: 100px, left: 200px}', function() {
     var f = document.createDocumentFragment();
-    var a = vdom.createElement('div');
-    var b = vdom.createElement('div');
-    a.style = {top: '10px', left: '20px'};
-    b.style = {top: '100px', left: '200px'};
+    var a = vdom.createElement('div').style({top: '10px', left: '20px'});
+    var b = vdom.createElement('div').style({top: '100px', left: '200px'});
     injectVNode(f, a, null);
     a.update(b, null);
     expect(f.firstChild.style.top).to.be.equal('100px');
