@@ -1381,7 +1381,8 @@ vdom.VNode.prototype._updateExplicitChildren = function(a, b, context) {
 vdom._lis = function(a) {
   var p = a.slice(0);
   /** @type {!Array<number>} */
-  var result = [0];
+  var result = [];
+  result.push(0);
   var i;
   var il;
   var j;
