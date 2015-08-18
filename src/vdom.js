@@ -478,6 +478,8 @@ vdom.VNode.prototype.mount = function(node, context) {
       children = /** @type {!Array<!vdom.VNode>} */(children);
       /** @type {Node} */
       var child = node.firstChild;
+
+      // Adjacent text nodes should be separated by Comment node "<!---->", so we can properly mount them.
       var commentNode;
       while (child.constructor === Comment) {
         commentNode = child;
