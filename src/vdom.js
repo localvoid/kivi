@@ -522,7 +522,7 @@ vdom.VNode.prototype.update = function(b, context) {
   b.ref = ref;
 
   if ((flags & vdom.VNodeFlags.text) !== 0) {
-    if (this.data_ != b.data_) {
+    if (this.data_ !== b.data_) {
       this.ref.nodeValue = /** @type {string} */ (b.data_);
     }
   } else if ((flags & (vdom.VNodeFlags.element | vdom.VNodeFlags.component | vdom.VNodeFlags.root)) !== 0) {
