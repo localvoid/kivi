@@ -1,4 +1,4 @@
-goog.provide('kivi.utils');
+goog.provide('kivi.utils.shallowEqual');
 
 /**
  * Shallow Equal
