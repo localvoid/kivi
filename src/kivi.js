@@ -30,7 +30,7 @@ goog.provide('kivi.ComponentFlags');
 /**
  * Scheduler.
  *
- * Scheduler supports animation frame tasks, ans simple microtasks.
+ * Scheduler supports animation frame tasks, and simple microtasks.
  *
  * Animation frame tasks will be executed in batches, switching between write and read tasks until there
  * are no tasks left. Write tasks are sorted by their priority, tasks with the lowest priority value are
@@ -455,7 +455,10 @@ kivi.Invalidator.prototype.removeSubscription = function(subscription) {
  * Trigger invalidation.
  */
 kivi.Invalidator.prototype.invalidate = function() {
-  //if (this._lastInvalidatedTime < kivi.now()) {
+  var now = kivi.env.scheduler.clock;
+  if (this._lastInvalidatedTime < now) {
+    this._lastInvalidatedTime = now;
+
     var s = this._nextSubscription;
     while (s !== null) {
       if ((s.flags & kivi.InvalidatorSubscriptionFlags.component) !== 0) {
@@ -463,7 +466,7 @@ kivi.Invalidator.prototype.invalidate = function() {
       }
       s = s._iNext;
     }
-  //}
+  }
 };
 
 /**
