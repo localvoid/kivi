@@ -703,7 +703,7 @@ kivi.createSvgElement = function(tag) {
  * Create a [vdom.VNode] representing a [vdom.Component] node.
  *
  * @param {!kivi.CDescriptor} descriptor
- * @param {*} data
+ * @param {*=} data
  * @return {!kivi.VNode}
  */
 kivi.createComponent = function(descriptor, data) {
