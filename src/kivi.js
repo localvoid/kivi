@@ -494,36 +494,68 @@ kivi.InvalidatorSubscription.prototype.invalidate = function() {
  * Virtual DOM Node.
  *
  * @param {number} flags Flags.
- * @param {number|string|null} key Key that should be unique among its siblings. If the key is `null`, it
- *   means that the key is implicit. When [key] is implicit, all siblings should also have implicit keys,
- *   otherwise it will result in undefined behaviour in "production" mode, or runtime error in
- *   "development" mode.
  * @param {string|kivi.CDescriptor|null} tag Tag should contain html tag name if VNode represents an element,
  *   or reference to the [vdom.CDescriptor] if it represents a Component.
  * @param {*} data Data that will be transffered to Components. If VNode represents an element, [data] is
  *   used as a cache for className string that was built from [type] and [classes] properties.
- * @param {?string} type Immutable class name
- * @param {Object<string,string>} attrs HTMLElement attributes
- * @param {Object<string,*>} props HTMLElement properties
- * @param {Object<string,string>} style HTMLElement styles
- * @param {Array<string>} classes HTMLElement classes
- * @param {Array<!kivi.VNode>|string} children List of children nodes. If VNode is a Component, children
- *   nodes will be transferred to the Component.
  * @constructor
  * @struct
  * @final
  */
-kivi.VNode = function(flags, key, tag, data, type, attrs, props, style, classes, children) {
+kivi.VNode = function(flags, tag, data) {
   this.flags = flags;
-  this.key_ = key;
   this.tag = tag;
   this.data_ = data;
-  this.type_ = type;
-  this.attrs_ = attrs;
-  this.props_ = props;
-  this.style_ = style;
-  this.classes_ = classes;
-  this.children_ = children;
+  /**
+   * Key that should be unique among its siblings. If the key is `null`, it means that the key is implicit.
+   * When [key] is implicit, all siblings should also have implicit keys, otherwise it will result in
+   * undefined behaviour in "production" mode, or runtime error in "development" mode.
+   *
+   * @type {number|string|null}
+   */
+  this.key_ = null;
+
+  /**
+   * Immutable class name.
+   *
+   * @type {?string}
+   */
+  this.type_ = null;
+
+  /**
+   * HTMLElement attributes.
+   *
+   * @type {Object<string,string>}
+   */
+  this.attrs_ = null;
+
+  /**
+   * HTMLElement properties.
+   *
+   * @type {Object<string,*>}
+   */
+  this.props_ = null;
+
+  /**
+   * HTMLElement styles.
+   *
+   * @type {Object<string,string>}
+   */
+  this.style_ = null;
+
+  /**
+   * HTMLElement classes.
+   *
+   * @type {Array<string>}
+   */
+  this.classes_ = null;
+
+  /**
+   * List of children nodes. If VNode is a Component, children nodes will be transferred to the Component.
+   *
+   * @type {Array<!kivi.VNode>|string}
+   */
+  this.children_ = null;
 
   /**
    * Reference to the [Node]. It will be available after [vdom.VNode] is created or updated. Each time
@@ -676,7 +708,7 @@ kivi._removeAttr = function(node, key) {
  * @return {!kivi.VNode}
  */
 kivi.createText = function(content) {
-  return new kivi.VNode(kivi.VNodeFlags.text, null, null, content, null, null, null, null, null, null);
+  return new kivi.VNode(kivi.VNodeFlags.text, null, content);
 };
 
 /**
@@ -686,7 +718,7 @@ kivi.createText = function(content) {
  * @return {!kivi.VNode}
  */
 kivi.createElement = function(tag) {
-  return new kivi.VNode(kivi.VNodeFlags.element, null, tag, null, null, null, null, null, null, null);
+  return new kivi.VNode(kivi.VNodeFlags.element, tag, null);
 };
 
 /**
@@ -696,7 +728,7 @@ kivi.createElement = function(tag) {
  * @return {!kivi.VNode}
  */
 kivi.createSvgElement = function(tag) {
-  return new kivi.VNode(kivi.VNodeFlags.element | kivi.VNodeFlags.svg, null, tag, null, null, null, null, null, null, null);
+  return new kivi.VNode(kivi.VNodeFlags.element | kivi.VNodeFlags.svg, tag, null);
 };
 
 /**
@@ -708,7 +740,7 @@ kivi.createSvgElement = function(tag) {
  */
 kivi.createComponent = function(descriptor, data) {
   if (data === void 0) data = null;
-  return new kivi.VNode(kivi.VNodeFlags.component, null, descriptor, data, null, null, null, null, null, null);
+  return new kivi.VNode(kivi.VNodeFlags.component, descriptor, data);
 };
 
 /**
@@ -717,7 +749,7 @@ kivi.createComponent = function(descriptor, data) {
  * @return {!kivi.VNode}
  */
 kivi.createRoot = function() {
-  return new kivi.VNode(kivi.VNodeFlags.root, null, null, null, null, null, null, null, null, null);
+  return new kivi.VNode(kivi.VNodeFlags.root, null, null);
 };
 
 /**
