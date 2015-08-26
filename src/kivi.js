@@ -1389,7 +1389,7 @@ kivi._updateClasses = function(a, b, classList) {
           for (j = bStart; j <= bEnd; j++) {
             bCls = b[j];
 
-            if (aCls == bCls) {
+            if (aCls === bCls) {
               removed = false;
               visited[j - bStart] = true;
               break;
@@ -1859,7 +1859,7 @@ kivi.VNode.prototype._updateExplicitChildren = function(a, b, context) {
           next = nextPos < b.length ? b[nextPos].ref : null;
           this._insertChild(node, next, context);
         } else {
-          if (j < 0 || i != seq[j]) {
+          if (j < 0 || i !== seq[j]) {
             pos = i + bStart;
             node = b[pos];
             nextPos = pos + 1;
@@ -1870,7 +1870,7 @@ kivi.VNode.prototype._updateExplicitChildren = function(a, b, context) {
           }
         }
       }
-    } else if (aLength - removeOffset != bLength) {
+    } else if (aLength - removeOffset !== bLength) {
       for (i = bLength - 1; i >= 0; i--) {
         if (sources[i] === -1) {
           pos = i + bStart;
