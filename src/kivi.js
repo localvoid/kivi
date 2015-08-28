@@ -1000,7 +1000,7 @@ kivi.VNode.prototype.mount = function(node, context) {
 
       // Adjacent text nodes should be separated by Comment node "<!---->", so we can properly mount them.
       var commentNode;
-      while (child.constructor === Comment) {
+      while (child.nodeType === 8) {
         commentNode = child;
         child = child.nextSibling;
         node.removeChild(commentNode);
@@ -1008,7 +1008,7 @@ kivi.VNode.prototype.mount = function(node, context) {
       for (var i = 0; i < children.length; i++) {
         children[i].mount(/** @type {!Node} */(child), context);
         child = child.nextSibling;
-        while (child.constructor === Comment) {
+        while (child.nodeType === 8) {
           commentNode = child;
           child = child.nextSibling;
           node.removeChild(commentNode);
