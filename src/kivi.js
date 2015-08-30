@@ -26,6 +26,8 @@ goog.provide('kivi.createRoot');
 goog.provide('kivi.CDescriptor');
 goog.provide('kivi.Component');
 goog.provide('kivi.ComponentFlags');
+goog.provide('kivi.injectComponent');
+goog.provide('kivi.mountComponent');
 
 /**
  * Scheduler.
