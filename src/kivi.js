@@ -525,28 +525,28 @@ kivi.VNode = function(flags, tag, data) {
   this.type_ = null;
 
   /**
-   * HTMLElement attributes.
+   * Element attributes.
    *
    * @type {Object<string,string>}
    */
   this.attrs_ = null;
 
   /**
-   * HTMLElement properties.
+   * Element properties.
    *
    * @type {Object<string,*>}
    */
   this.props_ = null;
 
   /**
-   * HTMLElement styles.
+   * Element styles.
    *
    * @type {Object<string,string>}
    */
   this.style_ = null;
 
   /**
-   * HTMLElement classes.
+   * Element classes.
    *
    * @type {Array<string>}
    */
@@ -714,7 +714,7 @@ kivi.createText = function(content) {
 };
 
 /**
- * Create a [vdom.VNode] representing a [HTMLElement] node.
+ * Create a [vdom.VNode] representing a [Element] node.
  *
  * @param {string} tag
  * @return {!kivi.VNode}
@@ -895,7 +895,7 @@ kivi.VNode.prototype.render = function(context) {
   var keys;
   var flags = this.flags;
 
-  /** @type {HTMLElement} */
+  /** @type {Element} */
   var ref;
   /** @type {!CSSStyleDeclaration} */
   var style;
@@ -905,7 +905,7 @@ kivi.VNode.prototype.render = function(context) {
   var classes;
 
   if ((flags & (kivi.VNodeFlags.element | kivi.VNodeFlags.component | kivi.VNodeFlags.root)) !== 0) {
-    ref = /** @type {!HTMLElement} */(this.ref);
+    ref = /** @type {!Element} */(this.ref);
 
     if (this.attrs_ !== null) {
       keys = Object.keys(this.attrs_);
@@ -1030,8 +1030,8 @@ kivi.VNode.prototype.mount = function(node, context) {
  * @param {!kivi.Component} context
  */
 kivi.VNode.prototype.update = function(b, context) {
-  /** @type {HTMLElement} */
-  var ref = /** @type {HTMLElement} */ (this.ref);
+  /** @type {Element} */
+  var ref = /** @type {Element} */ (this.ref);
   var flags = this.flags;
   /** @type {string} */
   var classes;
@@ -1078,7 +1078,7 @@ kivi.VNode.prototype.update = function(b, context) {
         b.data_ = this.data_;
       }
     } else if (this.classes_ !== b.classes_) {
-      kivi._updateClasses(this.classes_, b.classes_, ref.classList);
+      kivi._updateClasses(this.classes_, b.classes_, /** @type {HTMLElement} */(ref).classList);
     }
 
     if ((flags & kivi.VNodeFlags.component) !== 0) {
