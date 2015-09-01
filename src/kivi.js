@@ -2021,6 +2021,9 @@ kivi.Component = function(flags, descriptor, parent, data, children, element) {
   /** @type {number} */
   this.flags = flags;
 
+  /** @type {number} */
+  this.mtime = 0;
+
   /** @type {!kivi.CDescriptor<D, S>} */
   this.descriptor = descriptor;
 
@@ -2060,6 +2063,7 @@ kivi.Component = function(flags, descriptor, parent, data, children, element) {
 kivi.Component.prototype.update = function() {
   if ((this.flags & kivi.ComponentFlags.shouldUpdateFlags) === kivi.ComponentFlags.shouldUpdateFlags) {
     this.descriptor.update(this);
+    this.mtime = kivi.env.scheduler.clock;
     this.flags &= ~kivi.ComponentFlags.dirty;
   }
 };
