@@ -1084,7 +1084,7 @@ kivi.VNode.prototype.update = function(b, context) {
     if ((flags & kivi.VNodeFlags.component) !== 0) {
       component = b.cref = /** @type {!kivi.Component} */(this.cref);
       if (component.descriptor.setData === null) {
-        if (this.data_ !== b.data) {
+        if (this.data_ !== b.data_) {
           component.data = b.data_;
           component.flags |= kivi.ComponentFlags.dirty;
         }
