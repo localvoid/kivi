@@ -1082,8 +1082,13 @@ kivi.VNode.prototype.update = function(b, context) {
     }
 
     if ((flags & kivi.VNodeFlags.component) !== 0) {
-      component = b.cref = /** @type {!kivi.Component} */ (this.cref);
-      if (this.data_ !== b.data_) {
+      component = b.cref = /** @type {!kivi.Component} */(this.cref);
+      if (component.descriptor.setData === null) {
+        if (this.data_ !== b.data) {
+          component.data = b.data_;
+          component.flags |= kivi.ComponentFlags.dirty;
+        }
+      } else {
         component.descriptor.setData(component, b.data_);
       }
       if (component.descriptor.setChildren !== null) {
@@ -1970,7 +1975,7 @@ kivi.CDescriptor = function() {
   this.init = null;
 
   /** @type {?function (!kivi.Component<D, S>, D)} */
-  this.setData = kivi.CDescriptor._defaultSetData;
+  this.setData = null;
 
   /** @type {?function (!kivi.Component<D, S>, (Array<!kivi.VNode>|string))} */
   this.setChildren = null;
@@ -2183,20 +2188,6 @@ kivi.Component.prototype.cancelTempSubscriptions = function() {
   while (s !== null) {
     s.invalidator.removeSubscription(s);
     s = s._sNext;
-  }
-};
-
-/**
- * Default setData method.
- *
- * @param {!kivi.Component<*, *>} component
- * @param {*} data
- * @protected
- */
-kivi.CDescriptor._defaultSetData = function(component, data) {
-  if (component.data !== data) {
-    component.data = data;
-    component.flags |= kivi.ComponentFlags.dirty;
   }
 };
 
