@@ -1048,13 +1048,13 @@ kivi.VNode.prototype.update = function(b, context) {
     }
   } else if ((flags & (kivi.VNodeFlags.element | kivi.VNodeFlags.component | kivi.VNodeFlags.root)) !== 0) {
     if (this.attrs_ !== b.attrs_) {
-      kivi._updateAttrs(this.attrs_, b.attrs_, /** @type {!Element} */ (ref));
+      kivi.updateAttrs(this.attrs_, b.attrs_, /** @type {!Element} */ (ref));
     }
     if (this.props_ !== b.props_) {
-      kivi._updateProps(this.props_, b.props_, /** @type {!Element} */ (ref));
+      kivi.updateProps(this.props_, b.props_, /** @type {!Element} */ (ref));
     }
     if (this.style_ !== b.style_) {
-      kivi._updateStyle(this.style_, b.style_, ref.style);
+      kivi.updateStyle(this.style_, b.style_, ref.style);
     }
 
     if ((flags & kivi.VNodeFlags.element) !== 0) {
@@ -1078,7 +1078,7 @@ kivi.VNode.prototype.update = function(b, context) {
         b.data_ = this.data_;
       }
     } else if (this.classes_ !== b.classes_) {
-      kivi._updateClasses(this.classes_, b.classes_, /** @type {HTMLElement} */(ref).classList);
+      kivi.updateClasses(this.classes_, b.classes_, /** @type {HTMLElement} */(ref).classList);
     }
 
     if ((flags & kivi.VNodeFlags.component) !== 0) {
@@ -1096,7 +1096,7 @@ kivi.VNode.prototype.update = function(b, context) {
       }
       /** @type {!kivi.Component} */(component).update();
     } else {
-      this._updateChildren(this.children_, b.children_, context);
+      this.updateChildren(this.children_, b.children_, context);
     }
   }
 };
@@ -1124,9 +1124,8 @@ kivi.VNode.prototype.dispose = function() {
  * @param {Object<string, string>} a Old attributes.
  * @param {Object<string, string>} b New attributes.
  * @param {!Element} node
- * @protected
  */
-kivi._updateAttrs = function(a, b, node) {
+kivi.updateAttrs = function(a, b, node) {
   var i, il;
   var key;
   var keys;
@@ -1181,9 +1180,8 @@ kivi._updateAttrs = function(a, b, node) {
  * @param {Object<string, *>} a Old properties.
  * @param {Object<string, *>} b New properties.
  * @param {!Element} node
- * @protected
  */
-kivi._updateProps = function(a, b, node) {
+kivi.updateProps = function(a, b, node) {
   var i, il;
   var key;
   var keys;
@@ -1238,9 +1236,8 @@ kivi._updateProps = function(a, b, node) {
  * @param {Object<string, string>} a Old style.
  * @param {Object<string, string>} b New style.
  * @param {!CSSStyleDeclaration} style
- * @protected
  */
-kivi._updateStyle = function(a, b, style) {
+kivi.updateStyle = function(a, b, style) {
   var i, il;
 
   /**
@@ -1297,9 +1294,8 @@ kivi._updateStyle = function(a, b, style) {
  * @param {Array<string>} a Old classes.
  * @param {Array<string>} b New classes.
  * @param {DOMTokenList} classList
- * @protected
  */
-kivi._updateClasses = function(a, b, classList) {
+kivi.updateClasses = function(a, b, classList) {
   var i;
   var aCls, bCls;
   var unchangedPosition;
@@ -1469,9 +1465,8 @@ kivi.VNode.prototype._removeChild = function(node) {
  * @param {Array<!kivi.VNode>|string} a Old children list.
  * @param {Array<!kivi.VNode>|string} b New children list.
  * @param {!kivi.Component} context Current context.
- * @private
  */
-kivi.VNode.prototype._updateChildren = function(a, b, context) {
+kivi.VNode.prototype.updateChildren = function(a, b, context) {
   var aNode;
   var bNode;
   var i = 0;
