@@ -72,20 +72,21 @@ kivi.Scheduler = function() {
 
   /** @private {!kivi._MutationObserverScheduler} */
   this._microtaskScheduler = new kivi._MutationObserverScheduler(function() {
-    self.flags &= ~kivi.SchedulerFlags.microtaskPending;
     self.flags |= kivi.SchedulerFlags.running;
 
     var tasks = self._microtasks;
-    if (tasks !== null) {
+    while (tasks !== null) {
       self._microtasks = null;
 
       for (var i = 0; i < tasks.length; i++) {
         tasks[i]();
       }
+
+      tasks = self._microtasks;
     }
 
     self.clock++;
-    self.flags &= ~kivi.SchedulerFlags.running;
+    self.flags &= ~(kivi.SchedulerFlags.microtaskPending | kivi.SchedulerFlags.running);
   });
 
   this._macrotaskTimeout = -1;
