@@ -89,9 +89,8 @@ kivi.Scheduler = function() {
     self.flags &= ~(kivi.SchedulerFlags.microtaskPending | kivi.SchedulerFlags.running);
   });
 
-  this._macrotaskTimeout = -1;
-
-  this._handleMacrotaskTick = function() {
+  /** @private {!kivi._PostMessageScheduler} */
+  this._macrotaskScheduler = new kivi._PostMessageScheduler(function() {
     self.flags &= ~kivi.SchedulerFlags.macrotaskPending;
     self.flags |= kivi.SchedulerFlags.running;
 
@@ -106,7 +105,7 @@ kivi.Scheduler = function() {
 
     self.clock++;
     self.flags &= ~kivi.SchedulerFlags.running;
-  };
+  });
 
   /** @private {function(number)} */
   this._handleAnimationFrame = function() {
@@ -249,7 +248,7 @@ kivi.Scheduler.prototype.scheduleMicrotask = function(cb) {
 kivi.Scheduler.prototype.scheduleMacrotask = function(cb) {
   if ((this.flags & kivi.SchedulerFlags.macrotaskPending) === 0) {
     this.flags |= kivi.SchedulerFlags.macrotaskPending;
-    this._macrotaskTimeout = setTimeout(this._handleMacrotaskTick, 0);
+    this._macrotaskScheduler.requestNextTick();
   }
 
   if (this._macrotasks === null) {
@@ -281,6 +280,35 @@ kivi._MutationObserverScheduler = function(cb) {
 kivi._MutationObserverScheduler.prototype.requestNextTick = function() {
   this._toggle ^= 1;
   this._node.data = this._toggle.toString();
+};
+
+/**
+ * PostMessage helper for macrotasks.
+ *
+ * @param {!Function} cb
+ * @constructor
+ * @struct
+ * @final
+ * @package
+ */
+kivi._PostMessageScheduler = function(cb) {
+  var message = this._message = '__pms' + Math.random().toString();
+
+  /** @param {Event} e */
+  var handler = function(e) {
+    e = /** @type {MessageEvent<string>} */(e);
+    if (e.source === window && e.data === message) {
+      cb();
+    }
+  };
+  window.addEventListener('message', handler);
+};
+
+/**
+ * Request a next tick.
+ */
+kivi._PostMessageScheduler.prototype.requestNextTick = function() {
+  window.postMessage(this._message, '*');
 };
 
 /**
