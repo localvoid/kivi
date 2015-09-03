@@ -59,6 +59,9 @@ kivi.Scheduler = function() {
   /** @private {Array<function()>} */
   this._microtasks = null;
 
+  /** @private {Array<function()>} */
+  this._macrotasks = null;
+
   /** @private {!kivi.SchedulerFrame} */
   this._currentFrame = new kivi.SchedulerFrame();
 
@@ -84,6 +87,25 @@ kivi.Scheduler = function() {
     self.clock++;
     self.flags &= ~kivi.SchedulerFlags.running;
   });
+
+  this._macrotaskTimeout = -1;
+
+  this._handleMacrotaskTick = function() {
+    self.flags &= ~kivi.SchedulerFlags.macrotaskPending;
+    self.flags |= kivi.SchedulerFlags.running;
+
+    var tasks = self._macrotasks;
+    if (tasks !== null) {
+      self._macrotasks = null;
+
+      for (var i = 0; i < tasks.length; i++) {
+        tasks[i]();
+      }
+    }
+
+    self.clock++;
+    self.flags &= ~kivi.SchedulerFlags.running;
+  };
 
   /** @private {function(number)} */
   this._handleAnimationFrame = function() {
@@ -171,9 +193,11 @@ kivi.Scheduler = function() {
 kivi.SchedulerFlags = {
   running:          0x0001,
   microtaskPending: 0x0002,
-  frametaskPending: 0x0004,
-  microtaskRunning: 0x0008,
-  frametaskRunning: 0x0010
+  macrotaskPending: 0x0004,
+  frametaskPending: 0x0008,
+  microtaskRunning: 0x0020,
+  macrotaskRunning: 0x0040,
+  frametaskRunning: 0x0080
 };
 
 /**
@@ -214,6 +238,24 @@ kivi.Scheduler.prototype.scheduleMicrotask = function(cb) {
   }
 
   this._microtasks.push(cb);
+};
+
+/**
+ * Schedule macrotask.
+ *
+ * @param {!function()} cb
+ */
+kivi.Scheduler.prototype.scheduleMacrotask = function(cb) {
+  if ((this.flags & kivi.SchedulerFlags.macrotaskPending) === 0) {
+    this.flags |= kivi.SchedulerFlags.macrotaskPending;
+    this._macrotaskTimeout = setTimeout(this._handleMacrotaskTick, 0);
+  }
+
+  if (this._macrotasks === null) {
+    this._macrotasks = [];
+  }
+
+  this._macrotasks.push(cb);
 };
 
 /**
@@ -1474,9 +1516,7 @@ kivi.VNode.prototype.updateChildren = function(a, b, context) {
 
   if (typeof a === 'string') {
     if (a !== b) {
-      var c = this.ref.firstChild;
-      if (c) c.nodeValue = /** @type {string} */(b);
-      else this.ref.textContent = b;
+      this.ref.textContent = b;
     }
   } else {
     a = /** @type {Array<!kivi.VNode>} */(a);
