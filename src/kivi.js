@@ -1567,11 +1567,27 @@ kivi.VNode.prototype.updateChildren = function(a, b, context) {
   var updated = false;
 
   if (typeof a === 'string') {
-    if (a !== b) {
-      var c = this.ref.firstChild;
-      if (c) c.nodeValue = /** @type {string} */(b);
-      else this.ref.textContent = b;
+    if (typeof b === 'string') {
+      if (a !== b) {
+        var c = this.ref.firstChild;
+        if (c) {
+          c.nodeValue = /** @type {string} */(b);
+        } else {
+          this.ref.textContent = b;
+        }
+      }
+    } else if (b !== null) {
+      while (i < b.length) {
+        this._insertChild(b[i++], null, context);
+      }
     }
+  } else if (typeof b === 'string') {
+    if (a !== null) {
+      while(i < a.length) {
+        this._removeChild(a[i++]);
+      }
+    }
+    this.ref.textContent = b;
   } else {
     a = /** @type {Array<!kivi.VNode>} */(a);
     b = /** @type {Array<!kivi.VNode>} */(b);
@@ -1588,7 +1604,6 @@ kivi.VNode.prototype.updateChildren = function(a, b, context) {
           aNode = a[0];
           bNode = b[0];
 
-          // Implicit key with same type or explicit key with same key.
           if (aNode._sameType(bNode)) {
             aNode.update(bNode, context);
           } else {
