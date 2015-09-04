@@ -1009,29 +1009,21 @@ kivi.VNode.prototype.render = function(context) {
       }
     }
 
-    if ((flags & (kivi.VNodeFlags.element | kivi.VNodeFlags.component)) !== 0) {
-      className = null;
-      if (this.type_ !== null) {
-        className = this.type_;
-      }
-      if (this.classes_ !== null) {
-        classes = this.classes_.join(' ');
-        className = (className === null) ? classes : className + ' ' + classes;
-      }
-      if (className !== null) {
+    className = null;
+    if (this.type_ !== null) {
+      className = this.type_;
+    }
+    if (this.classes_ !== null) {
+      classes = this.classes_.join(' ');
+      className = (className === null) ? classes : className + ' ' + classes;
+    }
+    if (className !== null) {
+      if ((flags & kivi.VNodeFlags.element) !== 0) {
         this.data_ = className;
         ref.className = className;
-      }
-    } else if ((flags & (kivi.VNodeFlags.root)) !== 0) {
-      className = null;
-      if (this.type_ !== null) {
-        className = this.type_;
-      }
-      if (this.classes_ !== null) {
-        classes = this.classes_.join(' ');
-        className = (className === null) ? classes : className + ' ' + classes;
-      }
-      if (className !== null) {
+      } else if ((flags & kivi.VNodeFlags.component) !== 0) {
+        ref.className = className;
+      } else {
         var oldClassName = ref.className;
         if (oldClassName === '') {
           ref.className = className;
