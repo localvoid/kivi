@@ -441,12 +441,17 @@ kivi.init = function(scheduler) {
  * @final
  */
 kivi.Invalidator = function() {
-  this._lastInvalidatedTime = kivi.env.scheduler.clock;
+  /**
+   * Last modification time.
+   *
+   * @type {number}
+   */
+  this.mtime = kivi.env.scheduler.clock;
 
-  /** @package {kivi.InvalidatorSubscription} */
-  this._nextSubscription = null;
-  /** @package {kivi.InvalidatorSubscription} */
-  this._nextTempSubscription = null;
+  /** @type {Array<!kivi.InvalidatorSubscription>} */
+  this._subscriptions = null;
+  /** @type {Array<!kivi.InvalidatorSubscription>} */
+  this._transientSubscriptions = null;
 };
 
 /**
@@ -463,15 +468,6 @@ kivi.InvalidatorSubscription = function(flags, invalidator, subscriber) {
   this.flags = flags;
   this.invalidator = invalidator;
   this.subscriber = subscriber;
-
-  /** @package {kivi.InvalidatorSubscription} */
-  this._iPrev = null;
-  /** @package {kivi.InvalidatorSubscription} */
-  this._iNext = null;
-  /** @package {kivi.InvalidatorSubscription} */
-  this._sPrev = null;
-  /** @package {kivi.InvalidatorSubscription} */
-  this._sNext = null;
 };
 
 /**
@@ -481,7 +477,7 @@ kivi.InvalidatorSubscription = function(flags, invalidator, subscriber) {
  */
 kivi.InvalidatorSubscriptionFlags = {
   component: 0x0001,
-  temp:      0x0002
+  transient: 0x0002
 };
 
 /**
@@ -490,18 +486,19 @@ kivi.InvalidatorSubscriptionFlags = {
  * @param {!kivi.InvalidatorSubscription} subscription
  */
 kivi.Invalidator.prototype.addSubscription = function(subscription) {
-  var next;
-  if ((subscription.flags & kivi.InvalidatorSubscriptionFlags.temp) === 0) {
-    next = this._nextSubscription;
-    this._nextSubscription = subscription;
+  var subscriptions;
+  if ((subscription.flags & kivi.InvalidatorSubscriptionFlags.transient) === 0) {
+    subscriptions = this._subscriptions;
+    if (subscriptions === null) {
+      this._subscriptions = subscriptions = [];
+    }
   } else {
-    next = this._nextTempSubscription;
-    this._nextTempSubscription = subscription;
+    subscriptions = this._transientSubscriptions;
+    if (subscriptions === null) {
+      this._transientSubscriptions = subscriptions = [];
+    }
   }
-  if (next !== null) {
-    next._iPrev = subscription;
-    subscription._iNext = next;
-  }
+  subscriptions.push(subscription);
 };
 
 /**
@@ -510,17 +507,16 @@ kivi.Invalidator.prototype.addSubscription = function(subscription) {
  * @param {!kivi.InvalidatorSubscription} subscription
  */
 kivi.Invalidator.prototype.removeSubscription = function(subscription) {
-  if (subscription._iPrev !== null) {
-    subscription._iPrev._iNext = subscription._iNext;
+  var subscriptions = ((subscription.flags & kivi.InvalidatorSubscriptionFlags.transient) === 0) ?
+      this._subscriptions : this._transientSubscriptions;
+
+  if (subscriptions.length === 1) {
+    subscriptions.pop();
   } else {
-    if ((subscription.flags & kivi.InvalidatorSubscriptionFlags.temp) === 0) {
-      this._nextSubscription = subscription._iNext;
-    } else {
-      this._nextTempSubscription = subscription._iNext;
+    var i = subscriptions.indexOf(subscription);
+    if (i !== -1) {
+      subscriptions[i] = subscriptions.pop();
     }
-  }
-  if (subscription._iNext !== null) {
-    subscription._iNext._iPrev = subscription._iPrev;
   }
 };
 
@@ -529,15 +525,25 @@ kivi.Invalidator.prototype.removeSubscription = function(subscription) {
  */
 kivi.Invalidator.prototype.invalidate = function() {
   var now = kivi.env.scheduler.clock;
-  if (this._lastInvalidatedTime < now) {
-    this._lastInvalidatedTime = now;
+  if (this.mtime < now) {
+    this.mtime = now;
 
-    var s = this._nextSubscription;
-    while (s !== null) {
-      if ((s.flags & kivi.InvalidatorSubscriptionFlags.component) !== 0) {
-        /** {!kivi.Component} */(s.subscriber).invalidate();
+    var subscriptions = this._subscriptions;
+    var i;
+
+    if (subscriptions !== null) {
+      for (i = 0; i < subscriptions.length; i++) {
+        subscriptions[i].invalidate();
       }
-      s = s._iNext;
+    }
+
+    subscriptions = this._transientSubscriptions;
+    if (subscriptions !== null) {
+      this._transientSubscriptions = null;
+
+      for (i = 0; i < subscriptions.length; i++) {
+        subscriptions[i].invalidate();
+      }
     }
   }
 };
@@ -547,8 +553,7 @@ kivi.Invalidator.prototype.invalidate = function() {
  */
 kivi.InvalidatorSubscription.prototype.cancel = function() {
   this.invalidator.removeSubscription(this);
-  var flags = this.flags;
-  if ((flags & kivi.InvalidatorSubscriptionFlags.component) !== 0) {
+  if ((this.flags & kivi.InvalidatorSubscriptionFlags.component) !== 0) {
     /** @type {!kivi.Component} */(this.subscriber).removeSubscription(this);
   }
 };
@@ -558,8 +563,9 @@ kivi.InvalidatorSubscription.prototype.cancel = function() {
  */
 kivi.InvalidatorSubscription.prototype.invalidate = function() {
   if ((this.flags & kivi.InvalidatorSubscriptionFlags.component) !== 0) {
-    var component = /** @type {!kivi.Component} */(this.subscriber);
-    component.invalidate();
+    /** {!kivi.Component} */(this.subscriber).invalidate();
+  } else {
+    /** {!function()} */(this.subscriber).call();
   }
 };
 
@@ -2114,11 +2120,11 @@ kivi.Component = function(flags, descriptor, parent, data, children, element) {
    */
   this.root = null;
 
-  /** @type {kivi.InvalidatorSubscription} */
-  this._nextSubscription = null;
+  /** @type {Array<!kivi.InvalidatorSubscription>} */
+  this._subscriptions = null;
 
-  /** @type {kivi.InvalidatorSubscription} */
-  this._nextTempSubscription = null;
+  /** @type {Array<!kivi.InvalidatorSubscription>} */
+  this._transientSubscriptions = null;
 };
 
 /**
@@ -2162,7 +2168,7 @@ kivi.Component.prototype.updateRoot = function(newRoot) {
 kivi.Component.prototype.invalidate = function() {
   if ((this.flags & kivi.ComponentFlags.dirty) === 0) {
     this.flags |= kivi.ComponentFlags.dirty;
-    this.cancelTempSubscriptions();
+    this.cancelTransientSubscriptions();
     kivi.env.scheduler.nextFrame().updateComponent(this);
   }
 };
@@ -2173,7 +2179,7 @@ kivi.Component.prototype.invalidate = function() {
 kivi.Component.prototype.dispose = function() {
   this.flags &= ~kivi.ComponentFlags.attached;
   this.cancelSubscriptions();
-  this.cancelTempSubscriptions();
+  this.cancelTransientSubscriptions();
   if (this.root !== null) {
     this.root.dispose();
   }
@@ -2191,30 +2197,28 @@ kivi.Component.prototype.dispose = function() {
 kivi.Component.prototype.subscribe = function(invalidator) {
   var s = new kivi.InvalidatorSubscription(kivi.InvalidatorSubscriptionFlags.component, invalidator, this);
   invalidator.addSubscription(s);
-  var next = this._nextSubscription;
-  if (next !== null) {
-    next._sPrev = s;
-    s._sNext = next;
+  var subscriptions = this._subscriptions;
+  if (subscriptions === null) {
+    this._subscriptions = subscriptions = [];
   }
-  this._nextSubscription = s;
+  subscriptions.push(s);
 };
 
 /**
- * Temporary subscribe to Invalidator object.
+ * Transient subscribe to Invalidator object.
  *
  * @param {!kivi.Invalidator} invalidator
  */
-kivi.Component.prototype.tempSubscribe = function(invalidator) {
+kivi.Component.prototype.transientSubscribe = function(invalidator) {
   var s = new kivi.InvalidatorSubscription(
-      kivi.InvalidatorSubscriptionFlags.component | kivi.InvalidatorSubscriptionFlags.temp,
+      kivi.InvalidatorSubscriptionFlags.component | kivi.InvalidatorSubscriptionFlags.transient,
       invalidator, this);
   invalidator.addSubscription(s);
-  var next = this._nextTempSubscription;
-  if (next !== null) {
-    next._sPrev = s;
-    s._sNext = next;
+  var subscriptions = this._transientSubscriptions;
+  if (subscriptions === null) {
+    this._transientSubscriptions = subscriptions = [];
   }
-  this._nextTempSubscription = s;
+  subscriptions.push(s);
 };
 
 /**
@@ -2223,17 +2227,13 @@ kivi.Component.prototype.tempSubscribe = function(invalidator) {
  * @param {!kivi.InvalidatorSubscription} subscription
  */
 kivi.Component.prototype.removeSubscription = function(subscription) {
-  if (subscription._sPrev !== null) {
-    subscription._sPrev._sNext = subscription._sNext;
+  var subscriptions = ((subscription.flags & kivi.InvalidatorSubscriptionFlags.transient) === 0) ?
+      this._subscriptions: this._transientSubscriptions;
+
+  if (subscriptions.length === 1) {
+    subscriptions.pop();
   } else {
-    if ((subscription.flags & kivi.InvalidatorSubscriptionFlags.temp) === 0) {
-      this._nextSubscription = subscription._sNext;
-    } else {
-      this._nextTempSubscription = subscription._sNext;
-    }
-  }
-  if (subscription._sNext !== null) {
-    subscription._sNext._sPrev = subscription._sPrev;
+    subscriptions[subscriptions.indexOf(subscription)] = subscriptions.pop();
   }
 };
 
@@ -2241,22 +2241,28 @@ kivi.Component.prototype.removeSubscription = function(subscription) {
  * Cancels all subscriptions.
  */
 kivi.Component.prototype.cancelSubscriptions = function() {
-  var s = this._nextSubscription;
-  while (s !== null) {
-    s.invalidator.removeSubscription(s);
-    s = s._sNext;
+  var subscriptions = this._subscriptions;
+  if (subscriptions !== null) {
+    for (var i = 0; i < subscriptions.length; i++) {
+      var s = subscriptions[i];
+      s.invalidator.removeSubscription(s);
+    }
   }
+  this._subscriptions = null;
 };
 
 /**
- * Cancels all temporary subscriptions.
+ * Cancels all transient subscriptions.
  */
-kivi.Component.prototype.cancelTempSubscriptions = function() {
-  var s = this._nextTempSubscription;
-  while (s !== null) {
-    s.invalidator.removeSubscription(s);
-    s = s._sNext;
+kivi.Component.prototype.cancelTransientSubscriptions = function() {
+  var subscriptions = this._transientSubscriptions;
+  if (subscriptions !== null) {
+    for (var i = 0; i < subscriptions.length; i++) {
+      var s = subscriptions[i];
+      s.invalidator.removeSubscription(s);
+    }
   }
+  this._transientSubscriptions = null;
 };
 
 /**
