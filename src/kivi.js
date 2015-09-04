@@ -2323,3 +2323,39 @@ kivi.mountComponent = function(descriptor, data, element) {
   c.update();
   return c;
 };
+
+/**
+ * Shortcut for `kivi.env.scheduler.nextFrame()`
+ *
+ * @returns {!kivi.SchedulerFrame}
+ */
+kivi.nextFrame = function() {
+  return kivi.env.scheduler.nextFrame();
+};
+
+/**
+ * Shortcut for `kivi.env.scheduler.currentFrame()`
+ *
+ * @returns {!kivi.SchedulerFrame}
+ */
+kivi.currentFrame = function() {
+  return kivi.env.scheduler.currentFrame();
+};
+
+/**
+ * Shortcut for `kivi.env.scheduler.scheduleMicrotask`
+ *
+ * @param {!function()} cb
+ */
+kivi.scheduleMicrotask = function(cb) {
+  kivi.env.scheduler.scheduleMicrotask(cb);
+};
+
+/**
+ * Shortcut for `kivi.env.scheduler.scheduleMacrotask`
+ *
+ * @param {!function()} cb
+ */
+kivi.scheduleMacrotask = function(cb) {
+  kivi.env.scheduler.scheduleMacrotask(cb);
+};
