@@ -1551,7 +1551,9 @@ kivi.VNode.prototype.updateChildren = function(a, b, context) {
 
   if (typeof a === 'string') {
     if (a !== b) {
-      this.ref.textContent = b;
+      var c = this.ref.firstChild;
+      if (c) c.nodeValue = /** @type {string} */(b);
+      else this.ref.textContent = b;
     }
   } else {
     a = /** @type {Array<!kivi.VNode>} */(a);
