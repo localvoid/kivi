@@ -660,16 +660,18 @@ kivi.VNode = function(flags, tag, data) {
  * @enum {number}
  */
 kivi.VNodeFlags = {
-  /** Flag indicating that [vdom.VNode] is a [Text] node. */
-  text:      0x0001,
-  /** Flag indicating that [vdom.VNode] is an [Element] node. */
-  element:   0x0002,
-  /** Flag indicating that [vdom.VNode] is a [vdom.Component] node. */
-  component: 0x0004,
-  /** Flag indicating that [vdom.VNode] is a root element of the [vdom.Component]. */
-  root:      0x0008,
-  /** Flag indicating that [vdom.VNode] represents node in svg namespace. */
-  svg:       0x0010
+  /** Flag indicating that [kivi.VNode] is a [Text] node. */
+  text:       0x0001,
+  /** Flag indicating that [kivi.VNode] is an [Element] node. */
+  element:    0x0002,
+  /** Flag indicating that [kivi.VNode] is a [kivi.Component] node. */
+  component:  0x0004,
+  /** Flag indicating that [kivi.VNode] is a root element of the [kivi.Component]. */
+  root:       0x0008,
+  /** Flag indicating that [kivi.VNode] represents node in svg namespace. */
+  svg:        0x0010,
+  /** Flag indicating that [kivi.VNode] should track similar children by keys. */
+  trackByKey: 0x0020
 };
 
 /**
@@ -920,6 +922,16 @@ kivi.VNode.prototype.children = function(children) {
 };
 
 /**
+ * Enable Track By Key mode for children reconciliation.
+ *
+ * @returns {!kivi.VNode}
+ */
+kivi.VNode.prototype.trackByKey = function() {
+  this.flags |= kivi.VNodeFlags.trackByKey;
+  return this;
+};
+
+/**
  * Checks if two nodes have the same type and they can be updated.
  *
  * @param {!kivi.VNode} b
@@ -927,7 +939,10 @@ kivi.VNode.prototype.children = function(children) {
  * @private
  */
 kivi.VNode.prototype._sameType = function(b) {
-  return (this.flags === b.flags && this.tag === b.tag && this.type_ === b.type_);
+  return (this.flags === b.flags &&
+          this.tag === b.tag &&
+          this.type_ === b.type_ &&
+          this.key_ === b.key_);
 };
 
 /**
@@ -1499,6 +1514,20 @@ kivi.VNode.prototype._insertChild = function(node, nextRef, context) {
 };
 
 /**
+ * Replace VNode.
+ *
+ * @param {!kivi.VNode} newNode New Node.
+ * @param {!kivi.VNode} refNode Old node.
+ * @param {!kivi.Component} context Current context.
+ * @private
+ */
+kivi.VNode.prototype._replaceChild = function(newNode, refNode, context) {
+  newNode.create(context);
+  this.ref.replaceChild(newNode.ref, refNode.ref);
+  newNode.render(context);
+};
+
+/**
  * Move VNode
  *
  * @param {!kivi.VNode} node Node to move.
@@ -1560,17 +1589,15 @@ kivi.VNode.prototype.updateChildren = function(a, b, context) {
           bNode = b[0];
 
           // Implicit key with same type or explicit key with same key.
-          if ((aNode.key_ === null && aNode._sameType(bNode)) ||
-              (aNode.key_ !== null && aNode.key_ === bNode.key_)) {
+          if (aNode._sameType(bNode)) {
             aNode.update(bNode, context);
           } else {
-            this._removeChild(aNode);
-            this._insertChild(bNode, null, context);
+            this._replaceChild(bNode, aNode, context);
           }
         } else if (a.length === 1) {
           // Fast path when a have 1 child.
           aNode = a[0];
-          if (aNode.key_ === null) {
+          if ((this.flags & kivi.VNodeFlags.trackByKey) === 0) {
             while (i < b.length) {
               bNode = b[i++];
               if (aNode._sameType(bNode)) {
@@ -1601,7 +1628,7 @@ kivi.VNode.prototype.updateChildren = function(a, b, context) {
         } else if (b.length === 1) {
           // Fast path when b have 1 child.
           bNode = b[0];
-          if (bNode.key_ === null) {
+          if ((this.flags & kivi.VNodeFlags.trackByKey) === 0) {
             while (i < a.length) {
               aNode = a[i++];
               if (aNode._sameType(bNode)) {
@@ -1632,10 +1659,10 @@ kivi.VNode.prototype.updateChildren = function(a, b, context) {
           }
         } else {
           // a and b have more than 1 child.
-          if (a[0].key_ === null) {
-            this._updateImplicitChildren(a, b, context);
+          if ((this.flags & kivi.VNodeFlags.trackByKey) === 0) {
+            this._updateChildren(a, b, context);
           } else {
-            this._updateExplicitChildren(a, b, context);
+            this._updateChildrenTrackingByKeys(a, b, context);
           }
         }
       }
@@ -1649,7 +1676,7 @@ kivi.VNode.prototype.updateChildren = function(a, b, context) {
 };
 
 /**
- * Update children with implicit keys.
+ * Update children.
  *
  * Any heuristics that is used in this algorithm is an undefined behaviour, and external dependencies should
  * not rely on the knowledge about this algorithm, because it can be changed in any time.
@@ -1659,7 +1686,7 @@ kivi.VNode.prototype.updateChildren = function(a, b, context) {
  * @param {!kivi.Component} context Current context.
  * @private
  */
-kivi.VNode.prototype._updateImplicitChildren = function(a, b, context) {
+kivi.VNode.prototype._updateChildren = function(a, b, context) {
   var aStart = 0;
   var bStart = 0;
   var aEnd = a.length - 1;
@@ -1699,7 +1726,7 @@ kivi.VNode.prototype._updateImplicitChildren = function(a, b, context) {
     aNode.update(bNode, context);
   }
 
-  // Iterate through the remaining nodes and if they have the same type, then updateVNode, otherwise just
+  // Iterate through the remaining nodes and if they have the same type, then update, otherwise just
   // remove the old node and insert the new one.
   while (aStart <= aEnd && bStart <= bEnd) {
     aNode = a[aStart++];
@@ -1707,8 +1734,7 @@ kivi.VNode.prototype._updateImplicitChildren = function(a, b, context) {
     if (aNode._sameType(bNode)) {
       aNode.update(bNode, context);
     } else {
-      this._insertChild(bNode, aNode.ref, context);
-      this._removeChild(aNode);
+      this._replaceChild(bNode, aNode, context);
     }
   }
 
@@ -1727,14 +1753,14 @@ kivi.VNode.prototype._updateImplicitChildren = function(a, b, context) {
 };
 
 /**
- * Update children with explicit keys.
+ * Update children tracking by keys.
  *
  * @param {!Array<!kivi.VNode>} a Old children list.
  * @param {!Array<!kivi.VNode>} b New children list.
  * @param {!kivi.Component} context Current context.
  * @private
  */
-kivi.VNode.prototype._updateExplicitChildren = function(a, b, context) {
+kivi.VNode.prototype._updateChildrenTrackingByKeys = function(a, b, context) {
   var aStart = 0;
   var bStart = 0;
   var aEnd = a.length - 1;

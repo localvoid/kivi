@@ -7,7 +7,7 @@ function injectVNode(parent, node, nextRef) {
 }
 
 function ee(key, c) {
-  return kivi.createElement('div').key(key).children(c === void 0 ? null : c);
+  return kivi.createElement('div').key(key).trackByKey().children(c === void 0 ? null : c);
 }
 
 function ei(c) {
@@ -26,6 +26,9 @@ function gen(item, keys) {
   } else {
     var e = keys ? kivi.createElement('div').key(item.key) : kivi.createElement('div');
     e.children(gen(item.children));
+    if (keys) {
+      e.trackByKey();
+    }
     return e;
   }
 }
