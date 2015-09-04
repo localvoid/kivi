@@ -1137,11 +1137,7 @@ kivi.VNode.prototype.update = function(b, context) {
           b.data_ = className;
         }
         if (this.data_ !== b.data_) {
-          if (b.data_ === null) {
-            ref.className = '';
-          } else {
-            ref.className = className;
-          }
+          ref.className = (b.data_ === null) ? '' : className;
         }
       } else {
         b.data_ = this.data_;
