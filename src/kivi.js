@@ -142,7 +142,7 @@ kivi.Scheduler = function() {
               for (j = 0; j < group.length; j++) {
                 task = group[j];
                 if (task.constructor === kivi.Component) {
-                  /** {!kivi.Component} */(task).sync();
+                  /** {!kivi.Component} */(task).update();
                 } else {
                   /** {!function()} */(task).call();
                 }
@@ -157,7 +157,7 @@ kivi.Scheduler = function() {
           for (i = 0; i < group.length; i++) {
             task = group[i];
             if (task.constructor === kivi.Component) {
-              /** {!kivi.Component} */(task).sync();
+              /** {!kivi.Component} */(task).update();
             } else {
               /** {!function()} */(task).call();
             }
@@ -1112,7 +1112,7 @@ kivi.VNode.prototype.render = function(context) {
     }
 
     if ((flags & kivi.VNodeFlags.component) !== 0) {
-      /** @type {!kivi.Component} */(this.cref).sync();
+      /** @type {!kivi.Component} */(this.cref).update();
     } else if (this.children_ !== null) {
       var children = this.children_;
       if (typeof children === 'string') {
@@ -1166,7 +1166,7 @@ kivi.VNode.prototype.mount = function(node, context) {
 
   if ((flags & kivi.VNodeFlags.component) !== 0) {
     var cref = this.cref = kivi.Component.mount(/** @type {!kivi.CDescriptor} */(this.tag), this.data_, children, context, /** @type {!Element} */(node));
-    cref.sync();
+    cref.update();
   } else {
     if (children !== null && typeof children !== 'string' && children.length > 0) {
       children = /** @type {!Array<!kivi.VNode>} */(children);
@@ -1304,7 +1304,7 @@ kivi.VNode.prototype.sync = function(b, context) {
       if (component.descriptor.setChildren !== null) {
         component.descriptor.setChildren(component, b.children_);
       }
-      /** @type {!kivi.Component} */(component).sync();
+      /** @type {!kivi.Component} */(component).update();
     } else {
       this.syncChildren(this.children_, b.children_, context);
     }
@@ -2208,7 +2208,7 @@ kivi.CDescriptor = function() {
   this.setChildren = null;
 
   /** @type {?function (!kivi.Component<D, S>)} */
-  this.sync = null;
+  this.update = null;
 
   /** @type {?function (!kivi.Component<D, S>)} */
   this.invalidated = null;
@@ -2291,9 +2291,9 @@ kivi.Component = function(flags, descriptor, parent, data, children, element) {
 /**
  * Update component.
  */
-kivi.Component.prototype.sync = function() {
+kivi.Component.prototype.update = function() {
   if ((this.flags & kivi.ComponentFlags.shouldUpdateFlags) === kivi.ComponentFlags.shouldUpdateFlags) {
-    this.descriptor.sync(this);
+    this.descriptor.update(this);
     this.mtime = kivi.env.scheduler.clock;
     this.flags &= ~kivi.ComponentFlags.dirty;
   }
@@ -2483,7 +2483,7 @@ kivi.Component.mount = function(descriptor, data, children, context, element) {
 kivi.injectComponent = function(descriptor, data, container) {
   var c = kivi.Component.create(descriptor, data, null, null);
   container.appendChild(c.element);
-  c.sync();
+  c.update();
   return c;
 };
 
@@ -2497,7 +2497,7 @@ kivi.injectComponent = function(descriptor, data, container) {
  */
 kivi.mountComponent = function(descriptor, data, element) {
   var c = kivi.Component.mount(descriptor, data, null, null, /** @type {!Element} */(element));
-  c.sync();
+  c.update();
   return c;
 };
 
