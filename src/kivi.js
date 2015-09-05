@@ -198,12 +198,12 @@ kivi.Scheduler = function() {
  * @enum {number}
  */
 kivi.SchedulerFlags = {
-  running:          0x0001,
-  microtaskPending: 0x0002,
-  macrotaskPending: 0x0004,
+  running:          0x0100,
+  microtaskPending: 0x0001,
+  macrotaskPending: 0x0002,
   frametaskPending: 0x0008,
-  microtaskRunning: 0x0020,
-  macrotaskRunning: 0x0040,
+  microtaskRunning: 0x0010,
+  macrotaskRunning: 0x0020,
   frametaskRunning: 0x0080
 };
 
@@ -475,6 +475,10 @@ kivi.InvalidatorSubscription = function(flags, invalidator, subscriber) {
   this.flags = flags;
   this.invalidator = invalidator;
   this.subscriber = subscriber;
+
+  if (kivi.DEBUG) {
+    this._isCanceled = false;
+  }
 };
 
 /**
@@ -559,6 +563,12 @@ kivi.Invalidator.prototype.invalidate = function() {
  * Cancel subscription.
  */
 kivi.InvalidatorSubscription.prototype.cancel = function() {
+  if (kivi.DEBUG) {
+    if (this._isCanceled) {
+      throw 'InvalidatorSubscription is canceled more than one time.';
+    }
+    this._isCanceled = true;
+  }
   this.invalidator.removeSubscription(this);
   if ((this.flags & kivi.InvalidatorSubscriptionFlags.component) !== 0) {
     /** @type {!kivi.Component} */(this.subscriber).removeSubscription(this);
@@ -657,6 +667,12 @@ kivi.VNode = function(flags, tag, data) {
    * @type {kivi.Component}
    */
   this.cref = null;
+
+  if (kivi.DEBUG) {
+    this._isRendered = false;
+    this._isMounted = false;
+    this._isDisposed = false;
+  }
 };
 
 /**
@@ -765,6 +781,11 @@ kivi._setAttr = function(node, key, value) {
     node.setAttribute(key, value);
   } else {
     var details = kivi._namespacedAttrs[key];
+    if (kivi.DEBUG) {
+      if (details === void 0) {
+        throw `Invalid namespaced attribute $${key}}`;
+      }
+    }
     node.setAttributeNS(details.namespace, details.name, value);
   }
 };
@@ -783,6 +804,11 @@ kivi._removeAttr = function(node, key) {
     node.removeAttribute(key);
   } else {
     var details = kivi._namespacedAttrs[key];
+    if (kivi.DEBUG) {
+      if (details === void 0) {
+        throw `Invalid namespaced attribute $${key}}`;
+      }
+    }
     node.removeAttributeNS(details.namespace, details.name);
   }
 };
@@ -885,7 +911,7 @@ kivi.VNode.prototype.attrs = function(attrs) {
 /**
  * Set props.
  *
- * @param {Object<string,string>} props
+ * @param {Object<string,*>} props
  * @returns {!kivi.VNode}
  */
 kivi.VNode.prototype.props = function(props) {
@@ -918,7 +944,7 @@ kivi.VNode.prototype.classes = function(classes) {
 /**
  * Set children.
  *
- * @param {Array<kivi.VNode>|string} children
+ * @param {Array<!kivi.VNode>|string} children
  * @returns {!kivi.VNode}
  */
 kivi.VNode.prototype.children = function(children) {
@@ -956,6 +982,12 @@ kivi.VNode.prototype._sameType = function(b) {
  * @param {!kivi.Component} context
  */
 kivi.VNode.prototype.create = function(context) {
+  if (kivi.DEBUG) {
+    if (this.ref !== null) {
+      throw 'VNode cannot be created if it already has a reference to the DOM Node.';
+    }
+  }
+
   var flags = this.flags;
 
   if ((flags & kivi.VNodeFlags.text) !== 0) {
@@ -983,6 +1015,19 @@ kivi.VNode.prototype.create = function(context) {
  * @param {!kivi.Component} context
  */
 kivi.VNode.prototype.render = function(context) {
+  if (kivi.DEBUG) {
+    if (this.ref === null) {
+      throw 'VNode should be created before render.';
+    }
+    if (this._isRendered) {
+      throw 'VNode cannot be rendered twice.';
+    }
+    if (this._isMounted) {
+      throw 'VNode cannot be rendered after mount.';
+    }
+    this._isRendered = true;
+  }
+
   /** @type {number} */
   var i;
   /** @type {number} */
@@ -1088,6 +1133,19 @@ kivi.VNode.prototype.render = function(context) {
  * @param {!kivi.Component} context
  */
 kivi.VNode.prototype.mount = function(node, context) {
+  if (kivi.DEBUG) {
+    if (this.ref !== null) {
+      throw 'VNode cannot be mounted if it already has a reference to DOM Node.';
+    }
+    if (this._isRendered) {
+      throw 'VNode cannot be mounted after render.';
+    }
+    if (this._isMounted) {
+      throw 'VNode cannot be mounted twice.';
+    }
+    this._isMounted = true;
+  }
+
   var flags = this.flags;
   var children = this.children_;
   var i;
@@ -1123,6 +1181,11 @@ kivi.VNode.prototype.mount = function(node, context) {
         node.removeChild(commentNode);
       }
       for (i = 0; i < children.length; i++) {
+        if (kivi.DEBUG) {
+          if (!child) {
+            throw 'Failed to mount VNode. Cannot find matching node.';
+          }
+        }
         children[i].mount(/** @type {!Node} */(child), context);
         child = child.nextSibling;
         while (child.nodeType === 8) {
@@ -1145,6 +1208,14 @@ kivi.VNode.prototype.mount = function(node, context) {
  * @param {!kivi.Component} context
  */
 kivi.VNode.prototype.update = function(b, context) {
+  if (kivi.DEBUG) {
+    if (!(this._isRendered || this._isMounted)) {
+      throw 'VNode should be rendered or mounted before update.';
+    }
+    b._isRendered = this._isRendered;
+    b._isMounted = this._isMounted;
+  }
+
   /** @type {Element} */
   var ref = /** @type {Element} */ (this.ref);
   var flags = this.flags;
@@ -2215,6 +2286,10 @@ kivi.Component = function(flags, descriptor, parent, data, children, element) {
 
   /** @type {Array<!kivi.InvalidatorSubscription>} */
   this._transientSubscriptions = null;
+
+  if (kivi.DEBUG) {
+    this._isDisposed = false;
+  }
 };
 
 /**
@@ -2267,6 +2342,13 @@ kivi.Component.prototype.invalidate = function() {
  * Dispose Component.
  */
 kivi.Component.prototype.dispose = function() {
+  if (kivi.DEBUG) {
+    if (this._isDisposed) {
+      throw 'Component cannot be disposed twice.'
+    }
+    this._isDisposed = true;
+  }
+
   this.flags &= ~kivi.ComponentFlags.attached;
   this.cancelSubscriptions();
   this.cancelTransientSubscriptions();
@@ -2369,6 +2451,9 @@ kivi.Component.create = function(descriptor, data, children, context) {
   var c = new kivi.Component(kivi.ComponentFlags.shouldUpdateFlags, descriptor, context, data, children, element);
   if (descriptor.init !== null) {
     descriptor.init(c);
+  }
+  if (kivi.DEBUG) {
+    element._kiviComponent = c;
   }
   return c;
 };
