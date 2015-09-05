@@ -22,12 +22,12 @@ app.entry.d.update = function(c) {
   // `subscribe(d)` and `tempSubscribe(d)` are used to subscribe for
   // `Invalidator` objects.
   //
-  // Each time Component is invalidated, old temp subscriptions will be
-  // automatically canceled, so we just register a new one when something
-  // is changed.
-  c.tempSubscribe(c.data.dependency);
+  // Each time Component is invalidated, old transient subscriptions will
+  // be automatically canceled, so we just register a new one when
+  // something is changed.
+  c.transientSubscribe(c.data.dependency);
 
-  c.updateRoot(...);
+  c.syncVRoot(...);
 };
 ```
 
@@ -53,14 +53,14 @@ app.box.d.tag = 'span';
 // write phase.
 // First parameter is an instance of the Component.
 app.box.d.update = function(c) {
-  // updateRoot method is used to update internal representation using
+  // syncVRoot method is used to update internal representation using
   // Virtual DOM API.
-  c.updateRoot(kivi.createElement('span').children(c.data));
+  c.syncVRoot(kivi.createElement('span').children(c.data));
 };
 
 app.main.d = new vdom.CDescriptor();
 app.main.d.update = function(c) {
-  c.updateRoot(kivi.createRoot().children([
+  c.syncVRoot(kivi.createRoot().children([
     kivi.createElement('span').children('Hello '),
     kivi.createComponent(app.box.d, c.data)
   ]));
