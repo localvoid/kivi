@@ -2273,7 +2273,7 @@ kivi.Component = function(flags, descriptor, parent, data, children, element) {
 
   /**
    * Root node in the Components virtual tree.
-   * @type {kivi.VNode}
+   * @type {kivi.VNode|CanvasRenderingContext2D}
    */
   this.root = null;
 
