@@ -33,18 +33,20 @@ function gen(item, keys) {
   }
 }
 
-function checkInnerHtmlEquals(ax, bx) {
+function checkInnerHtmlEquals(ax, bx, cx) {
   var a = kivi.createElement('div');
   var b = kivi.createElement('div');
+  var c = kivi.createElement('div');
   a.children = ax;
   b.children = bx;
+  c.children = cx;
 
   var aDiv = document.createElement('div');
   var bDiv = document.createElement('div');
   injectVNode(aDiv, a, null);
   injectVNode(bDiv, b, null);
 
-  a.sync(b, null);
+  a.sync(c, null);
 
   expect(aDiv.innerHTML).to.be.equal(bDiv.innerHTML);
 }
@@ -713,7 +715,7 @@ var TESTS = [
 describe('syncChildren with keys', function() {
   TESTS.forEach(function(t) {
     var name = JSON.stringify(t[0]) + ' => ' + JSON.stringify(t[1]);
-    var testFn = function() { checkInnerHtmlEquals(gen(t[0], true), gen(t[1], true)); };
+    var testFn = function() { checkInnerHtmlEquals(gen(t[0], true), gen(t[1], true), gen(t[1], true)); };
 
     if (t.length === 3 && t[2].only === true) {
       it.only(name, testFn);
@@ -726,7 +728,7 @@ describe('syncChildren with keys', function() {
 describe('syncChildren without keys', function() {
   TESTS.forEach(function(t) {
     var name = JSON.stringify(t[0]) + ' => ' + JSON.stringify(t[1]);
-    var testFn = function() { checkInnerHtmlEquals(gen(t[0], false), gen(t[1], false)); };
+    var testFn = function() { checkInnerHtmlEquals(gen(t[0], false), gen(t[1], false), gen(t[1], false)); };
 
     if (t.length === 3 && t[2].only === true) {
       it.only(name, testFn);
