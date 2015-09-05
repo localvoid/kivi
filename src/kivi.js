@@ -30,6 +30,13 @@ goog.provide('kivi.injectComponent');
 goog.provide('kivi.mountComponent');
 
 /**
+ * @define {boolean} DEBUG is provided as a convenience so that debugging code
+ * that should not be included in a production js_binary can be easily stripped
+ * by specifying --define kivi.DEBUG=false to the JSCompiler.
+ */
+goog.define('kivi.DEBUG', true);
+
+/**
  * Scheduler.
  *
  * Scheduler supports animation frame tasks, and simple microtasks.
@@ -996,6 +1003,19 @@ kivi.VNode.prototype.render = function(context) {
   /** @type {?string} */
   var classes;
 
+  if (kivi.DEBUG) {
+    if (this.children_ !== null && typeof this.children_ !== 'string') {
+      if ((flags & kivi.VNodeFlags.trackByKey) !== 0) {
+        for (i = 0; i < this.children_.length; i++) {
+          if (this.children_[i].key_ === null) {
+            throw 'Failed to render VNode. Invalid VNode: rendering children with trackByKey requires that all' +
+            ' children have keys.';
+          }
+        }
+      }
+    }
+  }
+
   if ((flags & (kivi.VNodeFlags.element | kivi.VNodeFlags.component | kivi.VNodeFlags.root)) !== 0) {
     ref = /** @type {!Element} */(this.ref);
 
@@ -1072,7 +1092,20 @@ kivi.VNode.prototype.render = function(context) {
 kivi.VNode.prototype.mount = function(node, context) {
   var flags = this.flags;
   var children = this.children_;
+  var i;
 
+  if (kivi.DEBUG) {
+    if (children !== null && typeof children !== 'string') {
+      if ((flags & kivi.VNodeFlags.trackByKey) !== 0) {
+        for (i = 0; i < children.length; i++) {
+          if (children[i].key_ === null) {
+            throw 'Failed to mount VNode. Invalid VNode: mounting children with trackByKey requires that all' +
+            ' children have keys.';
+          }
+        }
+      }
+    }
+  }
   this.ref = node;
 
   if ((flags & kivi.VNodeFlags.component) !== 0) {
@@ -1091,7 +1124,7 @@ kivi.VNode.prototype.mount = function(node, context) {
         child = child.nextSibling;
         node.removeChild(commentNode);
       }
-      for (var i = 0; i < children.length; i++) {
+      for (i = 0; i < children.length; i++) {
         children[i].mount(/** @type {!Node} */(child), context);
         child = child.nextSibling;
         while (child.nodeType === 8) {
@@ -1123,6 +1156,34 @@ kivi.VNode.prototype.update = function(b, context) {
   var className;
   /** @type {!kivi.Component} */
   var component;
+
+  if (kivi.DEBUG) {
+    if (this.flags !== b.flags) {
+      throw `Failed to update VNode. Invalid VNode: flags does not match (old: ${this.flags}, new: ${b.flags})`;
+    }
+    if (this.tag !== b.tag) {
+      throw `Failed to update VNode. Invalid VNode: tags does not match (old: ${this.tag}, new: ${b.tag})`;
+    }
+    if (this.key_ !== b.key_) {
+      throw `Failed to update VNode. Invalid VNode: keys does not match (old: ${this.key_}, new: ${b.key_})`;
+    }
+    if (this.type_ !== b.type_) {
+      throw `Failed to update VNode. Invalid VNode: types does not match (old: ${this.type_}, new: ${b.type_})`;
+    }
+    if (b.ref !== null && this.ref !== b.ref) {
+      throw 'Failed to update VNode. Invalid VNode: reusing VNodes isn\'t allowed unless it has the same ref';
+    }
+    if (b.children_ !== null && typeof b.children_ !== 'string') {
+      if ((b.flags & kivi.VNodeFlags.trackByKey) !== 0) {
+        for (var i = 0; i < b.children_.length; i++) {
+          if (b.children_[i].key_ === null) {
+            throw 'Failed to update VNode. Invalid VNode: updating children with trackByKey requires that all' +
+                  ' children have keys.';
+          }
+        }
+      }
+    }
+  }
 
   b.ref = ref;
 
