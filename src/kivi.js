@@ -593,9 +593,7 @@ kivi.VNode = function(flags, tag, data) {
   this.tag = tag;
   this.data_ = data;
   /**
-   * Key that should be unique among its siblings. If the key is `null`, it means that the key is implicit.
-   * When [key] is implicit, all siblings should also have implicit keys, otherwise it will result in
-   * undefined behaviour in "production" mode, or runtime error in "development" mode.
+   * Key that should be unique among its siblings.
    *
    * @type {number|string|null}
    */
@@ -1009,7 +1007,7 @@ kivi.VNode.prototype.render = function(context) {
         for (i = 0; i < this.children_.length; i++) {
           if (this.children_[i].key_ === null) {
             throw 'Failed to render VNode. Invalid VNode: rendering children with trackByKey requires that all' +
-            ' children have keys.';
+                  ' children have keys.';
           }
         }
       }
@@ -1100,7 +1098,7 @@ kivi.VNode.prototype.mount = function(node, context) {
         for (i = 0; i < children.length; i++) {
           if (children[i].key_ === null) {
             throw 'Failed to mount VNode. Invalid VNode: mounting children with trackByKey requires that all' +
-            ' children have keys.';
+                  ' children have keys.';
           }
         }
       }
