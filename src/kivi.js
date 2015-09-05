@@ -142,7 +142,7 @@ kivi.Scheduler = function() {
               for (j = 0; j < group.length; j++) {
                 task = group[j];
                 if (task.constructor === kivi.Component) {
-                  /** {!kivi.Component} */(task).update();
+                  /** {!kivi.Component} */(task).sync();
                 } else {
                   /** {!function()} */(task).call();
                 }
@@ -157,7 +157,7 @@ kivi.Scheduler = function() {
           for (i = 0; i < group.length; i++) {
             task = group[i];
             if (task.constructor === kivi.Component) {
-              /** {!kivi.Component} */(task).update();
+              /** {!kivi.Component} */(task).sync();
             } else {
               /** {!function()} */(task).call();
             }
@@ -652,16 +652,16 @@ kivi.VNode = function(flags, tag, data) {
   this.children_ = null;
 
   /**
-   * Reference to the [Node]. It will be available after [vdom.VNode] is created or updated. Each time
-   * [vdom.VNode] is updated, reference to the [Node] is transferred from the previous node to the new one.
+   * Reference to the [Node]. It will be available after [vdom.VNode] is created or synced. Each time
+   * [vdom.VNode] is synced, reference to the [Node] is transferred from the previous node to the new one.
    *
    * @type {Node}
    */
   this.ref = null;
 
   /**
-   * Reference to the [vdom.Component]. It will be available after [vdom.VNode] is created or updated. Each
-   * time [vdom.VNode] is updated, reference to the [vdom.Component] is transferred from the previous node to
+   * Reference to the [vdom.Component]. It will be available after [vdom.VNode] is created or synced. Each
+   * time [vdom.VNode] is synced, reference to the [vdom.Component] is transferred from the previous node to
    * the new one.
    *
    * @type {kivi.Component}
@@ -963,13 +963,13 @@ kivi.VNode.prototype.trackByKey = function() {
 };
 
 /**
- * Checks if two nodes have the same type and they can be updated.
+ * Checks if two nodes can be synced.
  *
  * @param {!kivi.VNode} b
  * @return {boolean}
  * @private
  */
-kivi.VNode.prototype._sameType = function(b) {
+kivi.VNode.prototype._canSync = function(b) {
   return (this.flags === b.flags &&
           this.tag === b.tag &&
           this.type_ === b.type_ &&
@@ -1112,7 +1112,7 @@ kivi.VNode.prototype.render = function(context) {
     }
 
     if ((flags & kivi.VNodeFlags.component) !== 0) {
-      /** @type {!kivi.Component} */(this.cref).update();
+      /** @type {!kivi.Component} */(this.cref).sync();
     } else if (this.children_ !== null) {
       var children = this.children_;
       if (typeof children === 'string') {
@@ -1166,7 +1166,7 @@ kivi.VNode.prototype.mount = function(node, context) {
 
   if ((flags & kivi.VNodeFlags.component) !== 0) {
     var cref = this.cref = kivi.Component.mount(/** @type {!kivi.CDescriptor} */(this.tag), this.data_, children, context, /** @type {!Element} */(node));
-    cref.update();
+    cref.sync();
   } else {
     if (children !== null && typeof children !== 'string' && children.length > 0) {
       children = /** @type {!Array<!kivi.VNode>} */(children);
@@ -1199,18 +1199,18 @@ kivi.VNode.prototype.mount = function(node, context) {
 };
 
 /**
- * Update Virtual Node.
+ * Synchronize Virtual Node.
  *
- * When `this` node is updated with node `b`, `this` node should be considered as destroyed, and any access
- * to it after update is an undefined behaviour.
+ * When `this` node is synced with node `b`, `this` node should be considered as destroyed, and any access
+ * to it after synced is an undefined behaviour.
  *
  * @param {!kivi.VNode} b New node
  * @param {!kivi.Component} context
  */
-kivi.VNode.prototype.update = function(b, context) {
+kivi.VNode.prototype.sync = function(b, context) {
   if (kivi.DEBUG) {
     if (!(this._isRendered || this._isMounted)) {
-      throw 'VNode should be rendered or mounted before update.';
+      throw 'VNode should be rendered or mounted before sync.';
     }
     b._isRendered = this._isRendered;
     b._isMounted = this._isMounted;
@@ -1228,25 +1228,25 @@ kivi.VNode.prototype.update = function(b, context) {
 
   if (kivi.DEBUG) {
     if (this.flags !== b.flags) {
-      throw `Failed to update VNode. Invalid VNode: flags does not match (old: ${this.flags}, new: ${b.flags})`;
+      throw `Failed to sync VNode. Invalid VNode: flags does not match (old: ${this.flags}, new: ${b.flags})`;
     }
     if (this.tag !== b.tag) {
-      throw `Failed to update VNode. Invalid VNode: tags does not match (old: ${this.tag}, new: ${b.tag})`;
+      throw `Failed to sync VNode. Invalid VNode: tags does not match (old: ${this.tag}, new: ${b.tag})`;
     }
     if (this.key_ !== b.key_) {
-      throw `Failed to update VNode. Invalid VNode: keys does not match (old: ${this.key_}, new: ${b.key_})`;
+      throw `Failed to sync VNode. Invalid VNode: keys does not match (old: ${this.key_}, new: ${b.key_})`;
     }
     if (this.type_ !== b.type_) {
-      throw `Failed to update VNode. Invalid VNode: types does not match (old: ${this.type_}, new: ${b.type_})`;
+      throw `Failed to sync VNode. Invalid VNode: types does not match (old: ${this.type_}, new: ${b.type_})`;
     }
     if (b.ref !== null && this.ref !== b.ref) {
-      throw 'Failed to update VNode. Invalid VNode: reusing VNodes isn\'t allowed unless it has the same ref';
+      throw 'Failed to sync VNode. Invalid VNode: reusing VNodes isn\'t allowed unless it has the same ref';
     }
     if (b.children_ !== null && typeof b.children_ !== 'string') {
       if ((b.flags & kivi.VNodeFlags.trackByKey) !== 0) {
         for (var i = 0; i < b.children_.length; i++) {
           if (b.children_[i].key_ === null) {
-            throw 'Failed to update VNode. Invalid VNode: updating children with trackByKey requires that all' +
+            throw 'Failed to sync VNode. Invalid VNode: updating children with trackByKey requires that all' +
                   ' children have keys.';
           }
         }
@@ -1262,13 +1262,13 @@ kivi.VNode.prototype.update = function(b, context) {
     }
   } else if ((flags & (kivi.VNodeFlags.element | kivi.VNodeFlags.component | kivi.VNodeFlags.root)) !== 0) {
     if (this.attrs_ !== b.attrs_) {
-      kivi.updateAttrs(this.attrs_, b.attrs_, /** @type {!Element} */ (ref));
+      kivi.syncAttrs(this.attrs_, b.attrs_, /** @type {!Element} */ (ref));
     }
     if (this.props_ !== b.props_) {
-      kivi.updateProps(this.props_, b.props_, /** @type {!Element} */ (ref));
+      kivi.syncProps(this.props_, b.props_, /** @type {!Element} */ (ref));
     }
     if (this.style_ !== b.style_) {
-      kivi.updateStyle(this.style_, b.style_, ref.style);
+      kivi.syncStyle(this.style_, b.style_, ref.style);
     }
 
     if ((flags & kivi.VNodeFlags.element) !== 0) {
@@ -1288,7 +1288,7 @@ kivi.VNode.prototype.update = function(b, context) {
         b.data_ = this.data_;
       }
     } else if (this.classes_ !== b.classes_) {
-      kivi.updateClasses(this.classes_, b.classes_, /** @type {HTMLElement} */(ref).classList);
+      kivi.syncClasses(this.classes_, b.classes_, /** @type {HTMLElement} */(ref).classList);
     }
 
     if ((flags & kivi.VNodeFlags.component) !== 0) {
@@ -1304,9 +1304,9 @@ kivi.VNode.prototype.update = function(b, context) {
       if (component.descriptor.setChildren !== null) {
         component.descriptor.setChildren(component, b.children_);
       }
-      /** @type {!kivi.Component} */(component).update();
+      /** @type {!kivi.Component} */(component).sync();
     } else {
-      this.updateChildren(this.children_, b.children_, context);
+      this.syncChildren(this.children_, b.children_, context);
     }
   }
 };
@@ -1329,13 +1329,13 @@ kivi.VNode.prototype.dispose = function() {
 };
 
 /**
- * Update attributes.
+ * Synchronize attributes.
  *
  * @param {Object<string, string>} a Old attributes.
  * @param {Object<string, string>} b New attributes.
  * @param {!Element} node
  */
-kivi.updateAttrs = function(a, b, node) {
+kivi.syncAttrs = function(a, b, node) {
   var i, il;
   var key;
   var keys;
@@ -1350,7 +1350,7 @@ kivi.updateAttrs = function(a, b, node) {
         kivi._removeAttr(node, keys[i]);
       }
     } else {
-      // Remove and updateVNode attributes.
+      // Remove and update attributes.
       keys = Object.keys(a);
       for (i = 0, il = keys.length; i < il; i++) {
         key = keys[i];
@@ -1385,13 +1385,13 @@ kivi.updateAttrs = function(a, b, node) {
 };
 
 /**
- * Update properties.
+ * Synchronize properties.
  *
  * @param {Object<string, *>} a Old properties.
  * @param {Object<string, *>} b New properties.
  * @param {!Element} node
  */
-kivi.updateProps = function(a, b, node) {
+kivi.syncProps = function(a, b, node) {
   var i, il;
   var key;
   var keys;
@@ -1406,7 +1406,7 @@ kivi.updateProps = function(a, b, node) {
         node[keys[i]] = undefined;
       }
     } else {
-      // Remove and updateVNode attributes.
+      // Remove and update attributes.
       keys = Object.keys(a);
       for (i = 0, il = keys.length; i < il; i++) {
         key = keys[i];
@@ -1441,13 +1441,13 @@ kivi.updateProps = function(a, b, node) {
 };
 
 /**
- * Update styles.
+ * Synchronize styles.
  *
  * @param {Object<string, string>} a Old style.
  * @param {Object<string, string>} b New style.
  * @param {!CSSStyleDeclaration} style
  */
-kivi.updateStyle = function(a, b, style) {
+kivi.syncStyle = function(a, b, style) {
   var i, il;
 
   /**
@@ -1468,7 +1468,7 @@ kivi.updateStyle = function(a, b, style) {
         style.removeProperty(keys[i]);
       }
     } else {
-      // Remove and updateVNode styles.
+      // Remove and update styles.
       keys = Object.keys(a);
       for (i = 0, il = keys.length; i < il; i++) {
         key = keys[i];
@@ -1499,13 +1499,13 @@ kivi.updateStyle = function(a, b, style) {
 };
 
 /**
- * Update classes in the classList.
+ * Synchronize classes in the classList.
  *
  * @param {Array<string>} a Old classes.
  * @param {Array<string>} b New classes.
  * @param {DOMTokenList} classList
  */
-kivi.updateClasses = function(a, b, classList) {
+kivi.syncClasses = function(a, b, classList) {
   var i;
   var aCls, bCls;
   var unchangedPosition;
@@ -1680,21 +1680,17 @@ kivi.VNode.prototype._removeChild = function(node) {
 };
 
 /**
- * Update old children list [a] with the new one [b].
- *
- * Mixing children with explicit and implicit keys in one children list will result in undefined behaviour
- * in production mode. In development mode it will be checked for this conditions and if it is detected
- * that there are children with implicit and explicit keys, it will result in runtime error.
+ * Synchronize old children list [a] with the new one [b].
  *
  * @param {Array<!kivi.VNode>|string} a Old children list.
  * @param {Array<!kivi.VNode>|string} b New children list.
  * @param {!kivi.Component} context Current context.
  */
-kivi.VNode.prototype.updateChildren = function(a, b, context) {
+kivi.VNode.prototype.syncChildren = function(a, b, context) {
   var aNode;
   var bNode;
   var i = 0;
-  var updated = false;
+  var synced = false;
 
   if (typeof a === 'string') {
     if (typeof b === 'string') {
@@ -1734,8 +1730,8 @@ kivi.VNode.prototype.updateChildren = function(a, b, context) {
           aNode = a[0];
           bNode = b[0];
 
-          if (aNode._sameType(bNode)) {
-            aNode.update(bNode, context);
+          if (aNode._canSync(bNode)) {
+            aNode.sync(bNode, context);
           } else {
             this._replaceChild(bNode, aNode, context);
           }
@@ -1745,9 +1741,9 @@ kivi.VNode.prototype.updateChildren = function(a, b, context) {
           if ((this.flags & kivi.VNodeFlags.trackByKey) === 0) {
             while (i < b.length) {
               bNode = b[i++];
-              if (aNode._sameType(bNode)) {
-                aNode.update(bNode, context);
-                updated = true;
+              if (aNode._canSync(bNode)) {
+                aNode.sync(bNode, context);
+                synced = true;
                 break;
               }
               this._insertChild(bNode, aNode.ref, context);
@@ -1756,14 +1752,14 @@ kivi.VNode.prototype.updateChildren = function(a, b, context) {
             while (i < b.length) {
               bNode = b[i++];
               if (aNode.key_ === bNode.key_) {
-                aNode.update(bNode, context);
-                updated = true;
+                aNode.sync(bNode, context);
+                synced = true;
                 break;
               }
               this._insertChild(bNode, aNode.ref, context);
             }
           }
-          if (updated) {
+          if (synced) {
             while (i < b.length) {
               this._insertChild(b[i++], null, context);
             }
@@ -1776,9 +1772,9 @@ kivi.VNode.prototype.updateChildren = function(a, b, context) {
           if ((this.flags & kivi.VNodeFlags.trackByKey) === 0) {
             while (i < a.length) {
               aNode = a[i++];
-              if (aNode._sameType(bNode)) {
-                aNode.update(bNode, context);
-                updated = true;
+              if (aNode._canSync(bNode)) {
+                aNode.sync(bNode, context);
+                synced = true;
                 break;
               }
               this._removeChild(aNode);
@@ -1787,15 +1783,15 @@ kivi.VNode.prototype.updateChildren = function(a, b, context) {
             while (i < a.length) {
               aNode = a[i++];
               if (aNode.key_ === bNode.key_) {
-                aNode.update(bNode, context);
-                updated = true;
+                aNode.sync(bNode, context);
+                synced = true;
                 break;
               }
               this._removeChild(aNode);
             }
           }
 
-          if (updated) {
+          if (synced) {
             while (i < a.length) {
               this._removeChild(a[i++]);
             }
@@ -1805,9 +1801,9 @@ kivi.VNode.prototype.updateChildren = function(a, b, context) {
         } else {
           // a and b have more than 1 child.
           if ((this.flags & kivi.VNodeFlags.trackByKey) === 0) {
-            this._updateChildren(a, b, context);
+            this._syncChildren(a, b, context);
           } else {
-            this._updateChildrenTrackingByKeys(a, b, context);
+            this._syncChildrenTrackingByKeys(a, b, context);
           }
         }
       }
@@ -1821,7 +1817,7 @@ kivi.VNode.prototype.updateChildren = function(a, b, context) {
 };
 
 /**
- * Update children.
+ * Synchronize children.
  *
  * Any heuristics that is used in this algorithm is an undefined behaviour, and external dependencies should
  * not rely on the knowledge about this algorithm, because it can be changed in any time.
@@ -1831,7 +1827,7 @@ kivi.VNode.prototype.updateChildren = function(a, b, context) {
  * @param {!kivi.Component} context Current context.
  * @private
  */
-kivi.VNode.prototype._updateChildren = function(a, b, context) {
+kivi.VNode.prototype._syncChildren = function(a, b, context) {
   var aStart = 0;
   var bStart = 0;
   var aEnd = a.length - 1;
@@ -1841,49 +1837,49 @@ kivi.VNode.prototype._updateChildren = function(a, b, context) {
   var nextPos;
   var next;
 
-  // Update nodes with the same type at the beginning.
+  // Sync similar nodes at the beginning.
   while (aStart <= aEnd && bStart <= bEnd) {
     aNode = a[aStart];
     bNode = b[bStart];
 
-    if (!aNode._sameType(bNode)) {
+    if (!aNode._canSync(bNode)) {
       break;
     }
 
     aStart++;
     bStart++;
 
-    aNode.update(bNode, context);
+    aNode.sync(bNode, context);
   }
 
-  // Update nodes with the same type at the end.
+  // Sync similar nodes at the end.
   while (aStart <= aEnd && bStart <= bEnd) {
     aNode = a[aEnd];
     bNode = b[bEnd];
 
-    if (!aNode._sameType(bNode)) {
+    if (!aNode._canSync(bNode)) {
       break;
     }
 
     aEnd--;
     bEnd--;
 
-    aNode.update(bNode, context);
+    aNode.sync(bNode, context);
   }
 
-  // Iterate through the remaining nodes and if they have the same type, then update, otherwise just
+  // Iterate through the remaining nodes and if they have the same type, then sync, otherwise just
   // remove the old node and insert the new one.
   while (aStart <= aEnd && bStart <= bEnd) {
     aNode = a[aStart++];
     bNode = b[bStart++];
-    if (aNode._sameType(bNode)) {
-      aNode.update(bNode, context);
+    if (aNode._canSync(bNode)) {
+      aNode.sync(bNode, context);
     } else {
       this._replaceChild(bNode, aNode, context);
     }
   }
 
-  // All nodes from a are updated, insert the rest from b.
+  // All nodes from a are synced, insert the rest from b.
   while (aStart <= aEnd) {
     this._removeChild(a[aStart++]);
   }
@@ -1891,21 +1887,21 @@ kivi.VNode.prototype._updateChildren = function(a, b, context) {
   nextPos = bEnd + 1;
   next = nextPos < b.length ? b[nextPos].ref : null;
 
-  // All nodes from b are updated, remove the rest from a.
+  // All nodes from b are synced, remove the rest from a.
   while (bStart <= bEnd) {
     this._insertChild(b[bStart++], next, context);
   }
 };
 
 /**
- * Update children tracking by keys.
+ * Synchronize children tracking by keys.
  *
  * @param {!Array<!kivi.VNode>} a Old children list.
  * @param {!Array<!kivi.VNode>} b New children list.
  * @param {!kivi.Component} context Current context.
  * @private
  */
-kivi.VNode.prototype._updateChildrenTrackingByKeys = function(a, b, context) {
+kivi.VNode.prototype._syncChildrenTrackingByKeys = function(a, b, context) {
   var aStart = 0;
   var bStart = 0;
   var aEnd = a.length - 1;
@@ -1933,15 +1929,15 @@ kivi.VNode.prototype._updateChildrenTrackingByKeys = function(a, b, context) {
   // Algorithm that works on simple cases with basic list transformations.
   //
   // It tries to reduce the diff problem by simultaneously iterating from the beginning and the end of both
-  // lists, if keys are the same, they're updated, if node is moved from the beginning to the end of the
+  // lists, if keys are the same, they're synced, if node is moved from the beginning to the end of the
   // current cursor positions or vice versa it just performs move operation and continues to reduce the diff
   // problem.
   outer: do {
     stop = true;
 
-    // Update nodes with the same key at the beginning.
+    // Sync nodes with the same key at the beginning.
     while (aStartNode.key_ === bStartNode.key_) {
-      aStartNode.update(bStartNode, context);
+      aStartNode.sync(bStartNode, context);
       aStart++;
       bStart++;
       if (aStart > aEnd || bStart > bEnd) {
@@ -1952,9 +1948,9 @@ kivi.VNode.prototype._updateChildrenTrackingByKeys = function(a, b, context) {
       stop = false;
     }
 
-    // Update nodes with the same key at the end.
+    // Sync nodes with the same key at the end.
     while (aEndNode.key_ === bEndNode.key_) {
-      aEndNode.update(bEndNode, context);
+      aEndNode.sync(bEndNode, context);
       aEnd--;
       bEnd--;
       if (aStart > aEnd || bStart > bEnd) {
@@ -1965,9 +1961,9 @@ kivi.VNode.prototype._updateChildrenTrackingByKeys = function(a, b, context) {
       stop = false;
     }
 
-    // Move nodes from left to right.
+    // Move and sync nodes from left to right.
     while (aStartNode.key_ === bEndNode.key_) {
-      aStartNode.update(bEndNode, context);
+      aStartNode.sync(bEndNode, context);
       nextPos = bEnd + 1;
       next = nextPos < b.length ? b[nextPos].ref : null;
       this._moveChild(bEndNode, next);
@@ -1982,9 +1978,9 @@ kivi.VNode.prototype._updateChildrenTrackingByKeys = function(a, b, context) {
       continue outer;
     }
 
-    // Move nodes from right to left.
+    // Move and sync nodes from right to left.
     while (aEndNode.key_ === bStartNode.key_) {
-      aEndNode.update(bStartNode, context);
+      aEndNode.sync(bStartNode, context);
       this._moveChild(bStartNode, aStartNode.ref);
       aEnd--;
       bStart++;
@@ -1998,22 +1994,22 @@ kivi.VNode.prototype._updateChildrenTrackingByKeys = function(a, b, context) {
   } while (!stop && aStart <= aEnd && bStart <= bEnd);
 
   if (aStart > aEnd) {
-    // All nodes from a are updated, insert the rest from b.
+    // All nodes from a are synced, insert the rest from b.
     nextPos = bEnd + 1;
     next = nextPos < b.length ? b[nextPos].ref : null;
     while (bStart <= bEnd) {
       this._insertChild(b[bStart++], next, context);
     }
   } else if (bStart > bEnd) {
-    // All nodes from b are updated, remove the rest from a.
+    // All nodes from b are synced, remove the rest from a.
     while (aStart <= aEnd) {
       this._removeChild(a[aStart++]);
     }
   } else {
-    // Perform more complex updateVNode algorithm on the remaining nodes.
+    // Perform more complex sync algorithm on the remaining nodes.
     //
     // We start by marking all nodes from b as inserted, then we try to find all removed nodes and
-    // simultaneously perform updates on the nodes that exists in both lists and replacing "inserted"
+    // simultaneously perform syncs on the nodes that exists in both lists and replacing "inserted"
     // marks with the position of the node from the list b in list a. Then we just need to perform
     // slightly modified LIS algorithm, that ignores "inserted" marks and find common subsequence and
     // move all nodes that doesn't belong to this subsequence, or insert if they have "inserted" mark.
@@ -2044,7 +2040,7 @@ kivi.VNode.prototype._updateChildrenTrackingByKeys = function(a, b, context) {
             } else {
               lastTarget = j;
             }
-            aNode.update(bNode, context);
+            aNode.sync(bNode, context);
             removed = false;
             break;
           }
@@ -2075,7 +2071,7 @@ kivi.VNode.prototype._updateChildrenTrackingByKeys = function(a, b, context) {
           } else {
             lastTarget = j;
           }
-          aNode.update(bNode, context);
+          aNode.sync(bNode, context);
         } else {
           this._removeChild(aNode);
           removeOffset++;
@@ -2212,7 +2208,7 @@ kivi.CDescriptor = function() {
   this.setChildren = null;
 
   /** @type {?function (!kivi.Component<D, S>)} */
-  this.update = null;
+  this.sync = null;
 
   /** @type {?function (!kivi.Component<D, S>)} */
   this.invalidated = null;
@@ -2295,23 +2291,23 @@ kivi.Component = function(flags, descriptor, parent, data, children, element) {
 /**
  * Update component.
  */
-kivi.Component.prototype.update = function() {
+kivi.Component.prototype.sync = function() {
   if ((this.flags & kivi.ComponentFlags.shouldUpdateFlags) === kivi.ComponentFlags.shouldUpdateFlags) {
-    this.descriptor.update(this);
+    this.descriptor.sync(this);
     this.mtime = kivi.env.scheduler.clock;
     this.flags &= ~kivi.ComponentFlags.dirty;
   }
 };
 
 /**
- * Update internal tree using virtual dom representation.
+ * Synchronize internal tree using virtual dom representation.
  *
  * If this method is called during mounting phase, then virtual dom will be mounted on top of the existing
  * html tree.
  *
  * @param {!kivi.VNode} newRoot
  */
-kivi.Component.prototype.updateRoot = function(newRoot) {
+kivi.Component.prototype.syncVRoot = function(newRoot) {
   if (this.root === null) {
     newRoot.cref = this;
     if ((this.flags & kivi.ComponentFlags.mounting) !== 0) {
@@ -2322,7 +2318,7 @@ kivi.Component.prototype.updateRoot = function(newRoot) {
       newRoot.render(this);
     }
   } else {
-    this.root.update(newRoot, this);
+    this.root.sync(newRoot, this);
   }
   this.root = newRoot;
 };
@@ -2487,7 +2483,7 @@ kivi.Component.mount = function(descriptor, data, children, context, element) {
 kivi.injectComponent = function(descriptor, data, container) {
   var c = kivi.Component.create(descriptor, data, null, null);
   container.appendChild(c.element);
-  c.update();
+  c.sync();
   return c;
 };
 
@@ -2501,7 +2497,7 @@ kivi.injectComponent = function(descriptor, data, container) {
  */
 kivi.mountComponent = function(descriptor, data, element) {
   var c = kivi.Component.mount(descriptor, data, null, null, /** @type {!Element} */(element));
-  c.update();
+  c.sync();
   return c;
 };
 

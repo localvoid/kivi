@@ -27,7 +27,7 @@
   },
   "github": "https://github.com/localvoid/kivi",
   "scripts": {
-    "test": "karma start --single-run --browsers PhantomJS"
+    "test": "karma start --single-run --browsers Chrome"
   },
   "dependencies": {
   },
