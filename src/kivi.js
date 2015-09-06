@@ -1879,7 +1879,7 @@ kivi.VNode.prototype._syncChildren = function(a, b, context) {
     }
   }
 
-  // All nodes from a are synced, insert the rest from b.
+  // All nodes from a are synced, remove the rest.
   while (aStart <= aEnd) {
     this._removeChild(a[aStart++]);
   }
@@ -1887,7 +1887,7 @@ kivi.VNode.prototype._syncChildren = function(a, b, context) {
   nextPos = bEnd + 1;
   next = nextPos < b.length ? b[nextPos].ref : null;
 
-  // All nodes from b are synced, remove the rest from a.
+  // All nodes from b are synced, insert the rest.
   while (bStart <= bEnd) {
     this._insertChild(b[bStart++], next, context);
   }

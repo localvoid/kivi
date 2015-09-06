@@ -19,7 +19,7 @@ Scheduler for batching read and write DOM tasks.
 ```js
 app.entry.d = new vdom.CDescriptor();
 app.entry.d.update = function(c) {
-  // `subscribe(d)` and `tempSubscribe(d)` are used to subscribe for
+  // `subscribe(d)` and `transientSubscribe(d)` are used to subscribe for
   // `Invalidator` objects.
   //
   // Each time Component is invalidated, old transient subscriptions will
