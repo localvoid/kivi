@@ -2191,11 +2191,12 @@ kivi._lis = function(a) {
  * Component Descriptor.
  *
  * @template D, S
+ * @param {string} name
  * @constructor
  * @struct
  * @final
  */
-kivi.CDescriptor = function() {
+kivi.CDescriptor = function(name) {
   this.flags = 0;
   this.tag = 'div';
 
@@ -2217,17 +2218,6 @@ kivi.CDescriptor = function() {
   /** @type {?function (!kivi.Component<D, S>)} */
   this.disposed = null;
 
-  if (kivi.DEBUG) {
-    this.name = 'noname';
-  }
-};
-
-/**
- * Set Component name.
- *
- * @param {string} name
- */
-kivi.CDescriptor.prototype.setName = function(name) {
   if (kivi.DEBUG) {
     this.name = name;
   }
