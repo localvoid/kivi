@@ -69,3 +69,15 @@ app.main.d.update = function(c) {
 // Instantiate and inject component into document body.
 kivi.injectComponent(app.main.d, 'kivi', document.body);
 ```
+
+## kivi vs React
+
+React community and ecosystem is way more important than slight performance
+advantage of kivi, or anything else, so if you don't have any serious reason
+to choose kivi over React, just use React.
+
+## Benchmarks
+
+- [dbmonster](https://localvoid.github.io/kivi-dbmonster/)
+- [uibench](https://localvoid.github.io/uibench/)
+- [vdom benchmark](https://vdom-benchmark.github.io/vdom-benchmark/)
