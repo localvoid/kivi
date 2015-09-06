@@ -63,11 +63,11 @@ kivi.Scheduler = function() {
    */
   this.clock = 1;
 
-  /** @private {Array<function()>} */
-  this._microtasks = null;
+  /** @private {!Array<function()>} */
+  this._microtasks = [];
 
-  /** @private {Array<function()>} */
-  this._macrotasks = null;
+  /** @private {!Array<function()>} */
+  this._macrotasks = [];
 
   /** @private {!kivi.SchedulerFrame} */
   this._currentFrame = new kivi.SchedulerFrame();
@@ -82,8 +82,8 @@ kivi.Scheduler = function() {
     self.flags |= kivi.SchedulerFlags.running;
 
     var tasks = self._microtasks;
-    while (tasks !== null) {
-      self._microtasks = null;
+    while (tasks.length > 0) {
+      self._microtasks = [];
 
       for (var i = 0; i < tasks.length; i++) {
         tasks[i]();
@@ -102,8 +102,8 @@ kivi.Scheduler = function() {
     self.flags |= kivi.SchedulerFlags.running;
 
     var tasks = self._macrotasks;
-    if (tasks !== null) {
-      self._macrotasks = null;
+    if (tasks.length > 0) {
+      self._macrotasks = [];
 
       for (var i = 0; i < tasks.length; i++) {
         tasks[i]();
@@ -240,10 +240,6 @@ kivi.Scheduler.prototype.scheduleMicrotask = function(cb) {
     this._microtaskScheduler.requestNextTick();
   }
 
-  if (this._microtasks === null) {
-    this._microtasks = [];
-  }
-
   this._microtasks.push(cb);
 };
 
@@ -256,10 +252,6 @@ kivi.Scheduler.prototype.scheduleMacrotask = function(cb) {
   if ((this.flags & kivi.SchedulerFlags.macrotaskPending) === 0) {
     this.flags |= kivi.SchedulerFlags.macrotaskPending;
     this._macrotaskScheduler.requestNextTick();
-  }
-
-  if (this._macrotasks === null) {
-    this._macrotasks = [];
   }
 
   this._macrotasks.push(cb);
