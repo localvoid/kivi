@@ -2216,6 +2216,21 @@ kivi.CDescriptor = function() {
 
   /** @type {?function (!kivi.Component<D, S>)} */
   this.disposed = null;
+
+  if (kivi.DEBUG) {
+    this.name = 'noname';
+  }
+};
+
+/**
+ * Set Component name.
+ *
+ * @param {string} name
+ */
+kivi.CDescriptor.prototype.setName = function(name) {
+  if (kivi.DEBUG) {
+    this.name = name;
+  }
 };
 
 /**
@@ -2286,6 +2301,7 @@ kivi.Component = function(flags, descriptor, parent, data, children, element) {
 
   if (kivi.DEBUG) {
     this._isDisposed = false;
+    element.setAttribute('data-kivi-component', descriptor.name);
   }
 };
 
