@@ -29,25 +29,24 @@
   "scripts": {
     "test": "karma start --single-run --browsers Chrome"
   },
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
-    "google-closure-library": "~20150505.0.0",
     "chai": "^1.10.0",
+    "google-closure-library": "^20150901.0.0",
     "karma": "^0.12.32",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^0.1.12",
     "karma-cli": "0.0.4",
+    "karma-closure": "^0.1.0",
     "karma-commonjs": "0.0.13",
+    "karma-coverage": "^0.3.1",
+    "karma-coveralls": "^1.0.1",
     "karma-firefox-launcher": "^0.1.6",
     "karma-mocha": "^0.1.10",
     "karma-phantomjs-launcher": "^0.2.0",
     "karma-sinon": "^1.0.4",
     "mocha": "^2.1.0",
-    "sinon": "^1.12.2",
-    "karma-coveralls": "^1.0.1",
-    "karma-coverage": "^0.3.1",
     "phantomjs": "^1.9.17",
-    "karma-closure": "^0.1.0"
+    "sinon": "^1.12.2"
   }
 }
