@@ -2284,7 +2284,7 @@ kivi.Component = function(flags, descriptor, parent, data, children, element) {
   if (kivi.DEBUG) {
     this._isDisposed = false;
     element.setAttribute('data-kivi-component', descriptor.name);
-    element._kiviComponent = c;
+    element._kiviComponent = this;
   }
 };
 
