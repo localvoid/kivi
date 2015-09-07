@@ -95,6 +95,11 @@ app.main.d.update = function(c) {
 kivi.injectComponent(app.main.d, 'kivi', document.body);
 ```
 
+## Examples
+
+- [Hello World](https://github.com/localvoid/kivi-examples/src/hello)
+- [Anim](https://github.com/localvoid/kivi-examples/src/anim)
+
 ## Benchmarks
 
 - [dbmonster](https://localvoid.github.io/kivi-dbmonster/)
