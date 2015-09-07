@@ -2284,6 +2284,7 @@ kivi.Component = function(flags, descriptor, parent, data, children, element) {
   if (kivi.DEBUG) {
     this._isDisposed = false;
     element.setAttribute('data-kivi-component', descriptor.name);
+    element._kiviComponent = c;
   }
 };
 
@@ -2446,9 +2447,6 @@ kivi.Component.create = function(descriptor, data, children, context) {
   var c = new kivi.Component(kivi.ComponentFlags.shouldUpdateFlags, descriptor, context, data, children, element);
   if (descriptor.init !== null) {
     descriptor.init(c);
-  }
-  if (kivi.DEBUG) {
-    element._kiviComponent = c;
   }
   return c;
 };
