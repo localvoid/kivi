@@ -3,6 +3,26 @@ goog.provide('kivi.VNodeFlags');
 goog.require('kivi.HtmlNamespace');
 
 /**
+ * VNode Flags
+ *
+ * @enum {number}
+ */
+kivi.VNodeFlags = {
+  /** Flag indicating that [kivi.VNode] is a [Text] node. */
+  text:       0x0001,
+  /** Flag indicating that [kivi.VNode] is an [Element] node. */
+  element:    0x0002,
+  /** Flag indicating that [kivi.VNode] is a [kivi.Component] node. */
+  component:  0x0004,
+  /** Flag indicating that [kivi.VNode] is a root element of the [kivi.Component]. */
+  root:       0x0008,
+  /** Flag indicating that [kivi.VNode] represents node in svg namespace. */
+  svg:        0x0010,
+  /** Flag indicating that [kivi.VNode] should track similar children by keys. */
+  trackByKey: 0x0020
+};
+
+/**
  * Virtual DOM Node.
  *
  * @param {number} flags Flags.
@@ -521,7 +541,7 @@ kivi.VNode = class {
         if (component.descriptor.setData === null) {
           if (this.data_ !== b.data_) {
             component.data = b.data_;
-            component.flags |= kivi.Component.Flags.DIRTY;
+            component.flags |= kivi.ComponentFlags.DIRTY;
           }
         } else {
           component.descriptor.setData(component, b.data_);
@@ -1038,26 +1058,6 @@ kivi.VNode = class {
       }
     }
   };
-};
-
-/**
- * VNode Flags
- *
- * @enum {number}
- */
-kivi.VNodeFlags = {
-  /** Flag indicating that [kivi.VNode] is a [Text] node. */
-  text:       0x0001,
-  /** Flag indicating that [kivi.VNode] is an [Element] node. */
-  element:    0x0002,
-  /** Flag indicating that [kivi.VNode] is a [kivi.Component] node. */
-  component:  0x0004,
-  /** Flag indicating that [kivi.VNode] is a root element of the [kivi.Component]. */
-  root:       0x0008,
-  /** Flag indicating that [kivi.VNode] represents node in svg namespace. */
-  svg:        0x0010,
-  /** Flag indicating that [kivi.VNode] should track similar children by keys. */
-  trackByKey: 0x0020
 };
 
 /**

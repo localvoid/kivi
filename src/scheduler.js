@@ -3,6 +3,21 @@ goog.provide('kivi.SchedulerFrame');
 goog.provide('kivi.scheduler');
 
 /**
+ * Scheduler Flags.
+ *
+ * @enum {number}
+ */
+kivi.SchedulerFlags = {
+  RUNNING:           0x0100,
+  MICROTASK_PENDING: 0x0001,
+  MACROTASK_PENDING: 0x0002,
+  FRAMETASK_PENDING: 0x0008,
+  MICROTASK_RUNNING: 0x0010,
+  MACROTASK_RUNNING: 0x0020,
+  FRAMETASK_RUNNING: 0x0080
+};
+
+/**
  * Scheduler.
  *
  * Scheduler supports animation frame tasks, and simple microtasks.
@@ -45,7 +60,7 @@ kivi.Scheduler = class {
 
     /** @private {!kivi._MutationObserverScheduler} */
     this._microtaskScheduler = new kivi._MutationObserverScheduler(function() {
-      self.flags |= kivi.Scheduler.Flags.RUNNING;
+      self.flags |= kivi.SchedulerFlags.RUNNING;
 
       var tasks = self._microtasks;
       while (tasks.length > 0) {
@@ -59,13 +74,13 @@ kivi.Scheduler = class {
       }
 
       self.clock++;
-      self.flags &= ~(kivi.Scheduler.Flags.MICROTASK_PENDING | kivi.Scheduler.Flags.RUNNING);
+      self.flags &= ~(kivi.SchedulerFlags.MICROTASK_PENDING | kivi.SchedulerFlags.RUNNING);
     });
 
     /** @private {!kivi._PostMessageScheduler} */
     this._macrotaskScheduler = new kivi._PostMessageScheduler(function() {
-      self.flags &= ~kivi.Scheduler.Flags.MACROTASK_PENDING;
-      self.flags |= kivi.Scheduler.Flags.RUNNING;
+      self.flags &= ~kivi.SchedulerFlags.MACROTASK_PENDING;
+      self.flags |= kivi.SchedulerFlags.RUNNING;
 
       var tasks = self._macrotasks;
       if (tasks.length > 0) {
@@ -77,7 +92,7 @@ kivi.Scheduler = class {
       }
 
       self.clock++;
-      self.flags &= ~kivi.Scheduler.Flags.RUNNING;
+      self.flags &= ~kivi.SchedulerFlags.RUNNING;
     });
 
     /** @private {function(number)} */
@@ -88,17 +103,17 @@ kivi.Scheduler = class {
       var task;
       var i, j;
 
-      self.flags &= ~kivi.Scheduler.Flags.FRAMETASK_PENDING;
-      self.flags |= kivi.Scheduler.Flags.RUNNING;
+      self.flags &= ~kivi.SchedulerFlags.FRAMETASK_PENDING;
+      self.flags |= kivi.SchedulerFlags.RUNNING;
 
       frame = self._nextFrame;
       self._nextFrame = self._currentFrame;
       self._currentFrame = frame;
 
       do {
-        while ((frame.flags & kivi.SchedulerFrame.Flags.WRITE_ANY) !== 0) {
-          if ((frame.flags & kivi.SchedulerFrame.Flags.WRITE_PRIO) !== 0) {
-            frame.flags &= ~kivi.SchedulerFrame.Flags.WRITE_PRIO;
+        while ((frame.flags & kivi.SchedulerFrameFlags.WRITE_ANY) !== 0) {
+          if ((frame.flags & kivi.SchedulerFrameFlags.WRITE_PRIO) !== 0) {
+            frame.flags &= ~kivi.SchedulerFrameFlags.WRITE_PRIO;
             groups = frame.writeTaskGroups;
 
             for (i = 0; i < groups.length; i++) {
@@ -117,8 +132,8 @@ kivi.Scheduler = class {
             }
           }
 
-          if ((frame.flags & kivi.SchedulerFrame.Flags.WRITE) !== 0) {
-            frame.flags &= ~kivi.SchedulerFrame.Flags.WRITE;
+          if ((frame.flags & kivi.SchedulerFrameFlags.WRITE) !== 0) {
+            frame.flags &= ~kivi.SchedulerFrameFlags.WRITE;
             group = frame.writeTasks;
             for (i = 0; i < group.length; i++) {
               task = group[i];
@@ -131,8 +146,8 @@ kivi.Scheduler = class {
           }
         }
 
-        while ((frame.flags & kivi.SchedulerFrame.Flags.READ) !== 0) {
-          frame.flags &= ~kivi.SchedulerFrame.Flags.READ;
+        while ((frame.flags & kivi.SchedulerFrameFlags.READ) !== 0) {
+          frame.flags &= ~kivi.SchedulerFrameFlags.READ;
           group = frame.readTasks;
           frame.readTasks = null;
 
@@ -141,10 +156,10 @@ kivi.Scheduler = class {
             task();
           }
         }
-      } while ((frame.flags & kivi.SchedulerFrame.Flags.WRITE_ANY) !== 0);
+      } while ((frame.flags & kivi.SchedulerFrameFlags.WRITE_ANY) !== 0);
 
-      while ((frame.flags & kivi.SchedulerFrame.Flags.AFTER) !== 0) {
-        frame.flags &= ~kivi.SchedulerFrame.Flags.AFTER;
+      while ((frame.flags & kivi.SchedulerFrameFlags.AFTER) !== 0) {
+        frame.flags &= ~kivi.SchedulerFrameFlags.AFTER;
 
         group = frame.afterTasks;
         for (i = 0; i < group.length; i++) {
@@ -154,7 +169,7 @@ kivi.Scheduler = class {
       }
 
       self.clock++;
-      self.flags &= ~kivi.Scheduler.Flags.RUNNING;
+      self.flags &= ~kivi.SchedulerFlags.RUNNING;
     };
   }
 
@@ -173,8 +188,8 @@ kivi.Scheduler = class {
    * @returns {!kivi.SchedulerFrame}
    */
   nextFrame() {
-    if ((this.flags & kivi.Scheduler.Flags.FRAMETASK_PENDING) === 0) {
-      this.flags |= kivi.Scheduler.Flags.FRAMETASK_PENDING;
+    if ((this.flags & kivi.SchedulerFlags.FRAMETASK_PENDING) === 0) {
+      this.flags |= kivi.SchedulerFlags.FRAMETASK_PENDING;
       window.requestAnimationFrame(this._handleAnimationFrame);
     }
     return this._nextFrame;
@@ -186,8 +201,8 @@ kivi.Scheduler = class {
    * @param {!function()} cb
    */
   scheduleMicrotask(cb) {
-    if ((this.flags & kivi.Scheduler.Flags.MICROTASK_PENDING) === 0) {
-      this.flags |= kivi.Scheduler.Flags.MICROTASK_PENDING;
+    if ((this.flags & kivi.SchedulerFlags.MICROTASK_PENDING) === 0) {
+      this.flags |= kivi.SchedulerFlags.MICROTASK_PENDING;
       this._microtaskScheduler.requestNextTick();
     }
 
@@ -200,28 +215,13 @@ kivi.Scheduler = class {
    * @param {!function()} cb
    */
   scheduleMacrotask(cb) {
-    if ((this.flags & kivi.Scheduler.Flags.MACROTASK_PENDING) === 0) {
-      this.flags |= kivi.Scheduler.Flags.MACROTASK_PENDING;
+    if ((this.flags & kivi.SchedulerFlags.MACROTASK_PENDING) === 0) {
+      this.flags |= kivi.SchedulerFlags.MACROTASK_PENDING;
       this._macrotaskScheduler.requestNextTick();
     }
 
     this._macrotasks.push(cb);
   };
-};
-
-/**
- * Scheduler Flags.
- *
- * @enum {number}
- */
-kivi.Scheduler.Flags = {
-  RUNNING:          0x0100,
-  MICROTASK_PENDING: 0x0001,
-  MACROTASK_PENDING: 0x0002,
-  FRAMETASK_PENDING: 0x0008,
-  MICROTASK_RUNNING: 0x0010,
-  MACROTASK_RUNNING: 0x0020,
-  FRAMETASK_RUNNING: 0x0080
 };
 
 /**
@@ -233,23 +233,20 @@ kivi.Scheduler.Flags = {
  * @final
  * @private
  */
-kivi._MutationObserverScheduler = class {
-  constructor(cb) {
-    this._observer = new window.MutationObserver(cb);
-    this._node = document.createTextNode('');
-    this._observer.observe(this._node, {characterData: true});
-    this._toggle = 0;
-  }
-
-  /**
-   * Request a next tick.
-   */
-  requestNextTick() {
-    this._toggle ^= 1;
-    this._node.data = this._toggle.toString();
-  };
+kivi._MutationObserverScheduler = function(cb) {
+  this._observer = new window.MutationObserver(cb);
+  this._node = document.createTextNode('');
+  this._observer.observe(this._node, {characterData: true});
+  this._toggle = 0;
 };
 
+/**
+ * Request a next tick.
+ */
+kivi._MutationObserverScheduler.prototype.requestNextTick = function() {
+  this._toggle ^= 1;
+  this._node.data = this._toggle.toString();
+};
 
 /**
  * PostMessage helper for macrotasks.
@@ -260,29 +257,39 @@ kivi._MutationObserverScheduler = class {
  * @final
  * @private
  */
-kivi._PostMessageScheduler = class {
-  constructor(cb) {
-    this._message = '__pms' + Math.random().toString();
-    var message = this._message;
+kivi._PostMessageScheduler = function(cb) {
+  this._message = '__pms' + Math.random().toString();
+  var message = this._message;
 
-    /** @param {!Event} e */
-    var handler = function(e) {
-      e = /** @type {!MessageEvent<string>} */(e);
-      if (e.source === window && e.data === message) {
-        cb();
-      }
-    };
-    window.addEventListener('message', handler);
-  }
-
-  /**
-   * Request a next tick.
-   */
-  requestNextTick() {
-    window.postMessage(this._message, '*');
+  /** @param {!Event} e */
+  var handler = function(e) {
+    e = /** @type {!MessageEvent<string>} */(e);
+    if (e.source === window && e.data === message) {
+      cb();
+    }
   };
+  window.addEventListener('message', handler);
 };
 
+/**
+ * Request a next tick.
+ */
+kivi._PostMessageScheduler.prototype.requestNextTick = function() {
+  window.postMessage(this._message, '*');
+};
+
+/**
+ * Scheduler Frame Flags.
+ *
+ * @enum {number}
+ */
+kivi.SchedulerFrameFlags = {
+  WRITE_PRIO: 0x0001,
+  WRITE:      0x0002,
+  READ:       0x0004,
+  AFTER:      0x0008,
+  WRITE_ANY:  0x0003
+};
 
 /**
  * Scheduler Frame.
@@ -314,7 +321,7 @@ kivi.SchedulerFrame = class {
    */
   updateComponent(component) {
     this.write(component, component.depth);
-  };
+  }
 
   /**
    * Add callback to the write task queue.
@@ -328,13 +335,13 @@ kivi.SchedulerFrame = class {
     if (opt_priority === void 0) opt_priority = -1;
 
     if (opt_priority === -1) {
-      this.flags |= kivi.SchedulerFrame.Flags.WRITE;
+      this.flags |= kivi.SchedulerFrameFlags.WRITE;
       if (this.writeTasks === null) {
         this.writeTasks = [];
       }
       this.writeTasks.push(cb);
     } else {
-      this.flags |= kivi.SchedulerFrame.Flags.WRITE_PRIO;
+      this.flags |= kivi.SchedulerFrameFlags.WRITE_PRIO;
       while (opt_priority >= this.writeTaskGroups.length) {
         this.writeTaskGroups.push(null);
       }
@@ -346,7 +353,7 @@ kivi.SchedulerFrame = class {
 
       group.push(cb);
     }
-  };
+  }
 
   /**
    * Add callback to the read task queue.
@@ -354,12 +361,12 @@ kivi.SchedulerFrame = class {
    * @param {!function()} cb
    */
   read(cb) {
-    this.flags |= kivi.SchedulerFrame.Flags.READ;
+    this.flags |= kivi.SchedulerFrameFlags.READ;
     if (this.readTasks === null) {
       this.readTasks = [];
     }
     this.readTasks.push(cb);
-  };
+  }
 
   /**
    * Add callback to the after task queue.
@@ -367,25 +374,12 @@ kivi.SchedulerFrame = class {
    * @param {!function()} cb
    */
   after(cb) {
-    this.flags |= kivi.SchedulerFrame.Flags.AFTER;
+    this.flags |= kivi.SchedulerFrameFlags.AFTER;
     if (this.afterTasks === null) {
       this.afterTasks = [];
     }
     this.afterTasks.push(cb);
-  };
-};
-
-/**
- * Scheduler Frame Flags.
- *
- * @enum {number}
- */
-kivi.SchedulerFrame.Flags = {
-  WRITE_PRIO: 0x0001,
-  WRITE:      0x0002,
-  READ:       0x0004,
-  AFTER:      0x0008,
-  WRITE_ANY:  0x0003
+  }
 };
 
 /**

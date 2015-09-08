@@ -1,6 +1,6 @@
 goog.provide('kivi.CDescriptor');
 goog.provide('kivi.Component');
-goog.provide('kivi.Component.Flags');
+goog.provide('kivi.ComponentFlags');
 goog.require('kivi.Invalidator');
 goog.require('kivi.InvalidatorSubscription');
 goog.require('kivi.scheduler');
@@ -39,6 +39,19 @@ kivi.CDescriptor = class {
       this.name = name;
     }
   }
+};
+
+/**
+ * Component Flags.
+ *
+ * @enum {number}
+ */
+kivi.ComponentFlags = {
+  DIRTY:               0x0001,
+  ATTACHED:            0x0002,
+  SVG:                 0x0004,
+  MOUNTING:            0x0008,
+  SHOULD_UPDATE_FLAGS: 0x0003
 };
 
 /**
@@ -104,10 +117,10 @@ kivi.Component = class {
    * Update component.
    */
   update() {
-    if ((this.flags & kivi.Component.Flags.SHOULD_UPDATE_FLAGS) === kivi.Component.Flags.SHOULD_UPDATE_FLAGS) {
+    if ((this.flags & kivi.ComponentFlags.SHOULD_UPDATE_FLAGS) === kivi.ComponentFlags.SHOULD_UPDATE_FLAGS) {
       this.descriptor.update(this);
       this.mtime = kivi.scheduler.clock;
-      this.flags &= ~kivi.Component.Flags.DIRTY;
+      this.flags &= ~kivi.ComponentFlags.DIRTY;
     }
   };
 
@@ -122,9 +135,9 @@ kivi.Component = class {
   syncVRoot(newRoot) {
     if (this.root === null) {
       newRoot.cref = this;
-      if ((this.flags & kivi.Component.Flags.MOUNTING) !== 0) {
+      if ((this.flags & kivi.ComponentFlags.MOUNTING) !== 0) {
         newRoot.mount(this.element, this);
-        this.flags &= ~kivi.Component.Flags.MOUNTING;
+        this.flags &= ~kivi.ComponentFlags.MOUNTING;
       } else {
         newRoot.ref = this.element;
         newRoot.render(this);
@@ -139,8 +152,8 @@ kivi.Component = class {
    * Invalidate Component.
    */
   invalidate() {
-    if ((this.flags & kivi.Component.Flags.DIRTY) === 0) {
-      this.flags |= kivi.Component.Flags.DIRTY;
+    if ((this.flags & kivi.ComponentFlags.DIRTY) === 0) {
+      this.flags |= kivi.ComponentFlags.DIRTY;
       this.cancelTransientSubscriptions();
       kivi.scheduler.nextFrame().updateComponent(this);
     }
@@ -157,7 +170,7 @@ kivi.Component = class {
       this._isDisposed = true;
     }
 
-    this.flags &= ~kivi.Component.Flags.ATTACHED;
+    this.flags &= ~kivi.ComponentFlags.ATTACHED;
     this.cancelSubscriptions();
     this.cancelTransientSubscriptions();
     if (this.root !== null) {
@@ -248,19 +261,6 @@ kivi.Component = class {
 };
 
 /**
- * Component Flags.
- *
- * @enum {number}
- */
-kivi.Component.Flags = {
-  DIRTY:               0x0001,
-  ATTACHED:            0x0002,
-  SVG:                 0x0004,
-  MOUNTING:            0x0008,
-  SHOULD_UPDATE_FLAGS: 0x0003
-};
-
-/**
  * Create a [kivi.Component].
  *
  * @param {!kivi.CDescriptor} descriptor
@@ -271,7 +271,7 @@ kivi.Component.Flags = {
  */
 kivi.Component.create = function(descriptor, data, children, context) {
   var element = document.createElement(descriptor.tag);
-  var c = new kivi.Component(kivi.Component.Flags.SHOULD_UPDATE_FLAGS, descriptor, context, data, children, element);
+  var c = new kivi.Component(kivi.ComponentFlags.SHOULD_UPDATE_FLAGS, descriptor, context, data, children, element);
   if (descriptor.init !== null) {
     descriptor.init(c);
   }
@@ -289,7 +289,7 @@ kivi.Component.create = function(descriptor, data, children, context) {
  * @returns {!kivi.Component}
  */
 kivi.Component.mount = function(descriptor, data, children, context, element) {
-  var c = new kivi.Component(kivi.Component.Flags.SHOULD_UPDATE_FLAGS | kivi.Component.Flags.MOUNTING, descriptor, context, data, children, element);
+  var c = new kivi.Component(kivi.ComponentFlags.SHOULD_UPDATE_FLAGS | kivi.ComponentFlags.MOUNTING, descriptor, context, data, children, element);
   if (descriptor.init !== null) {
     descriptor.init(c);
   }
