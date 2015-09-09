@@ -1,6 +1,7 @@
 goog.provide('kivi.scheduler.Scheduler');
 goog.provide('kivi.scheduler.SchedulerFlags');
 goog.provide('kivi.scheduler.instance');
+goog.require('kivi.ComponentFlags');
 goog.require('kivi.scheduler.Frame');
 goog.require('kivi.scheduler.FrameFlags');
 goog.require('kivi.scheduler.MutationObserver');
@@ -60,8 +61,12 @@ kivi.scheduler.Scheduler = function() {
   /** @private {!kivi.scheduler.Frame} */
   this._nextFrame = new kivi.scheduler.Frame();
 
-  /** @private {!Array<!kivi.Component>} */
-  this._invalidateEachFrame = [];
+  /**
+   * Array of Components that should be updated on each frame.
+   *
+   * @private {!Array<!kivi.Component>}
+   */
+  this._updateComponents = [];
 
   var self = this;
 
@@ -104,6 +109,7 @@ kivi.scheduler.Scheduler = function() {
 
   /** @private {function(number)} */
   this._handleAnimationFrame = function() {
+    var updateComponents = self._updateComponents;
     var frame;
     var groups;
     var group;
@@ -113,15 +119,16 @@ kivi.scheduler.Scheduler = function() {
     self.flags &= ~kivi.scheduler.SchedulerFlags.FRAMETASK_PENDING;
     self.flags |= kivi.scheduler.SchedulerFlags.RUNNING;
 
-    // invalidate components before swapping frames, because they
-    // should register for updates in the next frame.
-    for (i = 0; i < self._invalidateEachFrame.length; i++) {
-      self._invalidateEachFrame[i].invalidate();
-    }
-
     frame = self._nextFrame;
     self._nextFrame = self._currentFrame;
     self._currentFrame = frame;
+
+    // Mark all update components as dirty. But don't update until all write tasks
+    // are finished. It is possible that we won't need to update Component if it
+    // is removed.
+    for (i = 0; i < updateComponents.length; i++) {
+      updateComponents[i].flags |= kivi.ComponentFlags.DIRTY;
+    }
 
     do {
       while ((frame.flags & kivi.scheduler.FrameFlags.WRITE_ANY) !== 0) {
@@ -159,6 +166,24 @@ kivi.scheduler.Scheduler = function() {
         }
       }
 
+      // Update components registered for updating on each frame.
+      // Remove components that doesn't have UPDATE_EACH_FRAME flag.
+      i = 0;
+      j = updateComponents.length;
+      while (i < j) {
+        task = updateComponents[i++];
+        if ((task.flags & kivi.ComponentFlags.UPDATE_EACH_FRAME) === 0) {
+          task.flags &= ~kivi.ComponentFlags.IN_UPDATE_QUEUE;
+          if (i === j) {
+            updateComponents.pop();
+          } else {
+            updateComponents[--i] = updateComponents.pop();
+          }
+        } else {
+          task.update();
+        }
+      }
+
       while ((frame.flags & kivi.scheduler.FrameFlags.READ) !== 0) {
         frame.flags &= ~kivi.scheduler.FrameFlags.READ;
         group = frame.readTasks;
@@ -181,7 +206,7 @@ kivi.scheduler.Scheduler = function() {
       }
     }
 
-    if (self._invalidateEachFrame.length > 0) {
+    if (updateComponents.length > 0) {
       self.requestAnimationFrame();
     }
 
@@ -224,23 +249,9 @@ kivi.scheduler.Scheduler.prototype.nextFrame = function() {
  *
  * @param {!kivi.Component} c
  */
-kivi.scheduler.Scheduler.prototype.startInvalidateEachFrame = function(c) {
+kivi.scheduler.Scheduler.prototype.startUpdateComponentEachFrame = function(c) {
   this.requestAnimationFrame();
-  this._invalidateEachFrame.push(c);
-};
-
-/**
- * Stop Invalidating Component on each frame.
- *
- * @param {!kivi.Component} c
- */
-kivi.scheduler.Scheduler.prototype.stopInvalidateEachFrame = function(c) {
-  var handlers = this._invalidateEachFrame;
-  if (handlers.length > 1) {
-    handlers[handlers.indexOf(c)] = handlers.pop();
-  } else {
-    handlers.pop();
-  }
+  this._updateComponents.push(c);
 };
 
 /**

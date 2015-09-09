@@ -1,6 +1,6 @@
 goog.provide('kivi.CDescriptor');
 goog.provide('kivi.Component');
-goog.provide('kivi.ComponentFlags');
+goog.require('kivi.ComponentFlags');
 goog.require('kivi.Invalidator');
 goog.require('kivi.InvalidatorSubscription');
 goog.require('kivi.scheduler.instance');
@@ -39,20 +39,6 @@ kivi.CDescriptor = function(name) {
   if (kivi.DEBUG) {
     this.name = name;
   }
-};
-
-/**
- * Component Flags.
- *
- * @enum {number}
- */
-kivi.ComponentFlags = {
-  DIRTY:                 0x0001,
-  ATTACHED:              0x0002,
-  SVG:                   0x0004,
-  MOUNTING:              0x0008,
-  INVALIDATE_EACH_FRAME: 0x0010,
-  SHOULD_UPDATE_FLAGS:   0x0003
 };
 
 /**
@@ -109,7 +95,6 @@ kivi.Component = function(flags, descriptor, parent, data, children, element) {
   this._transientSubscriptions = null;
 
   if (kivi.DEBUG) {
-    this._isDisposed = false;
     element.setAttribute('data-kivi-component', descriptor.name);
     element._kiviComponent = this;
   }
@@ -198,23 +183,20 @@ kivi.Component.prototype.invalidate = function() {
 };
 
 /**
- * Start invalidating Component on each frame.
+ * Start updating Component on each frame.
  */
-kivi.Component.prototype.startInvalidateEachFrame = function() {
-  if ((this.flags & kivi.ComponentFlags.INVALIDATE_EACH_FRAME) === 0) {
-    this.flags |= kivi.ComponentFlags.INVALIDATE_EACH_FRAME;
-    kivi.scheduler.instance.startInvalidateEachFrame(this);
+kivi.Component.prototype.startUpdateEachFrame = function() {
+  this.flags |= kivi.ComponentFlags.UPDATE_EACH_FRAME;
+  if ((this.flags & kivi.ComponentFlags.IN_UPDATE_QUEUE) === 0) {
+    kivi.scheduler.instance.startUpdateComponentEachFrame(this);
   }
 };
 
 /**
- * Stop invalidating Component on each frame.
+ * Stop updating Component on each frame.
  */
-kivi.Component.prototype.stopInvalidateEachFrame = function() {
-  if ((this.flags & kivi.ComponentFlags.INVALIDATE_EACH_FRAME) === 0) {
-    this.flags &= ~kivi.ComponentFlags.INVALIDATE_EACH_FRAME;
-    kivi.scheduler.instance.stopInvalidateEachFrame(this);
-  }
+kivi.Component.prototype.stopUpdateEachFrame = function() {
+  this.flags &= ~kivi.ComponentFlags.UPDATE_EACH_FRAME;
 };
 
 /**
@@ -222,16 +204,15 @@ kivi.Component.prototype.stopInvalidateEachFrame = function() {
  */
 kivi.Component.prototype.dispose = function() {
   if (kivi.DEBUG) {
-    if (this._isDisposed) {
-      throw 'Failed to dispose Component: component cannot be disposed twice'
+    if ((this.flags & kivi.ComponentFlags.DISPOSED) !== 0) {
+      throw 'Failed to dispose Component: component is already disposed';
     }
-    this._isDisposed = true;
   }
 
-  this.flags &= ~kivi.ComponentFlags.ATTACHED;
+  this.flags |= kivi.ComponentFlags.DISPOSED;
+  this.flags &= ~(kivi.ComponentFlags.ATTACHED | kivi.ComponentFlags.UPDATE_EACH_FRAME);
   this.cancelSubscriptions();
   this.cancelTransientSubscriptions();
-  this.stopInvalidateEachFrame();
   if (this.root !== null) {
     this.root.dispose();
   }
