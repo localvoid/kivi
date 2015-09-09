@@ -1242,7 +1242,7 @@ kivi.syncProps = function(a, b, node) {
       // b is empty, remove all attributes from a.
       keys = Object.keys(a);
       for (i = 0, il = keys.length; i < il; i++) {
-        node[keys[i]] = undefined;
+        node[keys[i]] = void 0;
       }
     } else {
       // Remove and update attributes.
@@ -1256,7 +1256,7 @@ kivi.syncProps = function(a, b, node) {
             node[key] = bValue;
           }
         } else {
-          node[key] = undefined;
+          node[key] = void 0;
         }
       }
 
