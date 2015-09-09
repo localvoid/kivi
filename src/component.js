@@ -188,7 +188,7 @@ kivi.Component = class {
    * @param {!kivi.Invalidator} invalidator
    */
   subscribe(invalidator) {
-    var s = new kivi.InvalidatorSubscription(kivi.InvalidatorSubscription.Flags.component, invalidator, this);
+    var s = new kivi.InvalidatorSubscription(kivi.InvalidatorSubscriptionFlags.COMPONENT, invalidator, this);
     invalidator.addSubscription(s);
     var subscriptions = this._subscriptions;
     if (subscriptions === null) {
@@ -204,7 +204,7 @@ kivi.Component = class {
    */
   transientSubscribe(invalidator) {
     var s = new kivi.InvalidatorSubscription(
-        kivi.InvalidatorSubscription.Flags.component | kivi.InvalidatorSubscription.Flags.transient,
+        kivi.InvalidatorSubscriptionFlags.COMPONENT | kivi.InvalidatorSubscriptionFlags.TRANSIENT,
         invalidator, this);
     invalidator.addSubscription(s);
     var subscriptions = this._transientSubscriptions;
@@ -221,7 +221,7 @@ kivi.Component = class {
    */
   removeSubscription(subscription) {
     var subscriptions = /** @type {!Array<!kivi.InvalidatorSubscription>} */(
-        ((subscription.flags & kivi.InvalidatorSubscription.Flags.transient) === 0) ?
+        ((subscription.flags & kivi.InvalidatorSubscriptionFlags.TRANSIENT) === 0) ?
             this._subscriptions: this._transientSubscriptions);
 
     if (subscriptions.length === 1) {

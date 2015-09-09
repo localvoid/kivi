@@ -1,6 +1,17 @@
 goog.provide('kivi.Invalidator');
 goog.provide('kivi.InvalidatorSubscription');
+goog.provide('kivi.InvalidatorSubscriptionFlags');
 goog.require('kivi.scheduler');
+
+/**
+ * Invalidator Subscription Flags.
+ *
+ * @enum {number}
+ */
+kivi.InvalidatorSubscriptionFlags = {
+  COMPONENT: 0x0001,
+  TRANSIENT: 0x0002
+};
 
 /**
  * Invalidator Subscription.
@@ -32,7 +43,7 @@ kivi.InvalidatorSubscription = class {
       this._isCanceled = true;
     }
     this.invalidator.removeSubscription(this);
-    if ((this.flags & kivi.InvalidatorSubscription.Flags.component) !== 0) {
+    if ((this.flags & kivi.InvalidatorSubscriptionFlags.COMPONENT) !== 0) {
       /** @type {!kivi.Component} */(this.subscriber).removeSubscription(this);
     }
   };
@@ -41,22 +52,12 @@ kivi.InvalidatorSubscription = class {
    * Trigger invalidation.
    */
   invalidate() {
-    if ((this.flags & kivi.InvalidatorSubscription.Flags.component) !== 0) {
+    if ((this.flags & kivi.InvalidatorSubscriptionFlags.COMPONENT) !== 0) {
       /** {!kivi.Component} */(this.subscriber).invalidate();
     } else {
       /** {!function()} */(this.subscriber).call();
     }
   };
-};
-
-/**
- * Invalidator Subscription Flags.
- *
- * @enum {number}
- */
-kivi.InvalidatorSubscription.Flags = {
-  component: 0x0001,
-  transient: 0x0002
 };
 
 /**
@@ -86,7 +87,7 @@ kivi.Invalidator = class {
    */
   addSubscription(subscription) {
     var subscriptions;
-    if ((subscription.flags & kivi.InvalidatorSubscription.Flags.transient) === 0) {
+    if ((subscription.flags & kivi.InvalidatorSubscriptionFlags.TRANSIENT) === 0) {
       subscriptions = this._subscriptions;
       if (subscriptions === null) {
         this._subscriptions = subscriptions = [];
@@ -107,7 +108,7 @@ kivi.Invalidator = class {
    */
   removeSubscription(subscription) {
     var subscriptions = /** @type {!Array<!kivi.InvalidatorSubscription>} */(
-        ((subscription.flags & kivi.InvalidatorSubscription.Flags.transient) === 0) ?
+        ((subscription.flags & kivi.InvalidatorSubscriptionFlags.TRANSIENT) === 0) ?
             this._subscriptions : this._transientSubscriptions);
 
     if (subscriptions.length === 1) {
