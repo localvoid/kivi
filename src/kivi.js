@@ -27,7 +27,7 @@ goog.define('kivi.DEBUG', true);
  * @return {!kivi.VNode}
  */
 kivi.createText = function(content) {
-  return new kivi.VNode(kivi.VNodeFlags.text, null, content);
+  return new kivi.VNode(kivi.VNodeFlags.TEXT, null, content);
 };
 
 /**
@@ -37,7 +37,7 @@ kivi.createText = function(content) {
  * @return {!kivi.VNode}
  */
 kivi.createElement = function(tag) {
-  return new kivi.VNode(kivi.VNodeFlags.element, tag, null);
+  return new kivi.VNode(kivi.VNodeFlags.ELEMENT, tag, null);
 };
 
 /**
@@ -47,7 +47,7 @@ kivi.createElement = function(tag) {
  * @return {!kivi.VNode}
  */
 kivi.createSvgElement = function(tag) {
-  return new kivi.VNode(kivi.VNodeFlags.element | kivi.VNodeFlags.svg, tag, null);
+  return new kivi.VNode(kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.SVG, tag, null);
 };
 
 /**
@@ -59,7 +59,7 @@ kivi.createSvgElement = function(tag) {
  */
 kivi.createComponent = function(descriptor, opt_data) {
   if (opt_data === void 0) opt_data = null;
-  return new kivi.VNode(kivi.VNodeFlags.component, descriptor, opt_data);
+  return new kivi.VNode(kivi.VNodeFlags.COMPONENT, descriptor, opt_data);
 };
 
 /**
@@ -68,7 +68,7 @@ kivi.createComponent = function(descriptor, opt_data) {
  * @return {!kivi.VNode}
  */
 kivi.createRoot = function() {
-  return new kivi.VNode(kivi.VNodeFlags.root, null, null);
+  return new kivi.VNode(kivi.VNodeFlags.ROOT, null, null);
 };
 
 /**

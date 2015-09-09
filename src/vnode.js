@@ -14,17 +14,17 @@ goog.require('kivi.sync.style');
  */
 kivi.VNodeFlags = {
   /** Flag indicating that [kivi.VNode] is a [Text] node. */
-  text:       0x0001,
+  TEXT:         0x0001,
   /** Flag indicating that [kivi.VNode] is an [Element] node. */
-  element:    0x0002,
+  ELEMENT:      0x0002,
   /** Flag indicating that [kivi.VNode] is a [kivi.Component] node. */
-  component:  0x0004,
+  COMPONENT:    0x0004,
   /** Flag indicating that [kivi.VNode] is a root element of the [kivi.Component]. */
-  root:       0x0008,
+  ROOT:         0x0008,
   /** Flag indicating that [kivi.VNode] represents node in svg namespace. */
-  svg:        0x0010,
+  SVG:          0x0010,
   /** Flag indicating that [kivi.VNode] should track similar children by keys. */
-  trackByKey: 0x0020
+  TRACK_BY_KEY: 0x0020
 };
 
 /**
@@ -209,7 +209,7 @@ kivi.VNode = class {
    * @returns {!kivi.VNode}
    */
   trackByKey() {
-    this.flags |= kivi.VNodeFlags.trackByKey;
+    this.flags |= kivi.VNodeFlags.TRACK_BY_KEY;
     return this;
   };
 
@@ -241,15 +241,15 @@ kivi.VNode = class {
 
     var flags = this.flags;
 
-    if ((flags & kivi.VNodeFlags.text) !== 0) {
+    if ((flags & kivi.VNodeFlags.TEXT) !== 0) {
       this.ref = document.createTextNode(/** @type {string} */(this.data_));
-    } else if ((flags & kivi.VNodeFlags.element) !== 0) {
-      if ((flags & kivi.VNodeFlags.svg) === 0) {
+    } else if ((flags & kivi.VNodeFlags.ELEMENT) !== 0) {
+      if ((flags & kivi.VNodeFlags.SVG) === 0) {
         this.ref = document.createElement(/** @type {string} */(this.tag));
       } else {
         this.ref = document.createElementNS(kivi.HtmlNamespace.SVG, /** @type {string} */(this.tag));
       }
-    } else if ((flags & kivi.VNodeFlags.component) !== 0) {
+    } else if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
       var component = kivi.Component.create(
           /** @type {!kivi.CDescriptor} */(this.tag),
           this.data_,
@@ -299,7 +299,7 @@ kivi.VNode = class {
 
     if (kivi.DEBUG) {
       if (this.children_ !== null && typeof this.children_ !== 'string') {
-        if ((flags & kivi.VNodeFlags.trackByKey) !== 0) {
+        if ((flags & kivi.VNodeFlags.TRACK_BY_KEY) !== 0) {
           for (i = 0; i < this.children_.length; i++) {
             if (this.children_[i].key_ === null) {
               throw 'Failed to render VNode. Invalid VNode: rendering children with trackByKey requires that all' +
@@ -310,7 +310,7 @@ kivi.VNode = class {
       }
     }
 
-    if ((flags & (kivi.VNodeFlags.element | kivi.VNodeFlags.component | kivi.VNodeFlags.root)) !== 0) {
+    if ((flags & (kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.COMPONENT | kivi.VNodeFlags.ROOT)) !== 0) {
       ref = /** @type {!Element} */(this.ref);
 
       if (this.attrs_ !== null) {
@@ -347,10 +347,10 @@ kivi.VNode = class {
         className = (className === null) ? classes : className + ' ' + classes;
       }
       if (className !== null) {
-        if ((flags & kivi.VNodeFlags.element) !== 0) {
+        if ((flags & kivi.VNodeFlags.ELEMENT) !== 0) {
           this.data_ = className;
           ref.className = className;
-        } else if ((flags & kivi.VNodeFlags.component) !== 0) {
+        } else if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
           ref.className = className;
         } else {
           var oldClassName = ref.className;
@@ -362,7 +362,7 @@ kivi.VNode = class {
         }
       }
 
-      if ((flags & kivi.VNodeFlags.component) !== 0) {
+      if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
         /** @type {!kivi.Component} */(this.cref).update();
       } else if (this.children_ !== null) {
         var children = this.children_;
@@ -403,7 +403,7 @@ kivi.VNode = class {
 
     if (kivi.DEBUG) {
       if (children !== null && typeof children !== 'string') {
-        if ((flags & kivi.VNodeFlags.trackByKey) !== 0) {
+        if ((flags & kivi.VNodeFlags.TRACK_BY_KEY) !== 0) {
           for (i = 0; i < children.length; i++) {
             if (children[i].key_ === null) {
               throw 'Failed to mount VNode. Invalid VNode: mounting children with trackByKey requires that all' +
@@ -415,7 +415,7 @@ kivi.VNode = class {
     }
     this.ref = node;
 
-    if ((flags & kivi.VNodeFlags.component) !== 0) {
+    if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
       var cref = this.cref = kivi.Component.mount(/** @type {!kivi.CDescriptor} */(this.tag), this.data_, children, context, /** @type {!Element} */(node));
       cref.update();
     } else {
@@ -492,7 +492,7 @@ kivi.VNode = class {
         throw 'Failed to sync VNode. Invalid VNode: reusing VNodes isn\'t allowed unless it has the same ref';
       }
       if (b.children_ !== null && typeof b.children_ !== 'string') {
-        if ((b.flags & kivi.VNodeFlags.trackByKey) !== 0) {
+        if ((b.flags & kivi.VNodeFlags.TRACK_BY_KEY) !== 0) {
           for (var i = 0; i < b.children_.length; i++) {
             if (b.children_[i].key_ === null) {
               throw 'Failed to sync VNode. Invalid VNode: updating children with trackByKey requires that all' +
@@ -505,11 +505,11 @@ kivi.VNode = class {
 
     b.ref = ref;
 
-    if ((flags & kivi.VNodeFlags.text) !== 0) {
+    if ((flags & kivi.VNodeFlags.TEXT) !== 0) {
       if (this.data_ !== b.data_) {
         this.ref.nodeValue = /** @type {string} */ (b.data_);
       }
-    } else if ((flags & (kivi.VNodeFlags.element | kivi.VNodeFlags.component | kivi.VNodeFlags.root)) !== 0) {
+    } else if ((flags & (kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.COMPONENT | kivi.VNodeFlags.ROOT)) !== 0) {
       if (this.attrs_ !== b.attrs_) {
         kivi.sync.attrs(this.attrs_, b.attrs_, ref);
       }
@@ -520,7 +520,7 @@ kivi.VNode = class {
         kivi.sync.style(this.style_, b.style_, ref.style);
       }
 
-      if ((flags & kivi.VNodeFlags.element) !== 0) {
+      if ((flags & kivi.VNodeFlags.ELEMENT) !== 0) {
         if (this.classes_ !== b.classes_) {
           if (b.data_ === null) {
             className = b.type_;
@@ -541,7 +541,7 @@ kivi.VNode = class {
             /** @type {!DOMTokenList} */(/** @type {!HTMLElement} */(ref).classList));
       }
 
-      if ((flags & kivi.VNodeFlags.component) !== 0) {
+      if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
         component = b.cref = /** @type {!kivi.Component} */(this.cref);
         if (component.descriptor.setData === null) {
           if (this.data_ !== b.data_) {
@@ -565,7 +565,7 @@ kivi.VNode = class {
    * Dispose Virtual Node.
    */
   dispose() {
-    if ((this.flags & kivi.VNodeFlags.component) !== 0) {
+    if ((this.flags & kivi.VNodeFlags.COMPONENT) !== 0) {
       /** @type {!kivi.Component} */ (this.cref).dispose();
     } else if (this.children_ !== null) {
       var children = this.children_;
@@ -683,7 +683,7 @@ kivi.VNode = class {
           } else if (a.length === 1) {
             // Fast path when a have 1 child.
             aNode = a[0];
-            if ((this.flags & kivi.VNodeFlags.trackByKey) === 0) {
+            if ((this.flags & kivi.VNodeFlags.TRACK_BY_KEY) === 0) {
               while (i < b.length) {
                 bNode = b[i++];
                 if (aNode._canSync(bNode)) {
@@ -714,7 +714,7 @@ kivi.VNode = class {
           } else if (b.length === 1) {
             // Fast path when b have 1 child.
             bNode = b[0];
-            if ((this.flags & kivi.VNodeFlags.trackByKey) === 0) {
+            if ((this.flags & kivi.VNodeFlags.TRACK_BY_KEY) === 0) {
               while (i < a.length) {
                 aNode = a[i++];
                 if (aNode._canSync(bNode)) {
@@ -745,7 +745,7 @@ kivi.VNode = class {
             }
           } else {
             // a and b have more than 1 child.
-            if ((this.flags & kivi.VNodeFlags.trackByKey) === 0) {
+            if ((this.flags & kivi.VNodeFlags.TRACK_BY_KEY) === 0) {
               this._syncChildren(a, b, context);
             } else {
               this._syncChildrenTrackingByKeys(a, b, context);
