@@ -26,7 +26,7 @@ how your Component should look at any point in time.
 - Extremely fast ([see benchmarks below](#benchmarks)).
 - Support for specifying html attributes, classes, etc outside of the
   Components as well as inside.
-- Minimal number of move operations for children reconciliation using
+- Minimal number of move operations in children reconciliation using
   [Longest Increasing Subsequence](https://en.wikipedia.org/wiki/Longest_increasing_subsequence)
   algorithm.
 - Mounting on top of existing html (adjacent text nodes should be
