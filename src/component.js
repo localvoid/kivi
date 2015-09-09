@@ -101,10 +101,10 @@ kivi.Component = function(flags, descriptor, parent, data, children, element) {
    */
   this.root = null;
 
-  /** @type {?Array<!kivi.InvalidatorSubscription>} */
+  /** @type {?Array<!kivi.InvalidatorSubscription>|?kivi.InvalidatorSubscription} */
   this._subscriptions = null;
 
-  /** @type {?Array<!kivi.InvalidatorSubscription>} */
+  /** @type {?Array<!kivi.InvalidatorSubscription>|?kivi.InvalidatorSubscription} */
   this._transientSubscriptions = null;
 
   if (kivi.DEBUG) {
@@ -202,7 +202,7 @@ kivi.Component.prototype.invalidate = function() {
 kivi.Component.prototype.dispose = function() {
   if (kivi.DEBUG) {
     if (this._isDisposed) {
-      throw 'Component cannot be disposed twice.'
+      throw 'Failed to dispose Component: component cannot be disposed twice'
     }
     this._isDisposed = true;
   }
@@ -229,9 +229,12 @@ kivi.Component.prototype.subscribe = function(invalidator) {
   invalidator.addSubscription(s);
   var subscriptions = this._subscriptions;
   if (subscriptions === null) {
-    this._subscriptions = subscriptions = [];
+    this._subscriptions = s;
+  } else if (subscriptions.constructor === kivi.InvalidatorSubscription) {
+    this._subscriptions = [this._subscriptions, s];
+  } else {
+    subscriptions.push(s);
   }
-  subscriptions.push(s);
 };
 
 /**
@@ -246,9 +249,12 @@ kivi.Component.prototype.transientSubscribe = function(invalidator) {
   invalidator.addSubscription(s);
   var subscriptions = this._transientSubscriptions;
   if (subscriptions === null) {
-    this._transientSubscriptions = subscriptions = [];
+    this._transientSubscriptions = s;
+  } else if (subscriptions.constructor === kivi.InvalidatorSubscription) {
+    this._transientSubscriptions = [this._transientSubscriptions, s];
+  } else {
+    subscriptions.push(s);
   }
-  subscriptions.push(s);
 };
 
 /**
@@ -257,15 +263,64 @@ kivi.Component.prototype.transientSubscribe = function(invalidator) {
  * @param {!kivi.InvalidatorSubscription} subscription
  */
 kivi.Component.prototype.removeSubscription = function(subscription) {
-  var subscriptions = /** @type {!Array<!kivi.InvalidatorSubscription>} */(
-      ((subscription.flags & kivi.InvalidatorSubscriptionFlags.TRANSIENT) === 0) ?
-          this._subscriptions: this._transientSubscriptions);
-
-  if (subscriptions.length === 1) {
-    subscriptions.pop();
+  var subscriptions;
+  var i;
+  if ((subscription.flags & kivi.InvalidatorSubscriptionFlags.TRANSIENT) === 0) {
+    subscriptions = this._subscriptions;
+    if (subscriptions.constructor === kivi.InvalidatorSubscription ||
+        subscriptions.length === 1) {
+      if (kivi.DEBUG) {
+        if (subscriptions.constructor === kivi.InvalidatorSubscription) {
+          if (subscriptions !== subscription) {
+            throw 'Failed to remove subscription from Component: cannot find appropriate subscription';
+          }
+        } else {
+          subscriptions = /** @type {!Array<!kivi.InvalidatorSubscription>} */(subscriptions);
+          if (subscriptions[0] !== subscription) {
+            throw 'Failed to remove subscription from Component: cannot find appropriate subscription';
+          }
+        }
+      }
+      this._subscriptions = null;
+    } else {
+      subscriptions = /** @type {!Array<!kivi.InvalidatorSubscription>} */(subscriptions);
+      i = subscriptions.indexOf(subscription);
+      if (kivi.DEBUG) {
+        if (i === -1) {
+          throw 'Failed to remove subscription from Component: cannot find appropriate subscription';
+        }
+      }
+      subscriptions[i] = subscriptions.pop();
+    }
   } else {
-    subscriptions[subscriptions.indexOf(subscription)] = subscriptions.pop();
+    subscriptions = this._transientSubscriptions;
+    if (subscriptions.constructor === kivi.InvalidatorSubscription ||
+        subscriptions.length === 1) {
+      if (kivi.DEBUG) {
+        if (subscriptions.constructor === kivi.InvalidatorSubscription) {
+          if (subscriptions !== subscription) {
+            throw 'Failed to remove subscription from Component: cannot find appropriate subscription';
+          }
+        } else {
+          subscriptions = /** @type {!Array<!kivi.InvalidatorSubscription>} */(subscriptions);
+          if (subscriptions[0] !== subscription) {
+            throw 'Failed to remove subscription from Component: cannot find appropriate subscription';
+          }
+        }
+      }
+      this._transientSubscriptions = null;
+    } else {
+      subscriptions = /** @type {!Array<!kivi.InvalidatorSubscription>} */(subscriptions);
+      i = subscriptions.indexOf(subscription);
+      if (kivi.DEBUG) {
+        if (i === -1) {
+          throw 'Failed to remove subscription from Component: cannot find appropriate subscription';
+        }
+      }
+      subscriptions[i] = subscriptions.pop();
+    }
   }
+
 };
 
 /**
@@ -274,9 +329,14 @@ kivi.Component.prototype.removeSubscription = function(subscription) {
 kivi.Component.prototype.cancelSubscriptions = function() {
   var subscriptions = this._subscriptions;
   if (subscriptions !== null) {
-    for (var i = 0; i < subscriptions.length; i++) {
-      var s = subscriptions[i];
-      s.invalidator.removeSubscription(s);
+    if (subscriptions.constructor === kivi.InvalidatorSubscription) {
+      subscriptions.invalidator.removeSubscription(/** @type {!kivi.InvalidatorSubscription} */(subscriptions));
+    } else {
+      subscriptions = /** @type {!Array<!kivi.InvalidatorSubscription>} */(subscriptions);
+      for (var i = 0; i < subscriptions.length; i++) {
+        var s = subscriptions[i];
+        s.invalidator.removeSubscription(s);
+      }
     }
   }
   this._subscriptions = null;
@@ -288,9 +348,14 @@ kivi.Component.prototype.cancelSubscriptions = function() {
 kivi.Component.prototype.cancelTransientSubscriptions = function() {
   var subscriptions = this._transientSubscriptions;
   if (subscriptions !== null) {
-    for (var i = 0; i < subscriptions.length; i++) {
-      var s = subscriptions[i];
-      s.invalidator.removeSubscription(s);
+    if (subscriptions.constructor === kivi.InvalidatorSubscription) {
+      subscriptions.invalidator.removeSubscription(/** @type {!kivi.InvalidatorSubscription} */(subscriptions));
+    } else {
+      for (var i = 0; i < subscriptions.length; i++) {
+        subscriptions = /** @type {!Array<!kivi.InvalidatorSubscription>} */(subscriptions);
+        var s = subscriptions[i];
+        s.invalidator.removeSubscription(s);
+      }
     }
   }
   this._transientSubscriptions = null;
