@@ -11,7 +11,7 @@ goog.provide('kivi.injectComponent');
 goog.provide('kivi.mountComponent');
 goog.require('kivi.Component');
 goog.require('kivi.VNode');
-goog.require('kivi.scheduler');
+goog.require('kivi.scheduler.instance');
 
 /**
  * @define {boolean} DEBUG is provided as a convenience so that debugging code
@@ -21,7 +21,7 @@ goog.require('kivi.scheduler');
 goog.define('kivi.DEBUG', true);
 
 /**
- * Create a [vdom.VNode] representing a [Text] node.
+ * Create a [kivi.VNode] representing a [Text] node.
  *
  * @param {string} content
  * @return {!kivi.VNode}
@@ -31,7 +31,7 @@ kivi.createText = function(content) {
 };
 
 /**
- * Create a [vdom.VNode] representing a [Element] node.
+ * Create a [kivi.VNode] representing a [Element] node.
  *
  * @param {string} tag
  * @return {!kivi.VNode}
@@ -41,7 +41,7 @@ kivi.createElement = function(tag) {
 };
 
 /**
- * Create a [vdom.VNode] representing a [SVGElement] node.
+ * Create a [kivi.VNode] representing a [SVGElement] node.
  *
  * @param {string} tag
  * @return {!kivi.VNode}
@@ -51,7 +51,7 @@ kivi.createSvgElement = function(tag) {
 };
 
 /**
- * Create a [vdom.VNode] representing a [vdom.Component] node.
+ * Create a [kivi.VNode] representing a [kivi.Component] node.
  *
  * @param {!kivi.CDescriptor} descriptor
  * @param {*=} opt_data
@@ -63,7 +63,7 @@ kivi.createComponent = function(descriptor, opt_data) {
 };
 
 /**
- * Create a [vdom.VNode] representing a root node.
+ * Create a [kivi.VNode] representing a root node.
  *
  * @return {!kivi.VNode}
  */
@@ -101,37 +101,37 @@ kivi.mountComponent = function(descriptor, data, element) {
 };
 
 /**
- * Shortcut for `kivi.scheduler.nextFrame()`
+ * Shortcut for `kivi.scheduler.instance.nextFrame()`
  *
- * @returns {!kivi.SchedulerFrame}
+ * @returns {!kivi.scheduler.Frame}
  */
 kivi.nextFrame = function() {
-  return kivi.scheduler.nextFrame();
+  return kivi.scheduler.instance.nextFrame();
 };
 
 /**
- * Shortcut for `kivi.scheduler.currentFrame()`
+ * Shortcut for `kivi.scheduler.instance.currentFrame()`
  *
- * @returns {!kivi.SchedulerFrame}
+ * @returns {!kivi.scheduler.Frame}
  */
 kivi.currentFrame = function() {
-  return kivi.scheduler.currentFrame();
+  return kivi.scheduler.instance.currentFrame();
 };
 
 /**
- * Shortcut for `kivi.scheduler.scheduleMicrotask`
+ * Shortcut for `kivi.scheduler.instance.scheduleMicrotask`
  *
  * @param {!function()} cb
  */
 kivi.scheduleMicrotask = function(cb) {
-  kivi.scheduler.scheduleMicrotask(cb);
+  kivi.scheduler.instance.scheduleMicrotask(cb);
 };
 
 /**
- * Shortcut for `kivi.scheduler.scheduleMacrotask`
+ * Shortcut for `kivi.scheduler.instance.scheduleMacrotask`
  *
  * @param {!function()} cb
  */
 kivi.scheduleMacrotask = function(cb) {
-  kivi.scheduler.scheduleMacrotask(cb);
+  kivi.scheduler.instance.scheduleMacrotask(cb);
 };
