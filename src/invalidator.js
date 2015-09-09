@@ -82,6 +82,18 @@ kivi.Invalidator = function() {
 };
 
 /**
+ * Returns `true` if Invalidator has active subscription.
+ *
+ * @returns {boolean}
+ */
+kivi.Invalidator.prototype.hasSubscriptions = function() {
+  return ((this._subscriptions !== null &&
+           (this._subscriptions.constructor === kivi.InvalidatorSubscription || this._subscriptions.length > 0)) ||
+          (this._transientSubscriptions !== null &&
+           (this._transientSubscriptions.constructor === kivi.InvalidatorSubscription || this._transientSubscriptions.length > 0)));
+};
+
+/**
  * Add Subscription.
  *
  * @param {!kivi.InvalidatorSubscription} subscription

@@ -60,6 +60,9 @@ kivi.scheduler.Scheduler = function() {
   /** @private {!kivi.scheduler.Frame} */
   this._nextFrame = new kivi.scheduler.Frame();
 
+  /** @private {!Array<!kivi.Component>} */
+  this._invalidateEachFrame = [];
+
   var self = this;
 
   /** @private {!kivi.scheduler.MutationObserver} */
@@ -109,6 +112,12 @@ kivi.scheduler.Scheduler = function() {
 
     self.flags &= ~kivi.scheduler.SchedulerFlags.FRAMETASK_PENDING;
     self.flags |= kivi.scheduler.SchedulerFlags.RUNNING;
+
+    // invalidate components before swapping frames, because they
+    // should register for updates in the next frame.
+    for (i = 0; i < self._invalidateEachFrame.length; i++) {
+      self._invalidateEachFrame[i].invalidate();
+    }
 
     frame = self._nextFrame;
     self._nextFrame = self._currentFrame;
@@ -172,9 +181,23 @@ kivi.scheduler.Scheduler = function() {
       }
     }
 
+    if (self._invalidateEachFrame.length > 0) {
+      self.requestAnimationFrame();
+    }
+
     self.clock++;
     self.flags &= ~kivi.scheduler.SchedulerFlags.RUNNING;
   };
+};
+
+/**
+ * Request animation frame.
+ */
+kivi.scheduler.Scheduler.prototype.requestAnimationFrame = function() {
+  if ((this.flags & kivi.scheduler.SchedulerFlags.FRAMETASK_PENDING) === 0) {
+    this.flags |= kivi.scheduler.SchedulerFlags.FRAMETASK_PENDING;
+    window.requestAnimationFrame(this._handleAnimationFrame);
+  }
 };
 
 /**
@@ -192,11 +215,32 @@ kivi.scheduler.Scheduler.prototype.currentFrame = function() {
  * @returns {!kivi.scheduler.Frame}
  */
 kivi.scheduler.Scheduler.prototype.nextFrame = function() {
-  if ((this.flags & kivi.scheduler.SchedulerFlags.FRAMETASK_PENDING) === 0) {
-    this.flags |= kivi.scheduler.SchedulerFlags.FRAMETASK_PENDING;
-    window.requestAnimationFrame(this._handleAnimationFrame);
-  }
+  this.requestAnimationFrame();
   return this._nextFrame;
+};
+
+/**
+ * Start invalidating Component on each frame.
+ *
+ * @param {!kivi.Component} c
+ */
+kivi.scheduler.Scheduler.prototype.startInvalidateEachFrame = function(c) {
+  this.requestAnimationFrame();
+  this._invalidateEachFrame.push(c);
+};
+
+/**
+ * Stop Invalidating Component on each frame.
+ *
+ * @param {!kivi.Component} c
+ */
+kivi.scheduler.Scheduler.prototype.stopInvalidateEachFrame = function(c) {
+  var handlers = this._invalidateEachFrame;
+  if (handlers.length > 1) {
+    handlers[handlers.indexOf(c)] = handlers.pop();
+  } else {
+    handlers.pop();
+  }
 };
 
 /**

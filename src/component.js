@@ -47,11 +47,12 @@ kivi.CDescriptor = function(name) {
  * @enum {number}
  */
 kivi.ComponentFlags = {
-  DIRTY:               0x0001,
-  ATTACHED:            0x0002,
-  SVG:                 0x0004,
-  MOUNTING:            0x0008,
-  SHOULD_UPDATE_FLAGS: 0x0003
+  DIRTY:                 0x0001,
+  ATTACHED:              0x0002,
+  SVG:                   0x0004,
+  MOUNTING:              0x0008,
+  INVALIDATE_EACH_FRAME: 0x0010,
+  SHOULD_UPDATE_FLAGS:   0x0003
 };
 
 /**
@@ -197,6 +198,26 @@ kivi.Component.prototype.invalidate = function() {
 };
 
 /**
+ * Start invalidating Component on each frame.
+ */
+kivi.Component.prototype.startInvalidateEachFrame = function() {
+  if ((this.flags & kivi.ComponentFlags.INVALIDATE_EACH_FRAME) === 0) {
+    this.flags |= kivi.ComponentFlags.INVALIDATE_EACH_FRAME;
+    kivi.scheduler.instance.startInvalidateEachFrame(this);
+  }
+};
+
+/**
+ * Stop invalidating Component on each frame.
+ */
+kivi.Component.prototype.stopInvalidateEachFrame = function() {
+  if ((this.flags & kivi.ComponentFlags.INVALIDATE_EACH_FRAME) === 0) {
+    this.flags &= ~kivi.ComponentFlags.INVALIDATE_EACH_FRAME;
+    kivi.scheduler.instance.stopInvalidateEachFrame(this);
+  }
+};
+
+/**
  * Dispose Component.
  */
 kivi.Component.prototype.dispose = function() {
@@ -210,6 +231,7 @@ kivi.Component.prototype.dispose = function() {
   this.flags &= ~kivi.ComponentFlags.ATTACHED;
   this.cancelSubscriptions();
   this.cancelTransientSubscriptions();
+  this.stopInvalidateEachFrame();
   if (this.root !== null) {
     this.root.dispose();
   }
