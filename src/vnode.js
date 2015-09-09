@@ -223,9 +223,9 @@ kivi.VNode.prototype.trackByKey = function() {
  */
 kivi.VNode.prototype._canSync = function(b) {
   return (this.flags === b.flags &&
-  this.tag === b.tag &&
-  this.type_ === b.type_ &&
-  this.key_ === b.key_);
+          this.tag === b.tag &&
+          this.type_ === b.type_ &&
+          this.key_ === b.key_);
 };
 
 /**

@@ -2,11 +2,11 @@
 
 Library for building web UIs.
 
-Kivi is build for
+Kivi is written for
 [google-closure-compiler](https://github.com/google/closure-compiler)
-ADVANCED_MODE, and it is using google-closure modules. There are no
-plans for distributing it as a standalone library without closure
-compiler dependency.
+ADVANCED_MODE, and it is using closure modules. There are no plans for
+distributing it as a standalone library without closure compiler
+dependency.
 
 If you are choosing between [React](https://facebook.github.io/react/)
 and any other similar library, I'd strongly recommend to use React,
@@ -23,9 +23,21 @@ that you'll have the same problems in a typical SPA.
 Virtual DOM simplifies the way to manage DOM mutations, just describe
 how your Component should look at any point in time.
 
+- Extremely fast ([see benchmarks below](#benchmarks)).
+- Support for specifying html attributes, classes, etc outside of the
+  Components as well as inside.
+- Minimal number of move operations for children reconciliation using
+  [Longest Increasing Subsequence](https://en.wikipedia.org/wiki/Longest_increasing_subsequence)
+  algorithm.
+- Mounting on top of existing html (adjacent text nodes should be
+  separated by Comment nodes `<!---->` when rendered to string).
+
 ### Scheduler
 
-Scheduler for batching read and write DOM tasks.
+- Batching for read and write DOM tasks.
+- Write DOM tasks sorted by their priority.
+- Microtask queue.
+- Macrotask queue.
 
 ### Misc
 
@@ -51,16 +63,18 @@ app.entry.d.update = function(c) {
 
 ```js
 goog.provide('app');
+goog.provide('app.box');
+goog.provide('app.main');
 goog.require('kivi');
-
-// Initialize kivi library with default Scheduler implementation.
-kivi.init(new kivi.Scheduler());
 
 // Component Descriptor is an object that stores the behavior of
 // the Component.
 // First parameter is the name that is used for debugging purposes,
 // and will be automatically removed from production builds.
-app.box.d = new vdom.CDescriptor('Box');
+// First generic type parameter is an input data type, and the
+// second is a state type.
+/** @const {!kivi.CDescriptor<string, null>} */
+app.box.d = new kivi.CDescriptor('Box');
 // Tag name of the root element for this Component. Default tag is 'div'.
 app.box.d.tag = 'span';
 
@@ -77,13 +91,17 @@ app.box.d.tag = 'span';
 // any method that is best suited for updates.
 //
 // First parameter is an instance of the Component.
+/** @param {!kivi.Component<string, null>} c */
 app.box.d.update = function(c) {
   // syncVRoot method is used to update internal representation using
   // Virtual DOM API.
   c.syncVRoot(kivi.createRoot().children(c.data));
 };
 
-app.main.d = new vdom.CDescriptor('Main');
+/** @const {!kivi.CDescriptor<string, null>} */
+app.main.d = new kivi.CDescriptor('Main');
+
+/** @param {!kivi.Component<string, null>} c */
 app.main.d.update = function(c) {
   c.syncVRoot(kivi.createRoot().children([
     kivi.createElement('span').children('Hello '),
@@ -97,10 +115,11 @@ kivi.injectComponent(app.main.d, 'kivi', document.body);
 
 ## Examples
 
-- [Hello World](https://github.com/localvoid/kivi-examples/src/hello)
-- [Anim](https://github.com/localvoid/kivi-examples/src/anim)
+- [Hello World](https://github.com/localvoid/kivi-examples/tree/master/src/hello)
+- [Anim](https://github.com/localvoid/kivi-examples/tree/master/src/anim)
 
 ## Benchmarks
+<a name="benchmarks"></a>
 
 - [dbmonster](https://localvoid.github.io/kivi-dbmonster/)
 - [uibench](https://localvoid.github.io/uibench/)
