@@ -1,6 +1,11 @@
 goog.provide('kivi.VNode');
 goog.provide('kivi.VNodeFlags');
 goog.require('kivi.HtmlNamespace');
+goog.require('kivi.sync.attrs');
+goog.require('kivi.sync.classes');
+goog.require('kivi.sync.props');
+goog.require('kivi.sync.setAttr');
+goog.require('kivi.sync.style');
 
 /**
  * VNode Flags
@@ -312,7 +317,7 @@ kivi.VNode = class {
         keys = Object.keys(this.attrs_);
         for (i = 0, il = keys.length; i < il; i++) {
           key = keys[i];
-          kivi._setAttr(ref, key, this.attrs_[key]);
+          kivi.sync.setAttr(ref, key, this.attrs_[key]);
         }
       }
 
@@ -506,13 +511,13 @@ kivi.VNode = class {
       }
     } else if ((flags & (kivi.VNodeFlags.element | kivi.VNodeFlags.component | kivi.VNodeFlags.root)) !== 0) {
       if (this.attrs_ !== b.attrs_) {
-        kivi.syncAttrs(this.attrs_, b.attrs_, ref);
+        kivi.sync.attrs(this.attrs_, b.attrs_, ref);
       }
       if (this.props_ !== b.props_) {
-        kivi.syncProps(this.props_, b.props_, ref);
+        kivi.sync.props(this.props_, b.props_, ref);
       }
       if (this.style_ !== b.style_) {
-        kivi.syncStyle(this.style_, b.style_, ref.style);
+        kivi.sync.style(this.style_, b.style_, ref.style);
       }
 
       if ((flags & kivi.VNodeFlags.element) !== 0) {
@@ -532,7 +537,7 @@ kivi.VNode = class {
           b.data_ = this.data_;
         }
       } else if (this.classes_ !== b.classes_) {
-        kivi.syncClasses(this.classes_, b.classes_,
+        kivi.sync.classes(this.classes_, b.classes_,
             /** @type {!DOMTokenList} */(/** @type {!HTMLElement} */(ref).classList));
       }
 
@@ -1058,414 +1063,6 @@ kivi.VNode = class {
       }
     }
   };
-};
-
-/**
- * Namespaced Attribute should be set with setAttributeNS call.
- *
- * @typedef {{name: string, namespace: kivi.HtmlNamespace}}
- * @protected
- */
-kivi._NamespacedAttr;
-
-/**
- * Namespaced Attributes.
- *
- * Namespaced attribute names should start with '$' symbol, so we can easily recognize them from simple
- * attributes.
- *
- * @const {!Object<string, !kivi._NamespacedAttr>}
- * @protected
- */
-kivi._namespacedAttrs = {
-  '$xlink:actuate': {
-    name: 'xlink:actuate',
-    namespace: kivi.HtmlNamespace.XLINK
-  },
-  '$xlink:arcrole': {
-    name: 'xlink:arcrole',
-    namespace: kivi.HtmlNamespace.XLINK
-  },
-  '$xlink:href': {
-    name: 'xlink:href',
-    namespace: kivi.HtmlNamespace.XLINK
-  },
-  '$xlink:role': {
-    name: 'xlink:role',
-    namespace: kivi.HtmlNamespace.XLINK
-  },
-  '$xlink:show': {
-    name: 'xlink:show',
-    namespace: kivi.HtmlNamespace.XLINK
-  },
-  '$xlink:title': {
-    name: 'xlink:title',
-    namespace: kivi.HtmlNamespace.XLINK
-  },
-  '$xlink:type': {
-    name: 'xlink:type',
-    namespace: kivi.HtmlNamespace.XLINK
-  },
-  '$xml:base': {
-    name: 'xml:base',
-    namespace: kivi.HtmlNamespace.XML
-  },
-  '$xml:lang': {
-    name: 'xml:lang',
-    namespace: kivi.HtmlNamespace.XML
-  },
-  '$xml:space': {
-    name: 'xml:space',
-    namespace: kivi.HtmlNamespace.XML
-  }
-};
-
-/**
- * Set Attribute.
- *
- * If attribute name starts with '$', treat it as a special attribute.
- *
- * @param {!Element} node
- * @param {string} key
- * @param {string} value
- * @protected
- */
-kivi._setAttr = function(node, key, value) {
-  if (key[0] !== '$') {
-    node.setAttribute(key, value);
-  } else {
-    var details = kivi._namespacedAttrs[key];
-    if (kivi.DEBUG) {
-      if (details === void 0) {
-        throw `Invalid namespaced attribute $${key}}`;
-      }
-    }
-    node.setAttributeNS(details.namespace, details.name, value);
-  }
-};
-
-/**
- * Remove Attribute.
- *
- * If attribute name starts with '$', treat it as a special attribute.
- *
- * @param {!Element} node
- * @param {string} key
- * @protected
- */
-kivi._removeAttr = function(node, key) {
-  if (key[0] !== '$') {
-    node.removeAttribute(key);
-  } else {
-    var details = kivi._namespacedAttrs[key];
-    if (kivi.DEBUG) {
-      if (details === void 0) {
-        throw `Invalid namespaced attribute $${key}}`;
-      }
-    }
-    node.removeAttributeNS(details.namespace, details.name);
-  }
-};
-
-/**
- * Synchronize attributes.
- *
- * @param {?Object<string, string>} a Old attributes.
- * @param {?Object<string, string>} b New attributes.
- * @param {!Element} node
- */
-kivi.syncAttrs = function(a, b, node) {
-  var i, il;
-  var key;
-  var keys;
-  var aValue;
-  var bValue;
-
-  if (a !== null) {
-    if (b === null) {
-      // b is empty, remove all attributes from a.
-      keys = Object.keys(a);
-      for (i = 0, il = keys.length; i < il; i++) {
-        kivi._removeAttr(node, keys[i]);
-      }
-    } else {
-      // Remove and update attributes.
-      keys = Object.keys(a);
-      for (i = 0, il = keys.length; i < il; i++) {
-        key = keys[i];
-        if (b.hasOwnProperty(key)) {
-          aValue = a[key];
-          bValue = b[key];
-          if (aValue !== bValue) {
-            kivi._setAttr(node, key, bValue);
-          }
-        } else {
-          kivi._removeAttr(node, key);
-        }
-      }
-
-      // Insert new attributes.
-      keys = Object.keys(b);
-      for (i = 0, il = keys.length; i < il; i++) {
-        key = keys[i];
-        if (!a.hasOwnProperty(key)) {
-          kivi._setAttr(node, key, b[key]);
-        }
-      }
-    }
-  } else if (b !== null) {
-    // a is empty, insert all attributes from b.
-    keys = Object.keys(b);
-    for (i = 0, il = keys.length; i < il; i++) {
-      key = keys[i];
-      kivi._setAttr(node, key, b[key]);
-    }
-  }
-};
-
-/**
- * Synchronize properties.
- *
- * @param {?Object<string, *>} a Old properties.
- * @param {?Object<string, *>} b New properties.
- * @param {!Element} node
- */
-kivi.syncProps = function(a, b, node) {
-  var i, il;
-  var key;
-  var keys;
-  var aValue;
-  var bValue;
-
-  if (a !== null) {
-    if (b === null) {
-      // b is empty, remove all attributes from a.
-      keys = Object.keys(a);
-      for (i = 0, il = keys.length; i < il; i++) {
-        node[keys[i]] = void 0;
-      }
-    } else {
-      // Remove and update attributes.
-      keys = Object.keys(a);
-      for (i = 0, il = keys.length; i < il; i++) {
-        key = keys[i];
-        if (b.hasOwnProperty(key)) {
-          aValue = a[key];
-          bValue = b[key];
-          if (aValue !== bValue) {
-            node[key] = bValue;
-          }
-        } else {
-          node[key] = void 0;
-        }
-      }
-
-      // Insert new attributes.
-      keys = Object.keys(b);
-      for (i = 0, il = keys.length; i < il; i++) {
-        key = keys[i];
-        if (!a.hasOwnProperty(key)) {
-          node[key] = b[key];
-        }
-      }
-    }
-  } else if (b !== null) {
-    // a is empty, insert all attributes from b.
-    keys = Object.keys(b);
-    for (i = 0, il = keys.length; i < il; i++) {
-      key = keys[i];
-      node[key] = b[key];
-    }
-  }
-};
-
-/**
- * Synchronize styles.
- *
- * @param {?Object<string, string>} a Old style.
- * @param {?Object<string, string>} b New style.
- * @param {!CSSStyleDeclaration} style
- */
-kivi.syncStyle = function(a, b, style) {
-  var i, il;
-
-  /**
-   * @type {string}
-   */
-  var key;
-
-  /**
-   * @type {!Array<string>}
-   */
-  var keys;
-
-  if (a !== null) {
-    if (b === null) {
-      // b is empty, remove all styles from a.
-      keys = Object.keys(a);
-      for (i = 0, il = keys.length; i < il; i++) {
-        style.removeProperty(keys[i]);
-      }
-    } else {
-      // Remove and update styles.
-      keys = Object.keys(a);
-      for (i = 0, il = keys.length; i < il; i++) {
-        key = keys[i];
-        if (b.hasOwnProperty(key)) {
-          style.setProperty(key, b[key], '');
-        } else {
-          style.removeProperty(key);
-        }
-      }
-
-      // Insert new styles.
-      keys = Object.keys(b);
-      for (i = 0, il = keys.length; i < il; i++) {
-        key = keys[i];
-        if (!a.hasOwnProperty(key)) {
-          style.setProperty(key, b[key], '');
-        }
-      }
-    }
-  } else if (b !== null) {
-    // a is empty, insert all styles from b.
-    keys = Object.keys(b);
-    for (i = 0, il = keys.length; i < il; i++) {
-      key = keys[i];
-      style.setProperty(key, b[key], '');
-    }
-  }
-};
-
-/**
- * Synchronize classes in the classList.
- *
- * @param {?Array<string>} a Old classes.
- * @param {?Array<string>} b New classes.
- * @param {!DOMTokenList} classList
- */
-kivi.syncClasses = function(a, b, classList) {
-  var i;
-  var aCls, bCls;
-  var unchangedPosition;
-
-  if (a !== null && a.length !== 0) {
-    if (b === null || b.length === 0) {
-      // b is empty, remove all classes from a.
-      for (i = 0; i < a.length; i++) {
-        classList.remove(a[i]);
-      }
-    } else {
-      if (a.length === 1 && b.length === 1) {
-        // Fast path when a and b have only one class.
-        aCls = a[0];
-        bCls = b[0];
-
-        if (aCls !== bCls) {
-          classList.remove(aCls);
-          classList.add(bCls);
-        }
-      } else if (a.length === 1) {
-        // Fast path when a have 1 class.
-        aCls = a[0];
-        unchangedPosition = -1;
-        for (i = 0; i < b.length; i++) {
-          bCls = b[i];
-          if (aCls === bCls) {
-            unchangedPosition = i;
-            break;
-          } else {
-            classList.add(bCls);
-          }
-        }
-        if (unchangedPosition !== -1) {
-          for (i = unchangedPosition + 1; i < b.length; i++) {
-            classList.add(b[i]);
-          }
-        } else {
-          classList.remove(aCls);
-        }
-      } else if (b.length === 1) {
-        // Fast path when b have 1 class.
-        bCls = b[0];
-        unchangedPosition = -1;
-        for (i = 0; i < a.length; i++) {
-          aCls = a[i];
-          if (aCls === bCls) {
-            unchangedPosition = i;
-            break;
-          } else {
-            classList.remove(aCls);
-          }
-        }
-        if (unchangedPosition !== -1) {
-          for (i = unchangedPosition + 1; i < a.length; i++) {
-            classList.remove(a[i]);
-          }
-        } else {
-          classList.add(bCls);
-        }
-      } else {
-        // a and b have more than 1 class.
-        var aStart = 0;
-        var bStart = 0;
-        var aEnd = a.length - 1;
-        var bEnd = b.length - 1;
-        var removed = false;
-        var j;
-
-        while (aStart <= aEnd && bStart <= bEnd) {
-          if (a[aStart] !== b[bStart]) {
-            break;
-          }
-
-          aStart++;
-          bStart++;
-        }
-
-        while (aStart <= aEnd && bStart <= bEnd) {
-          if (a[aEnd] !== b[bEnd]) {
-            break;
-          }
-
-          aEnd--;
-          bEnd--;
-        }
-
-        var visited = new Array(bEnd - bStart + 1);
-
-        for (i = aStart; i <= aEnd; i++) {
-          aCls = a[i];
-          removed = true;
-
-          for (j = bStart; j <= bEnd; j++) {
-            bCls = b[j];
-
-            if (aCls === bCls) {
-              removed = false;
-              visited[j - bStart] = true;
-              break;
-            }
-          }
-
-          if (removed) {
-            classList.remove(aCls);
-          }
-        }
-
-        for (i = bStart; i <= bEnd; i++) {
-          if (!visited[i - bStart]) {
-            classList.add(b[i]);
-          }
-        }
-      }
-    }
-  } else if (b !== null && b.length > 0) {
-    // a is empty, insert all classes from b.
-    for (i = 0; i < b.length; i++) {
-      classList.add(b[i]);
-    }
-  }
 };
 
 /**
