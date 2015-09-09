@@ -176,7 +176,7 @@ kivi.Component.prototype.syncVRoot = function(newRoot) {
  * Invalidate Component.
  */
 kivi.Component.prototype.invalidate = function() {
-  if ((this.flags & kivi.ComponentFlags.DIRTY) === 0) {
+  if ((this.flags & (kivi.ComponentFlags.DIRTY | kivi.ComponentFlags.DISPOSED)) === 0) {
     this.flags |= kivi.ComponentFlags.DIRTY;
     this.cancelTransientSubscriptions();
     kivi.scheduler.instance.nextFrame().updateComponent(this);
