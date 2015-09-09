@@ -1,6 +1,5 @@
 goog.provide('kivi.scheduler.Scheduler');
 goog.provide('kivi.scheduler.SchedulerFlags');
-goog.provide('kivi.scheduler.instance');
 goog.require('kivi.ComponentFlags');
 goog.require('kivi.scheduler.Frame');
 goog.require('kivi.scheduler.FrameFlags');
@@ -281,10 +280,3 @@ kivi.scheduler.Scheduler.prototype.scheduleMacrotask = function(cb) {
 
   this._macrotasks.push(cb);
 };
-
-/**
- * Global scheduler instance.
- *
- * @const {!kivi.scheduler.Scheduler}
- */
-kivi.scheduler.instance = new kivi.scheduler.Scheduler();
