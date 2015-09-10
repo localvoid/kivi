@@ -369,6 +369,10 @@ kivi.VNode.prototype.render = function(context) {
       }
     }
   }
+
+  if (kivi.DEBUG) {
+    Object.freeze(this);
+  }
 };
 
 /**
@@ -439,6 +443,10 @@ kivi.VNode.prototype.mount = function(node, context) {
         }
       }
     }
+  }
+
+  if (kivi.DEBUG) {
+    Object.freeze(this);
   }
 };
 
