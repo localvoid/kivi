@@ -1,4 +1,5 @@
 goog.provide('kivi.CDescriptor');
+goog.provide('kivi.CDescriptorFlags');
 goog.provide('kivi.Component');
 goog.require('kivi.ComponentFlags');
 goog.require('kivi.Invalidator');
@@ -7,16 +8,26 @@ goog.require('kivi.InvalidatorSubscriptionFlags');
 goog.require('kivi.scheduler.instance');
 
 /**
+ * CDescriptor Flags.
+ *
+ * @enum {number}
+ */
+kivi.CDescriptorFlags = {
+  SVG: 0x0001
+};
+
+/**
  * Component Descriptor.
  *
  * @template D, S
  * @param {string} name
+ * @param {number=} flags
  * @constructor
  * @struct
  * @final
  */
-kivi.CDescriptor = function(name) {
-  this.flags = 0;
+kivi.CDescriptor = function(name, flags) {
+  this.flags = flags === void 0 ? 0 : flags;
   this.tag = 'div';
 
   /** @type {?function (!kivi.Component<D, S>)} */
@@ -111,7 +122,9 @@ kivi.Component = function(flags, descriptor, parent, data, children, element) {
  * @returns {!kivi.Component}
  */
 kivi.Component.create = function(descriptor, data, children, context) {
-  var element = document.createElement(descriptor.tag);
+  var element = ((descriptor.flags & kivi.CDescriptorFlags.SVG) === 0) ?
+      document.createElement(descriptor.tag) :
+      document.createElementNS(kivi.HtmlNamespace.SVG, descriptor.tag);
   var c = new kivi.Component(kivi.ComponentFlags.SHOULD_UPDATE_FLAGS, descriptor, context, data, children, element);
   if (descriptor.init !== null) {
     descriptor.init(c);
