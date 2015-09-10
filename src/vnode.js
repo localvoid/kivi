@@ -195,6 +195,18 @@ kivi.VNode.prototype.trackByKey = function() {
 };
 
 /**
+ * Disable warnings in DEBUG mode when children shape is changing.
+ *
+ * @returns {!kivi.VNode}
+ */
+kivi.VNode.prototype.disableChildrenShapeWarnings = function() {
+  if (kivi.DEBUG) {
+    this.flags |= kivi.VNodeFlags.DISABLE_CHILDREN_SHAPE_WARNINGS;
+  }
+  return this;
+};
+
+/**
  * Checks if two nodes can be synced.
  *
  * @param {!kivi.VNode} b
@@ -665,6 +677,16 @@ kivi.VNode.prototype.syncChildren = function(a, b, context) {
           // Fast path when a have 1 child.
           aNode = a[0];
           if ((this.flags & kivi.VNodeFlags.TRACK_BY_KEY) === 0) {
+            if (kivi.DEBUG) {
+              if ((this.flags & kivi.VNodeFlags.DISABLE_CHILDREN_SHAPE_WARNINGS) === 0) {
+                console.log(
+                    'VNode sync children: children shape is changing, try to enable tracking by key with ' +
+                    'VNode method trackByKey().\n' +
+                    'If you certain that children shape changes won\'t cause any problems with losing ' +
+                    'state, you can remove this warning with VNode method disableChildrenShapeWarnings().');
+                console.trace();
+              }
+            }
             while (i < b.length) {
               bNode = b[i++];
               if (aNode._canSync(bNode)) {
@@ -696,6 +718,16 @@ kivi.VNode.prototype.syncChildren = function(a, b, context) {
           // Fast path when b have 1 child.
           bNode = b[0];
           if ((this.flags & kivi.VNodeFlags.TRACK_BY_KEY) === 0) {
+            if (kivi.DEBUG) {
+              if ((this.flags & kivi.VNodeFlags.DISABLE_CHILDREN_SHAPE_WARNINGS) === 0) {
+                console.log(
+                    'VNode sync children: children shape is changing, try to enable tracking by key with ' +
+                    'VNode method trackByKey().\n' +
+                    'If you certain that children shape changes won\'t cause any problems with losing ' +
+                    'state, you can remove this warning with VNode method disableChildrenShapeWarnings().');
+                console.trace();
+              }
+            }
             while (i < a.length) {
               aNode = a[i++];
               if (aNode._canSync(bNode)) {
@@ -791,6 +823,17 @@ kivi.VNode.prototype._syncChildren = function(a, b, context) {
     bEnd--;
 
     aNode.sync(bNode, context);
+  }
+
+  if (kivi.DEBUG) {
+    if ((aStart <= aEnd || bStart <= bEnd) && ((this.flags & kivi.VNodeFlags.DISABLE_CHILDREN_SHAPE_WARNINGS) === 0)) {
+      console.log(
+          'VNode sync children: children shape is changing, try to enable tracking by key with ' +
+          'VNode method trackByKey().\n' +
+          'If you certain that children shape changes won\'t cause any problems with losing ' +
+          'state, you can remove this warning with VNode method disableChildrenShapeWarnings().');
+      console.trace();
+    }
   }
 
   // Iterate through the remaining nodes and if they have the same type, then sync, otherwise just
