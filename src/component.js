@@ -189,6 +189,7 @@ kivi.Component.prototype.invalidate = function() {
 kivi.Component.prototype.startUpdateEachFrame = function() {
   this.flags |= kivi.ComponentFlags.UPDATE_EACH_FRAME;
   if ((this.flags & kivi.ComponentFlags.IN_UPDATE_QUEUE) === 0) {
+    this.flags |= kivi.ComponentFlags.IN_UPDATE_QUEUE;
     kivi.scheduler.instance.startUpdateComponentEachFrame(this);
   }
 };
