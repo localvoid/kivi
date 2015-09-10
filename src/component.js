@@ -21,13 +21,13 @@ kivi.CDescriptorFlags = {
  *
  * @template D, S
  * @param {string} name
- * @param {number=} flags
+ * @param {number=} opt_flags
  * @constructor
  * @struct
  * @final
  */
-kivi.CDescriptor = function(name, flags) {
-  this.flags = flags === void 0 ? 0 : flags;
+kivi.CDescriptor = function(name, opt_flags) {
+  this.flags = opt_flags === void 0 ? 0 : opt_flags;
   this.tag = 'div';
 
   /** @type {?function (!kivi.Component<D, S>)} */
