@@ -1,6 +1,7 @@
 goog.provide('kivi.VNode');
 goog.require('kivi.HtmlNamespace');
 goog.require('kivi.VNodeFlags');
+goog.require('kivi.debug.printError');
 goog.require('kivi.sync.attrs');
 goog.require('kivi.sync.classes');
 goog.require('kivi.sync.props');
@@ -195,13 +196,13 @@ kivi.VNode.prototype.trackByKey = function() {
 };
 
 /**
- * Disable warnings in DEBUG mode when children shape is changing.
+ * Disable errors in DEBUG mode when children shape is changing.
  *
  * @returns {!kivi.VNode}
  */
-kivi.VNode.prototype.disableChildrenShapeWarnings = function() {
+kivi.VNode.prototype.disableChildrenShapeError = function() {
   if (kivi.DEBUG) {
-    this.flags |= kivi.VNodeFlags.DISABLE_CHILDREN_SHAPE_WARNINGS;
+    this.flags |= kivi.VNodeFlags.DISABLE_CHILDREN_SHAPE_ERROR;
   }
   return this;
 };
@@ -678,13 +679,12 @@ kivi.VNode.prototype.syncChildren = function(a, b, context) {
           aNode = a[0];
           if ((this.flags & kivi.VNodeFlags.TRACK_BY_KEY) === 0) {
             if (kivi.DEBUG) {
-              if ((this.flags & kivi.VNodeFlags.DISABLE_CHILDREN_SHAPE_WARNINGS) === 0) {
-                console.log(
-                    'VNode sync children: children shape is changing, try to enable tracking by key with ' +
+              if ((this.flags & kivi.VNodeFlags.DISABLE_CHILDREN_SHAPE_ERROR) === 0) {
+                kivi.debug.printError(
+                    'VNode sync children: children shape is changing, you should enable tracking by key with ' +
                     'VNode method trackByKey().\n' +
                     'If you certain that children shape changes won\'t cause any problems with losing ' +
-                    'state, you can remove this warning with VNode method disableChildrenShapeWarnings().');
-                console.trace();
+                    'state, you can remove this warning with VNode method disableChildrenShapeError().');
               }
             }
             while (i < b.length) {
@@ -719,13 +719,12 @@ kivi.VNode.prototype.syncChildren = function(a, b, context) {
           bNode = b[0];
           if ((this.flags & kivi.VNodeFlags.TRACK_BY_KEY) === 0) {
             if (kivi.DEBUG) {
-              if ((this.flags & kivi.VNodeFlags.DISABLE_CHILDREN_SHAPE_WARNINGS) === 0) {
-                console.log(
-                    'VNode sync children: children shape is changing, try to enable tracking by key with ' +
+              if ((this.flags & kivi.VNodeFlags.DISABLE_CHILDREN_SHAPE_ERROR) === 0) {
+                kivi.debug.printError(
+                    'VNode sync children: children shape is changing, you should enable tracking by key with ' +
                     'VNode method trackByKey().\n' +
                     'If you certain that children shape changes won\'t cause any problems with losing ' +
-                    'state, you can remove this warning with VNode method disableChildrenShapeWarnings().');
-                console.trace();
+                    'state, you can remove this warning with VNode method disableChildrenShapeError().');
               }
             }
             while (i < a.length) {
@@ -826,13 +825,12 @@ kivi.VNode.prototype._syncChildren = function(a, b, context) {
   }
 
   if (kivi.DEBUG) {
-    if ((aStart <= aEnd || bStart <= bEnd) && ((this.flags & kivi.VNodeFlags.DISABLE_CHILDREN_SHAPE_WARNINGS) === 0)) {
-      console.log(
-          'VNode sync children: children shape is changing, try to enable tracking by key with ' +
+    if ((aStart <= aEnd || bStart <= bEnd) && ((this.flags & kivi.VNodeFlags.DISABLE_CHILDREN_SHAPE_ERROR) === 0)) {
+      kivi.debug.printError(
+          'VNode sync children: children shape is changing, you should enable tracking by key with ' +
           'VNode method trackByKey().\n' +
           'If you certain that children shape changes won\'t cause any problems with losing ' +
-          'state, you can remove this warning with VNode method disableChildrenShapeWarnings().');
-      console.trace();
+          'state, you can remove this warning with VNode method disableChildrenShapeError().');
     }
   }
 
