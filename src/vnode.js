@@ -196,6 +196,16 @@ kivi.VNode.prototype.trackByKey = function() {
 };
 
 /**
+ * Owner [kivi.Component] will be responsible for managing children lifecycle.
+ *
+ * @returns {!kivi.VNode}
+ */
+kivi.VNode.prototype.managedContainer = function() {
+  this.flags |= kivi.VNodeFlags.MANAGED_CONTAINER;
+  return this;
+};
+
+/**
  * Disable errors in DEBUG mode when children shape is changing.
  *
  * @returns {!kivi.VNode}
@@ -588,9 +598,13 @@ kivi.VNode.prototype.dispose = function() {
  * @private
  */
 kivi.VNode.prototype._insertChild = function(node, nextRef, context) {
-  node.create(context);
-  this.ref.insertBefore(node.ref, nextRef);
-  node.render(context);
+  if (((this.flags & kivi.VNodeFlags.MANAGED_CONTAINER) !== 0) && context.descriptor.insertChild !== null) {
+    context.descriptor.insertChild(context, node, nextRef);
+  } else {
+    node.create(context);
+    this.ref.insertBefore(node.ref, nextRef);
+    node.render(context);
+  }
 };
 
 /**
@@ -602,9 +616,13 @@ kivi.VNode.prototype._insertChild = function(node, nextRef, context) {
  * @private
  */
 kivi.VNode.prototype._replaceChild = function(newNode, refNode, context) {
-  newNode.create(context);
-  this.ref.replaceChild(newNode.ref, refNode.ref);
-  newNode.render(context);
+  if (((this.flags & kivi.VNodeFlags.MANAGED_CONTAINER) !== 0) && context.descriptor.replaceChild !== null) {
+    context.descriptor.replaceChild(context, newNode, refNode);
+  } else {
+    newNode.create(context);
+    this.ref.replaceChild(newNode.ref, refNode.ref);
+    newNode.render(context);
+  }
 };
 
 /**
@@ -612,21 +630,31 @@ kivi.VNode.prototype._replaceChild = function(newNode, refNode, context) {
  *
  * @param {!kivi.VNode} node Node to move.
  * @param {?Node} nextRef Reference to the next html element.
+ * @param {!kivi.Component} context Current context.
  * @private
  */
-kivi.VNode.prototype._moveChild = function(node, nextRef) {
-  this.ref.insertBefore(node.ref, nextRef);
+kivi.VNode.prototype._moveChild = function(node, nextRef, context) {
+  if (((this.flags & kivi.VNodeFlags.MANAGED_CONTAINER) !== 0) && context.descriptor.moveChild !== null) {
+    context.descriptor.moveChild(context, node, nextRef);
+  } else {
+    this.ref.insertBefore(node.ref, nextRef);
+  }
 };
 
 /**
  * Remove VNode.
  *
  * @param {!kivi.VNode} node Node to remove.
+ * @param {!kivi.Component} context Current context.
  * @private
  */
-kivi.VNode.prototype._removeChild = function(node) {
-  this.ref.removeChild(node.ref);
-  node.dispose();
+kivi.VNode.prototype._removeChild = function(node, context) {
+  if (((this.flags & kivi.VNodeFlags.MANAGED_CONTAINER) !== 0) && context.descriptor.removeChild !== null) {
+    context.descriptor.removeChild(context, node);
+  } else {
+    this.ref.removeChild(node.ref);
+    node.dispose();
+  }
 };
 
 /**
@@ -660,7 +688,7 @@ kivi.VNode.prototype.syncChildren = function(a, b, context) {
   } else if (typeof b === 'string') {
     if (a !== null) {
       while(i < a.length) {
-        this._removeChild(a[i++]);
+        this._removeChild(a[i++], context);
       }
     }
     this.ref.textContent = b;
@@ -669,7 +697,7 @@ kivi.VNode.prototype.syncChildren = function(a, b, context) {
       if (b === null || b.length === 0) {
         // b is empty, remove all children from a.
         while(i < a.length) {
-          this._removeChild(a[i++]);
+          this._removeChild(a[i++], context);
         }
       } else {
         if (a.length === 1 && b.length === 1) {
@@ -720,7 +748,7 @@ kivi.VNode.prototype.syncChildren = function(a, b, context) {
               this._insertChild(b[i++], null, context);
             }
           } else {
-            this._removeChild(aNode);
+            this._removeChild(aNode, context);
           }
         } else if (b.length === 1) {
           // Fast path when b have 1 child.
@@ -742,7 +770,7 @@ kivi.VNode.prototype.syncChildren = function(a, b, context) {
                 synced = true;
                 break;
               }
-              this._removeChild(aNode);
+              this._removeChild(aNode, context);
             }
           } else {
             while (i < a.length) {
@@ -752,13 +780,13 @@ kivi.VNode.prototype.syncChildren = function(a, b, context) {
                 synced = true;
                 break;
               }
-              this._removeChild(aNode);
+              this._removeChild(aNode, context);
             }
           }
 
           if (synced) {
             while (i < a.length) {
-              this._removeChild(a[i++]);
+              this._removeChild(a[i++], context);
             }
           } else {
             this._insertChild(bNode, null, context);
@@ -857,7 +885,7 @@ kivi.VNode.prototype._syncChildren = function(a, b, context) {
   if (aStart <= aEnd) {
     // All nodes from a are synced, remove the rest.
     do {
-      this._removeChild(a[aStart++]);
+      this._removeChild(a[aStart++], context);
     } while (aStart < aEnd);
   } else if (bStart <= bEnd) {
     // All nodes from b are synced, insert the rest.
@@ -942,7 +970,7 @@ kivi.VNode.prototype._syncChildrenTrackingByKeys = function(a, b, context) {
       aStartNode.sync(bEndNode, context);
       nextPos = bEnd + 1;
       next = nextPos < b.length ? b[nextPos].ref : null;
-      this._moveChild(bEndNode, next);
+      this._moveChild(bEndNode, next, context);
       aStart++;
       bEnd--;
       if (aStart > aEnd || bStart > bEnd) {
@@ -957,7 +985,7 @@ kivi.VNode.prototype._syncChildrenTrackingByKeys = function(a, b, context) {
     // Move and sync nodes from right to left.
     while (aEndNode.key_ === bStartNode.key_) {
       aEndNode.sync(bStartNode, context);
-      this._moveChild(bStartNode, aStartNode.ref);
+      this._moveChild(bStartNode, aStartNode.ref, context);
       aEnd--;
       bStart++;
       if (aStart > aEnd || bStart > bEnd) {
@@ -979,7 +1007,7 @@ kivi.VNode.prototype._syncChildrenTrackingByKeys = function(a, b, context) {
   } else if (bStart > bEnd) {
     // All nodes from b are synced, remove the rest from a.
     while (aStart <= aEnd) {
-      this._removeChild(a[aStart++]);
+      this._removeChild(a[aStart++], context);
     }
   } else {
     // Perform more complex sync algorithm on the remaining nodes.
@@ -1022,7 +1050,7 @@ kivi.VNode.prototype._syncChildrenTrackingByKeys = function(a, b, context) {
           }
         }
         if (removed) {
-          this._removeChild(aNode);
+          this._removeChild(aNode, context);
           removeOffset++;
         }
       }
@@ -1049,7 +1077,7 @@ kivi.VNode.prototype._syncChildrenTrackingByKeys = function(a, b, context) {
           }
           aNode.sync(bNode, context);
         } else {
-          this._removeChild(aNode);
+          this._removeChild(aNode, context);
           removeOffset++;
         }
       }
@@ -1074,7 +1102,7 @@ kivi.VNode.prototype._syncChildrenTrackingByKeys = function(a, b, context) {
             node = b[pos];
             nextPos = pos + 1;
             next = nextPos < b.length ? b[nextPos].ref : null;
-            this._moveChild(node, next);
+            this._moveChild(node, next, context);
           } else {
             j--;
           }

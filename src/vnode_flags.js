@@ -18,6 +18,8 @@ kivi.VNodeFlags = {
   SVG:                          0x0010,
   /** [kivi.VNode] should track similar children by keys. */
   TRACK_BY_KEY:                 0x0020,
+  /** Owner [kivi.Component] will be responsible for managing children lifecycle. */
+  MANAGED_CONTAINER:            0x0040,
   /** Disable warnings in DEBUG mode when children shape is changing. */
   DISABLE_CHILDREN_SHAPE_ERROR: 0x1000
 };

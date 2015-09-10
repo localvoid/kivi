@@ -30,23 +30,75 @@ kivi.CDescriptor = function(name, opt_flags) {
   this.flags = opt_flags === void 0 ? 0 : opt_flags;
   this.tag = 'div';
 
-  /** @type {?function (!kivi.Component<D, S>)} */
-  this.init = null;
-
-  /** @type {?function (!kivi.Component<D, S>, D)} */
+  /**
+   * Data setter.
+   *
+   * @type {?function (!kivi.Component<D, S>, D)}
+   */
   this.setData = null;
 
-  /** @type {?function (!kivi.Component<D, S>, (?Array<!kivi.VNode>|string))} */
+  /**
+   * Children setter.
+   *
+   * @type {?function (!kivi.Component<D, S>, (?Array<!kivi.VNode>|string))}
+   */
   this.setChildren = null;
 
-  /** @type {?function (!kivi.Component<D, S>)} */
+  /**
+   * Lifecycle method: init.
+   *
+   * @type {?function (!kivi.Component<D, S>)}
+   */
+  this.init = null;
+
+  /**
+   * Lifecycle method: update.
+   *
+   * @type {?function (!kivi.Component<D, S>)}
+   */
   this.update = null;
 
-  /** @type {?function (!kivi.Component<D, S>)} */
+  /**
+   * Lifecycle method: invalidated.
+   *
+   * @type {?function (!kivi.Component<D, S>)}
+   */
   this.invalidated = null;
 
-  /** @type {?function (!kivi.Component<D, S>)} */
+  /**
+   * Lifecycle method: disposed.
+   *
+   * @type {?function (!kivi.Component<D, S>)}
+   */
   this.disposed = null;
+
+  /**
+   * Insert child hook for Managed Containers.
+   *
+   * @type {?function (!kivi.Component<D, S>, !kivi.VNode, ?Node)}
+   */
+  this.insertChild = null;
+
+  /**
+   * Replace child hook for Managed Containers.
+   *
+   * @type {?function (!kivi.Component<D, S>, !kivi.VNode, !kivi.VNode)}
+   */
+  this.replaceChild = null;
+
+  /**
+   * Move child hook for Managed Containers.
+   *
+   * @type {?function (!kivi.Component<D, S>, !kivi.VNode, ?Node)}
+   */
+  this.moveChild = null;
+
+  /**
+   * Remove child hook for Managed Containers.
+   *
+   * @type {?function (!kivi.Component<D, S>, !kivi.VNode)}
+   */
+  this.removeChild = null;
 
   if (kivi.DEBUG) {
     this.name = name;
