@@ -599,7 +599,7 @@ kivi.VNode.prototype.dispose = function() {
  */
 kivi.VNode.prototype._insertChild = function(node, nextRef, context) {
   if (((this.flags & kivi.VNodeFlags.MANAGED_CONTAINER) !== 0) && context.descriptor.insertChild !== null) {
-    context.descriptor.insertChild(context, node, nextRef);
+    context.descriptor.insertChild(context, this, node, nextRef);
   } else {
     node.create(context);
     this.ref.insertBefore(node.ref, nextRef);
@@ -617,7 +617,7 @@ kivi.VNode.prototype._insertChild = function(node, nextRef, context) {
  */
 kivi.VNode.prototype._replaceChild = function(newNode, refNode, context) {
   if (((this.flags & kivi.VNodeFlags.MANAGED_CONTAINER) !== 0) && context.descriptor.replaceChild !== null) {
-    context.descriptor.replaceChild(context, newNode, refNode);
+    context.descriptor.replaceChild(context, this, newNode, refNode);
   } else {
     newNode.create(context);
     this.ref.replaceChild(newNode.ref, refNode.ref);
@@ -635,7 +635,7 @@ kivi.VNode.prototype._replaceChild = function(newNode, refNode, context) {
  */
 kivi.VNode.prototype._moveChild = function(node, nextRef, context) {
   if (((this.flags & kivi.VNodeFlags.MANAGED_CONTAINER) !== 0) && context.descriptor.moveChild !== null) {
-    context.descriptor.moveChild(context, node, nextRef);
+    context.descriptor.moveChild(context, this, node, nextRef);
   } else {
     this.ref.insertBefore(node.ref, nextRef);
   }
@@ -650,7 +650,7 @@ kivi.VNode.prototype._moveChild = function(node, nextRef, context) {
  */
 kivi.VNode.prototype._removeChild = function(node, context) {
   if (((this.flags & kivi.VNodeFlags.MANAGED_CONTAINER) !== 0) && context.descriptor.removeChild !== null) {
-    context.descriptor.removeChild(context, node);
+    context.descriptor.removeChild(context, this, node);
   } else {
     this.ref.removeChild(node.ref);
     node.dispose();
