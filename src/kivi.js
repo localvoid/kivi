@@ -20,6 +20,10 @@ goog.require('kivi.scheduler.instance');
  */
 goog.define('kivi.DEBUG', true);
 
+if (kivi.DEBUG) {
+  console.info('kivi debug mode: on');
+}
+
 /**
  * Create a [kivi.VNode] representing a [Text] node.
  *
