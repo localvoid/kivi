@@ -299,16 +299,16 @@ kivi.VNode.prototype.createCommentPlaceholder = function() {
 kivi.VNode.prototype.render = function(context) {
   if (kivi.DEBUG) {
     if (this.ref === null) {
-      throw 'VNode should be created before render.';
+      throw 'Failed to render VNode: VNode should be created before render.';
     }
     if ((this.flags & kivi.VNodeFlags.COMMENT_PLACEHOLDER) !== 0) {
-      throw 'VNode comment placeholder cannot be rendered.'
+      throw 'Failed to render VNode: VNode comment placeholder cannot be rendered.'
     }
     if ((this.flags & kivi.VNodeFlags.DEBUG_IS_RENDERED) !== 0) {
-      throw 'VNode cannot be rendered twice.';
+      throw 'Failed to render VNode: VNode cannot be rendered twice.';
     }
     if ((this.flags & kivi.VNodeFlags.DEBUG_IS_MOUNTED) !== 0) {
-      throw 'VNode cannot be rendered after mount.';
+      throw 'Failed to render VNode: VNode cannot be rendered after mount.';
     }
     this.flags |= kivi.VNodeFlags.DEBUG_IS_RENDERED;
   }
@@ -336,7 +336,7 @@ kivi.VNode.prototype.render = function(context) {
       if ((flags & kivi.VNodeFlags.TRACK_BY_KEY) !== 0) {
         for (i = 0; i < this.children_.length; i++) {
           if (this.children_[i].key_ === null) {
-            throw 'Failed to render VNode. Invalid VNode: rendering children with trackByKey requires that all' +
+            throw 'Failed to render VNode: rendering children with trackByKey requires that all' +
                   ' children have keys.';
           }
         }
@@ -422,16 +422,16 @@ kivi.VNode.prototype.render = function(context) {
 kivi.VNode.prototype.mount = function(node, context) {
   if (kivi.DEBUG) {
     if (this.ref !== null) {
-      throw 'VNode cannot be mounted if it already has a reference to DOM Node.';
+      throw 'Failed to mount VNode: VNode cannot be mounted if it already has a reference to DOM Node.';
     }
     if ((this.flags & kivi.VNodeFlags.COMMENT_PLACEHOLDER) !== 0) {
-      throw 'VNode comment placeholder cannot be mounted.'
+      throw 'Failed to mount VNode: VNode comment placeholder cannot be mounted.'
     }
     if ((this.flags & kivi.VNodeFlags.DEBUG_IS_RENDERED) !== 0) {
-      throw 'VNode cannot be mounted after render.';
+      throw 'Failed to mount VNode: VNode cannot be mounted after render.';
     }
     if ((this.flags & kivi.VNodeFlags.DEBUG_IS_MOUNTED) !== 0) {
-      throw 'VNode cannot be mounted twice.';
+      throw 'Failed to mount VNode: VNode cannot be mounted twice.';
     }
     this.flags |= kivi.VNodeFlags.DEBUG_IS_MOUNTED;
   }
@@ -445,7 +445,7 @@ kivi.VNode.prototype.mount = function(node, context) {
       if ((flags & kivi.VNodeFlags.TRACK_BY_KEY) !== 0) {
         for (i = 0; i < children.length; i++) {
           if (children[i].key_ === null) {
-            throw 'Failed to mount VNode. Invalid VNode: mounting children with trackByKey requires that all' +
+            throw 'Failed to mount VNode: mounting children with trackByKey requires that all' +
                   ' children have keys.';
           }
         }
@@ -472,7 +472,7 @@ kivi.VNode.prototype.mount = function(node, context) {
       for (i = 0; i < children.length; i++) {
         if (kivi.DEBUG) {
           if (!child) {
-            throw 'Failed to mount VNode. Cannot find matching node.';
+            throw 'Failed to mount VNode: cannot find matching node.';
           }
         }
         children[i].mount(child, context);
@@ -501,7 +501,7 @@ kivi.VNode.prototype.mount = function(node, context) {
 kivi.VNode.prototype.sync = function(b, context) {
   if (kivi.DEBUG) {
     if ((this.flags & (kivi.VNodeFlags.DEBUG_IS_RENDERED | kivi.VNodeFlags.DEBUG_IS_MOUNTED)) === 0) {
-      throw 'VNode should be rendered or mounted before sync.';
+      throw 'Failed to sync VNode: VNode should be rendered or mounted before sync.';
     }
     b.flags |= this.flags & (kivi.VNodeFlags.DEBUG_IS_RENDERED | kivi.VNodeFlags.DEBUG_IS_MOUNTED);
   }
@@ -517,25 +517,25 @@ kivi.VNode.prototype.sync = function(b, context) {
 
   if (kivi.DEBUG) {
     if (this.flags !== b.flags) {
-      throw 'Failed to sync VNode. Invalid VNode: flags does not match (old: ' + this.flags + ', new: ' + b.flags + ')';
+      throw 'Failed to sync VNode: flags does not match (old: ' + this.flags + ', new: ' + b.flags + ')';
     }
     if (this.tag !== b.tag) {
-      throw 'Failed to sync VNode. Invalid VNode: tags does not match (old: ' + this.tag + ', new: ' + b.tag + ')';
+      throw 'Failed to sync VNode: tags does not match (old: ' + this.tag + ', new: ' + b.tag + ')';
     }
     if (this.key_ !== b.key_) {
-      throw 'Failed to sync VNode. Invalid VNode: keys does not match (old: ' + this.key_ + ', new: ' + b.key_ + ')';
+      throw 'Failed to sync VNode: keys does not match (old: ' + this.key_ + ', new: ' + b.key_ + ')';
     }
     if (this.type_ !== b.type_) {
-      throw 'Failed to sync VNode. Invalid VNode: types does not match (old: ' + this.type_ + ', new: ' + b.type_ + ')';
+      throw 'Failed to sync VNode: types does not match (old: ' + this.type_ + ', new: ' + b.type_ + ')';
     }
     if (b.ref !== null && this.ref !== b.ref) {
-      throw 'Failed to sync VNode. Invalid VNode: reusing VNodes isn\'t allowed unless it has the same ref';
+      throw 'Failed to sync VNode: reusing VNodes isn\'t allowed unless it has the same ref.';
     }
     if (b.children_ !== null && typeof b.children_ !== 'string') {
       if ((b.flags & kivi.VNodeFlags.TRACK_BY_KEY) !== 0) {
         for (var i = 0; i < b.children_.length; i++) {
           if (b.children_[i].key_ === null) {
-            throw 'Failed to sync VNode. Invalid VNode: updating children with trackByKey requires that all' +
+            throw 'Failed to sync VNode: syncing children with trackByKey requires that all' +
                   ' children have keys.';
           }
         }
