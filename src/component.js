@@ -272,7 +272,7 @@ kivi.Component.prototype.stopUpdateEachFrame = function() {
 kivi.Component.prototype.dispose = function() {
   if (kivi.DEBUG) {
     if ((this.flags & kivi.ComponentFlags.DISPOSED) !== 0) {
-      throw 'Failed to dispose Component: component is already disposed';
+      throw new Error('Failed to dispose Component: component is already disposed');
     }
   }
 
@@ -280,7 +280,7 @@ kivi.Component.prototype.dispose = function() {
   this.flags &= ~(kivi.ComponentFlags.ATTACHED | kivi.ComponentFlags.UPDATE_EACH_FRAME);
   this.cancelSubscriptions();
   this.cancelTransientSubscriptions();
-  if (this.root !== null) {
+  if (this.root !== null && this.root.constructor === kivi.VNode) {
     this.root.dispose();
   }
   var descriptor = this.descriptor;
@@ -342,12 +342,12 @@ kivi.Component.prototype.removeSubscription = function(subscription) {
       if (kivi.DEBUG) {
         if (subscriptions.constructor === kivi.InvalidatorSubscription) {
           if (subscriptions !== subscription) {
-            throw 'Failed to remove subscription from Component: cannot find appropriate subscription';
+            throw new Error('Failed to remove subscription from Component: cannot find appropriate subscription');
           }
         } else {
           subscriptions = /** @type {!Array<!kivi.InvalidatorSubscription>} */(subscriptions);
           if (subscriptions[0] !== subscription) {
-            throw 'Failed to remove subscription from Component: cannot find appropriate subscription';
+            throw new Error('Failed to remove subscription from Component: cannot find appropriate subscription');
           }
         }
       }
@@ -357,7 +357,7 @@ kivi.Component.prototype.removeSubscription = function(subscription) {
       i = subscriptions.indexOf(subscription);
       if (kivi.DEBUG) {
         if (i === -1) {
-          throw 'Failed to remove subscription from Component: cannot find appropriate subscription';
+          throw new Error('Failed to remove subscription from Component: cannot find appropriate subscription');
         }
       }
       subscriptions[i] = subscriptions.pop();
@@ -369,12 +369,12 @@ kivi.Component.prototype.removeSubscription = function(subscription) {
       if (kivi.DEBUG) {
         if (subscriptions.constructor === kivi.InvalidatorSubscription) {
           if (subscriptions !== subscription) {
-            throw 'Failed to remove subscription from Component: cannot find appropriate subscription';
+            throw new Error('Failed to remove subscription from Component: cannot find appropriate subscription');
           }
         } else {
           subscriptions = /** @type {!Array<!kivi.InvalidatorSubscription>} */(subscriptions);
           if (subscriptions[0] !== subscription) {
-            throw 'Failed to remove subscription from Component: cannot find appropriate subscription';
+            throw new Error('Failed to remove subscription from Component: cannot find appropriate subscription');
           }
         }
       }
@@ -384,7 +384,7 @@ kivi.Component.prototype.removeSubscription = function(subscription) {
       i = subscriptions.indexOf(subscription);
       if (kivi.DEBUG) {
         if (i === -1) {
-          throw 'Failed to remove subscription from Component: cannot find appropriate subscription';
+          throw new Error('Failed to remove subscription from Component: cannot find appropriate subscription');
         }
       }
       subscriptions[i] = subscriptions.pop();

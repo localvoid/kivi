@@ -79,12 +79,12 @@ kivi.Invalidator.prototype.removeSubscription = function(subscription) {
       if (kivi.DEBUG) {
         if (subscriptions.constructor === kivi.InvalidatorSubscription) {
           if (subscriptions !== subscription) {
-            throw 'Failed to remove subscription from Invalidator: cannot find appropriate subscription';
+            throw new Error('Failed to remove subscription from Invalidator: cannot find appropriate subscription');
           }
         } else {
           subscriptions = /** @type {!Array<!kivi.InvalidatorSubscription>} */(subscriptions);
           if (subscriptions[0] !== subscription) {
-            throw 'Failed to remove subscription from Invalidator: cannot find appropriate subscription';
+            throw new Error('Failed to remove subscription from Invalidator: cannot find appropriate subscription');
           }
         }
       }
@@ -94,7 +94,7 @@ kivi.Invalidator.prototype.removeSubscription = function(subscription) {
       i = subscriptions.indexOf(subscription);
       if (kivi.DEBUG) {
         if (i === -1) {
-          throw 'Failed to remove subscription from Invalidator: cannot find appropriate subscription';
+          throw new Error('Failed to remove subscription from Invalidator: cannot find appropriate subscription');
         }
       }
       subscriptions[i] = subscriptions.pop();
@@ -106,12 +106,12 @@ kivi.Invalidator.prototype.removeSubscription = function(subscription) {
       if (kivi.DEBUG) {
         if (subscriptions.constructor === kivi.InvalidatorSubscription) {
           if (subscriptions !== subscription) {
-            throw 'Failed to remove subscription from Invalidator: cannot find appropriate subscription';
+            throw new Error('Failed to remove subscription from Invalidator: cannot find appropriate subscription');
           }
         } else {
           subscriptions = /** @type {!Array<!kivi.InvalidatorSubscription>} */(subscriptions);
           if (subscriptions[0] !== subscription) {
-            throw 'Failed to remove subscription from Invalidator: cannot find appropriate subscription';
+            throw new Error('Failed to remove subscription from Invalidator: cannot find appropriate subscription');
           }
         }
       }
@@ -121,7 +121,7 @@ kivi.Invalidator.prototype.removeSubscription = function(subscription) {
       i = subscriptions.indexOf(subscription);
       if (kivi.DEBUG) {
         if (i === -1) {
-          throw 'Failed to remove subscription from Invalidator: cannot find appropriate subscription';
+          throw new Error('Failed to remove subscription from Invalidator: cannot find appropriate subscription');
         }
       }
       subscriptions[i] = subscriptions.pop();

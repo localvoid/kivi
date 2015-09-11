@@ -40,7 +40,5 @@ kivi.VNodeFlags = {
   /** [kivi.VNode] is rendered */
   DEBUG_IS_RENDERED:            0x10000,
   /** [kivi.VNode] is mounted */
-  DEBUG_IS_MOUNTED:             0x20000,
-  /** [kivi.VNode] is disposed */
-  DEBUG_IS_DISPOSED:            0x40000
+  DEBUG_IS_MOUNTED:             0x20000
 };

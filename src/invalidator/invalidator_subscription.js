@@ -27,7 +27,7 @@ kivi.InvalidatorSubscription = function(flags, invalidator, subscriber) {
 kivi.InvalidatorSubscription.prototype.cancel = function() {
   if (kivi.DEBUG) {
     if (this._isCanceled) {
-      throw 'Failed to cancel InvalidatorSubscription: subscription cannot be canceled twice';
+      throw new Error('Failed to cancel InvalidatorSubscription: subscription cannot be canceled twice');
     }
     this._isCanceled = true;
   }

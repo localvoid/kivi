@@ -78,7 +78,7 @@ kivi.sync.setAttr = function(node, key, value) {
     var details = kivi.sync._NamespacedAttrs[key];
     if (kivi.DEBUG) {
       if (details === void 0) {
-        throw `Invalid namespaced attribute $${key}}`;
+        throw new Error('Invalid namespaced attribute $' + key);
       }
     }
     node.setAttributeNS(details.namespace, details.name, value);
@@ -100,7 +100,7 @@ kivi.sync.removeAttr = function(node, key) {
     var details = kivi.sync._NamespacedAttrs[key];
     if (kivi.DEBUG) {
       if (details === void 0) {
-        throw `Invalid namespaced attribute $${key}}`;
+        throw new Error('Invalid namespaced attribute $' + key);
       }
     }
     node.removeAttributeNS(details.namespace, details.name);
