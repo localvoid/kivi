@@ -36,6 +36,9 @@ kivi.scheduler.Frame = function() {
 
   /** @type {?Array<!function()>} */
   this.afterTasks = null;
+
+  /** @type {!kivi.VNode|!Element|null} */
+  this.focus = null;
 };
 
 /**
@@ -103,4 +106,13 @@ kivi.scheduler.Frame.prototype.after = function(cb) {
     this.afterTasks = [];
   }
   this.afterTasks.push(cb);
+};
+
+/**
+ * Set focus on the element when all tasks are finished.
+ *
+ * @param {!kivi.VNode|!Element} n
+ */
+kivi.scheduler.Frame.prototype.setFocus = function(n) {
+  this.focus = n;
 };

@@ -205,6 +205,15 @@ kivi.scheduler.Scheduler = function() {
       }
     }
 
+    if (frame.focus !== null) {
+      if (frame.focus.constructor === kivi.VNode) {
+        /** @type {!Element} */(frame.focus.ref).focus();
+      } else {
+        frame.focus.focus();
+      }
+      frame.focus = null;
+    }
+
     if (updateComponents.length > 0) {
       self.requestAnimationFrame();
     }
