@@ -89,6 +89,17 @@ kivi.VNode = function(flags, tag, data) {
    * @type {?kivi.Component}
    */
   this.cref = null;
+
+  if (kivi.DEBUG) {
+    /**
+     * Debug Properties are used because VNode properties are frozen.
+     *
+     * @private {{disposed: boolean}}
+     */
+    this._debugProperties = {
+      disposed: false
+    };
+  }
 };
 
 /**
@@ -608,9 +619,13 @@ kivi.VNode.prototype.sync = function(b, context) {
  */
 kivi.VNode.prototype.dispose = function() {
   if (kivi.DEBUG) {
+    if (this._debugProperties.disposed) {
+      throw new Error('Failed to dispose VNode: VNode is already disposed.')
+    }
     if ((this.flags & (kivi.VNodeFlags.DEBUG_IS_RENDERED | kivi.VNodeFlags.DEBUG_IS_MOUNTED)) === 0) {
       throw new Error('Failed to dispose VNode: VNode should be rendered or mounted before disposing.');
     }
+    this._debugProperties.disposed = true;
   }
   if ((this.flags & kivi.VNodeFlags.COMPONENT) !== 0) {
     /** @type {!kivi.Component} */ (this.cref).dispose();
