@@ -89,12 +89,6 @@ kivi.VNode = function(flags, tag, data) {
    * @type {?kivi.Component}
    */
   this.cref = null;
-
-  if (kivi.DEBUG) {
-    this._isRendered = false;
-    this._isMounted = false;
-    this._isDisposed = false;
-  }
 };
 
 /**
@@ -291,13 +285,13 @@ kivi.VNode.prototype.render = function(context) {
     if (this.ref === null) {
       throw 'VNode should be created before render.';
     }
-    if (this._isRendered) {
+    if ((this.flags & kivi.VNodeFlags.DEBUG_IS_RENDERED) !== 0) {
       throw 'VNode cannot be rendered twice.';
     }
-    if (this._isMounted) {
+    if ((this.flags & kivi.VNodeFlags.DEBUG_IS_MOUNTED) !== 0) {
       throw 'VNode cannot be rendered after mount.';
     }
-    this._isRendered = true;
+    this.flags |= kivi.VNodeFlags.DEBUG_IS_RENDERED;
   }
 
   /** @type {number} */
@@ -411,13 +405,13 @@ kivi.VNode.prototype.mount = function(node, context) {
     if (this.ref !== null) {
       throw 'VNode cannot be mounted if it already has a reference to DOM Node.';
     }
-    if (this._isRendered) {
+    if ((this.flags & kivi.VNodeFlags.DEBUG_IS_RENDERED) !== 0) {
       throw 'VNode cannot be mounted after render.';
     }
-    if (this._isMounted) {
+    if ((this.flags & kivi.VNodeFlags.DEBUG_IS_MOUNTED) !== 0) {
       throw 'VNode cannot be mounted twice.';
     }
-    this._isMounted = true;
+    this.flags |= kivi.VNodeFlags.DEBUG_IS_MOUNTED;
   }
 
   var flags = this.flags;
@@ -484,11 +478,10 @@ kivi.VNode.prototype.mount = function(node, context) {
  */
 kivi.VNode.prototype.sync = function(b, context) {
   if (kivi.DEBUG) {
-    if (!(this._isRendered || this._isMounted)) {
+    if ((this.flags & (kivi.VNodeFlags.DEBUG_IS_RENDERED | kivi.VNodeFlags.DEBUG_IS_MOUNTED)) === 0) {
       throw 'VNode should be rendered or mounted before sync.';
     }
-    b._isRendered = this._isRendered;
-    b._isMounted = this._isMounted;
+    b.flags |= this.flags & (kivi.VNodeFlags.DEBUG_IS_RENDERED | kivi.VNodeFlags.DEBUG_IS_MOUNTED);
   }
 
   var ref = /** @type {!Element} */(this.ref);
@@ -584,12 +577,23 @@ kivi.VNode.prototype.sync = function(b, context) {
       this.syncChildren(this.children_, b.children_, context);
     }
   }
+
+  b._freeze();
 };
 
 /**
  * Dispose Virtual Node.
  */
 kivi.VNode.prototype.dispose = function() {
+  if (kivi.DEBUG) {
+    if ((this.flags & kivi.VNodeFlags.DEBUG_IS_DISPOSED) !== 0) {
+      throw 'Failed to dispose VNode: VNode is already disposed.';
+    }
+    if ((this.flags & (kivi.VNodeFlags.DEBUG_IS_RENDERED | kivi.VNodeFlags.DEBUG_IS_MOUNTED)) === 0) {
+      throw 'Failed to dispose VNode: VNode should be rendered or mounted before disposing.';
+    }
+    this.flags |= kivi.VNodeFlags.DEBUG_IS_DISPOSED;
+  }
   if ((this.flags & kivi.VNodeFlags.COMPONENT) !== 0) {
     /** @type {!kivi.Component} */ (this.cref).dispose();
   } else if (this.children_ !== null) {
@@ -614,19 +618,21 @@ kivi.VNode.prototype._freeze = function() {
   if (kivi.DEBUG) {
     if ((this.flags & kivi.VNodeFlags.DISABLE_FREEZE) === 0) {
       Object.freeze(this);
-      if (this.attrs_ !== null) {
+      if (this.attrs_ !== null && !Object.isFrozen(this.attrs_)) {
         Object.freeze(this.attrs_);
       }
-      if (this.props_ !== null) {
+      if (this.props_ !== null && !Object.isFrozen(this.props_)) {
         Object.freeze(this.props_);
       }
-      if (this.style_ !== null) {
+      if (this.style_ !== null && !Object.isFrozen(this.style_)) {
         Object.freeze(this.style_);
       }
-      if (this.classes_ !== null) {
+      if (this.classes_ !== null && !Object.isFrozen(this.classes_)) {
         Object.freeze(this.classes_);
       }
-      if (this.children_ !== null && Array.isArray((this.children_))) {
+      if (this.children_ !== null &&
+          Array.isArray((this.children_)) &&
+          !Object.isFrozen(/** @type {!Object} */(this.children_))) {
         Object.freeze(this.children_);
       }
     }
