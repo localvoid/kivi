@@ -31,6 +31,12 @@ kivi.VNodeFlags = {
    * up to date (prevents spellchecker flickering).
    */
   DISABLE_FREEZE:               0x02000,
+  /**
+   * [kivi.VNode] contains a Comment placeholder.
+   *
+   * Comment placeholder can be used to delay element appearance in animations.
+   */
+  COMMENT_PLACEHOLDER:          0x04000,
   /** [kivi.VNode] is rendered */
   DEBUG_IS_RENDERED:            0x10000,
   /** [kivi.VNode] is mounted */

@@ -248,13 +248,14 @@ kivi.VNode.prototype._canSync = function(b) {
  * @param {!kivi.Component} context
  */
 kivi.VNode.prototype.create = function(context) {
-  if (kivi.DEBUG) {
-    if (this.ref !== null) {
-      throw 'VNode cannot be created if it already has a reference to the DOM Node.';
-    }
-  }
-
   var flags = this.flags;
+
+  if (kivi.DEBUG) {
+    if (this.ref !== null && ((flags & kivi.VNodeFlags.COMMENT_PLACEHOLDER) === 0)) {
+      throw 'Failed to create VNode: VNode already has a reference to the DOM node.';
+    }
+    this.flags &= ~kivi.VNodeFlags.COMMENT_PLACEHOLDER;
+  }
 
   if ((flags & kivi.VNodeFlags.TEXT) !== 0) {
     this.ref = document.createTextNode(/** @type {string} */(this.data_));
@@ -276,6 +277,21 @@ kivi.VNode.prototype.create = function(context) {
 };
 
 /**
+ * Create Comment placeholder.
+ *
+ * Comment placeholder can be used to delay element appearance in animations.
+ */
+kivi.VNode.prototype.createCommentPlaceholder = function() {
+  if (kivi.DEBUG) {
+    if (this.ref !== null) {
+      throw 'Failed to create VNode Comment Placeholder: VNode already has a reference to the DOM node.'
+    }
+    this.flags |= kivi.VNodeFlags.COMMENT_PLACEHOLDER;
+  }
+  this.ref = document.createComment('');
+};
+
+/**
  * Render internal representation of the Virtual Node.
  *
  * @param {!kivi.Component} context
@@ -284,6 +300,9 @@ kivi.VNode.prototype.render = function(context) {
   if (kivi.DEBUG) {
     if (this.ref === null) {
       throw 'VNode should be created before render.';
+    }
+    if ((this.flags & kivi.VNodeFlags.COMMENT_PLACEHOLDER) !== 0) {
+      throw 'VNode comment placeholder cannot be rendered.'
     }
     if ((this.flags & kivi.VNodeFlags.DEBUG_IS_RENDERED) !== 0) {
       throw 'VNode cannot be rendered twice.';
@@ -404,6 +423,9 @@ kivi.VNode.prototype.mount = function(node, context) {
   if (kivi.DEBUG) {
     if (this.ref !== null) {
       throw 'VNode cannot be mounted if it already has a reference to DOM Node.';
+    }
+    if ((this.flags & kivi.VNodeFlags.COMMENT_PLACEHOLDER) !== 0) {
+      throw 'VNode comment placeholder cannot be mounted.'
     }
     if ((this.flags & kivi.VNodeFlags.DEBUG_IS_RENDERED) !== 0) {
       throw 'VNode cannot be mounted after render.';
