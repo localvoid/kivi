@@ -6,12 +6,12 @@ module.exports = function(config) {
     files: [
       'node_modules/google-closure-library/closure/goog/base.js',
       'tests/*.spec.js',
-      {pattern: 'src/*.js', included: false}
+      {pattern: 'src/**/*.js', included: false}
     ],
 
     preprocessors: {
       'tests/*.spec.js': ['closure'],
-      'src/*.js': ['closure']
+      'src/**/*.js': ['closure']
     },
 
     reporters: ['progress'],

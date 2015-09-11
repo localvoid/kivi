@@ -218,6 +218,23 @@ kivi.VNode.prototype.disableChildrenShapeError = function() {
 };
 
 /**
+ * Disable freezing in DEBUG mode.
+ *
+ * One use case when it is quite useful, it is for ContentEditable editor.
+ * We monitoring changes in DOM, and apply this changes to VNodes, so that
+ * when we rerender text block, we don't touch properties that is already
+ * up to date (prevents spellchecker flickering).
+ *
+ * @returns {!kivi.VNode}
+ */
+kivi.VNode.prototype.disableFreeze = function() {
+  if (kivi.DEBUG) {
+    this.flags |= kivi.VNodeFlags.DISABLE_FREEZE;
+  }
+  return this;
+};
+
+/**
  * Checks if two nodes can be synced.
  *
  * @param {!kivi.VNode} b
@@ -380,9 +397,7 @@ kivi.VNode.prototype.render = function(context) {
     }
   }
 
-  if (kivi.DEBUG) {
-    Object.freeze(this);
-  }
+  this._freeze();
 };
 
 /**
@@ -455,9 +470,7 @@ kivi.VNode.prototype.mount = function(node, context) {
     }
   }
 
-  if (kivi.DEBUG) {
-    Object.freeze(this);
-  }
+  this._freeze();
 };
 
 /**
@@ -584,6 +597,37 @@ kivi.VNode.prototype.dispose = function() {
     if (typeof children !== 'string') {
       for (var i = 0; i < children.length; i++) {
         children[i].dispose();
+      }
+    }
+  }
+};
+
+/**
+ * Freeze VNode and all properties.
+ *
+ * Freeze everything, except `VNode.data_`. We are using mutable `data_` quite
+ * often, and using `mtime` to check if it is changed between renders.
+ *
+ * @private
+ */
+kivi.VNode.prototype._freeze = function() {
+  if (kivi.DEBUG) {
+    if ((this.flags & kivi.VNodeFlags.DISABLE_FREEZE) === 0) {
+      Object.freeze(this);
+      if (this.attrs_ !== null) {
+        Object.freeze(this.attrs_);
+      }
+      if (this.props_ !== null) {
+        Object.freeze(this.props_);
+      }
+      if (this.style_ !== null) {
+        Object.freeze(this.style_);
+      }
+      if (this.classes_ !== null) {
+        Object.freeze(this.classes_);
+      }
+      if (this.children_ !== null && Array.isArray((this.children_))) {
+        Object.freeze(this.children_);
       }
     }
   }
