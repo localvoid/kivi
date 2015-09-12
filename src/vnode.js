@@ -385,9 +385,27 @@ kivi.VNode.prototype.render = function(context) {
 
     className = null;
     if (this.type_ !== null) {
+      if (kivi.DEBUG) {
+        if ((flags & kivi.VNodeFlags.ROOT) !== 0) {
+          if (/** @type {!HTMLElement} */(ref).classList.contains(this.type_)) {
+            throw new Error('Failed to render VNode: component node is using class "' + this.type_ +
+                            '" that is already used by component root node.');
+          }
+        }
+      }
       className = this.type_;
     }
     if (this.classes_ !== null) {
+      if (kivi.DEBUG) {
+        if ((flags & kivi.VNodeFlags.ROOT) !== 0) {
+          for (i = 0; i < this.classes_.length; i++) {
+            if (/** @type {!HTMLElement} */(ref).classList.contains(this.classes_[i])) {
+              throw new Error('Failed to render VNode: component node is using class "' + this.classes_[i] +
+                              '" that is already used by component root node.');
+            }
+          }
+        }
+      }
       classes = this.classes_.join(' ');
       className = (className === null) ? classes : className + ' ' + classes;
     }
