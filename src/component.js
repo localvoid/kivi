@@ -13,7 +13,8 @@ goog.require('kivi.scheduler.instance');
  * @enum {number}
  */
 kivi.CDescriptorFlags = {
-  SVG: 0x0001
+  SVG:     0x0001,
+  WRAPPER: 0x0002
 };
 
 /**
@@ -100,9 +101,48 @@ kivi.CDescriptor = function(name, opt_flags) {
    */
   this.removeChild = null;
 
+  /**
+   *
+   * @type {?kivi.CDescriptor}
+   */
+  this.data = null;
+
   if (kivi.DEBUG) {
     this.name = name;
   }
+};
+
+/**
+ * Creates a Component descriptor with HTMLElement node.
+ *
+ * @param {string} name
+ * @returns {!kivi.CDescriptor}
+ */
+kivi.CDescriptor.element = function(name) {
+  return new kivi.CDescriptor(name, 0);
+};
+
+/**
+ * Creates a Component descriptor with SVGElement node.
+ *
+ * @param {string} name
+ * @returns {!kivi.CDescriptor}
+ */
+kivi.CDescriptor.svgElement = function(name) {
+  return new kivi.CDescriptor(name, kivi.CDescriptorFlags.SVG);
+};
+
+/**
+ * Creates a Component Descriptor Wrapper.
+ *
+ * @param {!kivi.CDescriptor} d
+ * @returns {!kivi.CDescriptor}
+ */
+kivi.CDescriptor.wrap = function(d) {
+  var r = new kivi.CDescriptor(d.name, kivi.CDescriptorFlags.WRAPPER);
+  r.flags |= d.flags & kivi.CDescriptorFlags.SVG;
+  r.tag = d.tag;
+  return d;
 };
 
 /**
@@ -148,7 +188,7 @@ kivi.Component = function(flags, descriptor, parent, data, children, element) {
 
   /**
    * Root node in the Components virtual tree.
-   * @type {?kivi.VNode|?CanvasRenderingContext2D}
+   * @type {?kivi.Component|?kivi.VNode|?CanvasRenderingContext2D}
    */
   this.root = null;
 
@@ -171,13 +211,18 @@ kivi.Component = function(flags, descriptor, parent, data, children, element) {
  * @param {*} data
  * @param {?Array<!kivi.VNode>|string} children
  * @param {?kivi.Component} context
+ * @param {!Element=} opt_element
  * @returns {!kivi.Component}
  */
-kivi.Component.create = function(descriptor, data, children, context) {
-  var element = ((descriptor.flags & kivi.CDescriptorFlags.SVG) === 0) ?
-      document.createElement(descriptor.tag) :
-      document.createElementNS(kivi.HtmlNamespace.SVG, descriptor.tag);
-  var c = new kivi.Component(kivi.ComponentFlags.SHOULD_UPDATE_FLAGS, descriptor, context, data, children, element);
+kivi.Component.create = function(descriptor, data, children, context, opt_element) {
+  if (opt_element === void 0) {
+    if ((descriptor.flags & kivi.CDescriptorFlags.SVG) === 0) {
+      opt_element = document.createElement(descriptor.tag);
+    } else {
+      opt_element = document.createElementNS(kivi.HtmlNamespace.SVG, descriptor.tag);
+    }
+  }
+  var c = new kivi.Component(kivi.ComponentFlags.SHOULD_UPDATE_FLAGS, descriptor, context, data, children, opt_element);
   if (descriptor.init !== null) {
     descriptor.init(c);
   }
@@ -235,6 +280,38 @@ kivi.Component.prototype.syncVRoot = function(newRoot) {
     this.root.sync(newRoot, this);
   }
   this.root = newRoot;
+};
+
+/**
+ * Synchronize internal component.
+ *
+ * @param {*} newData
+ * @param {?Array<!kivi.VNode>=} opt_newChildren
+ */
+kivi.Component.prototype.syncComponent = function(newData, opt_newChildren) {
+  if (opt_newChildren === void 0) opt_newChildren = null;
+
+  if (this.root === null) {
+    var descriptor = /** @type {!kivi.CDescriptor} */(this.descriptor.data);
+    if ((this.flags & kivi.ComponentFlags.MOUNTING) === 0) {
+      this.root = kivi.Component.create(descriptor, newData, opt_newChildren, this, this.element);
+    } else {
+      this.root = kivi.Component.mount(descriptor, newData, opt_newChildren, this, this.element);
+    }
+  }
+  var component = /** @type {!kivi.Component<*,*>} */(this.root);
+  if (component.descriptor.setData === null) {
+    if (component.data !== newData) {
+      component.data = newData;
+      component.flags |= kivi.ComponentFlags.DIRTY;
+    }
+  } else {
+    component.descriptor.setData(component, newData);
+  }
+  if (component.descriptor.setChildren !== null) {
+    component.descriptor.setChildren(component, opt_newChildren);
+  }
+  component.update();
 };
 
 /**
