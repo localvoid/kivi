@@ -611,18 +611,8 @@ kivi.VNode.prototype.sync = function(b, context) {
     }
 
     if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
-      component = b.cref = /** @type {!kivi.Component} */(this.cref);
-      if (component.descriptor.setData === null) {
-        if (this.data_ !== b.data_) {
-          component.data = b.data_;
-          component.flags |= kivi.ComponentFlags.DIRTY;
-        }
-      } else {
-        component.descriptor.setData(component, b.data_);
-      }
-      if (component.descriptor.setChildren !== null) {
-        component.descriptor.setChildren(component, b.children_);
-      }
+      component = b.cref = /** @type {!kivi.Component<*,*>} */(this.cref);
+      component.setInputData(b.data_, b.children_);
       component.update();
     } else {
       this.syncChildren(this.children_, b.children_, context);

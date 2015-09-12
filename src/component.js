@@ -302,18 +302,30 @@ kivi.Component.prototype.syncComponent = function(newData, opt_newChildren) {
     }
   }
   var component = /** @type {!kivi.Component<*,*>} */(this.root);
-  if (component.descriptor.setData === null) {
+  component.setInputData(newData, opt_newChildren);
+  component.update();
+};
+
+/**
+ * Set new input data.
+ *
+ * @param {*} newData
+ * @param {?Array<!kivi.VNode>|string} newChildren
+ */
+kivi.Component.prototype.setInputData = function(newData, newChildren) {
+  var descriptor = this.descriptor;
+  var component = /** @type {!kivi.Component<*,*>} */(this);
+  if (descriptor.setData === null) {
     if (component.data !== newData) {
       component.data = newData;
       component.flags |= kivi.ComponentFlags.DIRTY;
     }
   } else {
-    component.descriptor.setData(component, newData);
+    descriptor.setData(this, newData);
   }
-  if (component.descriptor.setChildren !== null) {
-    component.descriptor.setChildren(component, opt_newChildren);
+  if (descriptor.setChildren !== null) {
+    descriptor.setChildren(this, newChildren);
   }
-  component.update();
 };
 
 /**
