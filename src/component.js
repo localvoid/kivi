@@ -199,8 +199,10 @@ kivi.Component = function(flags, descriptor, parent, data, children, element) {
   this._transientSubscriptions = null;
 
   if (kivi.DEBUG) {
-    element.setAttribute('data-kivi-component', descriptor.name);
-    element._kiviComponent = this;
+    if (!element.getAttribute('data-kivi-component')) {
+      element.setAttribute('data-kivi-component', descriptor.name);
+      element._kiviComponent = this;
+    }
   }
 };
 
