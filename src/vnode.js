@@ -761,6 +761,15 @@ kivi.VNode.prototype.syncChildren = function(a, b, context) {
   var i = 0;
   var synced = false;
 
+  if (kivi.DEBUG) {
+    if (((this.flags & kivi.VNodeFlags.TRACK_BY_KEY) !== 0)) {
+      if (typeof a === 'string' || typeof b === 'string') {
+        throw new Error('VNode sync children failed: children property cannot have type string when track by' +
+                        ' key is enabled.')
+      }
+    }
+  }
+
   if (typeof a === 'string') {
     if (typeof b === 'string') {
       if (a !== b) {
@@ -827,6 +836,11 @@ kivi.VNode.prototype.syncChildren = function(a, b, context) {
             while (i < b.length) {
               bNode = b[i++];
               if (aNode.key_ === bNode.key_) {
+                if (kivi.DEBUG) {
+                  if (!aNode._canSync(bNode)) {
+                    throw new Error('VNode sync children failed: cannot sync two different children with the same key.');
+                  }
+                }
                 aNode.sync(bNode, context);
                 synced = true;
                 break;
@@ -867,6 +881,11 @@ kivi.VNode.prototype.syncChildren = function(a, b, context) {
             while (i < a.length) {
               aNode = a[i++];
               if (aNode.key_ === bNode.key_) {
+                if (kivi.DEBUG) {
+                  if (!aNode._canSync(bNode)) {
+                    throw new Error('VNode sync children failed: cannot sync two different children with the same key.');
+                  }
+                }
                 aNode.sync(bNode, context);
                 synced = true;
                 break;
@@ -1032,6 +1051,11 @@ kivi.VNode.prototype._syncChildrenTrackingByKeys = function(a, b, context) {
 
     // Sync nodes with the same key at the beginning.
     while (aStartNode.key_ === bStartNode.key_) {
+      if (kivi.DEBUG) {
+        if (!aStartNode._canSync(bStartNode)) {
+          throw new Error('VNode sync children failed: cannot sync two different children with the same key.');
+        }
+      }
       aStartNode.sync(bStartNode, context);
       aStart++;
       bStart++;
@@ -1045,6 +1069,11 @@ kivi.VNode.prototype._syncChildrenTrackingByKeys = function(a, b, context) {
 
     // Sync nodes with the same key at the end.
     while (aEndNode.key_ === bEndNode.key_) {
+      if (kivi.DEBUG) {
+        if (!aEndNode._canSync(bEndNode)) {
+          throw new Error('VNode sync children failed: cannot sync two different children with the same key.');
+        }
+      }
       aEndNode.sync(bEndNode, context);
       aEnd--;
       bEnd--;
@@ -1058,6 +1087,11 @@ kivi.VNode.prototype._syncChildrenTrackingByKeys = function(a, b, context) {
 
     // Move and sync nodes from left to right.
     while (aStartNode.key_ === bEndNode.key_) {
+      if (kivi.DEBUG) {
+        if (!aStartNode._canSync(bEndNode)) {
+          throw new Error('VNode sync children failed: cannot sync two different children with the same key.');
+        }
+      }
       aStartNode.sync(bEndNode, context);
       nextPos = bEnd + 1;
       next = nextPos < b.length ? b[nextPos].ref : null;
@@ -1075,6 +1109,11 @@ kivi.VNode.prototype._syncChildrenTrackingByKeys = function(a, b, context) {
 
     // Move and sync nodes from right to left.
     while (aEndNode.key_ === bStartNode.key_) {
+      if (kivi.DEBUG) {
+        if (!aEndNode._canSync(bStartNode)) {
+          throw new Error('VNode sync children failed: cannot sync two different children with the same key.');
+        }
+      }
       aEndNode.sync(bStartNode, context);
       this._moveChild(bStartNode, aStartNode.ref, context);
       aEnd--;
@@ -1135,6 +1174,11 @@ kivi.VNode.prototype._syncChildrenTrackingByKeys = function(a, b, context) {
             } else {
               lastTarget = j;
             }
+            if (kivi.DEBUG) {
+              if (!aNode._canSync(bNode)) {
+                throw new Error('VNode sync children failed: cannot sync two different children with the same key.');
+              }
+            }
             aNode.sync(bNode, context);
             removed = false;
             break;
@@ -1165,6 +1209,11 @@ kivi.VNode.prototype._syncChildrenTrackingByKeys = function(a, b, context) {
             moved = true;
           } else {
             lastTarget = j;
+          }
+          if (kivi.DEBUG) {
+            if (!aNode._canSync(bNode)) {
+              throw new Error('VNode sync children failed: cannot sync two different children with the same key.');
+            }
           }
           aNode.sync(bNode, context);
         } else {
