@@ -371,8 +371,15 @@ kivi.Component.prototype.dispose = function() {
   this.flags &= ~(kivi.ComponentFlags.ATTACHED | kivi.ComponentFlags.UPDATE_EACH_FRAME);
   this.cancelSubscriptions();
   this.cancelTransientSubscriptions();
-  if (this.root !== null && this.root.constructor === kivi.VNode) {
-    this.root.dispose();
+
+  var root = this.root;
+  if (root !== null) {
+    // monomorphic code
+    if (root.constructor === kivi.VNode) {
+      root.dispose();
+    } else if (root.constructor === kivi.Component) {
+      root.dispose();
+    }
   }
   var descriptor = this.descriptor;
   if (descriptor.disposed !== null) {
