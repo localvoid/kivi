@@ -288,7 +288,7 @@ kivi.Component.prototype.syncVRoot = function(newRoot) {
  * Synchronize internal component.
  *
  * @param {*} newData
- * @param {?Array<!kivi.VNode>=} opt_newChildren
+ * @param {?Array<!kivi.VNode>|string=} opt_newChildren
  */
 kivi.Component.prototype.syncComponent = function(newData, opt_newChildren) {
   if (opt_newChildren === void 0) opt_newChildren = null;
