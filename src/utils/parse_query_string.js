@@ -1,10 +1,17 @@
 goog.provide('kivi.utils.parseQueryString');
 
+/**
+ * Parse a query string.
+ *
+ * @param {string} qs
+ * @returns {!Object<string, string>}
+ */
 kivi.utils.parseQueryString = function(qs) {
   if (!qs) {
     return {};
   }
 
+  /** @type {!Object<string, string>} */
   var result = {};
   var qsLength = qs.length;
   /** @type {!Array<string>} */
