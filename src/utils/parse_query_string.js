@@ -1,4 +1,5 @@
 goog.provide('kivi.utils.parseQueryString');
+goog.require('kivi.utils.EMPTY_OBJECT');
 
 /**
  * Parse a query string.
@@ -8,7 +9,7 @@ goog.provide('kivi.utils.parseQueryString');
  */
 kivi.utils.parseQueryString = function(qs) {
   if (!qs) {
-    return {};
+    return kivi.utils.EMPTY_OBJECT;
   }
 
   /** @type {!Object<string, string>} */
@@ -23,7 +24,7 @@ kivi.utils.parseQueryString = function(qs) {
   var state = 0;
 
   for(var i = 0; i < qsLength; i++) {
-    var c = qs[i];
+    var c = /** @type {string} */(qs[i]);
 
     if (c === '=' && i !== 0 && state === 0) {
       state = 1;
