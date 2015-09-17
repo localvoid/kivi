@@ -22,6 +22,68 @@ kivi.scheduler.SchedulerFlags = {
 };
 
 /**
+ * Scheduler Task List.
+ *
+ * @private
+ * @constructor
+ * @struct
+ * @final
+ */
+kivi.scheduler._SchedulerTaskList = function() {
+  /** @private {!Array<!Function>} */
+  this._tasks = [];
+  /** @private {!Array<!Function|*>} */
+  this._tasksWithContext = [];
+};
+
+/**
+ * Returns true if SchedulerTaskList is emtpy.
+ *
+ * @returns {boolean}
+ */
+kivi.scheduler._SchedulerTaskList.prototype.isEmpty = function() {
+  return (this._tasks.length === 0 && this._tasksWithContext.length === 0);
+};
+
+/**
+ * Add simple task.
+ *
+ * @param {!Function} task
+ */
+kivi.scheduler._SchedulerTaskList.prototype.addTask = function(task) {
+  this._tasks.push(task);
+};
+
+/**
+ * Add task with context.
+ *
+ * @param {!Function} task
+ * @param {*} context
+ */
+kivi.scheduler._SchedulerTaskList.prototype.addTaskWithContext = function(task, context) {
+  this._tasksWithContext.push(task, context);
+};
+
+/**
+ * Run tasks.
+ */
+kivi.scheduler._SchedulerTaskList.prototype.run = function() {
+  var i = 0;
+  var tasks = this._tasks;
+
+  while (i < tasks.length) {
+    tasks[i++]();
+  }
+
+  i = 0;
+  tasks = this._tasksWithContext;
+  while (i < tasks.length) {
+    tasks[i].call(tasks[i+1]);
+    i += 2;
+  }
+};
+
+/**
  * Scheduler.
  *
  * Scheduler supports animation frame tasks, and simple microtasks.
@@ -48,11 +110,11 @@ kivi.scheduler.Scheduler = function() {
    */
   this.clock = 1;
 
-  /** @private {!Array<function()>} */
-  this._microtasks = [];
+  /** @private {!kivi.scheduler._SchedulerTaskList} */
+  this._microtasks = new kivi.scheduler._SchedulerTaskList();
 
-  /** @private {!Array<function()>} */
-  this._macrotasks = [];
+  /** @private {!kivi.scheduler._SchedulerTaskList} */
+  this._macrotasks = new kivi.scheduler._SchedulerTaskList();
 
   /** @private {!kivi.scheduler.Frame} */
   this._currentFrame = new kivi.scheduler.Frame();
@@ -74,13 +136,9 @@ kivi.scheduler.Scheduler = function() {
     self.flags |= kivi.scheduler.SchedulerFlags.RUNNING;
 
     var tasks = self._microtasks;
-    while (tasks.length > 0) {
-      self._microtasks = [];
-
-      for (var i = 0; i < tasks.length; i++) {
-        tasks[i]();
-      }
-
+    while (!tasks.isEmpty()) {
+      self._microtasks = new kivi.scheduler._SchedulerTaskList();
+      tasks.run();
       tasks = self._microtasks;
     }
 
@@ -94,12 +152,9 @@ kivi.scheduler.Scheduler = function() {
     self.flags |= kivi.scheduler.SchedulerFlags.RUNNING;
 
     var tasks = self._macrotasks;
-    if (tasks.length > 0) {
-      self._macrotasks = [];
-
-      for (var i = 0; i < tasks.length; i++) {
-        tasks[i]();
-      }
+    if (!tasks.isEmpty()) {
+      self._macrotasks = new kivi.scheduler._SchedulerTaskList();
+      tasks.run();
     }
 
     self.clock++;
@@ -266,26 +321,36 @@ kivi.scheduler.Scheduler.prototype.startUpdateComponentEachFrame = function(c) {
  * Schedule microtask.
  *
  * @param {!function()} cb
+ * @param {*=} opt_context
  */
-kivi.scheduler.Scheduler.prototype.scheduleMicrotask = function(cb) {
+kivi.scheduler.Scheduler.prototype.scheduleMicrotask = function(cb, opt_context) {
   if ((this.flags & kivi.scheduler.SchedulerFlags.MICROTASK_PENDING) === 0) {
     this.flags |= kivi.scheduler.SchedulerFlags.MICROTASK_PENDING;
     this._microtaskScheduler.requestNextTick();
   }
 
-  this._microtasks.push(cb);
+  if (opt_context === void 0) {
+    this._microtasks.addTask(cb);
+  } else {
+    this._microtasks.addTaskWithContext(cb, opt_context);
+  }
 };
 
 /**
  * Schedule macrotask.
  *
  * @param {!function()} cb
+ * @param {*=} opt_context
  */
-kivi.scheduler.Scheduler.prototype.scheduleMacrotask = function(cb) {
+kivi.scheduler.Scheduler.prototype.scheduleMacrotask = function(cb, opt_context) {
   if ((this.flags & kivi.scheduler.SchedulerFlags.MACROTASK_PENDING) === 0) {
     this.flags |= kivi.scheduler.SchedulerFlags.MACROTASK_PENDING;
     this._macrotaskScheduler.requestNextTick();
   }
 
-  this._macrotasks.push(cb);
+  if (opt_context === void 0) {
+    this._macrotasks.addTask(cb);
+  } else {
+    this._macrotasks.addTaskWithContext(cb, opt_context);
+  }
 };
