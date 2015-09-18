@@ -78,7 +78,7 @@ kivi.scheduler._SchedulerTaskList.prototype.run = function() {
   i = 0;
   tasks = this._tasksWithContext;
   while (i < tasks.length) {
-    tasks[i].call(tasks[i+1]);
+    /** @type {!Function} */(tasks[i]).call(tasks[i+1]);
     i += 2;
   }
 };
