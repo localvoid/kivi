@@ -712,6 +712,7 @@ kivi.VNode.prototype._replaceChild = function(newNode, refNode, context) {
   } else {
     newNode.create(context);
     this.ref.replaceChild(newNode.ref, refNode.ref);
+    refNode.dispose();
     newNode.render(context);
   }
 };
