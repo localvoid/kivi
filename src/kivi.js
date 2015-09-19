@@ -126,16 +126,18 @@ kivi.currentFrame = function() {
  * Shortcut for `kivi.scheduler.instance.scheduleMicrotask`
  *
  * @param {!function()} cb
+ * @param {*=} opt_context
  */
-kivi.scheduleMicrotask = function(cb) {
-  kivi.scheduler.instance.scheduleMicrotask(cb);
+kivi.scheduleMicrotask = function(cb, opt_context) {
+  kivi.scheduler.instance.scheduleMicrotask(cb, opt_context);
 };
 
 /**
  * Shortcut for `kivi.scheduler.instance.scheduleMacrotask`
  *
  * @param {!function()} cb
+ * @param {*=} opt_context
  */
-kivi.scheduleMacrotask = function(cb) {
-  kivi.scheduler.instance.scheduleMacrotask(cb);
+kivi.scheduleMacrotask = function(cb, opt_context) {
+  kivi.scheduler.instance.scheduleMacrotask(cb, opt_context);
 };
