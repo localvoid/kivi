@@ -32,7 +32,7 @@ kivi.router.route = function(path, handler) {
  * @returns {boolean}
  */
 kivi.router.dispatch = function(routes, path) {
-  if (path[0] === '#') {
+  if (path !== '' && path[0] === '#') {
     if (path[1] === '!') {
       path = path.substr(2);
     } else {
@@ -67,14 +67,21 @@ kivi.router.dispatch = function(routes, path) {
  * Simple URL Router.
  *
  * @param {!Array<!kivi.router.Route>} routes
+ * @param {string} defaultPath
  * @param {!function()} notFound
  */
-kivi.router.setup = function(routes, notFound) {
+kivi.router.setup = function(routes, defaultPath, notFound) {
   var loc = window.location;
   var prevHash = decodeURIComponent(loc.hash);
+  if (prevHash === '') {
+    loc.hash = prevHash = '#!' + defaultPath;
+  }
 
   window.addEventListener('hashchange', function() {
     var newHash = decodeURIComponent(loc.hash);
+    if (newHash === '') {
+      loc.hash = prevHash = '#!' + defaultPath;
+    }
     if (prevHash !== newHash) {
       prevHash = newHash;
       if (!kivi.router.dispatch(routes, newHash)) {
