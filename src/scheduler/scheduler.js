@@ -245,7 +245,11 @@ kivi.scheduler.Scheduler = function() {
 
         for (i = 0; i < group.length; i++) {
           task = group[i];
-          task();
+          if (task.constructor === kivi.Component) {
+            /** {!kivi.Component} */(task).update();
+          } else {
+            /** {!function()} */(task).call();
+          }
         }
       }
     } while ((frame.flags & kivi.scheduler.FrameFlags.WRITE_ANY) !== 0);
@@ -256,7 +260,11 @@ kivi.scheduler.Scheduler = function() {
       group = frame.afterTasks;
       for (i = 0; i < group.length; i++) {
         task = group[i];
-        task();
+        if (task.constructor === kivi.Component) {
+          /** {!kivi.Component} */(task).update();
+        } else {
+          /** {!function()} */(task).call();
+        }
       }
     }
 

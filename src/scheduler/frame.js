@@ -31,10 +31,10 @@ kivi.scheduler.Frame = function() {
   /** @type {?Array<!function()|!kivi.Component>} */
   this.writeTasks = null;
 
-  /** @type {?Array<!function()>} */
+  /** @type {?Array<!function()|!kivi.Component>} */
   this.readTasks = null;
 
-  /** @type {?Array<!function()>} */
+  /** @type {?Array<!function()|!kivi.Component>} */
   this.afterTasks = null;
 
   /** @type {!kivi.VNode|!Element|null} */
@@ -85,7 +85,7 @@ kivi.scheduler.Frame.prototype.write = function(cb, opt_priority) {
 /**
  * Add callback to the read task queue.
  *
- * @param {!function()} cb
+ * @param {!function()|!kivi.Component} cb
  */
 kivi.scheduler.Frame.prototype.read = function(cb) {
   this.flags |= kivi.scheduler.FrameFlags.READ;
@@ -98,7 +98,7 @@ kivi.scheduler.Frame.prototype.read = function(cb) {
 /**
  * Add callback to the after task queue.
  *
- * @param {!function()} cb
+ * @param {!function()|!kivi.Component} cb
  */
 kivi.scheduler.Frame.prototype.after = function(cb) {
   this.flags |= kivi.scheduler.FrameFlags.AFTER;
