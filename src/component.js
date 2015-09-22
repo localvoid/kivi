@@ -28,11 +28,24 @@ kivi.CDescriptorFlags = {
  * @final
  */
 kivi.CDescriptor = function(name, opt_flags) {
+  /**
+   * Component Descriptor flags.
+   *
+   * @type {number}
+   */
   this.flags = opt_flags === void 0 ? 0 : opt_flags;
+
+  /**
+   * Tag name of the root element.
+   *
+   * @type {string}
+   */
   this.tag = 'div';
 
   /**
    * Data setter.
+   * If new data changes the representation of the Component, data setter should
+   * set dirty flag for the Component.
    *
    * @type {?function (!kivi.Component<D, S>, D)}
    */
@@ -40,6 +53,8 @@ kivi.CDescriptor = function(name, opt_flags) {
 
   /**
    * Children setter.
+   * If new children list changes the representation of the Component, children
+   * setter should set dirty flag for the Component.
    *
    * @type {?function (!kivi.Component<D, S>, (?Array<!kivi.VNode>|string))}
    */
@@ -149,7 +164,8 @@ kivi.CDescriptor.wrap = function(d) {
  * Component.
  *
  * @template D, S
- * @param {number} flags
+ * @param {number} flags Lowest 24 bits reserved for kivi flags, other bits can
+ *     be used for custom flags.
  * @param {!kivi.CDescriptor<D, S>} descriptor
  * @param {?kivi.Component} parent
  * @param {*} data
@@ -163,13 +179,14 @@ kivi.Component = function(flags, descriptor, parent, data, children, element) {
   /** @type {number} */
   this.flags = flags;
 
-  /** @type {number} */
+  /**
+   * Last time component were updated, see `kivi.Scheduler.clock` for details.
+   *
+   * @type {number}
+   */
   this.mtime = 0;
 
-  /** @type {!kivi.CDescriptor<D, S>} */
   this.descriptor = descriptor;
-
-  /** @type {?kivi.Component} */
   this.parent = parent;
 
   /** @type {number} */
@@ -188,14 +205,15 @@ kivi.Component = function(flags, descriptor, parent, data, children, element) {
 
   /**
    * Root node in the Components virtual tree.
+   *
    * @type {?kivi.Component|?kivi.VNode|?CanvasRenderingContext2D}
    */
   this.root = null;
 
-  /** @type {?Array<!kivi.InvalidatorSubscription>|?kivi.InvalidatorSubscription} */
+  /** @private {?Array<!kivi.InvalidatorSubscription>|?kivi.InvalidatorSubscription} */
   this._subscriptions = null;
 
-  /** @type {?Array<!kivi.InvalidatorSubscription>|?kivi.InvalidatorSubscription} */
+  /** @private {?Array<!kivi.InvalidatorSubscription>|?kivi.InvalidatorSubscription} */
   this._transientSubscriptions = null;
 
   if (kivi.DEBUG) {
