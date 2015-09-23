@@ -1,6 +1,7 @@
 goog.provide('kivi.CDescriptor');
 goog.provide('kivi.CDescriptorFlags');
 goog.provide('kivi.Component');
+goog.require('kivi');
 goog.require('kivi.ComponentFlags');
 goog.require('kivi.Invalidator');
 goog.require('kivi.InvalidatorSubscription');

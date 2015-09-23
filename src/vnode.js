@@ -1,4 +1,5 @@
 goog.provide('kivi.VNode');
+goog.require('kivi');
 goog.require('kivi.HtmlNamespace');
 goog.require('kivi.VNodeFlags');
 goog.require('kivi.debug.printError');

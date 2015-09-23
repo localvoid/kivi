@@ -1,4 +1,5 @@
 goog.provide('kivi.Invalidator');
+goog.require('kivi');
 goog.require('kivi.InvalidatorSubscription');
 goog.require('kivi.InvalidatorSubscriptionFlags');
 goog.require('kivi.scheduler.instance');

@@ -1,4 +1,5 @@
 goog.provide('kivi.InvalidatorSubscription');
+goog.require('kivi');
 goog.require('kivi.InvalidatorSubscriptionFlags');
 
 /**
