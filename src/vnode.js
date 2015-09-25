@@ -104,6 +104,57 @@ kivi.VNode = function(flags, tag, data) {
 };
 
 /**
+ * Create a [kivi.VNode] representing a [Text] node.
+ *
+ * @param {string} content
+ * @return {!kivi.VNode}
+ */
+kivi.VNode.createText = function(content) {
+  return new kivi.VNode(kivi.VNodeFlags.TEXT, null, content);
+};
+
+/**
+ * Create a [kivi.VNode] representing a [Element] node.
+ *
+ * @param {string} tag
+ * @return {!kivi.VNode}
+ */
+kivi.VNode.createElement = function(tag) {
+  return new kivi.VNode(kivi.VNodeFlags.ELEMENT, tag, null);
+};
+
+/**
+ * Create a [kivi.VNode] representing a [SVGElement] node.
+ *
+ * @param {string} tag
+ * @return {!kivi.VNode}
+ */
+kivi.VNode.createSvgElement = function(tag) {
+  return new kivi.VNode(kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.SVG, tag, null);
+};
+
+/**
+ * Create a [kivi.VNode] representing a [kivi.Component] node.
+ *
+ * @param {!kivi.CDescriptor} descriptor
+ * @param {*=} opt_data
+ * @return {!kivi.VNode}
+ */
+kivi.VNode.createComponent = function(descriptor, opt_data) {
+  if (opt_data === void 0) opt_data = null;
+  return new kivi.VNode(kivi.VNodeFlags.COMPONENT, descriptor, opt_data);
+};
+
+/**
+ * Create a [kivi.VNode] representing a root node.
+ *
+ * @return {!kivi.VNode}
+ */
+kivi.VNode.createRoot = function() {
+  return new kivi.VNode(kivi.VNodeFlags.ROOT, null, null);
+};
+
+/**
  * Set key.
  *
  * @param {null|number|string} key
