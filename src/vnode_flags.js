@@ -1,3 +1,4 @@
+goog.provide('kivi.VNodeDebugFlags');
 goog.provide('kivi.VNodeFlags');
 
 /**
@@ -36,9 +37,20 @@ kivi.VNodeFlags = {
    *
    * Comment placeholder can be used to delay element appearance in animations.
    */
-  COMMENT_PLACEHOLDER:          0x04000,
+  COMMENT_PLACEHOLDER:          0x04000
+};
+
+/**
+ * VNode Debug Flags
+ *
+ * @enum {number}
+ */
+
+kivi.VNodeDebugFlags = {
   /** [kivi.VNode] is rendered */
-  DEBUG_IS_RENDERED:            0x10000,
+  IS_RENDERED: 0x00001,
   /** [kivi.VNode] is mounted */
-  DEBUG_IS_MOUNTED:             0x20000
+  IS_MOUNTED:  0x00002,
+  /** [kivi.VNode] is disposed */
+  IS_DISPOSED: 0x00004
 };

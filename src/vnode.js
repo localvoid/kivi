@@ -1,6 +1,7 @@
 goog.provide('kivi.VNode');
 goog.require('kivi');
 goog.require('kivi.HtmlNamespace');
+goog.require('kivi.VNodeDebugFlags');
 goog.require('kivi.VNodeFlags');
 goog.require('kivi.debug.printError');
 goog.require('kivi.sync.attrs');
@@ -95,10 +96,10 @@ kivi.VNode = function(flags, tag, data) {
     /**
      * Debug Properties are used because VNode properties are frozen.
      *
-     * @private {{disposed: boolean}}
+     * @private {{flags: number}}
      */
     this._debugProperties = {
-      disposed: false
+      flags: 0
     };
   }
 };
@@ -367,13 +368,13 @@ kivi.VNode.prototype.render = function(context) {
     if ((this.flags & kivi.VNodeFlags.COMMENT_PLACEHOLDER) !== 0) {
       throw new Error('Failed to render VNode: VNode comment placeholder cannot be rendered.');
     }
-    if ((this.flags & kivi.VNodeFlags.DEBUG_IS_RENDERED) !== 0) {
+    if ((this._debugProperties.flags & kivi.VNodeDebugFlags.IS_RENDERED) !== 0) {
       throw new Error('Failed to render VNode: VNode cannot be rendered twice.');
     }
-    if ((this.flags & kivi.VNodeFlags.DEBUG_IS_MOUNTED) !== 0) {
+    if ((this._debugProperties.flags & kivi.VNodeDebugFlags.IS_MOUNTED) !== 0) {
       throw new Error('Failed to render VNode: VNode cannot be rendered after mount.');
     }
-    this.flags |= kivi.VNodeFlags.DEBUG_IS_RENDERED;
+    this._debugProperties.flags |= kivi.VNodeDebugFlags.IS_RENDERED;
   }
 
   /** @type {number} */
@@ -508,13 +509,13 @@ kivi.VNode.prototype.mount = function(node, context) {
     if ((this.flags & kivi.VNodeFlags.COMMENT_PLACEHOLDER) !== 0) {
       throw new Error('Failed to mount VNode: VNode comment placeholder cannot be mounted.');
     }
-    if ((this.flags & kivi.VNodeFlags.DEBUG_IS_RENDERED) !== 0) {
+    if ((this._debugProperties.flags & kivi.VNodeDebugFlags.IS_RENDERED) !== 0) {
       throw new Error('Failed to mount VNode: VNode cannot be mounted after render.');
     }
-    if ((this.flags & kivi.VNodeFlags.DEBUG_IS_MOUNTED) !== 0) {
+    if ((this._debugProperties.flags & kivi.VNodeDebugFlags.IS_MOUNTED) !== 0) {
       throw new Error('Failed to mount VNode: VNode cannot be mounted twice.');
     }
-    this.flags |= kivi.VNodeFlags.DEBUG_IS_MOUNTED;
+    this._debugProperties.flags |= kivi.VNodeDebugFlags.IS_MOUNTED;
   }
 
   var flags = this.flags;
@@ -581,10 +582,10 @@ kivi.VNode.prototype.mount = function(node, context) {
  */
 kivi.VNode.prototype.sync = function(b, context) {
   if (kivi.DEBUG) {
-    if ((this.flags & (kivi.VNodeFlags.DEBUG_IS_RENDERED | kivi.VNodeFlags.DEBUG_IS_MOUNTED)) === 0) {
+    if ((this._debugProperties.flags & (kivi.VNodeDebugFlags.IS_RENDERED | kivi.VNodeDebugFlags.IS_MOUNTED)) === 0) {
       throw new Error('Failed to sync VNode: VNode should be rendered or mounted before sync.');
     }
-    b.flags |= this.flags & (kivi.VNodeFlags.DEBUG_IS_RENDERED | kivi.VNodeFlags.DEBUG_IS_MOUNTED);
+    b._debugProperties.flags |= this._debugProperties.flags & (kivi.VNodeDebugFlags.IS_RENDERED | kivi.VNodeDebugFlags.IS_MOUNTED);
   }
 
   var ref = /** @type {!Element} */(this.ref);
@@ -679,13 +680,13 @@ kivi.VNode.prototype.sync = function(b, context) {
  */
 kivi.VNode.prototype.dispose = function() {
   if (kivi.DEBUG) {
-    if (this._debugProperties.disposed) {
+    if ((this._debugProperties.flags & kivi.VNodeDebugFlags.IS_DISPOSED) !== 0) {
       throw new Error('Failed to dispose VNode: VNode is already disposed.')
     }
-    if ((this.flags & (kivi.VNodeFlags.DEBUG_IS_RENDERED | kivi.VNodeFlags.DEBUG_IS_MOUNTED)) === 0) {
+    if ((this._debugProperties.flags & (kivi.VNodeDebugFlags.IS_RENDERED | kivi.VNodeDebugFlags.IS_MOUNTED)) === 0) {
       throw new Error('Failed to dispose VNode: VNode should be rendered or mounted before disposing.');
     }
-    this._debugProperties.disposed = true;
+    this._debugProperties.flags |= kivi.VNodeDebugFlags.IS_DISPOSED;
   }
   if ((this.flags & kivi.VNodeFlags.COMPONENT) !== 0) {
     /** @type {!kivi.Component} */ (this.cref).dispose();
@@ -1014,6 +1015,7 @@ kivi.VNode.prototype._syncChildren = function(a, b, context) {
     bNode = b[bEnd];
 
     if (!aNode._canSync(bNode)) {
+      console.log(aNode, bNode);
       break;
     }
 
