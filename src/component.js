@@ -129,22 +129,22 @@ kivi.CDescriptor = function(name, opt_flags) {
 };
 
 /**
- * Creates a Component descriptor with HTMLElement node.
+ * Creates a Stateful Component descriptor with HTMLElement node.
  *
  * @param {string} name
  * @returns {!kivi.CDescriptor}
  */
-kivi.CDescriptor.element = function(name) {
+kivi.CDescriptor.create = function(name) {
   return new kivi.CDescriptor(name, 0);
 };
 
 /**
- * Creates a Component descriptor with SVGElement node.
+ * Creates a Stateful Component descriptor with SVGElement node.
  *
  * @param {string} name
  * @returns {!kivi.CDescriptor}
  */
-kivi.CDescriptor.svgElement = function(name) {
+kivi.CDescriptor.createSvg = function(name) {
   return new kivi.CDescriptor(name, kivi.CDescriptorFlags.SVG);
 };
 
@@ -154,7 +154,7 @@ kivi.CDescriptor.svgElement = function(name) {
  * @param {!kivi.CDescriptor} d
  * @returns {!kivi.CDescriptor}
  */
-kivi.CDescriptor.wrap = function(d) {
+kivi.CDescriptor.createWrapper = function(d) {
   var r = new kivi.CDescriptor(d.name, kivi.CDescriptorFlags.WRAPPER);
   r.flags |= d.flags & kivi.CDescriptorFlags.SVG;
   r.tag = d.tag;

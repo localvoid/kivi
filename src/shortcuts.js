@@ -1,5 +1,7 @@
+goog.provide('kivi.currentFrame');
 goog.provide('kivi.injectComponent');
 goog.provide('kivi.mountComponent');
+goog.provide('kivi.nextFrame');
 goog.provide('kivi.scheduleMacrotask');
 goog.provide('kivi.scheduleMicrotask');
 goog.require('kivi.Component');
