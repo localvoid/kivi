@@ -2,6 +2,7 @@ goog.provide('kivi.sync.attrs');
 goog.provide('kivi.sync.removeAttr');
 goog.provide('kivi.sync.setAttr');
 goog.require('kivi');
+goog.require('kivi.HtmlNamespace');
 
 /**
  * Namespaced Attribute should be set with setAttributeNS call.

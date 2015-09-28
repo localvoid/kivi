@@ -270,7 +270,7 @@ kivi.VNode.prototype.managedContainer = function() {
  */
 kivi.VNode.prototype.disableChildrenShapeError = function() {
   if (kivi.DEBUG) {
-    this.flags |= kivi.VNodeFlags.DISABLE_CHILDREN_SHAPE_ERROR;
+    this._debugProperties.flags |= kivi.VNodeDebugFlags.DISABLE_CHILDREN_SHAPE_ERROR;
   }
   return this;
 };
@@ -287,7 +287,7 @@ kivi.VNode.prototype.disableChildrenShapeError = function() {
  */
 kivi.VNode.prototype.disableFreeze = function() {
   if (kivi.DEBUG) {
-    this.flags |= kivi.VNodeFlags.DISABLE_FREEZE;
+    this._debugProperties.flags |= kivi.VNodeDebugFlags.DISABLE_FREEZE;
   }
   return this;
 };
@@ -368,13 +368,13 @@ kivi.VNode.prototype.render = function(context) {
     if ((this.flags & kivi.VNodeFlags.COMMENT_PLACEHOLDER) !== 0) {
       throw new Error('Failed to render VNode: VNode comment placeholder cannot be rendered.');
     }
-    if ((this._debugProperties.flags & kivi.VNodeDebugFlags.IS_RENDERED) !== 0) {
+    if ((this._debugProperties.flags & kivi.VNodeDebugFlags.RENDERED) !== 0) {
       throw new Error('Failed to render VNode: VNode cannot be rendered twice.');
     }
-    if ((this._debugProperties.flags & kivi.VNodeDebugFlags.IS_MOUNTED) !== 0) {
+    if ((this._debugProperties.flags & kivi.VNodeDebugFlags.MOUNTED) !== 0) {
       throw new Error('Failed to render VNode: VNode cannot be rendered after mount.');
     }
-    this._debugProperties.flags |= kivi.VNodeDebugFlags.IS_RENDERED;
+    this._debugProperties.flags |= kivi.VNodeDebugFlags.RENDERED;
   }
 
   /** @type {number} */
@@ -509,13 +509,13 @@ kivi.VNode.prototype.mount = function(node, context) {
     if ((this.flags & kivi.VNodeFlags.COMMENT_PLACEHOLDER) !== 0) {
       throw new Error('Failed to mount VNode: VNode comment placeholder cannot be mounted.');
     }
-    if ((this._debugProperties.flags & kivi.VNodeDebugFlags.IS_RENDERED) !== 0) {
+    if ((this._debugProperties.flags & kivi.VNodeDebugFlags.RENDERED) !== 0) {
       throw new Error('Failed to mount VNode: VNode cannot be mounted after render.');
     }
-    if ((this._debugProperties.flags & kivi.VNodeDebugFlags.IS_MOUNTED) !== 0) {
+    if ((this._debugProperties.flags & kivi.VNodeDebugFlags.MOUNTED) !== 0) {
       throw new Error('Failed to mount VNode: VNode cannot be mounted twice.');
     }
-    this._debugProperties.flags |= kivi.VNodeDebugFlags.IS_MOUNTED;
+    this._debugProperties.flags |= kivi.VNodeDebugFlags.MOUNTED;
   }
 
   var flags = this.flags;
@@ -582,10 +582,10 @@ kivi.VNode.prototype.mount = function(node, context) {
  */
 kivi.VNode.prototype.sync = function(b, context) {
   if (kivi.DEBUG) {
-    if ((this._debugProperties.flags & (kivi.VNodeDebugFlags.IS_RENDERED | kivi.VNodeDebugFlags.IS_MOUNTED)) === 0) {
+    if ((this._debugProperties.flags & (kivi.VNodeDebugFlags.RENDERED | kivi.VNodeDebugFlags.MOUNTED)) === 0) {
       throw new Error('Failed to sync VNode: VNode should be rendered or mounted before sync.');
     }
-    b._debugProperties.flags |= this._debugProperties.flags & (kivi.VNodeDebugFlags.IS_RENDERED | kivi.VNodeDebugFlags.IS_MOUNTED);
+    b._debugProperties.flags |= this._debugProperties.flags & (kivi.VNodeDebugFlags.RENDERED | kivi.VNodeDebugFlags.MOUNTED);
   }
 
   var ref = /** @type {!Element} */(this.ref);
@@ -680,13 +680,13 @@ kivi.VNode.prototype.sync = function(b, context) {
  */
 kivi.VNode.prototype.dispose = function() {
   if (kivi.DEBUG) {
-    if ((this._debugProperties.flags & kivi.VNodeDebugFlags.IS_DISPOSED) !== 0) {
+    if ((this._debugProperties.flags & kivi.VNodeDebugFlags.DISPOSED) !== 0) {
       throw new Error('Failed to dispose VNode: VNode is already disposed.')
     }
-    if ((this._debugProperties.flags & (kivi.VNodeDebugFlags.IS_RENDERED | kivi.VNodeDebugFlags.IS_MOUNTED)) === 0) {
+    if ((this._debugProperties.flags & (kivi.VNodeDebugFlags.RENDERED | kivi.VNodeDebugFlags.MOUNTED)) === 0) {
       throw new Error('Failed to dispose VNode: VNode should be rendered or mounted before disposing.');
     }
-    this._debugProperties.flags |= kivi.VNodeDebugFlags.IS_DISPOSED;
+    this._debugProperties.flags |= kivi.VNodeDebugFlags.DISPOSED;
   }
   if ((this.flags & kivi.VNodeFlags.COMPONENT) !== 0) {
     /** @type {!kivi.Component} */ (this.cref).dispose();
@@ -710,7 +710,7 @@ kivi.VNode.prototype.dispose = function() {
  */
 kivi.VNode.prototype._freeze = function() {
   if (kivi.DEBUG) {
-    if ((this.flags & kivi.VNodeFlags.DISABLE_FREEZE) === 0) {
+    if ((this._debugProperties.flags & kivi.VNodeDebugFlags.DISABLE_FREEZE) === 0) {
       Object.freeze(this);
       if (this.attrs_ !== null && !Object.isFrozen(this.attrs_)) {
         Object.freeze(this.attrs_);
@@ -869,7 +869,7 @@ kivi.VNode.prototype.syncChildren = function(a, b, context) {
           aNode = a[0];
           if ((this.flags & kivi.VNodeFlags.TRACK_BY_KEY) === 0) {
             if (kivi.DEBUG) {
-              if ((this.flags & kivi.VNodeFlags.DISABLE_CHILDREN_SHAPE_ERROR) === 0) {
+              if ((this._debugProperties.flags & kivi.VNodeDebugFlags.DISABLE_CHILDREN_SHAPE_ERROR) === 0) {
                 kivi.debug.printError(
                     'VNode sync children: children shape is changing, you should enable tracking by key with ' +
                     'VNode method trackByKey().\n' +
@@ -914,7 +914,7 @@ kivi.VNode.prototype.syncChildren = function(a, b, context) {
           bNode = b[0];
           if ((this.flags & kivi.VNodeFlags.TRACK_BY_KEY) === 0) {
             if (kivi.DEBUG) {
-              if ((this.flags & kivi.VNodeFlags.DISABLE_CHILDREN_SHAPE_ERROR) === 0) {
+              if ((this._debugProperties.flags & kivi.VNodeDebugFlags.DISABLE_CHILDREN_SHAPE_ERROR) === 0) {
                 kivi.debug.printError(
                     'VNode sync children: children shape is changing, you should enable tracking by key with ' +
                     'VNode method trackByKey().\n' +
@@ -1026,7 +1026,8 @@ kivi.VNode.prototype._syncChildren = function(a, b, context) {
   }
 
   if (kivi.DEBUG) {
-    if ((aStart <= aEnd || bStart <= bEnd) && ((this.flags & kivi.VNodeFlags.DISABLE_CHILDREN_SHAPE_ERROR) === 0)) {
+    if ((aStart <= aEnd || bStart <= bEnd) &&
+        ((this._debugProperties.flags & kivi.VNodeDebugFlags.DISABLE_CHILDREN_SHAPE_ERROR) === 0)) {
       kivi.debug.printError(
           'VNode sync children: children shape is changing, you should enable tracking by key with ' +
           'VNode method trackByKey().\n' +
