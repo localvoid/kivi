@@ -16,8 +16,10 @@ goog.require('kivi.scheduler.instance');
  * @returns {!kivi.Component}
  */
 kivi.injectComponent = function(descriptor, data, container) {
-  var c = kivi.Component.create(descriptor, data, null, null);
+  var c = kivi.Component.create(descriptor, null);
   container.appendChild(c.element);
+  c.attached();
+  c.setInputData(data, null);
   c.update();
   return c;
 };
@@ -31,7 +33,9 @@ kivi.injectComponent = function(descriptor, data, container) {
  * @return {!kivi.Component}
  */
 kivi.mountComponent = function(descriptor, data, element) {
-  var c = kivi.Component.mount(descriptor, data, null, null, element);
+  var c = kivi.Component.mount(descriptor, null, element);
+  c.attached();
+  c.setInputData(data, null);
   c.update();
   return c;
 };

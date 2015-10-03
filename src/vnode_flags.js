@@ -40,10 +40,14 @@ kivi.VNodeDebugFlags = {
   RENDERED:                     0x00001,
   /** [kivi.VNode] is mounted */
   MOUNTED:                      0x00002,
+  /** [kivi.VNode] is attached */
+  ATTACHED:                     0x00004,
+  /** [kivi.VNode] is detached */
+  DETACHED:                     0x00008,
   /** [kivi.VNode] is disposed */
-  DISPOSED:                     0x00004,
+  DISPOSED:                     0x00010,
   /** Disable warnings in DEBUG mode when children shape is changing. */
-  DISABLE_CHILDREN_SHAPE_ERROR: 0x00008,
+  DISABLE_CHILDREN_SHAPE_ERROR: 0x00020,
   /**
    * Disable [kivi.VNode] freezing in DEBUG mode.
    *
@@ -52,5 +56,5 @@ kivi.VNodeDebugFlags = {
    * when we rerender text block, we don't touch properties that is already
    * up to date (prevents spellchecker flickering).
    */
-  DISABLE_FREEZE:               0x00010
+  DISABLE_FREEZE:               0x00040
 };

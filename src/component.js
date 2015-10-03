@@ -14,8 +14,9 @@ goog.require('kivi.scheduler.instance');
  * @enum {number}
  */
 kivi.CDescriptorFlags = {
-  SVG:     0x0001,
-  WRAPPER: 0x0002
+  SVG:             0x0001,
+  WRAPPER:         0x0002,
+  RECYCLE_ENABLED: 0x0004
 };
 
 /**
@@ -83,6 +84,20 @@ kivi.CDescriptor = function(name, opt_flags) {
   this.invalidated = null;
 
   /**
+   * Lifecycle method: attached.
+   *
+   * @type {?function (!kivi.Component<D, S>)}
+   */
+  this.attached = null;
+
+  /**
+   * Lifecycle method: detached.
+   *
+   * @type {?function (!kivi.Component<D, S>)}
+   */
+  this.detached = null;
+
+  /**
    * Lifecycle method: disposed.
    *
    * @type {?function (!kivi.Component<D, S>)}
@@ -123,6 +138,12 @@ kivi.CDescriptor = function(name, opt_flags) {
    */
   this.data = null;
 
+  if (!kivi.DISABLE_COMPONENT_RECYCLING) {
+    /** @type {?Array<!kivi.Component<D, S>>} */
+    this.recycled = null;
+    this.maxRecycled = 0;
+  }
+
   if (kivi.DEBUG) {
     this.name = name;
   }
@@ -162,6 +183,19 @@ kivi.CDescriptor.createWrapper = function(d) {
 };
 
 /**
+ * Enable recycling.
+ *
+ * @param {number} maxRecycled
+ */
+kivi.CDescriptor.prototype.enableRecycling = function(maxRecycled) {
+  if (!kivi.DISABLE_COMPONENT_RECYCLING) {
+    this.flags |= kivi.CDescriptorFlags.RECYCLE_ENABLED;
+    this.recycled = [];
+    this.maxRecycled = maxRecycled;
+  }
+};
+
+/**
  * Component.
  *
  * @template D, S
@@ -169,14 +203,12 @@ kivi.CDescriptor.createWrapper = function(d) {
  *     be used for custom flags.
  * @param {!kivi.CDescriptor<D, S>} descriptor
  * @param {?kivi.Component} parent
- * @param {*} data
- * @param {?Array<!kivi.VNode>|string} children
  * @param {!Element} element
  * @constructor
  * @struct
  * @final
  */
-kivi.Component = function(flags, descriptor, parent, data, children, element) {
+kivi.Component = function(flags, descriptor, parent, element) {
   /** @type {number} */
   this.flags = flags;
 
@@ -193,13 +225,14 @@ kivi.Component = function(flags, descriptor, parent, data, children, element) {
   /** @type {number} */
   this.depth = parent === null ? 0 : parent.depth + 1;
 
-  /** @type {D} */
-  this.data = data;
-
   /** @type {S} */
   this.state = null;
 
-  this.children = children;
+  /** @type {D} */
+  this.data = null;
+
+  /** @type {?Array<!kivi.VNode>|string} */
+  this.children = null;
 
   /** @type {!Element} */
   this.element = element;
@@ -229,21 +262,40 @@ kivi.Component = function(flags, descriptor, parent, data, children, element) {
  * Create a [kivi.Component].
  *
  * @param {!kivi.CDescriptor} descriptor
- * @param {*} data
- * @param {?Array<!kivi.VNode>|string} children
  * @param {?kivi.Component} context
- * @param {!Element=} opt_element
  * @returns {!kivi.Component}
  */
-kivi.Component.create = function(descriptor, data, children, context, opt_element) {
-  if (opt_element === void 0) {
-    if ((descriptor.flags & kivi.CDescriptorFlags.SVG) === 0) {
-      opt_element = document.createElement(descriptor.tag);
-    } else {
-      opt_element = document.createElementNS(kivi.HtmlNamespace.SVG, descriptor.tag);
+kivi.Component.create = function(descriptor, context) {
+  var c;
+
+  if (kivi.DISABLE_COMPONENT_RECYCLING ||
+      ((descriptor.flags & kivi.CDescriptorFlags.RECYCLE_ENABLED) === 0) ||
+      descriptor.recycled.length === 0) {
+
+    var element = ((descriptor.flags & kivi.CDescriptorFlags.SVG) === 0) ?
+        document.createElement(descriptor.tag) :
+        document.createElementNS(kivi.HtmlNamespace.SVG, descriptor.tag);
+    c = new kivi.Component(kivi.ComponentFlags.DIRTY, descriptor, context, element);
+    if (descriptor.init !== null) {
+      descriptor.init(c);
     }
+  } else {
+    c = descriptor.recycled.pop();
   }
-  var c = new kivi.Component(kivi.ComponentFlags.SHOULD_UPDATE_FLAGS, descriptor, context, data, children, opt_element);
+
+  return c;
+};
+
+/**
+ * Mount Component on top of existing html element.
+ *
+ * @param {!kivi.CDescriptor} descriptor
+ * @param {?kivi.Component} context
+ * @param {!Element} element
+ * @returns {!kivi.Component}
+ */
+kivi.Component.mount = function(descriptor, context, element) {
+  var c = new kivi.Component(kivi.ComponentFlags.DIRTY | kivi.ComponentFlags.MOUNTING, descriptor, context, element);
   if (descriptor.init !== null) {
     descriptor.init(c);
   }
@@ -251,17 +303,15 @@ kivi.Component.create = function(descriptor, data, children, context, opt_elemen
 };
 
 /**
- * Mount a [kivi.Component] on top of existing html.
+ * Wrap Component.
  *
  * @param {!kivi.CDescriptor} descriptor
- * @param {*} data
- * @param {?Array<!kivi.VNode>|string} children
  * @param {?kivi.Component} context
  * @param {!Element} element
  * @returns {!kivi.Component}
  */
-kivi.Component.mount = function(descriptor, data, children, context, element) {
-  var c = new kivi.Component(kivi.ComponentFlags.SHOULD_UPDATE_FLAGS | kivi.ComponentFlags.MOUNTING, descriptor, context, data, children, element);
+kivi.Component.wrap = function(descriptor, context, element) {
+  var c = new kivi.Component(kivi.ComponentFlags.DIRTY, descriptor, context, element);
   if (descriptor.init !== null) {
     descriptor.init(c);
   }
@@ -312,17 +362,17 @@ kivi.Component.prototype.syncVRoot = function(newRoot) {
 kivi.Component.prototype.syncComponent = function(newData, opt_newChildren) {
   if (opt_newChildren === void 0) opt_newChildren = null;
 
-  if (this.root === null) {
+  var c = this.root;
+  if (c === null) {
     var descriptor = /** @type {!kivi.CDescriptor} */(this.descriptor.data);
     if ((this.flags & kivi.ComponentFlags.MOUNTING) === 0) {
-      this.root = kivi.Component.create(descriptor, newData, opt_newChildren, this, this.element);
+      c = kivi.Component.wrap(descriptor, this, this.element);
     } else {
-      this.root = kivi.Component.mount(descriptor, newData, opt_newChildren, this, this.element);
+      c = kivi.Component.mount(descriptor, this, this.element);
     }
   }
-  var component = /** @type {!kivi.Component<*,*>} */(this.root);
-  component.setInputData(newData, opt_newChildren);
-  component.update();
+  c.setInputData(newData, opt_newChildren);
+  c.update();
 };
 
 /**
@@ -377,6 +427,57 @@ kivi.Component.prototype.stopUpdateEachFrame = function() {
 };
 
 /**
+ * Attach method should be invoked when Component is attached to the document.
+ */
+kivi.Component.prototype.attach = function() {
+  this.attached();
+  var root = this.root;
+  if (root !== null) {
+    if (root.constructor === kivi.VNode) {
+      /** @type {!kivi.VNode} */(root).attach();
+    } else if (root.constructor === kivi.Component) {
+      /** @type {!kivi.Component} */(root).attach();
+    }
+  }
+};
+
+kivi.Component.prototype.attached = function() {
+  this.flags |= kivi.ComponentFlags.ATTACHED;
+  this.flags &= ~kivi.ComponentFlags.RECYCLED;
+
+  var attached = this.descriptor.attached;
+  if (attached !== null) {
+    attached(this);
+  }
+};
+
+/**
+ * Detach method should be invoked when Component is detached from the document.
+ */
+kivi.Component.prototype.detach = function() {
+  var root = this.root;
+  if (root !== null) {
+    if (root.constructor === kivi.VNode) {
+      /** @type {!kivi.VNode} */(root).detach();
+    } else if (root.constructor === kivi.Component) {
+      /** @type {!kivi.Component} */(root).detach();
+    }
+  }
+  this.detached();
+};
+
+kivi.Component.prototype.detached = function() {
+  this.flags &= ~(kivi.ComponentFlags.ATTACHED | kivi.ComponentFlags.UPDATE_EACH_FRAME);
+  this.cancelSubscriptions();
+  this.cancelTransientSubscriptions();
+
+  var detached = this.descriptor.detached;
+  if (detached !== null) {
+    detached(this);
+  }
+};
+
+/**
  * Dispose Component.
  */
 kivi.Component.prototype.dispose = function() {
@@ -385,25 +486,32 @@ kivi.Component.prototype.dispose = function() {
       throw new Error('Failed to dispose Component: component is already disposed');
     }
   }
-
-  this.flags |= kivi.ComponentFlags.DISPOSED;
-  this.flags &= ~(kivi.ComponentFlags.ATTACHED | kivi.ComponentFlags.UPDATE_EACH_FRAME);
-  this.cancelSubscriptions();
-  this.cancelTransientSubscriptions();
-
-  var root = this.root;
-  if (root !== null) {
-    // monomorphic code
-    if (root.constructor === kivi.VNode) {
-      /** @type {!kivi.VNode} */(root).dispose();
-    } else if (root.constructor === kivi.Component) {
-      /** @type {!kivi.Component} */(root).dispose();
-    }
-  }
   var descriptor = this.descriptor;
-  if (descriptor.disposed !== null) {
-    descriptor.disposed(this);
+
+  if (kivi.DISABLE_COMPONENT_RECYCLING ||
+      ((descriptor.flags & kivi.CDescriptorFlags.RECYCLE_ENABLED) === 0) ||
+      (descriptor.recycled.length >= descriptor.maxRecycled)) {
+    this.flags |= kivi.ComponentFlags.DISPOSED;
+
+    var root = this.root;
+    if (root !== null) {
+      // monomorphic code
+      if (root.constructor === kivi.VNode) {
+        /** @type {!kivi.VNode} */(root).dispose();
+      } else if (root.constructor === kivi.Component) {
+        /** @type {!kivi.Component} */(root).dispose();
+      }
+    }
+
+    this.detached();
+    if (descriptor.disposed !== null) {
+      descriptor.disposed(this);
+    }
+  } else {
+    this.detach();
+    descriptor.recycled.push(this);
   }
+
 };
 
 /**

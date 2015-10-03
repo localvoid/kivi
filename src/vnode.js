@@ -310,8 +310,6 @@ kivi.VNode.prototype.create = function(context) {
   } else if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
     var component = kivi.Component.create(
         /** @type {!kivi.CDescriptor} */(this.tag),
-        this.props_,
-        this.children_,
         context);
     this.ref = component.element;
     this.cref = component;
@@ -417,7 +415,9 @@ kivi.VNode.prototype.render = function(context) {
       }
     }
   } else if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
-    /** @type {!kivi.Component} */(this.cref).update();
+    var c = /** @type {!kivi.Component} */(this.cref);
+    c.setInputData(this.props_, this.children_);
+    c.update();
   }
 
   this._freeze();
@@ -466,7 +466,8 @@ kivi.VNode.prototype.mount = function(node, context) {
 
   if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
     var cref = this.cref = kivi.Component.mount(/** @type {!kivi.CDescriptor} */(this.tag),
-        this.props_, children, context, /** @type {!Element} */(node));
+        context, /** @type {!Element} */(node));
+    cref.setInputData(this.props_, this.children_);
     cref.update();
   } else {
     if (children !== null && typeof children !== 'string' && children.length > 0) {
@@ -514,7 +515,11 @@ kivi.VNode.prototype.sync = function(b, context) {
     if ((this._debugProperties.flags & (kivi.VNodeDebugFlags.RENDERED | kivi.VNodeDebugFlags.MOUNTED)) === 0) {
       throw new Error('Failed to sync VNode: VNode should be rendered or mounted before sync.');
     }
-    b._debugProperties.flags |= this._debugProperties.flags & (kivi.VNodeDebugFlags.RENDERED | kivi.VNodeDebugFlags.MOUNTED);
+    b._debugProperties.flags |= this._debugProperties.flags &
+        (kivi.VNodeDebugFlags.RENDERED |
+         kivi.VNodeDebugFlags.MOUNTED |
+         kivi.VNodeDebugFlags.ATTACHED |
+         kivi.VNodeDebugFlags.DETACHED);
   }
 
   var ref = /** @type {!Element} */(this.ref);
@@ -591,6 +596,87 @@ kivi.VNode.prototype.sync = function(b, context) {
 };
 
 /**
+ * Recursively attach all nodes.
+ */
+kivi.VNode.prototype.attach = function() {
+  if (kivi.DEBUG) {
+    if ((this._debugProperties.flags & kivi.VNodeDebugFlags.ATTACHED) !== 0) {
+      throw new Error('Failed to attach VNode: VNode is already attached.');
+    }
+    this._debugProperties.flags |= kivi.VNodeDebugFlags.ATTACHED;
+    this._debugProperties.flags &= ~kivi.VNodeDebugFlags.DETACHED;
+  }
+  if ((this.flags & kivi.VNodeFlags.COMPONENT) === 0) {
+    var children = this.children_;
+    if (children !== null && typeof children !== 'string') {
+      for (var i = 0; i < children.length; i++) {
+        children[i].attach();
+      }
+    }
+  } else {
+    this.cref.attach();
+  }
+};
+
+/**
+ * Attach node.
+ */
+kivi.VNode.prototype.attached = function() {
+  if (kivi.DEBUG) {
+    if ((this._debugProperties.flags & kivi.VNodeDebugFlags.ATTACHED) !== 0) {
+      throw new Error('Failed to attach VNode: VNode is already attached.');
+    }
+    this._debugProperties.flags |= kivi.VNodeDebugFlags.ATTACHED;
+    this._debugProperties.flags &= ~kivi.VNodeDebugFlags.DETACHED;
+  }
+  if ((this.flags & kivi.VNodeFlags.COMPONENT) !== 0) {
+    this.cref.attach();
+  }
+};
+
+/**
+ * Recursively detach all nodes.
+ */
+kivi.VNode.prototype.detach = function() {
+  if (kivi.DEBUG) {
+    if ((this._debugProperties.flags & kivi.VNodeDebugFlags.DETACHED) !== 0) {
+      throw new Error('Failed to detach VNode: VNode is already detached.');
+    }
+    this._debugProperties.flags |= kivi.VNodeDebugFlags.DETACHED;
+    this._debugProperties.flags &= ~kivi.VNodeDebugFlags.ATTACHED;
+  }
+  if ((this.flags & kivi.VNodeFlags.COMPONENT) === 0) {
+    var children = this.children_;
+    if (children !== null && typeof children !== 'string') {
+      for (var i = 0; i < children.length; i++) {
+        children[i].detach();
+      }
+    }
+  } else {
+    if (this.cref === null) {
+      console.error(this);
+    }
+    this.cref.detach();
+  }
+};
+
+/**
+ * Detach node.
+ */
+kivi.VNode.prototype.detached = function() {
+  if (kivi.DEBUG) {
+    if ((this._debugProperties.flags & kivi.VNodeDebugFlags.DETACHED) !== 0) {
+      throw new Error('Failed to detach VNode: VNode is already detached.');
+    }
+    this._debugProperties.flags |= kivi.VNodeDebugFlags.DETACHED;
+    this._debugProperties.flags &= ~kivi.VNodeDebugFlags.ATTACHED;
+  }
+  if ((this.flags & kivi.VNodeFlags.COMPONENT) !== 0) {
+    this.cref.detach();
+  }
+};
+
+/**
  * Dispose Virtual Node.
  */
 kivi.VNode.prototype.dispose = function() {
@@ -616,10 +702,7 @@ kivi.VNode.prototype.dispose = function() {
 };
 
 /**
- * Freeze VNode and all properties.
- *
- * Freeze everything, except `VNode.props_`. We are using mutable `props_` quite
- * often, and using `mtime` to check if it is changed between renders.
+ * Freeze VNode.
  *
  * @private
  */
@@ -629,6 +712,13 @@ kivi.VNode.prototype._freeze = function() {
       Object.freeze(this);
       if (this.attrs_ !== null && !Object.isFrozen(this.attrs_)) {
         Object.freeze(this.attrs_);
+      }
+      // Don't freeze props in Components.
+      if (((this.flags & kivi.VNodeFlags.COMPONENT) === 0) &&
+          this.props_ !== null &&
+          !Object.isFrozen(/** @type {!Object} */(this.props_))) {
+
+        Object.freeze(this.props_);
       }
       if (this.children_ !== null &&
           Array.isArray((this.children_)) &&
@@ -653,6 +743,7 @@ kivi.VNode.prototype._insertChild = function(node, nextRef, context) {
   } else {
     node.create(context);
     this.ref.insertBefore(node.ref, nextRef);
+    node.attached();
     node.render(context);
   }
 };
@@ -672,6 +763,7 @@ kivi.VNode.prototype._replaceChild = function(newNode, refNode, context) {
     newNode.create(context);
     this.ref.replaceChild(newNode.ref, refNode.ref);
     refNode.dispose();
+    newNode.attached();
     newNode.render(context);
   }
 };
@@ -921,7 +1013,6 @@ kivi.VNode.prototype._syncChildren = function(a, b, context) {
     bNode = b[bEnd];
 
     if (!aNode._canSync(bNode)) {
-      console.log(aNode, bNode);
       break;
     }
 
@@ -958,14 +1049,14 @@ kivi.VNode.prototype._syncChildren = function(a, b, context) {
     // All nodes from a are synced, remove the rest.
     do {
       this._removeChild(a[aStart++], context);
-    } while (aStart < aEnd);
+    } while (aStart <= aEnd);
   } else if (bStart <= bEnd) {
     // All nodes from b are synced, insert the rest.
     nextPos = bEnd + 1;
     next = nextPos < b.length ? b[nextPos].ref : null;
     do {
       this._insertChild(b[bStart++], next, context);
-    } while (bStart < bEnd);
+    } while (bStart <= bEnd);
   }
 };
 
