@@ -395,9 +395,9 @@ kivi.Component.prototype.dispose = function() {
   if (root !== null) {
     // monomorphic code
     if (root.constructor === kivi.VNode) {
-      root.dispose();
+      /** @type {!kivi.VNode} */(root).dispose();
     } else if (root.constructor === kivi.Component) {
-      root.dispose();
+      /** @type {!kivi.Component} */(root).dispose();
     }
   }
   var descriptor = this.descriptor;
