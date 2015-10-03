@@ -1,4 +1,6 @@
-goog.require('kivi');
+goog.require('kivi.VNode');
+
+var VNode = kivi.VNode;
 
 function injectVNode(parent, node, nextRef) {
   node.create(null);
@@ -7,16 +9,16 @@ function injectVNode(parent, node, nextRef) {
 }
 
 function ee(key, c) {
-  return kivi.createElement('div').key(key).TRACK_BY_KEY().children(c === void 0 ? null : c);
+  return VNode.createElement('div').key(key).trackByKey().children(c === void 0 ? null : c);
 }
 
 function ei(c) {
-  return kivi.createElement('div').children(c === void 0 ? null : c);
+  return VNode.createElement('div').children(c === void 0 ? null : c);
 }
 
 function gen(item, keys) {
   if (typeof item === 'number') {
-    return keys ? kivi.createText(item.toString()).key(item.toString()) : kivi.createText(item.toString());
+    return keys ? VNode.createText(item.toString()).key(item.toString()) : VNode.createText(item.toString());
   } else if (Array.isArray(item)) {
     var result = [];
     for (var i = 0; i < item.length; i++) {
@@ -24,19 +26,19 @@ function gen(item, keys) {
     }
     return result;
   } else {
-    var e = keys ? kivi.createElement('div').key(item.key) : kivi.createElement('div');
+    var e = keys ? VNode.createElement('div').key(item.key) : VNode.createElement('div');
     e.children(gen(item.children));
     if (keys) {
-      e.TRACK_BY_KEY();
+      e.trackByKey();
     }
     return e;
   }
 }
 
 function checkInnerHtmlEquals(ax, bx, cx) {
-  var a = kivi.createElement('div');
-  var b = kivi.createElement('div');
-  var c = kivi.createElement('div');
+  var a = VNode.createElement('div');
+  var b = VNode.createElement('div');
+  var c = VNode.createElement('div');
   a.children = ax;
   b.children = bx;
   c.children = cx;
@@ -54,21 +56,21 @@ function checkInnerHtmlEquals(ax, bx, cx) {
 describe('render', function() {
   it('should create empty div', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('div');
+    var a = VNode.createElement('div');
     injectVNode(f, a, null);
     expect(f.firstChild.tagName).to.be.equal('DIV');
   });
 
   it('should create empty span', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('span');
+    var a = VNode.createElement('span');
     injectVNode(f, a, null);
     expect(f.firstChild.tagName).to.be.equal('SPAN');
   });
 
   it('should create div with 1 attribute', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('div');
+    var a = VNode.createElement('div');
     a.attrs({
       a: '1'
     });
@@ -79,7 +81,7 @@ describe('render', function() {
 
   it('should create div with 2 attributes', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').attrs({
+    var a = VNode.createElement('div').attrs({
       a: '1',
       b: '2'
     });
@@ -89,55 +91,33 @@ describe('render', function() {
     expect(f.firstChild.getAttribute('b')).to.be.equal('2');
   });
 
-  it('should create div with 1 style', function() {
+  it('should create div with style', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').style({
-      top: '10px'
-    });
+    var a = VNode.createElement('div').style('top: 10px');
     injectVNode(f, a, null);
     expect(f.firstChild.style.top).to.be.equal('10px');
   });
 
-  it('should create div with 2 styles', function() {
+  it('should create div with className', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').style({
-      top: '10px',
-      left: '20px'
-    });
-    injectVNode(f, a, null);
-    expect(f.firstChild.style.top).to.be.equal('10px');
-    expect(f.firstChild.style.left).to.be.equal('20px');
-  });
-
-  it('should create div with 1 class', function() {
-    var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').classes(['a']);
+    var a = VNode.createElement('div').className('a');
     injectVNode(f, a, null);
     expect(f.firstChild.classList.length).to.be.equal(1);
     expect(f.firstChild.classList[0]).to.be.equal('a');
   });
 
-  it('should create div with 2 classes', function() {
-    var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').classes(['a', 'b']);
-    injectVNode(f, a, null);
-    expect(f.firstChild.classList.length).to.be.equal(2);
-    expect(f.firstChild.classList[0]).to.be.equal('a');
-    expect(f.firstChild.classList[1]).to.be.equal('b');
-  });
-
   it('should create div with 1 child', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').children([kivi.createElement('span')]);
+    var a = VNode.createElement('div').children([VNode.createElement('span')]);
     injectVNode(f, a, null);
     expect(f.firstChild.childNodes.length).to.be.equal(1);
   });
 
   it('should create div with 2 children', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').children([
-      kivi.createElement('span'),
-      kivi.createElement('span')
+    var a = VNode.createElement('div').children([
+      VNode.createElement('span'),
+      VNode.createElement('span')
     ]);
     injectVNode(f, a, null);
     expect(f.firstChild.childNodes.length).to.be.equal(2);
@@ -147,8 +127,8 @@ describe('render', function() {
 describe('update attrs', function() {
   it('null => null', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('div');
-    var b = kivi.createElement('div');
+    var a = VNode.createElement('div');
+    var b = VNode.createElement('div');
     injectVNode(f, a, null);
     a.sync(b, null);
     expect(f.firstChild.hasAttributes()).to.be.false();
@@ -156,8 +136,8 @@ describe('update attrs', function() {
 
   it('null => {}', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('div');
-    var b = kivi.createElement('div').attrs({});
+    var a = VNode.createElement('div');
+    var b = VNode.createElement('div').attrs({});
     injectVNode(f, a, null);
     a.sync(b, null);
     expect(f.firstChild.hasAttributes()).to.be.false();
@@ -165,8 +145,8 @@ describe('update attrs', function() {
 
   it('{} => null', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').attrs({});
-    var b = kivi.createElement('div');
+    var a = VNode.createElement('div').attrs({});
+    var b = VNode.createElement('div');
     injectVNode(f, a, null);
     a.sync(b, null);
     expect(f.firstChild.hasAttributes()).to.be.false();
@@ -174,8 +154,8 @@ describe('update attrs', function() {
 
   it('{} => {}', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').attrs({});
-    var b = kivi.createElement('div').attrs({});
+    var a = VNode.createElement('div').attrs({});
+    var b = VNode.createElement('div').attrs({});
     injectVNode(f, a, null);
     a.sync(b, null);
     expect(f.firstChild.hasAttributes()).to.be.false();
@@ -183,8 +163,8 @@ describe('update attrs', function() {
 
   it('null => {a: 1}', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('div');
-    var b = kivi.createElement('div').attrs({a: '1'});
+    var a = VNode.createElement('div');
+    var b = VNode.createElement('div').attrs({a: '1'});
     injectVNode(f, a, null);
     a.sync(b, null);
     expect(f.firstChild.hasAttributes()).to.be.true();
@@ -193,8 +173,8 @@ describe('update attrs', function() {
 
   it('{} => {a: 1}', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').attrs({});
-    var b = kivi.createElement('div').attrs({a: '1'});
+    var a = VNode.createElement('div').attrs({});
+    var b = VNode.createElement('div').attrs({a: '1'});
     injectVNode(f, a, null);
     a.sync(b, null);
     expect(f.firstChild.hasAttributes()).to.be.true();
@@ -203,8 +183,8 @@ describe('update attrs', function() {
 
   it('{} => {a: 1, b: 2}', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').attrs({});
-    var b = kivi.createElement('div').attrs({a: '1', b: '2'});
+    var a = VNode.createElement('div').attrs({});
+    var b = VNode.createElement('div').attrs({a: '1', b: '2'});
     injectVNode(f, a, null);
     a.sync(b, null);
     expect(f.firstChild.hasAttributes()).to.be.true();
@@ -214,8 +194,8 @@ describe('update attrs', function() {
 
   it('{} => {a: 1, b: 2, c: 3}', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').attrs({});
-    var b = kivi.createElement('div').attrs({a: '1', b: '2', c: '3'});
+    var a = VNode.createElement('div').attrs({});
+    var b = VNode.createElement('div').attrs({a: '1', b: '2', c: '3'});
     injectVNode(f, a, null);
     a.sync(b, null);
     expect(f.firstChild.hasAttributes()).to.be.true();
@@ -226,8 +206,8 @@ describe('update attrs', function() {
 
   it('{a: 1} => null', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').attrs({a: '1'});
-    var b = kivi.createElement('div');
+    var a = VNode.createElement('div').attrs({a: '1'});
+    var b = VNode.createElement('div');
     injectVNode(f, a, null);
     a.sync(b, null);
     expect(f.firstChild.hasAttributes()).to.be.false();
@@ -235,8 +215,8 @@ describe('update attrs', function() {
 
   it('{a: 1} => {}', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').attrs({a: '1'});
-    var b = kivi.createElement('div').attrs({});
+    var a = VNode.createElement('div').attrs({a: '1'});
+    var b = VNode.createElement('div').attrs({});
     injectVNode(f, a, null);
     a.sync(b, null);
     expect(f.firstChild.hasAttributes()).to.be.false();
@@ -244,8 +224,8 @@ describe('update attrs', function() {
 
   it('{a: 1, b: 2} => {}', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').attrs({a: '1', b: '2'});
-    var b = kivi.createElement('div').attrs({});
+    var a = VNode.createElement('div').attrs({a: '1', b: '2'});
+    var b = VNode.createElement('div').attrs({});
     injectVNode(f, a, null);
     a.sync(b, null);
     expect(f.firstChild.hasAttributes()).to.be.false();
@@ -253,8 +233,8 @@ describe('update attrs', function() {
 
   it('{a: 1} => {b: 2}', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').attrs({a: '1'});
-    var b = kivi.createElement('div').attrs({b: '2'});
+    var a = VNode.createElement('div').attrs({a: '1'});
+    var b = VNode.createElement('div').attrs({b: '2'});
     injectVNode(f, a, null);
     a.sync(b, null);
     expect(f.firstChild.hasAttributes()).to.be.true();
@@ -264,8 +244,8 @@ describe('update attrs', function() {
 
   it('{a: 1, b: 2} => {c: 3: d: 4}', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').attrs({a: '1', b: '2'});
-    var b = kivi.createElement('div').attrs({c: '3', d: '4'});
+    var a = VNode.createElement('div').attrs({a: '1', b: '2'});
+    var b = VNode.createElement('div').attrs({c: '3', d: '4'});
     injectVNode(f, a, null);
     a.sync(b, null);
     expect(f.firstChild.hasAttributes()).to.be.true();
@@ -277,8 +257,8 @@ describe('update attrs', function() {
 
   it('{a: 1} => {a: 10}', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').attrs({a: '1'});
-    var b = kivi.createElement('div').attrs({a: '10'});
+    var a = VNode.createElement('div').attrs({a: '1'});
+    var b = VNode.createElement('div').attrs({a: '10'});
     injectVNode(f, a, null);
     a.sync(b, null);
     expect(f.firstChild.hasAttributes()).to.be.true();
@@ -287,8 +267,8 @@ describe('update attrs', function() {
 
   it('{a: 1, b: 2} => {a: 10, b: 20}', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').attrs({a: '1', b: '2'});
-    var b = kivi.createElement('div').attrs({a: '10', b: '20'});
+    var a = VNode.createElement('div').attrs({a: '1', b: '2'});
+    var b = VNode.createElement('div').attrs({a: '10', b: '20'});
     injectVNode(f, a, null);
     a.sync(b, null);
     expect(f.firstChild.hasAttributes()).to.be.true();
@@ -300,35 +280,8 @@ describe('update attrs', function() {
 describe('update classes', function() {
   it('null => null', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('div');
-    var b = kivi.createElement('div');
-    injectVNode(f, a, null);
-    a.sync(b, null);
-    expect(f.firstChild.classList.length).to.be.equal(0);
-  });
-
-  it('null => []', function() {
-    var f = document.createDocumentFragment();
-    var a = kivi.createElement('div');
-    var b = kivi.createElement('div').classes([]);
-    injectVNode(f, a, null);
-    a.sync(b, null);
-    expect(f.firstChild.classList.length).to.be.equal(0);
-  });
-
-  it('[] => null', function() {
-    var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').classes([]);
-    var b = kivi.createElement('div');
-    injectVNode(f, a, null);
-    a.sync(b, null);
-    expect(f.firstChild.classList.length).to.be.equal(0);
-  });
-
-  it('[] => []', function() {
-    var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').classes([]);
-    var b = kivi.createElement('div').classes([]);
+    var a = VNode.createElement('div');
+    var b = VNode.createElement('div');
     injectVNode(f, a, null);
     a.sync(b, null);
     expect(f.firstChild.classList.length).to.be.equal(0);
@@ -336,130 +289,29 @@ describe('update classes', function() {
 
   it('null => [1]', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('div');
-    var b = kivi.createElement('div').classes(['1']);
+    var a = VNode.createElement('div');
+    var b = VNode.createElement('div').className('1');
     injectVNode(f, a, null);
     a.sync(b, null);
     expect(f.firstChild.classList.length).to.be.equal(1);
     expect(f.firstChild.classList[0]).to.be.equal('1');
-  });
-
-  it('[] => [1]', function() {
-    var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').classes([]);
-    var b = kivi.createElement('div').classes(['1']);
-    injectVNode(f, a, null);
-    a.sync(b, null);
-    expect(f.firstChild.classList.length).to.be.equal(1);
-    expect(f.firstChild.classList[0]).to.be.equal('1');
-  });
-
-  it('[] => [1, 2]', function() {
-    var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').classes([]);
-    var b = kivi.createElement('div').classes(['1', '2']);
-    injectVNode(f, a, null);
-    a.sync(b, null);
-    expect(f.firstChild.classList.length).to.be.equal(2);
-    expect(f.firstChild.classList[0]).to.be.equal('1');
-    expect(f.firstChild.classList[1]).to.be.equal('2');
   });
 
   it('[1] => null', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').classes(['1']);
-    var b = kivi.createElement('div');
+    var a = VNode.createElement('div').className('1');
+    var b = VNode.createElement('div');
     injectVNode(f, a, null);
     a.sync(b, null);
     expect(f.firstChild.classList.length).to.be.equal(0);
-  });
-
-  it('[1] => []', function() {
-    var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').classes(['1']);
-    var b = kivi.createElement('div').classes([]);
-    injectVNode(f, a, null);
-    a.sync(b, null);
-    expect(f.firstChild.classList.length).to.be.equal(0);
-  });
-
-  it('[1, 2] => []', function() {
-    var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').classes(['1', '2']);
-    var b = kivi.createElement('div').classes([]);
-    injectVNode(f, a, null);
-    a.sync(b, null);
-    expect(f.firstChild.classList.length).to.be.equal(0);
-  });
-
-  it('[1] => [10]', function() {
-    var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').classes(['1']);
-    var b = kivi.createElement('div').classes(['10']);
-    injectVNode(f, a, null);
-    a.sync(b, null);
-    expect(f.firstChild.classList.length).to.be.equal(1);
-    expect(f.firstChild.classList[0]).to.be.equal('10');
-  });
-
-  it('[1, 2] => [10, 20]', function() {
-    var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').classes(['1', '2']);
-    var b = kivi.createElement('div').classes(['10', '20']);
-    injectVNode(f, a, null);
-    a.sync(b, null);
-    expect(f.firstChild.classList.length).to.be.equal(2);
-    expect(f.firstChild.classList[0]).to.be.equal('10');
-    expect(f.firstChild.classList[1]).to.be.equal('20');
-  });
-
-  it('[1, 2, 3, 4, 5] => [10, 20, 30, 40, 50]', function() {
-    var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').classes(['1', '2', '3', '4', '5']);
-    var b = kivi.createElement('div').classes(['10', '20', '30', '40', '50']);
-    injectVNode(f, a, null);
-    a.sync(b, null);
-    expect(f.firstChild.classList.length).to.be.equal(5);
-    expect(f.firstChild.classList[0]).to.be.equal('10');
-    expect(f.firstChild.classList[1]).to.be.equal('20');
-    expect(f.firstChild.classList[2]).to.be.equal('30');
-    expect(f.firstChild.classList[3]).to.be.equal('40');
-    expect(f.firstChild.classList[4]).to.be.equal('50');
   });
 });
 
 describe('update style', function() {
   it('null => null', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('div');
-    var b = kivi.createElement('div');
-    injectVNode(f, a, null);
-    a.sync(b, null);
-    expect(f.firstChild.style.cssText).to.be.empty();
-  });
-
-  it('null => {}', function() {
-    var f = document.createDocumentFragment();
-    var a = kivi.createElement('div');
-    var b = kivi.createElement('div').style({});
-    injectVNode(f, a, null);
-    a.sync(b, null);
-    expect(f.firstChild.style.cssText).to.be.empty();
-  });
-
-  it('{} => {}', function() {
-    var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').style({});
-    var b = kivi.createElement('div').style({});
-    injectVNode(f, a, null);
-    a.sync(b, null);
-    expect(f.firstChild.style.cssText).to.be.empty();
-  });
-
-  it('{} => null', function() {
-    var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').style({});
-    var b = kivi.createElement('div');
+    var a = VNode.createElement('div');
+    var b = VNode.createElement('div');
     injectVNode(f, a, null);
     a.sync(b, null);
     expect(f.firstChild.style.cssText).to.be.empty();
@@ -467,100 +319,21 @@ describe('update style', function() {
 
   it('null => {top: 10px}', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('div');
-    var b = kivi.createElement('div').style({top: '10px'});
+    var a = VNode.createElement('div');
+    var b = VNode.createElement('div').style('top: 10px');
     injectVNode(f, a, null);
     a.sync(b, null);
     expect(f.firstChild.style.top).to.be.equal('10px');
-  });
-
-  it('{} => {top: 10px}', function() {
-    var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').style({});
-    var b = kivi.createElement('div').style({top: '10px'});
-    injectVNode(f, a, null);
-    a.sync(b, null);
-    expect(f.firstChild.style.top).to.be.equal('10px');
-  });
-
-  it('{} => {top: 10px, left: 10px}', function() {
-    var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').style({});
-    var b = kivi.createElement('div').style({top: '10px', left: '5px'});
-    injectVNode(f, a, null);
-    a.sync(b, null);
-    expect(f.firstChild.style.top).to.be.equal('10px');
-    expect(f.firstChild.style.left).to.be.equal('5px');
   });
 
   it('{top: 10px} => null', function() {
     var f = document.createDocumentFragment();
-    var a = kivi.createElement('div');
-    var b = kivi.createElement('div');
-    a.style_ = {top: '10px'};
+    var a = VNode.createElement('div');
+    var b = VNode.createElement('div');
+    a.style_ = 'top: 10px';
     injectVNode(f, a, null);
     a.sync(b, null);
     expect(f.firstChild.style.top).to.be.equal('');
-  });
-
-  it('{top: 10px} => {}', function() {
-    var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').style({top: '10px'});
-    var b = kivi.createElement('div').style({});
-    injectVNode(f, a, null);
-    a.sync(b, null);
-    expect(f.firstChild.style.top).to.be.equal('');
-  });
-
-  it('{top: 10px, left: 5px} => {}', function() {
-    var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').style({top: '10px', left: '5px'});
-    var b = kivi.createElement('div').style({});
-    injectVNode(f, a, null);
-    a.sync(b, null);
-    expect(f.firstChild.style.top).to.be.equal('');
-    expect(f.firstChild.style.left).to.be.equal('');
-  });
-
-  it('{top: 10px} => {left: 20px}', function() {
-    var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').style({top: '10px'});
-    var b = kivi.createElement('div').style({left: '20px'});
-    injectVNode(f, a, null);
-    a.sync(b, null);
-    expect(f.firstChild.style.top).to.be.equal('');
-    expect(f.firstChild.style.left).to.be.equal('20px');
-  });
-
-  it('{top: 10px, left: 20px} => {right: 30px, bottom: 40px}', function() {
-    var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').style({top: '10px', left: '20px'});
-    var b = kivi.createElement('div').style({right: '30px', bottom: '40px'});
-    injectVNode(f, a, null);
-    a.sync(b, null);
-    expect(f.firstChild.style.top).to.be.equal('');
-    expect(f.firstChild.style.left).to.be.equal('');
-    expect(f.firstChild.style.right).to.be.equal('30px');
-    expect(f.firstChild.style.bottom).to.be.equal('40px');
-  });
-
-  it('{top: 10px} => {top: 100px}', function() {
-    var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').style({top: '10px'});
-    var b = kivi.createElement('div').style({top: '100px'});
-    injectVNode(f, a, null);
-    a.sync(b, null);
-    expect(f.firstChild.style.top).to.be.equal('100px');
-  });
-
-  it('{top: 10px, left: 20px} => {top: 100px, left: 200px}', function() {
-    var f = document.createDocumentFragment();
-    var a = kivi.createElement('div').style({top: '10px', left: '20px'});
-    var b = kivi.createElement('div').style({top: '100px', left: '200px'});
-    injectVNode(f, a, null);
-    a.sync(b, null);
-    expect(f.firstChild.style.top).to.be.equal('100px');
-    expect(f.firstChild.style.left).to.be.equal('200px');
   });
 });
 

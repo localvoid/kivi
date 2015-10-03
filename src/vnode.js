@@ -6,10 +6,8 @@ goog.require('kivi.VNodeDebugFlags');
 goog.require('kivi.VNodeFlags');
 goog.require('kivi.debug.printError');
 goog.require('kivi.sync.attrs');
-goog.require('kivi.sync.classes');
 goog.require('kivi.sync.props');
 goog.require('kivi.sync.setAttr');
-goog.require('kivi.sync.style');
 
 /**
  * Virtual DOM Node.
@@ -17,16 +15,14 @@ goog.require('kivi.sync.style');
  * @param {number} flags Flags.
  * @param {string|kivi.CDescriptor|null} tag Tag should contain html tag name if VNode represents an element,
  *   or reference to the [kivi.CDescriptor] if it represents a Component.
- * @param {*} data Data that will be transffered to Components. If VNode represents an element, [data] is
- *   used as a cache for className string that was built from [type] and [classes] properties.
+ * @param {*} props
  * @constructor
  * @struct
  * @final
  */
-kivi.VNode = function(flags, tag, data) {
+kivi.VNode = function(flags, tag, props) {
   this.flags = flags;
   this.tag = tag;
-  this.data_ = data;
   /**
    * Key that should be unique among its siblings.
    *
@@ -35,11 +31,11 @@ kivi.VNode = function(flags, tag, data) {
   this.key_ = null;
 
   /**
-   * Immutable class name.
+   * Element properties, Text content or Component data.
    *
-   * @type {?string}
+   * @type {*}
    */
-  this.type_ = null;
+  this.props_ = props;
 
   /**
    * Element attributes.
@@ -49,25 +45,18 @@ kivi.VNode = function(flags, tag, data) {
   this.attrs_ = null;
 
   /**
-   * Element properties.
-   *
-   * @type {?Object<string,*>}
-   */
-  this.props_ = null;
-
-  /**
    * Element styles.
    *
-   * @type {?Object<string,string>}
+   * @type {?string}
    */
   this.style_ = null;
 
   /**
-   * Element classes.
+   * Element className.
    *
-   * @type {?Array<string>}
+   * @type {?string}
    */
-  this.classes_ = null;
+  this.className_ = null;
 
   /**
    * List of children nodes. If VNode is a Component, children nodes will be transferred to the Component.
@@ -174,18 +163,7 @@ kivi.VNode.prototype.key = function(key) {
  * @returns {!kivi.VNode}
  */
 kivi.VNode.prototype.data = function(data) {
-  this.data_ = data;
-  return this;
-};
-
-/**
- * Set type.
- *
- * @param {string} type
- * @returns {!kivi.VNode}
- */
-kivi.VNode.prototype.type = function(type) {
-  this.type_ = type;
+  this.props_ = data;
   return this;
 };
 
@@ -214,7 +192,7 @@ kivi.VNode.prototype.props = function(props) {
 /**
  * Set style.
  *
- * @param {?Object<string,string>} style
+ * @param {?string} style
  * @returns {!kivi.VNode}
  */
 kivi.VNode.prototype.style = function(style) {
@@ -223,13 +201,13 @@ kivi.VNode.prototype.style = function(style) {
 };
 
 /**
- * Set classes.
+ * Set className.
  *
- * @param {?Array<string>} classes
+ * @param {?string} className
  * @returns {!kivi.VNode}
  */
-kivi.VNode.prototype.classes = function(classes) {
-  this.classes_ = classes;
+kivi.VNode.prototype.className = function(className) {
+  this.className_ = className;
   return this;
 };
 
@@ -303,7 +281,6 @@ kivi.VNode.prototype.disableFreeze = function() {
 kivi.VNode.prototype._canSync = function(b) {
   return (this.flags === b.flags &&
           this.tag === b.tag &&
-          this.type_ === b.type_ &&
           this.key_ === b.key_);
 };
 
@@ -323,7 +300,7 @@ kivi.VNode.prototype.create = function(context) {
   }
 
   if ((flags & kivi.VNodeFlags.TEXT) !== 0) {
-    this.ref = document.createTextNode(/** @type {string} */(this.data_));
+    this.ref = document.createTextNode(/** @type {string} */(this.props_));
   } else if ((flags & kivi.VNodeFlags.ELEMENT) !== 0) {
     if ((flags & kivi.VNodeFlags.SVG) === 0) {
       this.ref = document.createElement(/** @type {string} */(this.tag));
@@ -333,7 +310,7 @@ kivi.VNode.prototype.create = function(context) {
   } else if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
     var component = kivi.Component.create(
         /** @type {!kivi.CDescriptor} */(this.tag),
-        this.data_,
+        this.props_,
         this.children_,
         context);
     this.ref = component.element;
@@ -376,6 +353,17 @@ kivi.VNode.prototype.render = function(context) {
       throw new Error('Failed to render VNode: VNode cannot be rendered after mount.');
     }
     this._debugProperties.flags |= kivi.VNodeDebugFlags.RENDERED;
+
+    if (this.children_ !== null && typeof this.children_ !== 'string') {
+      if ((this.flags & kivi.VNodeFlags.TRACK_BY_KEY) !== 0) {
+        for (i = 0; i < this.children_.length; i++) {
+          if (this.children_[i].key_ === null) {
+            throw new Error('Failed to render VNode: rendering children with trackByKey requires that all' +
+                ' children have keys.');
+          }
+        }
+      }
+    }
   }
 
   /** @type {number} */
@@ -389,28 +377,18 @@ kivi.VNode.prototype.render = function(context) {
 
   /** @type {?Element} */
   var ref;
-  /** @type {!CSSStyleDeclaration} */
-  var style;
-  /** @type {?string} */
-  var className;
-  /** @type {?string} */
-  var classes;
 
-  if (kivi.DEBUG) {
-    if (this.children_ !== null && typeof this.children_ !== 'string') {
-      if ((flags & kivi.VNodeFlags.TRACK_BY_KEY) !== 0) {
-        for (i = 0; i < this.children_.length; i++) {
-          if (this.children_[i].key_ === null) {
-            throw new Error('Failed to render VNode: rendering children with trackByKey requires that all' +
-                            ' children have keys.');
-          }
-        }
+  if ((flags & (kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.ROOT)) !== 0) {
+    ref = /** @type {!Element} */(this.ref);
+
+    var props = /** @type {!Object<string, *>} */(this.props_);
+    if (props !== null) {
+      keys = Object.keys(props);
+      for (i = 0, il = keys.length; i < il; i++) {
+        key = keys[i];
+        ref[key] = props[key];
       }
     }
-  }
-
-  if ((flags & (kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.COMPONENT | kivi.VNodeFlags.ROOT)) !== 0) {
-    ref = /** @type {!Element} */(this.ref);
 
     if (this.attrs_ !== null) {
       keys = Object.keys(this.attrs_);
@@ -420,77 +398,26 @@ kivi.VNode.prototype.render = function(context) {
       }
     }
 
-    if (this.props_ !== null) {
-      keys = Object.keys(this.props_);
-      for (i = 0, il = keys.length; i < il; i++) {
-        key = keys[i];
-        ref[key] = this.props_[key];
-      }
-    }
-
     if (this.style_ !== null) {
-      style = ref.style;
-      keys = Object.keys(this.style_);
-      for (i = 0, il = keys.length; i < il; i++) {
-        key = keys[i];
-        style.setProperty(key, this.style_[key], '');
-      }
+      ref.style.cssText = this.style_;
     }
 
-    className = null;
-    if (this.type_ !== null) {
-      if (kivi.DEBUG) {
-        if ((flags & kivi.VNodeFlags.ROOT) !== 0) {
-          if (/** @type {!HTMLElement} */(ref).classList.contains(this.type_)) {
-            throw new Error('Failed to render VNode: component node is using class "' + this.type_ +
-                            '" that is already used by component root node.');
-          }
-        }
-      }
-      className = this.type_;
-    }
-    if (this.classes_ !== null) {
-      if (kivi.DEBUG) {
-        if ((flags & kivi.VNodeFlags.ROOT) !== 0) {
-          for (i = 0; i < this.classes_.length; i++) {
-            if (/** @type {!HTMLElement} */(ref).classList.contains(this.classes_[i])) {
-              throw new Error('Failed to render VNode: component node is using class "' + this.classes_[i] +
-                              '" that is already used by component root node.');
-            }
-          }
-        }
-      }
-      classes = this.classes_.join(' ');
-      className = (className === null) ? classes : className + ' ' + classes;
-    }
-    if (className !== null) {
-      if ((flags & kivi.VNodeFlags.ELEMENT) !== 0) {
-        this.data_ = className;
-        ref.className = className;
-      } else if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
-        ref.className = className;
-      } else {
-        var oldClassName = ref.className;
-        if (oldClassName === '') {
-          ref.className = className;
-        } else {
-          ref.className = oldClassName + ' ' + className;
-        }
-      }
+    if (this.className_ !== null) {
+      ref.className = this.className_;
     }
 
-    if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
-      /** @type {!kivi.Component} */(this.cref).update();
-    } else if (this.children_ !== null) {
-      var children = this.children_;
+    var children = this.children_;
+    if (children !== null) {
       if (typeof children === 'string') {
         ref.textContent = children;
       } else {
-        for (i = 0, il = this.children_.length; i < il; i++) {
-          this._insertChild(this.children_[i], null, context);
+        for (i = 0, il = children.length; i < il; i++) {
+          this._insertChild(children[i], null, context);
         }
       }
     }
+  } else if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
+    /** @type {!kivi.Component} */(this.cref).update();
   }
 
   this._freeze();
@@ -538,7 +465,8 @@ kivi.VNode.prototype.mount = function(node, context) {
   this.ref = node;
 
   if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
-    var cref = this.cref = kivi.Component.mount(/** @type {!kivi.CDescriptor} */(this.tag), this.data_, children, context, /** @type {!Element} */(node));
+    var cref = this.cref = kivi.Component.mount(/** @type {!kivi.CDescriptor} */(this.tag),
+        this.props_, children, context, /** @type {!Element} */(node));
     cref.update();
   } else {
     if (children !== null && typeof children !== 'string' && children.length > 0) {
@@ -591,10 +519,6 @@ kivi.VNode.prototype.sync = function(b, context) {
 
   var ref = /** @type {!Element} */(this.ref);
   var flags = this.flags;
-  /** @type {string} */
-  var classes;
-  /** @type {?string} */
-  var className;
   /** @type {!kivi.Component} */
   var component;
 
@@ -607,9 +531,6 @@ kivi.VNode.prototype.sync = function(b, context) {
     }
     if (this.key_ !== b.key_) {
       throw new Error('Failed to sync VNode: keys does not match (old: ' + this.key_ + ', new: ' + b.key_ + ')');
-    }
-    if (this.type_ !== b.type_) {
-      throw new Error('Failed to sync VNode: types does not match (old: ' + this.type_ + ', new: ' + b.type_ + ')');
     }
     if (b.ref !== null && this.ref !== b.ref) {
       throw new Error('Failed to sync VNode: reusing VNodes isn\'t allowed unless it has the same ref.');
@@ -629,48 +550,41 @@ kivi.VNode.prototype.sync = function(b, context) {
   b.ref = ref;
 
   if ((flags & kivi.VNodeFlags.TEXT) !== 0) {
-    if (this.data_ !== b.data_) {
-      this.ref.nodeValue = /** @type {string} */ (b.data_);
+    if (this.props_ !== b.props_) {
+      this.ref.nodeValue = /** @type {string} */(b.props_);
     }
-  } else if ((flags & (kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.COMPONENT | kivi.VNodeFlags.ROOT)) !== 0) {
+  } else if ((flags & (kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.ROOT)) !== 0) {
+    if (this.props_ !== b.props_) {
+      kivi.sync.props(
+          /** @type {!Object<string, *>} */(this.props_),
+          /** @type {!Object<string, *>} */(b.props_),
+          ref);
+    }
     if (this.attrs_ !== b.attrs_) {
       kivi.sync.attrs(this.attrs_, b.attrs_, ref);
     }
-    if (this.props_ !== b.props_) {
-      kivi.sync.props(this.props_, b.props_, ref);
-    }
     if (this.style_ !== b.style_) {
-      kivi.sync.style(this.style_, b.style_, ref.style);
-    }
-
-    if ((flags & kivi.VNodeFlags.ELEMENT) !== 0) {
-      if (this.classes_ !== b.classes_) {
-        if (b.data_ === null) {
-          className = b.type_;
-          if (b.classes_ !== null) {
-            classes = b.classes_.join(' ');
-            className = (className === null) ? classes : className + ' ' + classes;
-          }
-          b.data_ = className;
-        }
-        if (this.data_ !== b.data_) {
-          ref.className = (b.data_ === null) ? '' : b.data_;
-        }
+      if (b.style_ === null) {
+        ref.style.cssText = '';
       } else {
-        b.data_ = this.data_;
+        ref.style.cssText = b.style_;
       }
-    } else if (this.classes_ !== b.classes_) {
-      kivi.sync.classes(this.classes_, b.classes_,
-          /** @type {!DOMTokenList} */(/** @type {!HTMLElement} */(ref).classList));
     }
 
-    if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
-      component = b.cref = /** @type {!kivi.Component<*,*>} */(this.cref);
-      component.setInputData(b.data_, b.children_);
-      component.update();
-    } else {
-      this.syncChildren(this.children_, b.children_, context);
+    if (this.className_ !== b.className_) {
+      if (b.className_ === null) {
+        ref.className = '';
+      } else {
+        ref.className = b.className_;
+      }
     }
+
+    this.syncChildren(this.children_, b.children_, context);
+
+  } else if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
+    component = b.cref = /** @type {!kivi.Component<*,*>} */(this.cref);
+    component.setInputData(b.props_, b.children_);
+    component.update();
   }
 
   b._freeze();
@@ -704,7 +618,7 @@ kivi.VNode.prototype.dispose = function() {
 /**
  * Freeze VNode and all properties.
  *
- * Freeze everything, except `VNode.data_`. We are using mutable `data_` quite
+ * Freeze everything, except `VNode.props_`. We are using mutable `props_` quite
  * often, and using `mtime` to check if it is changed between renders.
  *
  * @private
@@ -715,15 +629,6 @@ kivi.VNode.prototype._freeze = function() {
       Object.freeze(this);
       if (this.attrs_ !== null && !Object.isFrozen(this.attrs_)) {
         Object.freeze(this.attrs_);
-      }
-      if (this.props_ !== null && !Object.isFrozen(this.props_)) {
-        Object.freeze(this.props_);
-      }
-      if (this.style_ !== null && !Object.isFrozen(this.style_)) {
-        Object.freeze(this.style_);
-      }
-      if (this.classes_ !== null && !Object.isFrozen(this.classes_)) {
-        Object.freeze(this.classes_);
       }
       if (this.children_ !== null &&
           Array.isArray((this.children_)) &&
