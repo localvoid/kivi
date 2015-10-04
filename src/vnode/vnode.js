@@ -164,6 +164,11 @@ kivi.VNode.prototype.key = function(key) {
  * @returns {!kivi.VNode<P>}
  */
 kivi.VNode.prototype.props = function(props) {
+  if (kivi.DEBUG) {
+    if ((this.flags & (kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.ROOT)) === 0) {
+      throw new Error('Failed to set props on VNode: props method should be called on element or component root nodes only.')
+    }
+  }
   this.props_ = props;
   return this;
 };
@@ -175,6 +180,11 @@ kivi.VNode.prototype.props = function(props) {
  * @returns {!kivi.VNode<P>}
  */
 kivi.VNode.prototype.data = function(data) {
+  if (kivi.DEBUG) {
+    if ((this.flags & kivi.VNodeFlags.COMPONENT) === 0) {
+      throw new Error('Failed to set data on VNode: data method should be called on component nodes only.')
+    }
+  }
   this.props_ = data;
   return this;
 };
@@ -186,6 +196,11 @@ kivi.VNode.prototype.data = function(data) {
  * @returns {!kivi.VNode<P>}
  */
 kivi.VNode.prototype.attrs = function(attrs) {
+  if (kivi.DEBUG) {
+    if ((this.flags & (kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.ROOT)) === 0) {
+      throw new Error('Failed to set attrs on VNode: attrs method should be called on element or component root nodes only.')
+    }
+  }
   this.attrs_ = attrs;
   return this;
 };
@@ -197,6 +212,11 @@ kivi.VNode.prototype.attrs = function(attrs) {
  * @returns {!kivi.VNode<P>}
  */
 kivi.VNode.prototype.style = function(style) {
+  if (kivi.DEBUG) {
+    if ((this.flags & (kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.ROOT)) === 0) {
+      throw new Error('Failed to set style on VNode: style method should be called on element or component root nodes only.')
+    }
+  }
   this.style_ = style;
   return this;
 };
@@ -208,6 +228,11 @@ kivi.VNode.prototype.style = function(style) {
  * @returns {!kivi.VNode<P>}
  */
 kivi.VNode.prototype.className = function(className) {
+  if (kivi.DEBUG) {
+    if ((this.flags & (kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.ROOT)) === 0) {
+      throw new Error('Failed to set className on VNode: className method should be called on element or component root nodes only.')
+    }
+  }
   this.className_ = className;
   return this;
 };
@@ -219,6 +244,11 @@ kivi.VNode.prototype.className = function(className) {
  * @returns {!kivi.VNode<P>}
  */
 kivi.VNode.prototype.children = function(children) {
+  if (kivi.DEBUG) {
+    if ((this.flags & (kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.ROOT | kivi.VNodeFlags.COMPONENT)) === 0) {
+      throw new Error('Failed to set children on VNode: children method should be called on element, component or component root nodes only.')
+    }
+  }
   this.children_ = children;
   return this;
 };
@@ -229,6 +259,11 @@ kivi.VNode.prototype.children = function(children) {
  * @returns {!kivi.VNode<P>}
  */
 kivi.VNode.prototype.trackByKey = function() {
+  if (kivi.DEBUG) {
+    if ((this.flags & (kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.ROOT)) === 0) {
+      throw new Error('Failed to set trackByKey mode on VNode: trackByKey method should be called on element or component root nodes only.')
+    }
+  }
   this.flags |= kivi.VNodeFlags.TRACK_BY_KEY;
   return this;
 };
@@ -239,6 +274,11 @@ kivi.VNode.prototype.trackByKey = function() {
  * @returns {!kivi.VNode<P>}
  */
 kivi.VNode.prototype.managedContainer = function() {
+  if (kivi.DEBUG) {
+    if ((this.flags & (kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.ROOT)) === 0) {
+      throw new Error('Failed to set managedContainer mode on VNode: managedContainer method should be called on element or component root nodes only.')
+    }
+  }
   this.flags |= kivi.VNodeFlags.MANAGED_CONTAINER;
   return this;
 };
@@ -250,6 +290,9 @@ kivi.VNode.prototype.managedContainer = function() {
  */
 kivi.VNode.prototype.disableChildrenShapeError = function() {
   if (kivi.DEBUG) {
+    if ((this.flags & (kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.ROOT)) === 0) {
+      throw new Error('Failed to disable children shape error on VNode: disableChildrenShapeError method should be called on element or component root nodes only.')
+    }
     this._debugProperties.flags |= kivi.VNodeDebugFlags.DISABLE_CHILDREN_SHAPE_ERROR;
   }
   return this;

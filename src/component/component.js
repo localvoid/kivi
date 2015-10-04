@@ -458,6 +458,11 @@ kivi.Component.prototype.attach = function() {
 };
 
 kivi.Component.prototype.attached = function() {
+  if (kivi.DEBUG) {
+    if ((this.flags & kivi.ComponentFlags.ATTACHED) !== 0) {
+      throw new Error('Failed to attach Component: component is already attached.');
+    }
+  }
   this.flags |= kivi.ComponentFlags.ATTACHED;
   this.flags &= ~kivi.ComponentFlags.RECYCLED;
 
@@ -483,6 +488,11 @@ kivi.Component.prototype.detach = function() {
 };
 
 kivi.Component.prototype.detached = function() {
+  if (kivi.DEBUG) {
+    if ((this.flags & kivi.ComponentFlags.ATTACHED) === 0) {
+      throw new Error('Failed to detach Component: component is already detached.');
+    }
+  }
   this.flags &= ~(kivi.ComponentFlags.ATTACHED | kivi.ComponentFlags.UPDATE_EACH_FRAME);
   this.cancelSubscriptions();
   this.cancelTransientSubscriptions();
