@@ -127,7 +127,7 @@ kivi.CDescriptor = function(name, opt_flags) {
    */
   this.data = null;
 
-  if (!kivi.DISABLE_COMPONENT_RECYCLING) {
+  if (kivi.ENABLE_COMPONENT_RECYCLING) {
     /** @type {?Array<!kivi.Component<D, S>>} */
     this.recycled = null;
     this.maxRecycled = 0;
@@ -177,7 +177,7 @@ kivi.CDescriptor.createWrapper = function(d) {
  * @param {number} maxRecycled
  */
 kivi.CDescriptor.prototype.enableRecycling = function(maxRecycled) {
-  if (!kivi.DISABLE_COMPONENT_RECYCLING) {
+  if (kivi.ENABLE_COMPONENT_RECYCLING) {
     this.flags |= kivi.CDescriptorFlags.RECYCLE_ENABLED;
     this.recycled = [];
     this.maxRecycled = maxRecycled;
@@ -193,7 +193,7 @@ kivi.CDescriptor.prototype.enableRecycling = function(maxRecycled) {
 kivi.CDescriptor.prototype.createComponent = function(context) {
   var c;
 
-  if (kivi.DISABLE_COMPONENT_RECYCLING ||
+  if (!kivi.ENABLE_COMPONENT_RECYCLING ||
       ((this.flags & kivi.CDescriptorFlags.RECYCLE_ENABLED) === 0) ||
       (this.recycled.length === 0)) {
 
@@ -504,7 +504,7 @@ kivi.Component.prototype.dispose = function() {
   }
   var descriptor = this.descriptor;
 
-  if (kivi.DISABLE_COMPONENT_RECYCLING ||
+  if (!kivi.ENABLE_COMPONENT_RECYCLING ||
       ((descriptor.flags & kivi.CDescriptorFlags.RECYCLE_ENABLED) === 0) ||
       (descriptor.recycled.length >= descriptor.maxRecycled)) {
     this.flags |= kivi.ComponentFlags.DISPOSED;

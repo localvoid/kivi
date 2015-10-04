@@ -12,12 +12,14 @@ goog.provide('kivi');
 goog.define('kivi.DEBUG', true);
 
 /**
- * @define {boolean} DISABLE_COMPONENT_RECYCLING is provided so it easy to
- * disable recycling for benchmarks.
+ * @define {boolean} ENABLE_COMPONENT_RECYCLING enable component recycling, it
+ * is disabled by default because it easy to make a mistake when dealing with
+ * recycled components. Make sure that you understand how component lifecycle
+ * works, and clean up internal state when component is recycled.
  */
-goog.define('kivi.DISABLE_COMPONENT_RECYCLING', false);
+goog.define('kivi.ENABLE_COMPONENT_RECYCLING', false);
 
 if (kivi.DEBUG) {
   console.info('kivi debug mode: on');
-  console.info('kivi component recycling: ', kivi.DISABLE_COMPONENT_RECYCLING ? 'off' : 'on');
+  console.info('kivi component recycling: ', kivi.ENABLE_COMPONENT_RECYCLING ? 'on' : 'off');
 }
