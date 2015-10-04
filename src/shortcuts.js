@@ -11,15 +11,15 @@ goog.require('kivi.scheduler.instance');
  * Instantiate and inject component into container.
  *
  * @param {!kivi.CDescriptor} descriptor
- * @param {*} data
+ * @param {*} props
  * @param {!Element} container
  * @returns {!kivi.Component}
  */
-kivi.injectComponent = function(descriptor, data, container) {
-  var c = kivi.Component.create(descriptor, null);
+kivi.injectComponent = function(descriptor, props, container) {
+  var c = descriptor.createComponent(null);
   container.appendChild(c.element);
   c.attached();
-  c.setInputData(data, null);
+  c.setData(props);
   c.update();
   return c;
 };
@@ -28,14 +28,14 @@ kivi.injectComponent = function(descriptor, data, container) {
  * Instantiate and mount component on top of existing html.
  *
  * @param {!kivi.CDescriptor} descriptor
- * @param {*} data
+ * @param {*} props
  * @param {!Element} element
  * @return {!kivi.Component}
  */
-kivi.mountComponent = function(descriptor, data, element) {
-  var c = kivi.Component.mount(descriptor, null, element);
+kivi.mountComponent = function(descriptor, props, element) {
+  var c = descriptor.mountComponent(null, element);
   c.attached();
-  c.setInputData(data, null);
+  c.setData(props);
   c.update();
   return c;
 };

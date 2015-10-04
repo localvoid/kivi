@@ -12,6 +12,7 @@ goog.require('kivi.sync.setAttr');
 /**
  * Virtual DOM Node.
  *
+ * @template P
  * @param {number} flags Flags.
  * @param {string|kivi.CDescriptor|null} tag Tag should contain html tag name if VNode represents an element,
  *   or reference to the [kivi.CDescriptor] if it represents a Component.
@@ -31,7 +32,7 @@ kivi.VNode = function(flags, tag, props) {
   this.key_ = null;
 
   /**
-   * Element properties, Text content or Component data.
+   * Properties.
    *
    * @type {*}
    */
@@ -45,7 +46,7 @@ kivi.VNode = function(flags, tag, props) {
   this.attrs_ = null;
 
   /**
-   * Element styles.
+   * Element style in css string format.
    *
    * @type {?string}
    */
@@ -98,7 +99,7 @@ kivi.VNode = function(flags, tag, props) {
  * Create a [kivi.VNode] representing a [Text] node.
  *
  * @param {string} content
- * @return {!kivi.VNode}
+ * @returns {!kivi.VNode<string>}
  */
 kivi.VNode.createText = function(content) {
   return new kivi.VNode(kivi.VNodeFlags.TEXT, null, content);
@@ -108,7 +109,7 @@ kivi.VNode.createText = function(content) {
  * Create a [kivi.VNode] representing a [Element] node.
  *
  * @param {string} tag
- * @return {!kivi.VNode}
+ * @returns {!kivi.VNode<?Object<string,*>>}
  */
 kivi.VNode.createElement = function(tag) {
   return new kivi.VNode(kivi.VNodeFlags.ELEMENT, tag, null);
@@ -118,7 +119,7 @@ kivi.VNode.createElement = function(tag) {
  * Create a [kivi.VNode] representing a [SVGElement] node.
  *
  * @param {string} tag
- * @return {!kivi.VNode}
+ * @returns {!kivi.VNode<?Object<string,*>>}
  */
 kivi.VNode.createSvgElement = function(tag) {
   return new kivi.VNode(kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.SVG, tag, null);
@@ -128,18 +129,18 @@ kivi.VNode.createSvgElement = function(tag) {
  * Create a [kivi.VNode] representing a [kivi.Component] node.
  *
  * @param {!kivi.CDescriptor} descriptor
- * @param {*=} opt_data
- * @return {!kivi.VNode}
+ * @param {*=} opt_props
+ * @returns {!kivi.VNode<*>}
  */
-kivi.VNode.createComponent = function(descriptor, opt_data) {
-  if (opt_data === void 0) opt_data = null;
-  return new kivi.VNode(kivi.VNodeFlags.COMPONENT, descriptor, opt_data);
+kivi.VNode.createComponent = function(descriptor, opt_props) {
+  if (opt_props === void 0) opt_props = null;
+  return new kivi.VNode(kivi.VNodeFlags.COMPONENT, descriptor, opt_props);
 };
 
 /**
  * Create a [kivi.VNode] representing a root node.
  *
- * @return {!kivi.VNode}
+ * @returns {!kivi.VNode<null>}
  */
 kivi.VNode.createRoot = function() {
   return new kivi.VNode(kivi.VNodeFlags.ROOT, null, null);
@@ -149,7 +150,7 @@ kivi.VNode.createRoot = function() {
  * Set key.
  *
  * @param {null|number|string} key
- * @returns {!kivi.VNode}
+ * @returns {!kivi.VNode<P>}
  */
 kivi.VNode.prototype.key = function(key) {
   this.key_ = key;
@@ -157,10 +158,21 @@ kivi.VNode.prototype.key = function(key) {
 };
 
 /**
+ * Set props.
+ *
+ * @param {*} props
+ * @returns {!kivi.VNode<P>}
+ */
+kivi.VNode.prototype.props = function(props) {
+  this.props_ = props;
+  return this;
+};
+
+/**
  * Set data.
  *
  * @param {*} data
- * @returns {!kivi.VNode}
+ * @returns {!kivi.VNode<P>}
  */
 kivi.VNode.prototype.data = function(data) {
   this.props_ = data;
@@ -171,7 +183,7 @@ kivi.VNode.prototype.data = function(data) {
  * Set attrs.
  *
  * @param {?Object<string,string>} attrs
- * @returns {!kivi.VNode}
+ * @returns {!kivi.VNode<P>}
  */
 kivi.VNode.prototype.attrs = function(attrs) {
   this.attrs_ = attrs;
@@ -179,21 +191,10 @@ kivi.VNode.prototype.attrs = function(attrs) {
 };
 
 /**
- * Set props.
- *
- * @param {?Object<string,*>} props
- * @returns {!kivi.VNode}
- */
-kivi.VNode.prototype.props = function(props) {
-  this.props_ = props;
-  return this;
-};
-
-/**
  * Set style.
  *
  * @param {?string} style
- * @returns {!kivi.VNode}
+ * @returns {!kivi.VNode<P>}
  */
 kivi.VNode.prototype.style = function(style) {
   this.style_ = style;
@@ -204,7 +205,7 @@ kivi.VNode.prototype.style = function(style) {
  * Set className.
  *
  * @param {?string} className
- * @returns {!kivi.VNode}
+ * @returns {!kivi.VNode<P>}
  */
 kivi.VNode.prototype.className = function(className) {
   this.className_ = className;
@@ -215,7 +216,7 @@ kivi.VNode.prototype.className = function(className) {
  * Set children.
  *
  * @param {?Array<!kivi.VNode>|string} children
- * @returns {!kivi.VNode}
+ * @returns {!kivi.VNode<P>}
  */
 kivi.VNode.prototype.children = function(children) {
   this.children_ = children;
@@ -225,7 +226,7 @@ kivi.VNode.prototype.children = function(children) {
 /**
  * Enable Track By Key mode for children reconciliation.
  *
- * @returns {!kivi.VNode}
+ * @returns {!kivi.VNode<P>}
  */
 kivi.VNode.prototype.trackByKey = function() {
   this.flags |= kivi.VNodeFlags.TRACK_BY_KEY;
@@ -235,7 +236,7 @@ kivi.VNode.prototype.trackByKey = function() {
 /**
  * Owner [kivi.Component] will be responsible for managing children lifecycle.
  *
- * @returns {!kivi.VNode}
+ * @returns {!kivi.VNode<P>}
  */
 kivi.VNode.prototype.managedContainer = function() {
   this.flags |= kivi.VNodeFlags.MANAGED_CONTAINER;
@@ -245,7 +246,7 @@ kivi.VNode.prototype.managedContainer = function() {
 /**
  * Disable errors in DEBUG mode when children shape is changing.
  *
- * @returns {!kivi.VNode}
+ * @returns {!kivi.VNode<P>}
  */
 kivi.VNode.prototype.disableChildrenShapeError = function() {
   if (kivi.DEBUG) {
@@ -262,7 +263,7 @@ kivi.VNode.prototype.disableChildrenShapeError = function() {
  * when we rerender text block, we don't touch properties that is already
  * up to date (prevents spellchecker flickering).
  *
- * @returns {!kivi.VNode}
+ * @returns {!kivi.VNode<P>}
  */
 kivi.VNode.prototype.disableFreeze = function() {
   if (kivi.DEBUG) {
@@ -274,9 +275,9 @@ kivi.VNode.prototype.disableFreeze = function() {
 /**
  * Checks if two nodes can be synced.
  *
- * @param {!kivi.VNode} b
- * @return {boolean}
  * @private
+ * @param {!kivi.VNode} b
+ * @returns {boolean}
  */
 kivi.VNode.prototype._canSync = function(b) {
   return (this.flags === b.flags &&
@@ -308,9 +309,7 @@ kivi.VNode.prototype.create = function(context) {
       this.ref = document.createElementNS(kivi.HtmlNamespace.SVG, /** @type {string} */(this.tag));
     }
   } else if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
-    var component = kivi.Component.create(
-        /** @type {!kivi.CDescriptor} */(this.tag),
-        context);
+    var component = /** @type {!kivi.CDescriptor} */(this.tag).createComponent(context);
     this.ref = component.element;
     this.cref = component;
   }
@@ -416,7 +415,8 @@ kivi.VNode.prototype.render = function(context) {
     }
   } else if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
     var c = /** @type {!kivi.Component} */(this.cref);
-    c.setInputData(this.props_, this.children_);
+    c.setData(this.props_);
+    c.setChildren(this.children_);
     c.update();
   }
 
@@ -465,9 +465,9 @@ kivi.VNode.prototype.mount = function(node, context) {
   this.ref = node;
 
   if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
-    var cref = this.cref = kivi.Component.mount(/** @type {!kivi.CDescriptor} */(this.tag),
-        context, /** @type {!Element} */(node));
-    cref.setInputData(this.props_, this.children_);
+    var cref = this.cref = /** @type {!kivi.CDescriptor} */(this.tag).mountComponent(context, /** @type {!Element} */(node));
+    cref.setData(this.props_);
+    cref.setChildren(this.children_);
     cref.update();
   } else {
     if (children !== null && typeof children !== 'string' && children.length > 0) {
@@ -507,7 +507,7 @@ kivi.VNode.prototype.mount = function(node, context) {
  * When `this` node is synced with node `b`, `this` node should be considered as destroyed, and any access
  * to it after synced is an undefined behaviour.
  *
- * @param {!kivi.VNode} b New node
+ * @param {!kivi.VNode<P>} b New node
  * @param {!kivi.Component} context
  */
 kivi.VNode.prototype.sync = function(b, context) {
@@ -588,7 +588,8 @@ kivi.VNode.prototype.sync = function(b, context) {
 
   } else if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
     component = b.cref = /** @type {!kivi.Component<*,*>} */(this.cref);
-    component.setInputData(b.props_, b.children_);
+    component.setData(b.props_);
+    component.setChildren(b.children_);
     component.update();
   }
 
@@ -732,10 +733,10 @@ kivi.VNode.prototype._freeze = function() {
 /**
  * Insert VNode
  *
+ * @private
  * @param {!kivi.VNode} node Node to insert.
  * @param {?Node} nextRef Reference to the next html element.
  * @param {!kivi.Component} context Current context.
- * @private
  */
 kivi.VNode.prototype._insertChild = function(node, nextRef, context) {
   if (((this.flags & kivi.VNodeFlags.MANAGED_CONTAINER) !== 0) && context.descriptor.insertChild !== null) {
@@ -751,10 +752,10 @@ kivi.VNode.prototype._insertChild = function(node, nextRef, context) {
 /**
  * Replace VNode.
  *
+ * @private
  * @param {!kivi.VNode} newNode New Node.
  * @param {!kivi.VNode} refNode Old node.
  * @param {!kivi.Component} context Current context.
- * @private
  */
 kivi.VNode.prototype._replaceChild = function(newNode, refNode, context) {
   if (((this.flags & kivi.VNodeFlags.MANAGED_CONTAINER) !== 0) && context.descriptor.replaceChild !== null) {
@@ -771,10 +772,10 @@ kivi.VNode.prototype._replaceChild = function(newNode, refNode, context) {
 /**
  * Move VNode
  *
+ * @private
  * @param {!kivi.VNode} node Node to move.
  * @param {?Node} nextRef Reference to the next html element.
  * @param {!kivi.Component} context Current context.
- * @private
  */
 kivi.VNode.prototype._moveChild = function(node, nextRef, context) {
   if (((this.flags & kivi.VNodeFlags.MANAGED_CONTAINER) !== 0) && context.descriptor.moveChild !== null) {
@@ -787,9 +788,9 @@ kivi.VNode.prototype._moveChild = function(node, nextRef, context) {
 /**
  * Remove VNode.
  *
+ * @private
  * @param {!kivi.VNode} node Node to remove.
  * @param {!kivi.Component} context Current context.
- * @private
  */
 kivi.VNode.prototype._removeChild = function(node, context) {
   if (((this.flags & kivi.VNodeFlags.MANAGED_CONTAINER) !== 0) && context.descriptor.removeChild !== null) {
@@ -977,10 +978,10 @@ kivi.VNode.prototype.syncChildren = function(a, b, context) {
  * Any heuristics that is used in this algorithm is an undefined behaviour, and external dependencies should
  * not rely on the knowledge about this algorithm, because it can be changed in any time.
  *
+ * @private
  * @param {!Array<!kivi.VNode>} a Old children list.
  * @param {!Array<!kivi.VNode>} b New children list.
  * @param {!kivi.Component} context Current context.
- * @private
  */
 kivi.VNode.prototype._syncChildren = function(a, b, context) {
   var aStart = 0;
@@ -1063,10 +1064,10 @@ kivi.VNode.prototype._syncChildren = function(a, b, context) {
 /**
  * Synchronize children tracking by keys.
  *
+ * @private
  * @param {!Array<!kivi.VNode>} a Old children list.
  * @param {!Array<!kivi.VNode>} b New children list.
  * @param {!kivi.Component} context Current context.
- * @private
  */
 kivi.VNode.prototype._syncChildrenTrackingByKeys = function(a, b, context) {
   var aStart = 0;
@@ -1324,9 +1325,9 @@ kivi.VNode.prototype._syncChildrenTrackingByKeys = function(a, b, context) {
  *
  * http://en.wikipedia.org/wiki/Longest_increasing_subsequence
  *
+ * @package
  * @param {!Array<number>} a
  * @returns {!Array<number>}
- * @package
  */
 kivi._lis = function(a) {
   var p = a.slice(0);

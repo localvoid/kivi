@@ -1,23 +1,12 @@
 goog.provide('kivi.CDescriptor');
-goog.provide('kivi.CDescriptorFlags');
 goog.provide('kivi.Component');
 goog.require('kivi');
+goog.require('kivi.CDescriptorFlags');
 goog.require('kivi.ComponentFlags');
 goog.require('kivi.Invalidator');
 goog.require('kivi.InvalidatorSubscription');
 goog.require('kivi.InvalidatorSubscriptionFlags');
 goog.require('kivi.scheduler.instance');
-
-/**
- * CDescriptor Flags.
- *
- * @enum {number}
- */
-kivi.CDescriptorFlags = {
-  SVG:             0x0001,
-  WRAPPER:         0x0002,
-  RECYCLE_ENABLED: 0x0004
-};
 
 /**
  * Component Descriptor.
@@ -196,6 +185,64 @@ kivi.CDescriptor.prototype.enableRecycling = function(maxRecycled) {
 };
 
 /**
+ * Create a [kivi.Component].
+ *
+ * @param {?kivi.Component} context
+ * @returns {!kivi.Component<D, S>}
+ */
+kivi.CDescriptor.prototype.createComponent = function(context) {
+  var c;
+
+  if (kivi.DISABLE_COMPONENT_RECYCLING ||
+      ((this.flags & kivi.CDescriptorFlags.RECYCLE_ENABLED) === 0) ||
+      (this.recycled.length === 0)) {
+
+    var element = ((this.flags & kivi.CDescriptorFlags.SVG) === 0) ?
+        document.createElement(this.tag) :
+        document.createElementNS(kivi.HtmlNamespace.SVG, this.tag);
+    c = new kivi.Component(kivi.ComponentFlags.DIRTY, this, context, element);
+    if (this.init !== null) {
+      this.init(c);
+    }
+  } else {
+    c = this.recycled.pop();
+    c.setParent(context);
+  }
+
+  return c;
+};
+
+/**
+ * Mount Component on top of existing html element.
+ *
+ * @param {?kivi.Component} context
+ * @param {!Element} element
+ * @returns {!kivi.Component<D, S>}
+ */
+kivi.CDescriptor.prototype.mountComponent = function(context, element) {
+  var c = new kivi.Component(kivi.ComponentFlags.DIRTY | kivi.ComponentFlags.MOUNTING, this, context, element);
+  if (this.init !== null) {
+    this.init(c);
+  }
+  return c;
+};
+
+/**
+ * Wrap Component.
+ *
+ * @param {?kivi.Component} context
+ * @param {!Element} element
+ * @returns {!kivi.Component<D, S>}
+ */
+kivi.CDescriptor.prototype.wrapComponent = function(context, element) {
+  var c = new kivi.Component(kivi.ComponentFlags.DIRTY, this, context, element);
+  if (this.init !== null) {
+    this.init(c);
+  }
+  return c;
+};
+
+/**
  * Component.
  *
  * @template D, S
@@ -259,63 +306,53 @@ kivi.Component = function(flags, descriptor, parent, element) {
 };
 
 /**
- * Create a [kivi.Component].
- *
- * @param {!kivi.CDescriptor} descriptor
- * @param {?kivi.Component} context
- * @returns {!kivi.Component}
+ * Mark Component as dirty.
  */
-kivi.Component.create = function(descriptor, context) {
-  var c;
+kivi.Component.prototype.markDirty = function() {
+  this.flags |= kivi.ComponentFlags.DIRTY;
+};
 
-  if (kivi.DISABLE_COMPONENT_RECYCLING ||
-      ((descriptor.flags & kivi.CDescriptorFlags.RECYCLE_ENABLED) === 0) ||
-      descriptor.recycled.length === 0) {
+/**
+ * Set parent.
+ *
+ * @param {?kivi.Component} parent
+ */
+kivi.Component.prototype.setParent = function(parent) {
+  this.parent = parent;
 
-    var element = ((descriptor.flags & kivi.CDescriptorFlags.SVG) === 0) ?
-        document.createElement(descriptor.tag) :
-        document.createElementNS(kivi.HtmlNamespace.SVG, descriptor.tag);
-    c = new kivi.Component(kivi.ComponentFlags.DIRTY, descriptor, context, element);
-    if (descriptor.init !== null) {
-      descriptor.init(c);
+  /** @type {number} */
+  this.depth = parent === null ? 0 : parent.depth + 1;
+};
+
+/**
+ * Set data.
+ *
+ * @param {*} newData
+ */
+kivi.Component.prototype.setData = function(newData) {
+  var component = /** @type {!kivi.Component<*,*>} */(this);
+  var setData = this.descriptor.setData;
+
+  if (setData === null) {
+    if (component.data !== newData) {
+      component.data = newData;
+      component.flags |= kivi.ComponentFlags.DIRTY;
     }
   } else {
-    c = descriptor.recycled.pop();
+    setData(this, newData);
   }
-
-  return c;
 };
 
 /**
- * Mount Component on top of existing html element.
+ * Set new input data.
  *
- * @param {!kivi.CDescriptor} descriptor
- * @param {?kivi.Component} context
- * @param {!Element} element
- * @returns {!kivi.Component}
+ * @param {?Array<!kivi.VNode>|string} newChildren
  */
-kivi.Component.mount = function(descriptor, context, element) {
-  var c = new kivi.Component(kivi.ComponentFlags.DIRTY | kivi.ComponentFlags.MOUNTING, descriptor, context, element);
-  if (descriptor.init !== null) {
-    descriptor.init(c);
+kivi.Component.prototype.setChildren = function(newChildren) {
+  var setChildren = this.descriptor.setChildren;
+  if (setChildren !== null) {
+    setChildren(this, newChildren);
   }
-  return c;
-};
-
-/**
- * Wrap Component.
- *
- * @param {!kivi.CDescriptor} descriptor
- * @param {?kivi.Component} context
- * @param {!Element} element
- * @returns {!kivi.Component}
- */
-kivi.Component.wrap = function(descriptor, context, element) {
-  var c = new kivi.Component(kivi.ComponentFlags.DIRTY, descriptor, context, element);
-  if (descriptor.init !== null) {
-    descriptor.init(c);
-  }
-  return c;
 };
 
 /**
@@ -356,45 +393,24 @@ kivi.Component.prototype.syncVRoot = function(newRoot) {
 /**
  * Synchronize internal component.
  *
- * @param {*} newData
+ * @param {*} newProps
  * @param {?Array<!kivi.VNode>|string=} opt_newChildren
  */
-kivi.Component.prototype.syncComponent = function(newData, opt_newChildren) {
+kivi.Component.prototype.syncComponent = function(newProps, opt_newChildren) {
   if (opt_newChildren === void 0) opt_newChildren = null;
 
   var c = this.root;
   if (c === null) {
     var descriptor = /** @type {!kivi.CDescriptor} */(this.descriptor.data);
     if ((this.flags & kivi.ComponentFlags.MOUNTING) === 0) {
-      c = kivi.Component.wrap(descriptor, this, this.element);
+      c = descriptor.wrapComponent(this, this.element);
     } else {
-      c = kivi.Component.mount(descriptor, this, this.element);
+      c = descriptor.mountComponent(this, this.element);
     }
   }
-  c.setInputData(newData, opt_newChildren);
+  c.setData(newProps);
+  c.setChildren(opt_newChildren);
   c.update();
-};
-
-/**
- * Set new input data.
- *
- * @param {*} newData
- * @param {?Array<!kivi.VNode>|string} newChildren
- */
-kivi.Component.prototype.setInputData = function(newData, newChildren) {
-  var descriptor = this.descriptor;
-  var component = /** @type {!kivi.Component<*,*>} */(this);
-  if (descriptor.setData === null) {
-    if (component.data !== newData) {
-      component.data = newData;
-      component.flags |= kivi.ComponentFlags.DIRTY;
-    }
-  } else {
-    descriptor.setData(this, newData);
-  }
-  if (descriptor.setChildren !== null) {
-    descriptor.setChildren(this, newChildren);
-  }
 };
 
 /**
