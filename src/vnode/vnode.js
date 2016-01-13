@@ -57,7 +57,7 @@ kivi.VNode = function(flags, tag, props) {
    *
    * @type {?string}
    */
-  this.className_ = null;
+  this.classes_ = null;
 
   /**
    * List of children nodes. If VNode is a Component, children nodes will be transferred to the Component.
@@ -224,16 +224,16 @@ kivi.VNode.prototype.style = function(style) {
 /**
  * Set className.
  *
- * @param {?string} className
+ * @param {?string} classes
  * @returns {!kivi.VNode<P>}
  */
-kivi.VNode.prototype.className = function(className) {
+kivi.VNode.prototype.classes = function(classes) {
   if (kivi.DEBUG) {
     if ((this.flags & (kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.ROOT)) === 0) {
-      throw new Error('Failed to set className on VNode: className method should be called on element or component root nodes only.')
+      throw new Error('Failed to set classes on VNode: classes method should be called on element or component root nodes only.')
     }
   }
-  this.className_ = className;
+  this.classes_ = classes;
   return this;
 };
 
@@ -379,6 +379,9 @@ kivi.VNode.prototype.createCommentPlaceholder = function() {
  * @param {!kivi.Component} context
  */
 kivi.VNode.prototype.render = function(context) {
+  /** @type {number} */
+  var i;
+
   if (kivi.DEBUG) {
     if (this.ref === null) {
       throw new Error('Failed to render VNode: VNode should be created before render.');
@@ -406,8 +409,6 @@ kivi.VNode.prototype.render = function(context) {
     }
   }
 
-  /** @type {number} */
-  var i;
   /** @type {number} */
   var il;
   /** @type {string|number} */
@@ -442,8 +443,8 @@ kivi.VNode.prototype.render = function(context) {
       ref.style.cssText = this.style_;
     }
 
-    if (this.className_ !== null) {
-      ref.className = this.className_;
+    if (this.classes_ !== null) {
+      ref.className = this.classes_;
     }
 
     var children = this.children_;
@@ -619,11 +620,11 @@ kivi.VNode.prototype.sync = function(b, context) {
       }
     }
 
-    if (this.className_ !== b.className_) {
-      if (b.className_ === null) {
+    if (this.classes_ !== b.classes_) {
+      if (b.classes_ === null) {
         ref.className = '';
       } else {
-        ref.className = b.className_;
+        ref.className = b.classes_;
       }
     }
 
@@ -861,7 +862,7 @@ kivi.VNode.prototype.syncChildren = function(a, b, context) {
     if (((this.flags & kivi.VNodeFlags.TRACK_BY_KEY) !== 0)) {
       if (typeof a === 'string' || typeof b === 'string') {
         throw new Error('VNode sync children failed: children property cannot have type string when track by' +
-                        ' key is enabled.')
+                        ' key is enabled.');
       }
     }
   }
