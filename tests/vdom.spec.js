@@ -1,3 +1,4 @@
+goog.provide('tests');
 goog.require('kivi.VNode');
 
 var VNode = kivi.VNode;
@@ -50,7 +51,7 @@ function checkInnerHtmlEquals(ax, bx, cx) {
 
   a.sync(c, null);
 
-  expect(aDiv.innerHTML).to.be.equal(bDiv.innerHTML);
+  assert.equal(aDiv.innerHTML, bDiv.innerHTML);
 }
 
 describe('render', function() {
@@ -58,14 +59,14 @@ describe('render', function() {
     var f = document.createDocumentFragment();
     var a = VNode.createElement('div');
     injectVNode(f, a, null);
-    expect(f.firstChild.tagName).to.be.equal('DIV');
+    assert.equal(f.firstChild.tagName, 'DIV');
   });
 
   it('should create empty span', function() {
     var f = document.createDocumentFragment();
     var a = VNode.createElement('span');
     injectVNode(f, a, null);
-    expect(f.firstChild.tagName).to.be.equal('SPAN');
+    assert.equal(f.firstChild.tagName, 'SPAN');
   });
 
   it('should create div with 1 attribute', function() {
@@ -75,8 +76,8 @@ describe('render', function() {
       a: '1'
     });
     injectVNode(f, a, null);
-    expect(f.firstChild.hasAttributes()).to.be.true();
-    expect(f.firstChild.getAttribute('a')).to.be.equal('1');
+    assert.isTrue(f.firstChild.hasAttributes());
+    assert.equal(f.firstChild.getAttribute('a'), '1');
   });
 
   it('should create div with 2 attributes', function() {
@@ -86,31 +87,31 @@ describe('render', function() {
       b: '2'
     });
     injectVNode(f, a, null);
-    expect(f.firstChild.hasAttributes()).to.be.true();
-    expect(f.firstChild.getAttribute('a')).to.be.equal('1');
-    expect(f.firstChild.getAttribute('b')).to.be.equal('2');
+    assert.isTrue(f.firstChild.hasAttributes());
+    assert.equal(f.firstChild.getAttribute('a'), '1');
+    assert.equal(f.firstChild.getAttribute('b'), '2');
   });
 
   it('should create div with style', function() {
     var f = document.createDocumentFragment();
     var a = VNode.createElement('div').style('top: 10px');
     injectVNode(f, a, null);
-    expect(f.firstChild.style.top).to.be.equal('10px');
+    assert.equal(f.firstChild.style.top, '10px');
   });
 
   it('should create div with className', function() {
     var f = document.createDocumentFragment();
-    var a = VNode.createElement('div').className('a');
+    var a = VNode.createElement('div').classes('a');
     injectVNode(f, a, null);
-    expect(f.firstChild.classList.length).to.be.equal(1);
-    expect(f.firstChild.classList[0]).to.be.equal('a');
+    assert.equal(f.firstChild.classList.length, 1);
+    assert.equal(f.firstChild.classList[0], 'a');
   });
 
   it('should create div with 1 child', function() {
     var f = document.createDocumentFragment();
     var a = VNode.createElement('div').children([VNode.createElement('span')]);
     injectVNode(f, a, null);
-    expect(f.firstChild.childNodes.length).to.be.equal(1);
+    assert.equal(f.firstChild.childNodes.length, 1);
   });
 
   it('should create div with 2 children', function() {
@@ -120,7 +121,7 @@ describe('render', function() {
       VNode.createElement('span')
     ]);
     injectVNode(f, a, null);
-    expect(f.firstChild.childNodes.length).to.be.equal(2);
+    assert.equal(f.firstChild.childNodes.length, 2);
   });
 });
 
@@ -131,7 +132,7 @@ describe('update attrs', function() {
     var b = VNode.createElement('div');
     injectVNode(f, a, null);
     a.sync(b, null);
-    expect(f.firstChild.hasAttributes()).to.be.false();
+    assert.isFalse(f.firstChild.hasAttributes());
   });
 
   it('null => {}', function() {
@@ -140,7 +141,7 @@ describe('update attrs', function() {
     var b = VNode.createElement('div').attrs({});
     injectVNode(f, a, null);
     a.sync(b, null);
-    expect(f.firstChild.hasAttributes()).to.be.false();
+    assert.isFalse(f.firstChild.hasAttributes());
   });
 
   it('{} => null', function() {
@@ -149,7 +150,7 @@ describe('update attrs', function() {
     var b = VNode.createElement('div');
     injectVNode(f, a, null);
     a.sync(b, null);
-    expect(f.firstChild.hasAttributes()).to.be.false();
+    assert.isFalse(f.firstChild.hasAttributes());
   });
 
   it('{} => {}', function() {
@@ -158,7 +159,7 @@ describe('update attrs', function() {
     var b = VNode.createElement('div').attrs({});
     injectVNode(f, a, null);
     a.sync(b, null);
-    expect(f.firstChild.hasAttributes()).to.be.false();
+    assert.isFalse(f.firstChild.hasAttributes());
   });
 
   it('null => {a: 1}', function() {
@@ -167,8 +168,8 @@ describe('update attrs', function() {
     var b = VNode.createElement('div').attrs({a: '1'});
     injectVNode(f, a, null);
     a.sync(b, null);
-    expect(f.firstChild.hasAttributes()).to.be.true();
-    expect(f.firstChild.getAttribute('a')).to.be.equal('1');
+    assert.isTrue(f.firstChild.hasAttributes());
+    assert.equal(f.firstChild.getAttribute('a'), '1');
   });
 
   it('{} => {a: 1}', function() {
@@ -177,8 +178,8 @@ describe('update attrs', function() {
     var b = VNode.createElement('div').attrs({a: '1'});
     injectVNode(f, a, null);
     a.sync(b, null);
-    expect(f.firstChild.hasAttributes()).to.be.true();
-    expect(f.firstChild.getAttribute('a')).to.be.equal('1');
+    assert.isTrue(f.firstChild.hasAttributes());
+    assert.equal(f.firstChild.getAttribute('a'), '1');
   });
 
   it('{} => {a: 1, b: 2}', function() {
@@ -187,9 +188,9 @@ describe('update attrs', function() {
     var b = VNode.createElement('div').attrs({a: '1', b: '2'});
     injectVNode(f, a, null);
     a.sync(b, null);
-    expect(f.firstChild.hasAttributes()).to.be.true();
-    expect(f.firstChild.getAttribute('a')).to.be.equal('1');
-    expect(f.firstChild.getAttribute('b')).to.be.equal('2');
+    assert.isTrue(f.firstChild.hasAttributes());
+    assert.equal(f.firstChild.getAttribute('a'), '1');
+    assert.equal(f.firstChild.getAttribute('b'), '2');
   });
 
   it('{} => {a: 1, b: 2, c: 3}', function() {
@@ -198,10 +199,10 @@ describe('update attrs', function() {
     var b = VNode.createElement('div').attrs({a: '1', b: '2', c: '3'});
     injectVNode(f, a, null);
     a.sync(b, null);
-    expect(f.firstChild.hasAttributes()).to.be.true();
-    expect(f.firstChild.getAttribute('a')).to.be.equal('1');
-    expect(f.firstChild.getAttribute('b')).to.be.equal('2');
-    expect(f.firstChild.getAttribute('c')).to.be.equal('3');
+    assert.isTrue(f.firstChild.hasAttributes());
+    assert.equal(f.firstChild.getAttribute('a'), '1');
+    assert.equal(f.firstChild.getAttribute('b'), '2');
+    assert.equal(f.firstChild.getAttribute('c'), '3');
   });
 
   it('{a: 1} => null', function() {
@@ -210,7 +211,7 @@ describe('update attrs', function() {
     var b = VNode.createElement('div');
     injectVNode(f, a, null);
     a.sync(b, null);
-    expect(f.firstChild.hasAttributes()).to.be.false();
+    assert.isFalse(f.firstChild.hasAttributes());
   });
 
   it('{a: 1} => {}', function() {
@@ -219,7 +220,7 @@ describe('update attrs', function() {
     var b = VNode.createElement('div').attrs({});
     injectVNode(f, a, null);
     a.sync(b, null);
-    expect(f.firstChild.hasAttributes()).to.be.false();
+    assert.isFalse(f.firstChild.hasAttributes());
   });
 
   it('{a: 1, b: 2} => {}', function() {
@@ -228,7 +229,7 @@ describe('update attrs', function() {
     var b = VNode.createElement('div').attrs({});
     injectVNode(f, a, null);
     a.sync(b, null);
-    expect(f.firstChild.hasAttributes()).to.be.false();
+    assert.isFalse(f.firstChild.hasAttributes());
   });
 
   it('{a: 1} => {b: 2}', function() {
@@ -237,9 +238,9 @@ describe('update attrs', function() {
     var b = VNode.createElement('div').attrs({b: '2'});
     injectVNode(f, a, null);
     a.sync(b, null);
-    expect(f.firstChild.hasAttributes()).to.be.true();
-    expect(f.firstChild.hasAttribute('a')).to.be.false();
-    expect(f.firstChild.getAttribute('b')).to.be.equal('2');
+    assert.isTrue(f.firstChild.hasAttributes());
+    assert.isFalse(f.firstChild.hasAttribute('a'));
+    assert.equal(f.firstChild.getAttribute('b'), '2');
   });
 
   it('{a: 1, b: 2} => {c: 3: d: 4}', function() {
@@ -248,11 +249,11 @@ describe('update attrs', function() {
     var b = VNode.createElement('div').attrs({c: '3', d: '4'});
     injectVNode(f, a, null);
     a.sync(b, null);
-    expect(f.firstChild.hasAttributes()).to.be.true();
-    expect(f.firstChild.hasAttribute('a')).to.be.false();
-    expect(f.firstChild.hasAttribute('b')).to.be.false();
-    expect(f.firstChild.getAttribute('c')).to.be.equal('3');
-    expect(f.firstChild.getAttribute('d')).to.be.equal('4');
+    assert.isTrue(f.firstChild.hasAttributes());
+    assert.isFalse(f.firstChild.hasAttribute('a'));
+    assert.isFalse(f.firstChild.hasAttribute('b'));
+    assert.equal(f.firstChild.getAttribute('c'), '3');
+    assert.equal(f.firstChild.getAttribute('d'), '4');
   });
 
   it('{a: 1} => {a: 10}', function() {
@@ -261,8 +262,8 @@ describe('update attrs', function() {
     var b = VNode.createElement('div').attrs({a: '10'});
     injectVNode(f, a, null);
     a.sync(b, null);
-    expect(f.firstChild.hasAttributes()).to.be.true();
-    expect(f.firstChild.getAttribute('a')).to.be.equal('10');
+    assert.isTrue(f.firstChild.hasAttributes());
+    assert.equal(f.firstChild.getAttribute('a'), '10');
   });
 
   it('{a: 1, b: 2} => {a: 10, b: 20}', function() {
@@ -271,9 +272,9 @@ describe('update attrs', function() {
     var b = VNode.createElement('div').attrs({a: '10', b: '20'});
     injectVNode(f, a, null);
     a.sync(b, null);
-    expect(f.firstChild.hasAttributes()).to.be.true();
-    expect(f.firstChild.getAttribute('a')).to.be.equal('10');
-    expect(f.firstChild.getAttribute('b')).to.be.equal('20');
+    assert.isTrue(f.firstChild.hasAttributes());
+    assert.equal(f.firstChild.getAttribute('a'), '10');
+    assert.equal(f.firstChild.getAttribute('b'), '20');
   });
 });
 
@@ -284,26 +285,26 @@ describe('update classes', function() {
     var b = VNode.createElement('div');
     injectVNode(f, a, null);
     a.sync(b, null);
-    expect(f.firstChild.classList.length).to.be.equal(0);
+    assert.equal(f.firstChild.classList.length, 0);
   });
 
   it('null => [1]', function() {
     var f = document.createDocumentFragment();
     var a = VNode.createElement('div');
-    var b = VNode.createElement('div').className('1');
+    var b = VNode.createElement('div').classes('1');
     injectVNode(f, a, null);
     a.sync(b, null);
-    expect(f.firstChild.classList.length).to.be.equal(1);
-    expect(f.firstChild.classList[0]).to.be.equal('1');
+    assert.equal(f.firstChild.classList.length, 1);
+    assert.equal(f.firstChild.classList[0], '1');
   });
 
   it('[1] => null', function() {
     var f = document.createDocumentFragment();
-    var a = VNode.createElement('div').className('1');
+    var a = VNode.createElement('div').classes('1');
     var b = VNode.createElement('div');
     injectVNode(f, a, null);
     a.sync(b, null);
-    expect(f.firstChild.classList.length).to.be.equal(0);
+    assert.equal(f.firstChild.classList.length, 0);
   });
 });
 
@@ -314,7 +315,7 @@ describe('update style', function() {
     var b = VNode.createElement('div');
     injectVNode(f, a, null);
     a.sync(b, null);
-    expect(f.firstChild.style.cssText).to.be.empty();
+    assert.equal(f.firstChild.style.cssText, '');
   });
 
   it('null => {top: 10px}', function() {
@@ -323,7 +324,7 @@ describe('update style', function() {
     var b = VNode.createElement('div').style('top: 10px');
     injectVNode(f, a, null);
     a.sync(b, null);
-    expect(f.firstChild.style.top).to.be.equal('10px');
+    assert.equal(f.firstChild.style.top, '10px');
   });
 
   it('{top: 10px} => null', function() {
@@ -333,7 +334,7 @@ describe('update style', function() {
     a.style_ = 'top: 10px';
     injectVNode(f, a, null);
     a.sync(b, null);
-    expect(f.firstChild.style.top).to.be.equal('');
+    assert.equal(f.firstChild.style.top, '');
   });
 });
 

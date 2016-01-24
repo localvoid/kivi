@@ -878,6 +878,7 @@ kivi.VNode.prototype.syncChildren = function(a, b, context) {
         }
       }
     } else if (b !== null) {
+      this.ref.removeChild(this.ref.firstChild);
       while (i < b.length) {
         this._insertChild(b[i++], null, context);
       }
