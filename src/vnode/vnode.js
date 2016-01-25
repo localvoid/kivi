@@ -868,7 +868,9 @@ kivi.VNode.prototype.syncChildren = function(a, b, context) {
   }
 
   if (typeof a === 'string') {
-    if (typeof b === 'string') {
+    if (b === null) {
+      this.ref.removeChild(this.ref.firstChild);
+    } else if (typeof b === 'string') {
       if (a !== b) {
         var c = this.ref.firstChild;
         if (c) {
@@ -877,7 +879,7 @@ kivi.VNode.prototype.syncChildren = function(a, b, context) {
           this.ref.textContent = b;
         }
       }
-    } else if (b !== null) {
+    } else {
       this.ref.removeChild(this.ref.firstChild);
       while (i < b.length) {
         this._insertChild(b[i++], null, context);

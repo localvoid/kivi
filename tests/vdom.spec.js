@@ -123,6 +123,14 @@ describe('render', function() {
     injectVNode(f, a, null);
     assert.equal(f.firstChild.childNodes.length, 2);
   });
+
+  it('should create div with child "abc"', function() {
+    var f = document.createDocumentFragment();
+    var a = VNode.createElement('div').children('abc');
+    injectVNode(f, a, null);
+    assert.equal(f.firstChild.childNodes.length, 1);
+    assert.equal(f.firstChild.firstChild.nodeValue, 'abc');
+  });
 });
 
 describe('update attrs', function() {
@@ -306,6 +314,18 @@ describe('update classes', function() {
     a.sync(b, null);
     assert.equal(f.firstChild.classList.length, 0);
   });
+
+  it('null => [1, 2]', function() {
+    var f = document.createDocumentFragment();
+    var a = VNode.createElement('div');
+    var b = VNode.createElement('div').classes('1 2');
+    injectVNode(f, a, null);
+    a.sync(b, null);
+    assert.equal(f.firstChild.classList.length, 2);
+    assert.equal(f.firstChild.classList[0], '1');
+    assert.equal(f.firstChild.classList[1], '2');
+  });
+
 });
 
 describe('update style', function() {
@@ -335,6 +355,16 @@ describe('update style', function() {
     injectVNode(f, a, null);
     a.sync(b, null);
     assert.equal(f.firstChild.style.top, '');
+  });
+
+  it('null => {top: 10px, left: 20px}', function() {
+    var f = document.createDocumentFragment();
+    var a = VNode.createElement('div');
+    var b = VNode.createElement('div').style('top: 10px; left: 20px');
+    injectVNode(f, a, null);
+    a.sync(b, null);
+    assert.equal(f.firstChild.style.top, '10px');
+    assert.equal(f.firstChild.style.left, '20px');
   });
 });
 
@@ -485,6 +515,79 @@ var TESTS = [
   [[0, 1, {key: 2, children: [0]}, 3, {key: 4, children: [0]}, 5],
     [6, 7, 3, {key: 2, children: []}, {key: 4, children: []}]]
 ];
+
+describe('syncChildren string children', function() {
+  it('null => "abc"', function() {
+    var f = document.createDocumentFragment();
+    var a = VNode.createElement('div');
+    var b = VNode.createElement('div').children('abc');
+    injectVNode(f, a, null);
+    a.sync(b, null);
+    assert.equal(f.firstChild.childNodes.length, 1);
+    assert.equal(f.firstChild.firstChild.nodeValue, 'abc');
+  });
+
+  it('"abc" => null', function() {
+    var f = document.createDocumentFragment();
+    var a = VNode.createElement('div').children('abc');
+    var b = VNode.createElement('div');
+    injectVNode(f, a, null);
+    a.sync(b, null);
+    assert.equal(f.firstChild.childNodes.length, 0);
+  });
+
+  it('"abc" => "cde"', function() {
+    var f = document.createDocumentFragment();
+    var a = VNode.createElement('div').children('abc');
+    var b = VNode.createElement('div').children('cde');
+    injectVNode(f, a, null);
+    a.sync(b, null);
+    console.log(f);
+    assert.equal(f.firstChild.childNodes.length, 1);
+    assert.equal(f.firstChild.firstChild.nodeValue, 'cde');
+  });
+
+  it('[div] => "cde"', function() {
+    var f = document.createDocumentFragment();
+    var a = VNode.createElement('div').children([VNode.createElement('div')]);
+    var b = VNode.createElement('div').children('cde');
+    injectVNode(f, a, null);
+    a.sync(b, null);
+    assert.equal(f.firstChild.childNodes.length, 1);
+    assert.equal(f.firstChild.firstChild.nodeValue, 'cde');
+  });
+
+  it('[div, div] => "cde"', function() {
+    var f = document.createDocumentFragment();
+    var a = VNode.createElement('div').children([VNode.createElement('div'), VNode.createElement('div')]);
+    var b = VNode.createElement('div').children('cde');
+    injectVNode(f, a, null);
+    a.sync(b, null);
+    assert.equal(f.firstChild.childNodes.length, 1);
+    assert.equal(f.firstChild.firstChild.nodeValue, 'cde');
+  });
+
+  it('"cde" => [div]', function() {
+    var f = document.createDocumentFragment();
+    var a = VNode.createElement('div').children('cde');
+    var b = VNode.createElement('div').children([VNode.createElement('div')]);
+    injectVNode(f, a, null);
+    a.sync(b, null);
+    assert.equal(f.firstChild.childNodes.length, 1);
+    assert.equal(f.firstChild.firstChild.tagName, 'DIV');
+  });
+
+  it('"cde" => [div, span]', function() {
+    var f = document.createDocumentFragment();
+    var a = VNode.createElement('div').children('cde');
+    var b = VNode.createElement('div').children([VNode.createElement('div'), VNode.createElement('span')]);
+    injectVNode(f, a, null);
+    a.sync(b, null);
+    assert.equal(f.firstChild.childNodes.length, 2);
+    assert.equal(f.firstChild.firstChild.tagName, 'DIV');
+    assert.equal(f.firstChild.lastChild.tagName, 'SPAN');
+  });
+});
 
 describe('syncChildren with keys', function() {
   TESTS.forEach(function(t) {
