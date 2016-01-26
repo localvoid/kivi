@@ -1,6 +1,7 @@
 goog.provide('kivi.VNode');
 goog.require('kivi');
 goog.require('kivi.Component');
+goog.require('kivi.CTag');
 goog.require('kivi.HtmlNamespace');
 goog.require('kivi.VNodeDebugFlags');
 goog.require('kivi.VNodeFlags');
@@ -14,7 +15,7 @@ goog.require('kivi.sync.setAttr');
  *
  * @template P
  * @param {number} flags Flags.
- * @param {string|kivi.CDescriptor|null} tag Tag should contain html tag name if VNode represents an element,
+ * @param {string|kivi.CTag|kivi.CDescriptor|null} tag Tag should contain html tag name if VNode represents an element,
  *   or reference to the [kivi.CDescriptor] if it represents a Component.
  * @param {*} props
  * @constructor
@@ -346,10 +347,14 @@ kivi.VNode.prototype.create = function(context) {
   if ((flags & kivi.VNodeFlags.TEXT) !== 0) {
     this.ref = document.createTextNode(/** @type {string} */(this.props_));
   } else if ((flags & kivi.VNodeFlags.ELEMENT) !== 0) {
-    if ((flags & kivi.VNodeFlags.SVG) === 0) {
-      this.ref = document.createElement(/** @type {string} */(this.tag));
+    if (typeof this.tag === 'string') {
+      if ((flags & kivi.VNodeFlags.SVG) === 0) {
+        this.ref = document.createElement(/** @type {string} */(this.tag));
+      } else {
+        this.ref = document.createElementNS(kivi.HtmlNamespace.SVG, /** @type {string} */(this.tag));
+      }
     } else {
-      this.ref = document.createElementNS(kivi.HtmlNamespace.SVG, /** @type {string} */(this.tag));
+      this.ref = /** @type {!kivi.CTag} */(this.tag).createElement();
     }
   } else if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
     var component = /** @type {!kivi.CDescriptor} */(this.tag).createComponent(context);

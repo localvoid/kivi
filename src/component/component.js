@@ -2,6 +2,7 @@ goog.provide('kivi.CDescriptor');
 goog.provide('kivi.Component');
 goog.require('kivi');
 goog.require('kivi.CDescriptorFlags');
+goog.require('kivi.CTag');
 goog.require('kivi.ComponentFlags');
 goog.require('kivi.Invalidator');
 goog.require('kivi.InvalidatorSubscription');
@@ -29,7 +30,7 @@ kivi.CDescriptor = function(name, opt_flags) {
   /**
    * Tag name of the root element.
    *
-   * @type {string}
+   * @type {string|!kivi.CTag}
    */
   this.tag = 'div';
 
@@ -192,14 +193,19 @@ kivi.CDescriptor.prototype.enableRecycling = function(maxRecycled) {
  */
 kivi.CDescriptor.prototype.createComponent = function(context) {
   var c;
+  var element;
 
   if (!kivi.ENABLE_COMPONENT_RECYCLING ||
       ((this.flags & kivi.CDescriptorFlags.RECYCLE_ENABLED) === 0) ||
       (this.recycled.length === 0)) {
 
-    var element = ((this.flags & kivi.CDescriptorFlags.SVG) === 0) ?
-        document.createElement(this.tag) :
-        document.createElementNS(kivi.HtmlNamespace.SVG, this.tag);
+    if (typeof this.tag === 'string') {
+      element = ((this.flags & kivi.CDescriptorFlags.SVG) === 0) ?
+          document.createElement(this.tag) :
+          document.createElementNS(kivi.HtmlNamespace.SVG, this.tag);
+    } else {
+      element = this.tag.createElement();
+    }
     c = new kivi.Component(kivi.ComponentFlags.DIRTY, this, context, element);
     if (this.init !== null) {
       this.init(c);
@@ -464,7 +470,9 @@ kivi.Component.prototype.attached = function() {
     }
   }
   this.flags |= kivi.ComponentFlags.ATTACHED;
-  this.flags &= ~kivi.ComponentFlags.RECYCLED;
+  if (kivi.ENABLE_COMPONENT_RECYCLING) {
+    this.flags &= ~kivi.ComponentFlags.RECYCLED;
+  }
 
   var attached = this.descriptor.attached;
   if (attached !== null) {
