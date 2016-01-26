@@ -65,8 +65,6 @@ kivi.CTag.prototype.createElement = function() {
       ref = document.createElementNS(kivi.HtmlNamespace.SVG, this.tag);
     }
 
-    this.ref = ref;
-
     if (this.props_ !== null) {
       keys = Object.keys(this.props_);
       for (i = 0, il = keys.length; i < il; i++) {
@@ -90,9 +88,15 @@ kivi.CTag.prototype.createElement = function() {
     if (this.classes_ !== null) {
       ref.className = this.classes_;
     }
-  }
 
-  return this.ref.cloneNode(false);
+    if ((this.flags & kivi.CTagFlags.ENABLE_CLONING) !== 0) {
+      this.ref = ref;
+    }
+
+    return ref;
+  } else {
+    return this.ref.cloneNode(false);
+  }
 };
 
 /**
@@ -132,5 +136,17 @@ kivi.CTag.prototype.style = function(style) {
  */
 kivi.CTag.prototype.classes = function(classes) {
   this.classes_ = classes;
+  return this;
+};
+
+/**
+ * Enable cloning of element.
+ *
+ * Cloning is disabled by default because initial rendering is slower.
+ *
+ * @returns {!kivi.CTag}
+ */
+kivi.CTag.prototype.enableCloning = function() {
+  this.flags |= kivi.CTagFlags.ENABLE_CLONING;
   return this;
 };
