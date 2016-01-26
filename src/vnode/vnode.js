@@ -1,7 +1,7 @@
 goog.provide('kivi.VNode');
 goog.require('kivi');
-goog.require('kivi.Component');
 goog.require('kivi.CTag');
+goog.require('kivi.Component');
 goog.require('kivi.HtmlNamespace');
 goog.require('kivi.VNodeDebugFlags');
 goog.require('kivi.VNodeFlags');
@@ -109,7 +109,7 @@ kivi.VNode.createText = function(content) {
 /**
  * Create a [kivi.VNode] representing a [Element] node.
  *
- * @param {string} tag
+ * @param {string|!kivi.CTag} tag
  * @returns {!kivi.VNode<?Object<string,*>>}
  */
 kivi.VNode.createElement = function(tag) {
@@ -349,9 +349,9 @@ kivi.VNode.prototype.create = function(context) {
   } else if ((flags & kivi.VNodeFlags.ELEMENT) !== 0) {
     if (typeof this.tag === 'string') {
       if ((flags & kivi.VNodeFlags.SVG) === 0) {
-        this.ref = document.createElement(/** @type {string} */(this.tag));
+        this.ref = document.createElement(this.tag);
       } else {
-        this.ref = document.createElementNS(kivi.HtmlNamespace.SVG, /** @type {string} */(this.tag));
+        this.ref = document.createElementNS(kivi.HtmlNamespace.SVG, this.tag);
       }
     } else {
       this.ref = /** @type {!kivi.CTag} */(this.tag).createElement();
