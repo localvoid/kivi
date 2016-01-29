@@ -49,7 +49,7 @@ kivi.Invalidator.prototype.addSubscription = function(subscription) {
     if (subscriptions === null) {
       this._subscriptions = subscription;
     } else if (subscriptions.constructor === kivi.InvalidatorSubscription) {
-      this._subscriptions = [this._subscriptions, subscription];
+      this._subscriptions = [subscriptions, subscription];
     } else {
       subscriptions.push(subscription);
     }
@@ -58,7 +58,7 @@ kivi.Invalidator.prototype.addSubscription = function(subscription) {
     if (subscriptions === null) {
       this._transientSubscriptions = subscription;
     } else if (subscriptions.constructor === kivi.InvalidatorSubscription) {
-      this._transientSubscriptions = [this._transientSubscriptions, subscription];
+      this._transientSubscriptions = [subscriptions, subscription];
     } else {
       subscriptions.push(subscription);
     }
@@ -102,30 +102,32 @@ kivi.Invalidator.prototype.removeSubscription = function(subscription) {
     }
   } else {
     subscriptions = this._transientSubscriptions;
-    if (subscriptions.constructor === kivi.InvalidatorSubscription ||
-        subscriptions.length === 1) {
-      if (kivi.DEBUG) {
-        if (subscriptions.constructor === kivi.InvalidatorSubscription) {
-          if (subscriptions !== subscription) {
-            throw new Error('Failed to remove subscription from Invalidator: cannot find appropriate subscription');
+    if (subscriptions !== null) {
+      if (subscriptions.constructor === kivi.InvalidatorSubscription ||
+          subscriptions.length === 1) {
+        if (kivi.DEBUG) {
+          if (subscriptions.constructor === kivi.InvalidatorSubscription) {
+            if (subscriptions !== subscription) {
+              throw new Error('Failed to remove subscription from Invalidator: cannot find appropriate subscription');
+            }
+          } else {
+            subscriptions = /** @type {!Array<!kivi.InvalidatorSubscription>} */(subscriptions);
+            if (subscriptions[0] !== subscription) {
+              throw new Error('Failed to remove subscription from Invalidator: cannot find appropriate subscription');
+            }
           }
-        } else {
-          subscriptions = /** @type {!Array<!kivi.InvalidatorSubscription>} */(subscriptions);
-          if (subscriptions[0] !== subscription) {
+        }
+        this._transientSubscriptions = null;
+      } else {
+        subscriptions = /** @type {!Array<!kivi.InvalidatorSubscription>} */(subscriptions);
+        i = subscriptions.indexOf(subscription);
+        if (kivi.DEBUG) {
+          if (i === -1) {
             throw new Error('Failed to remove subscription from Invalidator: cannot find appropriate subscription');
           }
         }
+        subscriptions[i] = subscriptions.pop();
       }
-      this._transientSubscriptions = null;
-    } else {
-      subscriptions = /** @type {!Array<!kivi.InvalidatorSubscription>} */(subscriptions);
-      i = subscriptions.indexOf(subscription);
-      if (kivi.DEBUG) {
-        if (i === -1) {
-          throw new Error('Failed to remove subscription from Invalidator: cannot find appropriate subscription');
-        }
-      }
-      subscriptions[i] = subscriptions.pop();
     }
   }
 };
