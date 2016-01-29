@@ -1,63 +1,19 @@
 # kivi
 
-Library for building web UIs.
-
-Kivi is written for
+Library for building web UIs with large code base **>50kb**, incompatible
+with [React](https://facebook.github.io/react/) API and it works only with
 [google-closure-compiler](https://github.com/google/closure-compiler)
-ADVANCED_MODE, and it is using closure modules. There are no plans for
-distributing it as a standalone library without closure compiler
-dependency.
+, because obviously author is a fan of Java and OOP, so you should better
+go find something more lightweight and *functional*.
 
-If you are choosing between [React](https://facebook.github.io/react/)
-and any other similar library, I'd strongly recommend to use React,
-because its community and ecosystem is way more important than slight
-performance advantage of kivi, so if you don't have any serious
-reasons to choose kivi over React, just use React.
-
-Kivi was created to solve one specific problem when dealing with
-updates in extremely large documents, and there is a little chance
-that you'll have the same problems in a typical SPA.
-
-### Virtual DOM
-
-Virtual DOM simplifies the way to manage DOM mutations, just describe
-how your Component should look at any point in time.
-
-- Extremely fast ([see benchmarks below](#benchmarks)).
-- Minimal number of move operations in children reconciliation using
-  [Longest Increasing Subsequence](https://en.wikipedia.org/wiki/Longest_increasing_subsequence)
-  algorithm.
-- Mounting on top of existing html (adjacent text nodes should be
-  separated by Comment nodes `<!---->` when rendered to string).
-
-### Scheduler
-
-- Batching for read and write DOM tasks.
-- Write DOM tasks sorted by their priority.
-- Microtask queue.
-- Macrotask queue.
-
-### Misc
-
-- Automatic management of data dependencies in UI components with
-  `Invalidator` objects.
-
-```js
-app.entry.d = new kivi.CDescriptor('Entry');
-app.entry.d.update = function(c) {
-  // `subscribe(d)` and `transientSubscribe(d)` are used to subscribe for
-  // `Invalidator` objects.
-  //
-  // Each time Component is invalidated, old transient subscriptions will
-  // be automatically canceled, so we just register a new one when
-  // something is changed.
-  c.transientSubscribe(c.data.dependency);
-
-  c.syncVRoot(...);
-};
-```
+The core component of this library is a *virtual dom*, invented by React
+developers, so don't expect that rendering will be fast, vanilla js
+ninjas showed that this isn't the case for *virtual dom*.
 
 ## Example
+
+Just look how much Java in this code, who would ever want to write
+javascript code in that style:
 
 ```js
 goog.provide('app');
@@ -69,6 +25,8 @@ goog.require('kivi.injectComponent');
 
 goog.scope(function() {
   var VNode = kivi.VNode;
+  var $e = VNode.createElement;
+  var $c = VNode.createComponent;
   
   // Component Descriptor is an object that stores the behavior of
   // the Component.
@@ -77,7 +35,7 @@ goog.scope(function() {
   // First generic type parameter is an input data type, and the
   // second is a state type.
   /** @const {!kivi.CDescriptor<string, null>} */
-  app.box.d = new kivi.CDescriptor('Box');
+  app.box.d = kivi.CDescriptor.create('Box');
   // Tag name of the root element for this Component. Default tag is 'div'.
   app.box.d.tag = 'span';
   
@@ -107,8 +65,8 @@ goog.scope(function() {
   /** @param {!kivi.Component<string, null>} c */
   app.main.d.update = function(c) {
     c.syncVRoot(VNode.createRoot().children([
-      VNode.createElement('span').children('Hello '),
-      VNode.createComponent(app.box.d, c.data)
+      $e('span').children('Hello '),
+      $c(app.box.d, c.data)
     ]));
   };
   
@@ -116,15 +74,3 @@ goog.scope(function() {
   kivi.injectComponent(app.main.d, 'kivi', document.body);
 });
 ```
-
-## Examples
-
-- [Hello World](https://github.com/localvoid/kivi-examples/tree/master/src/hello)
-- [Anim](https://github.com/localvoid/kivi-examples/tree/master/src/anim)
-
-## Benchmarks
-<a name="benchmarks"></a>
-
-- [dbmonster](https://localvoid.github.io/kivi-dbmonster/)
-- [uibench](https://localvoid.github.io/uibench/)
-- [vdom benchmark](https://vdom-benchmark.github.io/vdom-benchmark/)
