@@ -63,7 +63,7 @@ kivi.VNode = function(flags, tag, props) {
   /**
    * List of children nodes. If VNode is a Component, children nodes will be transferred to the Component.
    *
-   * @type {?Array<!kivi.VNode>|string}
+   * @type {?Array<!kivi.VNode>|string|boolean}
    */
   this.children_ = null;
 
@@ -124,6 +124,32 @@ kivi.VNode.createElement = function(tag) {
  */
 kivi.VNode.createSvgElement = function(tag) {
   return new kivi.VNode(kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.SVG, tag, null);
+};
+
+/**
+ * Create a [kivi.VNode] representing a [HTMLInputElement] node with text value.
+ *
+ * @param {string|!kivi.CTag=} opt_tag
+ * @returns {!kivi.VNode<?Object<string,*>>}
+ */
+kivi.VNode.createTextInput = function(opt_tag) {
+  return new kivi.VNode(
+      kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.TEXT_INPUT_ELEMENT,
+      opt_tag === void 0 ? 'input' : opt_tag,
+      null);
+};
+
+/**
+ * Create a [kivi.VNode] representing a [HTMLInputElement] node with boolean value.
+ *
+ * @param {string|!kivi.CTag=} opt_tag
+ * @returns {!kivi.VNode<?Object<string,*>>}
+ */
+kivi.VNode.createCheckedInput = function(opt_tag) {
+  return new kivi.VNode(
+      kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.CHECKED_INPUT_ELEMENT,
+      opt_tag === void 0 ? 'input' : opt_tag,
+      null);
 };
 
 /**
@@ -251,6 +277,38 @@ kivi.VNode.prototype.children = function(children) {
     }
   }
   this.children_ = children;
+  return this;
+};
+
+/**
+ * Set text value for Input Elements.
+ *
+ * @param {string} value
+ * @returns {!kivi.VNode<P>}
+ */
+kivi.VNode.prototype.value = function(value) {
+  if (kivi.DEBUG) {
+    if ((this.flags & (kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.TEXT_INPUT_ELEMENT)) === 0) {
+      throw new Error('Failed to set value on VNode: value method should be called on input elements.')
+    }
+  }
+  this.children_ = value;
+  return this;
+};
+
+/**
+ * Set checked value for Input Elements.
+ *
+ * @param {boolean} value
+ * @returns {!kivi.VNode<P>}
+ */
+kivi.VNode.prototype.checked = function(value) {
+  if (kivi.DEBUG) {
+    if ((this.flags & (kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.CHECKED_INPUT_ELEMENT)) === 0) {
+      throw new Error('Failed to set value on VNode: value method should be called on input elements.')
+    }
+  }
+  this.children_ = value;
   return this;
 };
 
@@ -405,7 +463,7 @@ kivi.VNode.prototype.render = function(context) {
     if (this.children_ !== null && typeof this.children_ !== 'string') {
       if ((this.flags & kivi.VNodeFlags.TRACK_BY_KEY) !== 0) {
         for (i = 0; i < this.children_.length; i++) {
-          if (this.children_[i].key_ === null) {
+          if (/** @type {!Array<!kivi.VNode>} */(this.children_)[i].key_ === null) {
             throw new Error('Failed to render VNode: rendering children with trackByKey requires that all' +
                 ' children have keys.');
           }
@@ -454,18 +512,27 @@ kivi.VNode.prototype.render = function(context) {
 
     var children = this.children_;
     if (children !== null) {
-      if (typeof children === 'string') {
-        ref.textContent = children;
+      if ((this.flags & kivi.VNodeFlags.INPUT_ELEMENT) === 0) {
+        if (typeof children === 'string') {
+          ref.textContent = children;
+        } else {
+          for (i = 0, il = children.length; i < il; i++) {
+            this._insertChild(children[i], null, context);
+          }
+        }
       } else {
-        for (i = 0, il = children.length; i < il; i++) {
-          this._insertChild(children[i], null, context);
+        var iref = /** @type {!HTMLInputElement} */(this.ref);
+        if ((this.flags & kivi.VNodeFlags.TEXT_INPUT_ELEMENT) !== 0) {
+          iref.value = /** @type {string} */(this.children_);
+        } else { // ((this.flags & kivi.VNodeFlags.CHECKED_INPUT_ELEMENT) !== 0)
+          iref.checked = /** @type {boolean} */(this.children_);
         }
       }
     }
   } else if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
     var c = /** @type {!kivi.Component} */(this.cref);
     c.setData(this.props_);
-    c.setChildren(this.children_);
+    c.setChildren(/** @type {?Array<!kivi.VNode>|string} */(this.children_));
     c.update();
   }
 
@@ -503,7 +570,7 @@ kivi.VNode.prototype.mount = function(node, context) {
     if (children !== null && typeof children !== 'string') {
       if ((flags & kivi.VNodeFlags.TRACK_BY_KEY) !== 0) {
         for (i = 0; i < children.length; i++) {
-          if (children[i].key_ === null) {
+          if (/** @type {!Array<!kivi.VNode>} */(children)[i].key_ === null) {
             throw new Error('Failed to mount VNode: mounting children with trackByKey requires that all' +
                             ' children have keys.');
           }
@@ -516,7 +583,7 @@ kivi.VNode.prototype.mount = function(node, context) {
   if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
     var cref = this.cref = /** @type {!kivi.CDescriptor} */(this.tag).mountComponent(context, /** @type {!Element} */(node));
     cref.setData(this.props_);
-    cref.setChildren(this.children_);
+    cref.setChildren(/** @type {?Array<!kivi.VNode>|string} */(this.children_));
     cref.update();
   } else {
     if (children !== null && typeof children !== 'string' && children.length > 0) {
@@ -536,7 +603,7 @@ kivi.VNode.prototype.mount = function(node, context) {
             throw new Error('Failed to mount VNode: cannot find matching node.');
           }
         }
-        children[i].mount(child, context);
+        /** @type {!Array<!kivi.VNode>} */(children)[i].mount(child, context);
         child = child.nextSibling;
         while (child.nodeType === 8) {
           commentNode = child;
@@ -592,7 +659,7 @@ kivi.VNode.prototype.sync = function(b, context) {
     if (b.children_ !== null && typeof b.children_ !== 'string') {
       if ((b.flags & kivi.VNodeFlags.TRACK_BY_KEY) !== 0) {
         for (var i = 0; i < b.children_.length; i++) {
-          if (b.children_[i].key_ === null) {
+          if (/** @type {!Array<!kivi.VNode>} */(b.children_)[i].key_ === null) {
             throw new Error('Failed to sync VNode: syncing children with trackByKey requires that all' +
                             ' children have keys.');
           }
@@ -633,12 +700,26 @@ kivi.VNode.prototype.sync = function(b, context) {
       }
     }
 
-    this.syncChildren(this.children_, b.children_, context);
+    if ((this.flags & kivi.VNodeFlags.INPUT_ELEMENT) === 0) {
+      this.syncChildren(/** @type {?Array<!kivi.VNode>|string} */(this.children_), /** @type {?Array<!kivi.VNode>|string} */(b.children_), context);
+    } else {
+      var iref = /** @type {!HTMLInputElement} */(ref);
+      if ((flags & kivi.VNodeFlags.TEXT_INPUT_ELEMENT) !== 0) {
+        if (iref.value !== b.children_) {
+          iref.value = /** @type {string} */(b.children_);
+        }
+      } else { // ((flags & kivi.VNodeFlags.CHECKED_INPUT_ELEMENT) !== 0)
+        if (iref.checked !== b.children_) {
+          iref.checked = /** @type {boolean} */(b.children_);
+        }
+      }
+    }
+
 
   } else if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
     component = b.cref = /** @type {!kivi.Component<*,*>} */(this.cref);
     component.setData(b.props_);
-    component.setChildren(b.children_);
+    component.setChildren(/** @type {?Array<!kivi.VNode>|string} */(b.children_));
     component.update();
   }
 
@@ -660,7 +741,7 @@ kivi.VNode.prototype.attach = function() {
     var children = this.children_;
     if (children !== null && typeof children !== 'string') {
       for (var i = 0; i < children.length; i++) {
-        children[i].attach();
+        /** @type {!Array<!kivi.VNode>} */(children)[i].attach();
       }
     }
   } else {
@@ -699,7 +780,7 @@ kivi.VNode.prototype.detach = function() {
     var children = this.children_;
     if (children !== null && typeof children !== 'string') {
       for (var i = 0; i < children.length; i++) {
-        children[i].detach();
+        /** @type {!Array<!kivi.VNode>} */(children)[i].detach();
       }
     }
   } else {
@@ -745,7 +826,7 @@ kivi.VNode.prototype.dispose = function() {
     var children = this.children_;
     if (typeof children !== 'string') {
       for (var i = 0; i < children.length; i++) {
-        children[i].dispose();
+        /** @type {!Array<!kivi.VNode>} */(children)[i].dispose();
       }
     }
   }

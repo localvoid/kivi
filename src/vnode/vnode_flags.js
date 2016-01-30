@@ -21,6 +21,12 @@ kivi.VNodeFlags = {
   TRACK_BY_KEY:                 0x00020,
   /** Owner [kivi.Component] will be responsible for managing children lifecycle. */
   MANAGED_CONTAINER:            0x00040,
+  /** [kivi.VNode] is a [HTMLInputElement] that contains text value. */
+  TEXT_INPUT_ELEMENT:           0x00100,
+  /** [kivi.VNode] is a [HTMLInputElement] that contains boolean value. */
+  CHECKED_INPUT_ELEMENT:        0x00200,
+  /** [kivi.VNode] is a [HTMLInputElement]. */
+  INPUT_ELEMENT:                0x00300,
   /**
    * [kivi.VNode] contains a Comment placeholder.
    *
