@@ -4,6 +4,7 @@ goog.provide('kivi.mountComponent');
 goog.provide('kivi.nextFrame');
 goog.provide('kivi.scheduleMacrotask');
 goog.provide('kivi.scheduleMicrotask');
+goog.provide('kivi.start');
 goog.require('kivi.Component');
 goog.require('kivi.scheduler.instance');
 
@@ -76,4 +77,14 @@ kivi.scheduleMicrotask = function(cb, opt_context) {
  */
 kivi.scheduleMacrotask = function(cb, opt_context) {
   kivi.scheduler.instance.scheduleMacrotask(cb, opt_context);
+};
+
+/**
+ * Shortcut for `kivi.scheduler.instance.start`
+ *
+ * @param {!function()} cb
+ * @param {*=} opt_context
+ */
+kivi.start = function(cb, opt_context) {
+  kivi.scheduler.instance.start(cb, opt_context);
 };

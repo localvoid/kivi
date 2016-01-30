@@ -362,3 +362,22 @@ kivi.scheduler.Scheduler.prototype.scheduleMacrotask = function(cb, opt_context)
     this._macrotasks.addTaskWithContext(cb, opt_context);
   }
 };
+
+/**
+ * Start.
+ *
+ * @param {!function()} cb
+ * @param {*=} opt_context
+ */
+kivi.scheduler.Scheduler.prototype.start = function(cb, opt_context) {
+  this.flags |= kivi.scheduler.SchedulerFlags.RUNNING;
+
+  if (opt_context === void 0) {
+    cb();
+  } else {
+    cb.call(opt_context);
+  }
+
+  this.clock++;
+  this.flags &= ~kivi.scheduler.SchedulerFlags.RUNNING;
+};

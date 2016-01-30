@@ -22,6 +22,7 @@ goog.provide('app.main');
 goog.require('kivi.CDescriptor');
 goog.require('kivi.VNode');
 goog.require('kivi.injectComponent');
+goog.require('kivi.start');
 
 goog.scope(function() {
   var VNode = kivi.VNode;
@@ -70,7 +71,11 @@ goog.scope(function() {
     ]));
   };
   
-  // Instantiate and inject component into document body.
-  kivi.injectComponent(app.main.d, 'kivi', document.body);
+  // start function is necessary, because we need to advance scheduler
+  // internal clock after DOM modifications that involve kivi Components.
+  kivi.start(function() {
+    // Instantiate and inject component into document body.
+    kivi.injectComponent(app.main.d, 'kivi', document.body);
+  });
 });
 ```
