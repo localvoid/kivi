@@ -463,6 +463,9 @@ kivi.Component.prototype.attach = function() {
   }
 };
 
+/**
+ * Attached
+ */
 kivi.Component.prototype.attached = function() {
   if (kivi.DEBUG) {
     if ((this.flags & kivi.ComponentFlags.ATTACHED) !== 0) {
@@ -495,6 +498,9 @@ kivi.Component.prototype.detach = function() {
   this.detached();
 };
 
+/**
+ * Detached
+ */
 kivi.Component.prototype.detached = function() {
   if (kivi.DEBUG) {
     if ((this.flags & kivi.ComponentFlags.ATTACHED) === 0) {
