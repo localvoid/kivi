@@ -503,6 +503,7 @@ kivi.VNode.prototype.render = function(context) {
     }
 
     if (this.style_ !== null) {
+      // perf optimization for webkit/blink, probably will need to revisit this in the future.
       if ((flags & kivi.VNodeFlags.SVG) === 0) {
         ref.style.cssText = this.style_;
       } else {
@@ -518,6 +519,7 @@ kivi.VNode.prototype.render = function(context) {
                                 ` "${className}" with "${this.classes_}".`)
         }
       }
+      // perf optimization for webkit/blink, probably will need to revisit this in the future.
       if ((flags & kivi.VNodeFlags.SVG) === 0) {
         ref.className = this.classes_;
       } else {
@@ -549,6 +551,7 @@ kivi.VNode.prototype.render = function(context) {
     ref = /** @type {!Element} */(this.ref);
 
     if (this.classes_ !== null) {
+      // perf optimization for webkit/blink, probably will need to revisit this in the future.
       if ((flags & kivi.VNodeFlags.SVG) === 0) {
         ref.className = this.classes_;
       } else {
@@ -712,6 +715,7 @@ kivi.VNode.prototype.sync = function(b, context) {
     }
     if (this.style_ !== b.style_) {
       var style = b.style_ === null ? '' : b.style_;
+      // perf optimization for webkit/blink, probably will need to revisit this in the future.
       if ((flags & kivi.VNodeFlags.SVG) === 0) {
         ref.style.cssText = style;
       } else {
@@ -721,6 +725,7 @@ kivi.VNode.prototype.sync = function(b, context) {
 
     if (this.classes_ !== b.classes_) {
       className = (b.classes_ === null) ? '' : b.classes_;
+      // perf optimization for webkit/blink, probably will need to revisit this in the future.
       if ((flags & kivi.VNodeFlags.SVG) === 0) {
         ref.className = className;
       } else {
@@ -747,6 +752,7 @@ kivi.VNode.prototype.sync = function(b, context) {
   } else if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
     if (this.classes_ !== b.classes_) {
       className = (b.classes_ === null) ? '' : b.classes_;
+      // perf optimization for webkit/blink, probably will need to revisit this in the future.
       if ((flags & kivi.VNodeFlags.SVG) === 0) {
         ref.className = className;
       } else {
