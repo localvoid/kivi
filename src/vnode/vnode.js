@@ -256,8 +256,8 @@ kivi.VNode.prototype.style = function(style) {
  */
 kivi.VNode.prototype.classes = function(classes) {
   if (kivi.DEBUG) {
-    if ((this.flags & (kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.ROOT)) === 0) {
-      throw new Error('Failed to set classes on VNode: classes method should be called on element or component root nodes only.')
+    if ((this.flags & (kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.ROOT | kivi.VNodeFlags.COMPONENT)) === 0) {
+      throw new Error('Failed to set classes on VNode: classes method should be called on element, component or component root nodes only.')
     }
   }
   this.classes_ = classes;
@@ -503,11 +503,26 @@ kivi.VNode.prototype.render = function(context) {
     }
 
     if (this.style_ !== null) {
-      ref.style.cssText = this.style_;
+      if ((flags & kivi.VNodeFlags.SVG) === 0) {
+        ref.style.cssText = this.style_;
+      } else {
+        ref.setAttribute('style', this.style_)
+      }
     }
 
     if (this.classes_ !== null) {
-      ref.className = this.classes_;
+      if (kivi.DEBUG) {
+        var className = ref.getAttribute('class');
+        if ((flags & kivi.VNodeFlags.ROOT) !== 0 && className) {
+          kivi.debug.printError(`VNode render: Component root node overwrited className property` +
+                                ` "${className}" with "${this.classes_}".`)
+        }
+      }
+      if ((flags & kivi.VNodeFlags.SVG) === 0) {
+        ref.className = this.classes_;
+      } else {
+        ref.setAttribute('class', this.classes_)
+      }
     }
 
     var children = this.children_;
@@ -531,6 +546,16 @@ kivi.VNode.prototype.render = function(context) {
     }
   } else if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
     var c = /** @type {!kivi.Component} */(this.cref);
+    ref = /** @type {!Element} */(this.ref);
+
+    if (this.classes_ !== null) {
+      if ((flags & kivi.VNodeFlags.SVG) === 0) {
+        ref.className = this.classes_;
+      } else {
+        ref.setAttribute('class', this.classes_)
+      }
+    }
+
     c.setData(this.props_);
     c.setChildren(/** @type {?Array<!kivi.VNode>|string} */(this.children_));
     c.update();
@@ -642,6 +667,7 @@ kivi.VNode.prototype.sync = function(b, context) {
   var flags = this.flags;
   /** @type {!kivi.Component} */
   var component;
+  var className;
 
   if (kivi.DEBUG) {
     if (this.flags !== b.flags) {
@@ -685,18 +711,20 @@ kivi.VNode.prototype.sync = function(b, context) {
       kivi.sync.attrs(this.attrs_, b.attrs_, ref);
     }
     if (this.style_ !== b.style_) {
-      if (b.style_ === null) {
-        ref.style.cssText = '';
+      var style = b.style_ === null ? '' : b.style_;
+      if ((flags & kivi.VNodeFlags.SVG) === 0) {
+        ref.style.cssText = style;
       } else {
-        ref.style.cssText = b.style_;
+        ref.setAttribute('style', style);
       }
     }
 
     if (this.classes_ !== b.classes_) {
-      if (b.classes_ === null) {
-        ref.className = '';
+      className = (b.classes_ === null) ? '' : b.classes_;
+      if ((flags & kivi.VNodeFlags.SVG) === 0) {
+        ref.className = className;
       } else {
-        ref.className = b.classes_;
+        ref.setAttribute('class', className);
       }
     }
 
@@ -717,6 +745,15 @@ kivi.VNode.prototype.sync = function(b, context) {
 
 
   } else if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
+    if (this.classes_ !== b.classes_) {
+      className = (b.classes_ === null) ? '' : b.classes_;
+      if ((flags & kivi.VNodeFlags.SVG) === 0) {
+        ref.className = className;
+      } else {
+        ref.setAttribute('class', className);
+      }
+    }
+
     component = b.cref = /** @type {!kivi.Component<*,*>} */(this.cref);
     component.setData(b.props_);
     component.setChildren(/** @type {?Array<!kivi.VNode>|string} */(b.children_));
