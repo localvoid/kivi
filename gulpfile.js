@@ -9,12 +9,12 @@ var CLOSURE_OPTS = {
   define: [
     'kivi.DEBUG=true'
   ],
-  closure_entry_point: 'tests',
+  dependency_mode: 'STRICT',
+  entry_point: 'goog:tests',
   compilation_level: 'SIMPLE_OPTIMIZATIONS',
   formatting: 'PRETTY_PRINT',
   language_in: 'ECMASCRIPT6_STRICT',
   language_out: 'ECMASCRIPT5_STRICT',
-  only_closure_dependencies: true,
   externs: ['./node_modules/closure-externs-mocha/mocha.js'],
   output_wrapper: '(function(){%output%}).call();',
   summary_detail_level: 3
