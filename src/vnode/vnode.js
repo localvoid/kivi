@@ -28,7 +28,7 @@ kivi.VNode = function(flags, tag, props) {
   /**
    * Key that should be unique among its siblings.
    *
-   * @type {number|string|null}
+   * @type {*}
    */
   this.key_ = null;
 
@@ -176,7 +176,7 @@ kivi.VNode.createRoot = function() {
 /**
  * Set key.
  *
- * @param {null|number|string} key
+ * @param {*} key
  * @returns {!kivi.VNode<P>}
  */
 kivi.VNode.prototype.key = function(key) {
@@ -1213,7 +1213,7 @@ kivi.VNode.prototype._syncChildrenTrackingByKeys = function(a, b, context) {
   var bEndNode = b[bEnd];
   /** @type {number} */
   var i;
-  /** @type {number} */
+  /** @type {number|undefined} */
   var j;
   var stop = false;
   var nextPos;
@@ -1377,17 +1377,17 @@ kivi.VNode.prototype._syncChildrenTrackingByKeys = function(a, b, context) {
         }
       }
     } else {
-      /** @type {!Object<(string|number|null),number>} */
-      var keyIndex = {};
+      /** @type {!Map<*,number>} */
+      var keyIndex = new Map();
 
       for (i = bStart; i <= bEnd; i++) {
         node = b[i];
-        keyIndex[node.key_] = i;
+        keyIndex.set(node.key_, i);
       }
 
       for (i = aStart; i <= aEnd; i++) {
         aNode = a[i];
-        j = keyIndex[aNode.key_];
+        j = keyIndex.get(aNode.key_);
 
         if (j !== void 0) {
           bNode = b[j];
