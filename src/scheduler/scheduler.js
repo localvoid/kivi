@@ -110,6 +110,8 @@ kivi.scheduler.Scheduler = function() {
    */
   this.clock = 1;
 
+  this.time = 0;
+
   /** @private {!kivi.scheduler._SchedulerTaskList} */
   this._microtasks = new kivi.scheduler._SchedulerTaskList();
 
@@ -134,6 +136,7 @@ kivi.scheduler.Scheduler = function() {
   /** @private {!kivi.scheduler.MutationObserver} */
   this._microtaskScheduler = new kivi.scheduler.MutationObserver(function() {
     self.flags |= kivi.scheduler.SchedulerFlags.RUNNING;
+    self.time = Date.now();
 
     var tasks = self._microtasks;
     while (!tasks.isEmpty()) {
@@ -150,6 +153,7 @@ kivi.scheduler.Scheduler = function() {
   this._macrotaskScheduler = new kivi.scheduler.PostMessage(function() {
     self.flags &= ~kivi.scheduler.SchedulerFlags.MACROTASK_PENDING;
     self.flags |= kivi.scheduler.SchedulerFlags.RUNNING;
+    self.time = Date.now();
 
     var tasks = self._macrotasks;
     if (!tasks.isEmpty()) {
@@ -172,6 +176,7 @@ kivi.scheduler.Scheduler = function() {
 
     self.flags &= ~kivi.scheduler.SchedulerFlags.FRAMETASK_PENDING;
     self.flags |= kivi.scheduler.SchedulerFlags.RUNNING;
+    self.time = Date.now();
 
     frame = self._nextFrame;
     self._nextFrame = self._currentFrame;
@@ -371,6 +376,7 @@ kivi.scheduler.Scheduler.prototype.scheduleMacrotask = function(cb, opt_context)
  */
 kivi.scheduler.Scheduler.prototype.start = function(cb, opt_context) {
   this.flags |= kivi.scheduler.SchedulerFlags.RUNNING;
+  self.time = Date.now();
 
   if (opt_context === void 0) {
     cb();
