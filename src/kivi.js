@@ -1,7 +1,10 @@
 /**
  * kivi - library for building web UIs.
+ *
+ * ATTENTION: Be careful when reading the sources, you can experience butthurt
+ * because of global state or something else that everyone preaches not to do
+ * in software development.
  */
-
 goog.provide('kivi');
 
 /**
@@ -18,6 +21,12 @@ goog.define('kivi.DEBUG', true);
  * works, and clean up internal state when component is recycled.
  */
 goog.define('kivi.ENABLE_COMPONENT_RECYCLING', false);
+
+/**
+ * @define {boolean} ENABLE_DISPATCHER_LOGGING enable signal logging in
+ * dispatcher.
+ */
+goog.define('kivi.ENABLE_DISPATCHER_LOGGING', false);
 
 if (kivi.DEBUG) {
   console.info('kivi debug mode: on');

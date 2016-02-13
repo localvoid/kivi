@@ -455,11 +455,7 @@ kivi.Component.prototype.attach = function() {
   this.attached();
   var root = this.root;
   if (root !== null) {
-    if (root.constructor === kivi.VNode) {
-      /** @type {!kivi.VNode} */(root).attach();
-    } else if (root.constructor === kivi.Component) {
-      /** @type {!kivi.Component} */(root).attach();
-    }
+    root.attach();
   }
 };
 
@@ -489,11 +485,7 @@ kivi.Component.prototype.attached = function() {
 kivi.Component.prototype.detach = function() {
   var root = this.root;
   if (root !== null) {
-    if (root.constructor === kivi.VNode) {
-      /** @type {!kivi.VNode} */(root).detach();
-    } else if (root.constructor === kivi.Component) {
-      /** @type {!kivi.Component} */(root).detach();
-    }
+    root.detach();
   }
   this.detached();
 };
@@ -535,12 +527,7 @@ kivi.Component.prototype.dispose = function() {
 
     var root = this.root;
     if (root !== null) {
-      // monomorphic code
-      if (root.constructor === kivi.VNode) {
-        /** @type {!kivi.VNode} */(root).dispose();
-      } else if (root.constructor === kivi.Component) {
-        /** @type {!kivi.Component} */(root).dispose();
-      }
+      root.dispose();
     }
 
     this.detached();

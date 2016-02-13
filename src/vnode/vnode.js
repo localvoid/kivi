@@ -734,7 +734,9 @@ kivi.VNode.prototype.sync = function(b, context) {
     }
 
     if ((this.flags & kivi.VNodeFlags.INPUT_ELEMENT) === 0) {
-      this.syncChildren(/** @type {?Array<!kivi.VNode>|string} */(this.children_), /** @type {?Array<!kivi.VNode>|string} */(b.children_), context);
+      if (this.children_ !== b.children_) {
+        this.syncChildren(/** @type {?Array<!kivi.VNode>|string} */(this.children_), /** @type {?Array<!kivi.VNode>|string} */(b.children_), context);
+      }
     } else {
       var iref = /** @type {!HTMLInputElement} */(ref);
       if ((flags & kivi.VNodeFlags.TEXT_INPUT_ELEMENT) !== 0) {
@@ -1000,13 +1002,11 @@ kivi.VNode.prototype.syncChildren = function(a, b, context) {
     if (b === null) {
       this.ref.removeChild(this.ref.firstChild);
     } else if (typeof b === 'string') {
-      if (a !== b) {
-        var c = this.ref.firstChild;
-        if (c) {
-          c.nodeValue = b;
-        } else {
-          this.ref.textContent = b;
-        }
+      var c = this.ref.firstChild;
+      if (c) {
+        c.nodeValue = b;
+      } else {
+        this.ref.textContent = b;
       }
     } else {
       this.ref.removeChild(this.ref.firstChild);
