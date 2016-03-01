@@ -5,62 +5,27 @@ goog.require('kivi');
 goog.require('kivi.HtmlNamespace');
 
 /**
- * Namespaced Attribute should be set with setAttributeNS call.
+ * Get attribute namespace
  *
- * @typedef {{name: string, namespace: kivi.HtmlNamespace}}
- * @protected
+ * @param {string} key
+ * @returns {string}
+ * @package
  */
-kivi.sync._NamespacedAttr;
-
-/**
- * Namespaced Attributes.
- *
- * Namespaced attribute names should start with '$' symbol, so we can easily recognize them from simple
- * attributes.
- *
- * @const {!Object<string, !kivi.sync._NamespacedAttr>}
- * @protected
- */
-kivi.sync._NamespacedAttrs = {
-  '$xlink:actuate': {
-    name: 'xlink:actuate',
-    namespace: kivi.HtmlNamespace.XLINK
-  },
-  '$xlink:arcrole': {
-    name: 'xlink:arcrole',
-    namespace: kivi.HtmlNamespace.XLINK
-  },
-  '$xlink:href': {
-    name: 'xlink:href',
-    namespace: kivi.HtmlNamespace.XLINK
-  },
-  '$xlink:role': {
-    name: 'xlink:role',
-    namespace: kivi.HtmlNamespace.XLINK
-  },
-  '$xlink:show': {
-    name: 'xlink:show',
-    namespace: kivi.HtmlNamespace.XLINK
-  },
-  '$xlink:title': {
-    name: 'xlink:title',
-    namespace: kivi.HtmlNamespace.XLINK
-  },
-  '$xlink:type': {
-    name: 'xlink:type',
-    namespace: kivi.HtmlNamespace.XLINK
-  },
-  '$xml:base': {
-    name: 'xml:base',
-    namespace: kivi.HtmlNamespace.XML
-  },
-  '$xml:lang': {
-    name: 'xml:lang',
-    namespace: kivi.HtmlNamespace.XML
-  },
-  '$xml:space': {
-    name: 'xml:space',
-    namespace: kivi.HtmlNamespace.XML
+kivi.sync._getAttrNamespace = function(key) {
+  if (kivi.DEBUG) {
+    if (key.substring(1, 4) === 'xml') {
+      return kivi.HtmlNamespace.XML;
+    } else if (key.substring(1, 6) === 'xlink') {
+      return kivi.HtmlNamespace.XLINK;
+    } else {
+      throw new Error('Invalid attribute namespace: ' + key);
+    }
+  } else {
+    var p = key.substring(1, 3);
+    if (p === 'xm') {
+      return kivi.HtmlNamespace.XML;
+    }
+    return kivi.HtmlNamespace.XLINK;
   }
 };
 
@@ -77,13 +42,7 @@ kivi.sync.setAttr = function(node, key, value) {
   if (key[0] !== '$') {
     node.setAttribute(key, value);
   } else {
-    var details = kivi.sync._NamespacedAttrs[key];
-    if (kivi.DEBUG) {
-      if (details === void 0) {
-        throw new Error('Invalid namespaced attribute $' + key);
-      }
-    }
-    node.setAttributeNS(details.namespace, details.name, value);
+    node.setAttributeNS(kivi.sync._getAttrNamespace(key), key.substring(1), value);
   }
 };
 
@@ -99,13 +58,7 @@ kivi.sync.removeAttr = function(node, key) {
   if (key[0] !== '$') {
     node.removeAttribute(key);
   } else {
-    var details = kivi.sync._NamespacedAttrs[key];
-    if (kivi.DEBUG) {
-      if (details === void 0) {
-        throw new Error('Invalid namespaced attribute $' + key);
-      }
-    }
-    node.removeAttributeNS(details.namespace, details.name);
+    node.removeAttributeNS(kivi.sync._getAttrNamespace(key), key.substring(1));
   }
 };
 
