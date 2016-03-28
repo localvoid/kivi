@@ -21,11 +21,7 @@ kivi.sync._getAttrNamespace = function(key) {
       throw new Error('Invalid attribute namespace: ' + key);
     }
   } else {
-    var p = key.substring(1, 3);
-    if (p === 'xm') {
-      return kivi.HtmlNamespace.XML;
-    }
-    return kivi.HtmlNamespace.XLINK;
+    return (key[2] == 'm') ? kivi.HtmlNamespace.XML : kivi.HtmlNamespace.XLINK;
   }
 };
 
