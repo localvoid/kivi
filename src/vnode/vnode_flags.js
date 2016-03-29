@@ -32,7 +32,11 @@ kivi.VNodeFlags = {
    *
    * Comment placeholder can be used to delay element appearance in animations.
    */
-  COMMENT_PLACEHOLDER:          0x04000
+  COMMENT_PLACEHOLDER:          0x04000,
+  /** [kivi.VNode] has dynamic shape for attrs object */
+  DYNAMIC_SHAPE_ATTRS:          0x10000,
+  /** [kivi.VNode] has dynamic shape for props object */
+  DYNAMIC_SHAPE_PROPS:          0x20000
 };
 
 /**

@@ -1,13 +1,39 @@
-goog.provide('kivi.sync.props');
+goog.provide('kivi.sync.dynamicShapeProps');
+goog.provide('kivi.sync.staticShapeProps');
 
 /**
- * Synchronize properties.
+ * Synchronize properties with static shape.
  *
  * @param {?Object<string, *>} a Old properties.
  * @param {?Object<string, *>} b New properties.
  * @param {!Element} node
  */
-kivi.sync.props = function(a, b, node) {
+kivi.sync.staticShapeProps = function(a, b, node) {
+  var i, il;
+  var key;
+  var keys;
+  var aValue;
+  var bValue;
+
+  keys = Object.keys(a);
+  for (i = 0, il = keys.length; i < il; i++) {
+    key = keys[i];
+    aValue = a[key];
+    bValue = b[key];
+    if (aValue !== bValue) {
+      node[key] = bValue;
+    }
+  }
+};
+
+/**
+ * Synchronize properties with dynamic shape.
+ *
+ * @param {?Object<string, *>} a Old properties.
+ * @param {?Object<string, *>} b New properties.
+ * @param {!Element} node
+ */
+kivi.sync.dynamicShapeProps = function(a, b, node) {
   var i, il;
   var key;
   var keys;

@@ -72,7 +72,7 @@ describe('render', function() {
   it('should create div with 1 attribute', function() {
     var f = document.createDocumentFragment();
     var a = VNode.createElement('div');
-    a.attrs({
+    a.dynamicShapeAttrs({
       a: '1'
     });
     injectVNode(f, a, null);
@@ -82,7 +82,7 @@ describe('render', function() {
 
   it('should create div with 2 attributes', function() {
     var f = document.createDocumentFragment();
-    var a = VNode.createElement('div').attrs({
+    var a = VNode.createElement('div').dynamicShapeAttrs({
       a: '1',
       b: '2'
     });
@@ -145,8 +145,8 @@ describe('update attrs', function() {
 
   it('null => {}', function() {
     var f = document.createDocumentFragment();
-    var a = VNode.createElement('div');
-    var b = VNode.createElement('div').attrs({});
+    var a = VNode.createElement('div').dynamicShapeAttrs(null);
+    var b = VNode.createElement('div').dynamicShapeAttrs({});
     injectVNode(f, a, null);
     a.sync(b, null);
     assert.isFalse(f.firstChild.hasAttributes());
@@ -154,8 +154,8 @@ describe('update attrs', function() {
 
   it('{} => null', function() {
     var f = document.createDocumentFragment();
-    var a = VNode.createElement('div').attrs({});
-    var b = VNode.createElement('div');
+    var a = VNode.createElement('div').dynamicShapeAttrs({});
+    var b = VNode.createElement('div').dynamicShapeAttrs(null);
     injectVNode(f, a, null);
     a.sync(b, null);
     assert.isFalse(f.firstChild.hasAttributes());
@@ -163,8 +163,8 @@ describe('update attrs', function() {
 
   it('{} => {}', function() {
     var f = document.createDocumentFragment();
-    var a = VNode.createElement('div').attrs({});
-    var b = VNode.createElement('div').attrs({});
+    var a = VNode.createElement('div').dynamicShapeAttrs({});
+    var b = VNode.createElement('div').dynamicShapeAttrs({});
     injectVNode(f, a, null);
     a.sync(b, null);
     assert.isFalse(f.firstChild.hasAttributes());
@@ -172,8 +172,8 @@ describe('update attrs', function() {
 
   it('null => {a: 1}', function() {
     var f = document.createDocumentFragment();
-    var a = VNode.createElement('div');
-    var b = VNode.createElement('div').attrs({a: '1'});
+    var a = VNode.createElement('div').dynamicShapeAttrs(null);
+    var b = VNode.createElement('div').dynamicShapeAttrs({a: '1'});
     injectVNode(f, a, null);
     a.sync(b, null);
     assert.isTrue(f.firstChild.hasAttributes());
@@ -182,8 +182,8 @@ describe('update attrs', function() {
 
   it('{} => {a: 1}', function() {
     var f = document.createDocumentFragment();
-    var a = VNode.createElement('div').attrs({});
-    var b = VNode.createElement('div').attrs({a: '1'});
+    var a = VNode.createElement('div').dynamicShapeAttrs({});
+    var b = VNode.createElement('div').dynamicShapeAttrs({a: '1'});
     injectVNode(f, a, null);
     a.sync(b, null);
     assert.isTrue(f.firstChild.hasAttributes());
@@ -192,8 +192,8 @@ describe('update attrs', function() {
 
   it('{} => {a: 1, b: 2}', function() {
     var f = document.createDocumentFragment();
-    var a = VNode.createElement('div').attrs({});
-    var b = VNode.createElement('div').attrs({a: '1', b: '2'});
+    var a = VNode.createElement('div').dynamicShapeAttrs({});
+    var b = VNode.createElement('div').dynamicShapeAttrs({a: '1', b: '2'});
     injectVNode(f, a, null);
     a.sync(b, null);
     assert.isTrue(f.firstChild.hasAttributes());
@@ -203,8 +203,8 @@ describe('update attrs', function() {
 
   it('{} => {a: 1, b: 2, c: 3}', function() {
     var f = document.createDocumentFragment();
-    var a = VNode.createElement('div').attrs({});
-    var b = VNode.createElement('div').attrs({a: '1', b: '2', c: '3'});
+    var a = VNode.createElement('div').dynamicShapeAttrs({});
+    var b = VNode.createElement('div').dynamicShapeAttrs({a: '1', b: '2', c: '3'});
     injectVNode(f, a, null);
     a.sync(b, null);
     assert.isTrue(f.firstChild.hasAttributes());
@@ -215,8 +215,8 @@ describe('update attrs', function() {
 
   it('{a: 1} => null', function() {
     var f = document.createDocumentFragment();
-    var a = VNode.createElement('div').attrs({a: '1'});
-    var b = VNode.createElement('div');
+    var a = VNode.createElement('div').dynamicShapeAttrs({a: '1'});
+    var b = VNode.createElement('div').dynamicShapeAttrs(null);
     injectVNode(f, a, null);
     a.sync(b, null);
     assert.isFalse(f.firstChild.hasAttributes());
@@ -224,8 +224,8 @@ describe('update attrs', function() {
 
   it('{a: 1} => {}', function() {
     var f = document.createDocumentFragment();
-    var a = VNode.createElement('div').attrs({a: '1'});
-    var b = VNode.createElement('div').attrs({});
+    var a = VNode.createElement('div').dynamicShapeAttrs({a: '1'});
+    var b = VNode.createElement('div').dynamicShapeAttrs({});
     injectVNode(f, a, null);
     a.sync(b, null);
     assert.isFalse(f.firstChild.hasAttributes());
@@ -233,8 +233,8 @@ describe('update attrs', function() {
 
   it('{a: 1, b: 2} => {}', function() {
     var f = document.createDocumentFragment();
-    var a = VNode.createElement('div').attrs({a: '1', b: '2'});
-    var b = VNode.createElement('div').attrs({});
+    var a = VNode.createElement('div').dynamicShapeAttrs({a: '1', b: '2'});
+    var b = VNode.createElement('div').dynamicShapeAttrs({});
     injectVNode(f, a, null);
     a.sync(b, null);
     assert.isFalse(f.firstChild.hasAttributes());
@@ -242,8 +242,8 @@ describe('update attrs', function() {
 
   it('{a: 1} => {b: 2}', function() {
     var f = document.createDocumentFragment();
-    var a = VNode.createElement('div').attrs({a: '1'});
-    var b = VNode.createElement('div').attrs({b: '2'});
+    var a = VNode.createElement('div').dynamicShapeAttrs({a: '1'});
+    var b = VNode.createElement('div').dynamicShapeAttrs({b: '2'});
     injectVNode(f, a, null);
     a.sync(b, null);
     assert.isTrue(f.firstChild.hasAttributes());
@@ -253,8 +253,8 @@ describe('update attrs', function() {
 
   it('{a: 1, b: 2} => {c: 3: d: 4}', function() {
     var f = document.createDocumentFragment();
-    var a = VNode.createElement('div').attrs({a: '1', b: '2'});
-    var b = VNode.createElement('div').attrs({c: '3', d: '4'});
+    var a = VNode.createElement('div').dynamicShapeAttrs({a: '1', b: '2'});
+    var b = VNode.createElement('div').dynamicShapeAttrs({c: '3', d: '4'});
     injectVNode(f, a, null);
     a.sync(b, null);
     assert.isTrue(f.firstChild.hasAttributes());
@@ -266,8 +266,8 @@ describe('update attrs', function() {
 
   it('{a: 1} => {a: 10}', function() {
     var f = document.createDocumentFragment();
-    var a = VNode.createElement('div').attrs({a: '1'});
-    var b = VNode.createElement('div').attrs({a: '10'});
+    var a = VNode.createElement('div').dynamicShapeAttrs({a: '1'});
+    var b = VNode.createElement('div').dynamicShapeAttrs({a: '10'});
     injectVNode(f, a, null);
     a.sync(b, null);
     assert.isTrue(f.firstChild.hasAttributes());
@@ -276,8 +276,8 @@ describe('update attrs', function() {
 
   it('{a: 1, b: 2} => {a: 10, b: 20}', function() {
     var f = document.createDocumentFragment();
-    var a = VNode.createElement('div').attrs({a: '1', b: '2'});
-    var b = VNode.createElement('div').attrs({a: '10', b: '20'});
+    var a = VNode.createElement('div').dynamicShapeAttrs({a: '1', b: '2'});
+    var b = VNode.createElement('div').dynamicShapeAttrs({a: '10', b: '20'});
     injectVNode(f, a, null);
     a.sync(b, null);
     assert.isTrue(f.firstChild.hasAttributes());

@@ -6,8 +6,10 @@ goog.require('kivi.HtmlNamespace');
 goog.require('kivi.VNodeDebugFlags');
 goog.require('kivi.VNodeFlags');
 goog.require('kivi.debug.printError');
-goog.require('kivi.sync.attrs');
-goog.require('kivi.sync.props');
+goog.require('kivi.sync.dynamicShapeAttrs');
+goog.require('kivi.sync.dynamicShapeProps');
+goog.require('kivi.sync.staticShapeAttrs');
+goog.require('kivi.sync.staticShapeProps');
 goog.require('kivi.sync.setAttr');
 
 /**
@@ -201,6 +203,23 @@ kivi.VNode.prototype.props = function(props) {
 };
 
 /**
+ * Set props with dynamic shape.
+ *
+ * @param {*} props
+ * @returns {!kivi.VNode<P>}
+ */
+kivi.VNode.prototype.dynamicProps = function(props) {
+  if (kivi.DEBUG) {
+    if ((this.flags & (kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.ROOT)) === 0) {
+      throw new Error('Failed to set props on VNode: props method should be called on element or component root nodes only.')
+    }
+  }
+  this.flags |= kivi.VNodeFlags.DYNAMIC_SHAPE_PROPS;
+  this.props_ = props;
+  return this;
+};
+
+/**
  * Set data.
  *
  * @param {*} data
@@ -228,6 +247,23 @@ kivi.VNode.prototype.attrs = function(attrs) {
       throw new Error('Failed to set attrs on VNode: attrs method should be called on element or component root nodes only.')
     }
   }
+  this.attrs_ = attrs;
+  return this;
+};
+
+/**
+ * Set attrs with dynamic shape.
+ *
+ * @param {?Object<string,string>} attrs
+ * @returns {!kivi.VNode<P>}
+ */
+kivi.VNode.prototype.dynamicShapeAttrs = function(attrs) {
+  if (kivi.DEBUG) {
+    if ((this.flags & (kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.ROOT)) === 0) {
+      throw new Error('Failed to set attrs on VNode: dynamicAttrs method should be called on element or component root nodes only.')
+    }
+  }
+  this.flags |= kivi.VNodeFlags.DYNAMIC_SHAPE_ATTRS;
   this.attrs_ = attrs;
   return this;
 };
@@ -705,13 +741,24 @@ kivi.VNode.prototype.sync = function(b, context) {
     }
   } else if ((flags & (kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.ROOT)) !== 0) {
     if (this.props_ !== b.props_) {
-      kivi.sync.props(
-          /** @type {!Object<string, *>} */(this.props_),
-          /** @type {!Object<string, *>} */(b.props_),
-          ref);
+      if ((this.flags & kivi.VNodeFlags.DYNAMIC_SHAPE_PROPS) === 0) {
+        kivi.sync.staticShapeProps(
+            /** @type {!Object<string, *>} */(this.props_),
+            /** @type {!Object<string, *>} */(b.props_),
+            ref);
+      } else {
+        kivi.sync.dynamicShapeProps(
+            /** @type {!Object<string, *>} */(this.props_),
+            /** @type {!Object<string, *>} */(b.props_),
+            ref);
+      }
     }
     if (this.attrs_ !== b.attrs_) {
-      kivi.sync.attrs(this.attrs_, b.attrs_, ref);
+      if ((this.flags & kivi.VNodeFlags.DYNAMIC_SHAPE_ATTRS) === 0) {
+        kivi.sync.staticShapeAttrs(this.attrs_, b.attrs_, ref);
+      } else {
+        kivi.sync.dynamicShapeAttrs(this.attrs_, b.attrs_, ref);
+      }
     }
     if (this.style_ !== b.style_) {
       var style = b.style_ === null ? '' : b.style_;

@@ -1,6 +1,7 @@
-goog.provide('kivi.sync.attrs');
+goog.provide('kivi.sync.dynamicShapeAttrs');
 goog.provide('kivi.sync.removeAttr');
 goog.provide('kivi.sync.setAttr');
+goog.provide('kivi.sync.staticShapeAttrs');
 goog.require('kivi');
 goog.require('kivi.HtmlNamespace');
 
@@ -59,13 +60,38 @@ kivi.sync.removeAttr = function(node, key) {
 };
 
 /**
- * Synchronize attributes.
+ * Synchronize attributes with static shape.
  *
  * @param {?Object<string, string>} a Old attributes.
  * @param {?Object<string, string>} b New attributes.
  * @param {!Element} node
  */
-kivi.sync.attrs = function(a, b, node) {
+kivi.sync.staticShapeAttrs = function(a, b, node) {
+  var i, il;
+  var key;
+  var keys;
+  var aValue;
+  var bValue;
+
+  keys = Object.keys(a);
+  for (i = 0, il = keys.length; i < il; i++) {
+    key = keys[i];
+    aValue = a[key];
+    bValue = b[key];
+    if (aValue !== bValue) {
+      kivi.sync.setAttr(node, key, bValue);
+    }
+  }
+};
+
+/**
+ * Synchronize attributes with dynamic shape.
+ *
+ * @param {?Object<string, string>} a Old attributes.
+ * @param {?Object<string, string>} b New attributes.
+ * @param {!Element} node
+ */
+kivi.sync.dynamicShapeAttrs = function(a, b, node) {
   var i, il;
   var key;
   var keys;
