@@ -15,13 +15,34 @@ kivi.sync.staticShapeProps = function(a, b, node) {
   var aValue;
   var bValue;
 
+  if (kivi.DEBUG) {
+    if (a === null || b === null) {
+      throw new Error("Failed to update props with static shape: props object have dynamic shape.");
+    }
+  }
+
   keys = Object.keys(a);
   for (i = 0, il = keys.length; i < il; i++) {
     key = keys[i];
+    if (kivi.DEBUG) {
+      if (!b.hasOwnProperty(key)) {
+        throw new Error("Failed to update props with static shape: props object have dynamic shape.");
+      }
+    }
+
     aValue = a[key];
     bValue = b[key];
     if (aValue !== bValue) {
       node[key] = bValue;
+    }
+  }
+  if (kivi.DEBUG) {
+    keys = Object.keys(b);
+    for (i = 0, il = keys.length; i < il; i++) {
+      key = keys[i];
+      if (!a.hasOwnProperty(key)) {
+        throw new Error("Failed to update props with static shape: props object have dynamic shape.");
+      }
     }
   }
 };
