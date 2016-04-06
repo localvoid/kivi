@@ -169,13 +169,10 @@ kivi.VNode.createComponent = function(descriptor, opt_props) {
 /**
  * Create a [kivi.VNode] representing a root node.
  *
- * @param {!kivi.Component} component
  * @returns {!kivi.VNode<null>}
  */
-kivi.VNode.createRoot = function(component) {
-  var n = new kivi.VNode(kivi.VNodeFlags.ROOT, null, null);
-  n.cref = component;
-  return n;
+kivi.VNode.createRoot = function() {
+  return new kivi.VNode(kivi.VNodeFlags.ROOT, null, null);
 };
 
 /**
@@ -581,7 +578,7 @@ kivi.VNode.prototype.render = function(context) {
       if ((flags & kivi.VNodeFlags.ROOT) === 0) {
         /** @type {!kivi.CTag} */(this.tag).update_(ref, void 0, this.props_);
       } else {
-        /** @type {!kivi.CTag} */(this.cref.descriptor.tag).update_(ref, void 0, this.props_);
+        /** @type {!kivi.CTag} */(context.descriptor.tag).update_(ref, void 0, this.props_);
       }
     }
 
@@ -807,7 +804,7 @@ kivi.VNode.prototype.sync = function(b, context) {
       if ((flags & kivi.VNodeFlags.ROOT) === 0) {
         /** @type {!kivi.CTag} */(this.tag).update_(ref, this.props_, b.props_);
       } else {
-        /** @type {!kivi.CTag} */(this.cref.descriptor.tag).update_(ref, this.props_, b.props_);
+        /** @type {!kivi.CTag} */(context.descriptor.tag).update_(ref, this.props_, b.props_);
       }
     }
 
