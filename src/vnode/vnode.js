@@ -208,7 +208,7 @@ kivi.VNode.prototype.props = function(props) {
  * @param {*} props
  * @returns {!kivi.VNode<P>}
  */
-kivi.VNode.prototype.dynamicProps = function(props) {
+kivi.VNode.prototype.dynamicShapeProps = function(props) {
   if (kivi.DEBUG) {
     if ((this.flags & (kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.ROOT)) === 0) {
       throw new Error('Failed to set props on VNode: props method should be called on element or component root nodes only.')

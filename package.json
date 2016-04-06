@@ -31,7 +31,7 @@
     "chai": "^3.4.1",
     "closure-externs-mocha": "^1.0.1",
     "del": "^2.2.0",
-    "google-closure-compiler": "^20160208.1.0",
+    "google-closure-compiler": "^20160315.2.0",
     "gulp": "^3.9.1",
     "gulp-sourcemaps": "^1.6.0",
     "karma": "^0.13.19",
