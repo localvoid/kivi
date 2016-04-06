@@ -169,10 +169,13 @@ kivi.VNode.createComponent = function(descriptor, opt_props) {
 /**
  * Create a [kivi.VNode] representing a root node.
  *
+ * @param {!kivi.Component} component
  * @returns {!kivi.VNode<null>}
  */
-kivi.VNode.createRoot = function() {
-  return new kivi.VNode(kivi.VNodeFlags.ROOT, null, null);
+kivi.VNode.createRoot = function(component) {
+  var n = new kivi.VNode(kivi.VNodeFlags.ROOT, null, null);
+  n.cref = component;
+  return n;
 };
 
 /**
@@ -232,6 +235,18 @@ kivi.VNode.prototype.data = function(data) {
     }
   }
   this.props_ = data;
+  return this;
+};
+
+/**
+ * Set props for CTag update handler.
+ *
+ * @param {*} props
+ * @returns {!kivi.VNode<P>}
+ */
+kivi.VNode.prototype.updateProps = function(props) {
+  this.flags |= kivi.VNodeFlags.CTAG_UPDATE_HANDLER;
+  this.props_ = props;
   return this;
 };
 
@@ -520,46 +535,53 @@ kivi.VNode.prototype.render = function(context) {
 
   if ((flags & (kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.ROOT)) !== 0) {
     ref = /** @type {!Element} */(this.ref);
-
-    var props = /** @type {!Object<string, *>} */(this.props_);
-    if (props !== null) {
-      keys = Object.keys(props);
-      for (i = 0, il = keys.length; i < il; i++) {
-        key = keys[i];
-        ref[key] = props[key];
-      }
-    }
-
-    if (this.attrs_ !== null) {
-      keys = Object.keys(this.attrs_);
-      for (i = 0, il = keys.length; i < il; i++) {
-        key = keys[i];
-        kivi.sync.setAttr(ref, key, this.attrs_[key]);
-      }
-    }
-
-    if (this.style_ !== null) {
-      // perf optimization for webkit/blink, probably will need to revisit this in the future.
-      if ((flags & kivi.VNodeFlags.SVG) === 0) {
-        ref.style.cssText = this.style_;
-      } else {
-        ref.setAttribute('style', this.style_)
-      }
-    }
-
-    if (this.classes_ !== null) {
-      if (kivi.DEBUG) {
-        var className = ref.getAttribute('class');
-        if ((flags & kivi.VNodeFlags.ROOT) !== 0 && className) {
-          kivi.debug.printError(`VNode render: Component root node overwrited className property` +
-                                ` "${className}" with "${this.classes_}".`)
+    if ((flags & (kivi.VNodeFlags.CTAG_UPDATE_HANDLER)) === 0) {
+      var props = /** @type {!Object<string, *>} */(this.props_);
+      if (props !== null) {
+        keys = Object.keys(props);
+        for (i = 0, il = keys.length; i < il; i++) {
+          key = keys[i];
+          ref[key] = props[key];
         }
       }
-      // perf optimization for webkit/blink, probably will need to revisit this in the future.
-      if ((flags & kivi.VNodeFlags.SVG) === 0) {
-        ref.className = this.classes_;
+
+      if (this.attrs_ !== null) {
+        keys = Object.keys(this.attrs_);
+        for (i = 0, il = keys.length; i < il; i++) {
+          key = keys[i];
+          kivi.sync.setAttr(ref, key, this.attrs_[key]);
+        }
+      }
+
+      if (this.style_ !== null) {
+        // perf optimization for webkit/blink, probably will need to revisit this in the future.
+        if ((flags & kivi.VNodeFlags.SVG) === 0) {
+          ref.style.cssText = this.style_;
+        } else {
+          ref.setAttribute('style', this.style_)
+        }
+      }
+
+      if (this.classes_ !== null) {
+        if (kivi.DEBUG) {
+          var className = ref.getAttribute('class');
+          if ((flags & kivi.VNodeFlags.ROOT) !== 0 && className) {
+            kivi.debug.printError(`VNode render: Component root node overwrited className property` +
+                ` "${className}" with "${this.classes_}".`)
+          }
+        }
+        // perf optimization for webkit/blink, probably will need to revisit this in the future.
+        if ((flags & kivi.VNodeFlags.SVG) === 0) {
+          ref.className = this.classes_;
+        } else {
+          ref.setAttribute('class', this.classes_)
+        }
+      }
+    } else {
+      if ((flags & kivi.VNodeFlags.ROOT) === 0) {
+        /** @type {!kivi.CTag} */(this.tag).update_(ref, void 0, this.props_);
       } else {
-        ref.setAttribute('class', this.classes_)
+        /** @type {!kivi.CTag} */(this.cref.descriptor.tag).update_(ref, void 0, this.props_);
       }
     }
 
@@ -740,43 +762,52 @@ kivi.VNode.prototype.sync = function(b, context) {
       this.ref.nodeValue = /** @type {string} */(b.props_);
     }
   } else if ((flags & (kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.ROOT)) !== 0) {
-    if (this.props_ !== b.props_) {
-      if ((this.flags & kivi.VNodeFlags.DYNAMIC_SHAPE_PROPS) === 0) {
-        kivi.sync.staticShapeProps(
-            /** @type {!Object<string, *>} */(this.props_),
-            /** @type {!Object<string, *>} */(b.props_),
-            ref);
-      } else {
-        kivi.sync.dynamicShapeProps(
-            /** @type {!Object<string, *>} */(this.props_),
-            /** @type {!Object<string, *>} */(b.props_),
-            ref);
+    if ((flags & kivi.VNodeFlags.CTAG_UPDATE_HANDLER) === 0) {
+      if (this.props_ !== b.props_) {
+        if ((this.flags & kivi.VNodeFlags.DYNAMIC_SHAPE_PROPS) === 0) {
+          kivi.sync.staticShapeProps(
+              /** @type {!Object<string, *>} */(this.props_),
+              /** @type {!Object<string, *>} */(b.props_),
+              ref);
+        } else {
+          kivi.sync.dynamicShapeProps(
+              /** @type {!Object<string, *>} */(this.props_),
+              /** @type {!Object<string, *>} */(b.props_),
+              ref);
+        }
       }
-    }
-    if (this.attrs_ !== b.attrs_) {
-      if ((this.flags & kivi.VNodeFlags.DYNAMIC_SHAPE_ATTRS) === 0) {
-        kivi.sync.staticShapeAttrs(this.attrs_, b.attrs_, ref);
-      } else {
-        kivi.sync.dynamicShapeAttrs(this.attrs_, b.attrs_, ref);
+      if (this.attrs_ !== b.attrs_) {
+        if ((this.flags & kivi.VNodeFlags.DYNAMIC_SHAPE_ATTRS) === 0) {
+          kivi.sync.staticShapeAttrs(this.attrs_, b.attrs_, ref);
+        } else {
+          kivi.sync.dynamicShapeAttrs(this.attrs_, b.attrs_, ref);
+        }
       }
-    }
-    if (this.style_ !== b.style_) {
-      var style = b.style_ === null ? '' : b.style_;
-      // perf optimization for webkit/blink, probably will need to revisit this in the future.
-      if ((flags & kivi.VNodeFlags.SVG) === 0) {
-        ref.style.cssText = style;
-      } else {
-        ref.setAttribute('style', style);
+      if (this.style_ !== b.style_) {
+        var style = b.style_ === null ? '' : b.style_;
+        // perf optimization for webkit/blink, probably will need to revisit this in the future.
+        if ((flags & kivi.VNodeFlags.SVG) === 0) {
+          ref.style.cssText = style;
+        } else {
+          ref.setAttribute('style', style);
+        }
       }
-    }
 
-    if (this.classes_ !== b.classes_) {
-      className = (b.classes_ === null) ? '' : b.classes_;
-      // perf optimization for webkit/blink, probably will need to revisit this in the future.
-      if ((flags & kivi.VNodeFlags.SVG) === 0) {
-        ref.className = className;
+      if (this.classes_ !== b.classes_) {
+        className = (b.classes_ === null) ? '' : b.classes_;
+        // perf optimization for webkit/blink, probably will need to revisit this in the future.
+        if ((flags & kivi.VNodeFlags.SVG) === 0) {
+          ref.className = className;
+        } else {
+          ref.setAttribute('class', className);
+        }
+      }
+
+    } else if (this.props_ !== b.props_) {
+      if ((flags & kivi.VNodeFlags.ROOT) === 0) {
+        /** @type {!kivi.CTag} */(this.tag).update_(ref, this.props_, b.props_);
       } else {
-        ref.setAttribute('class', className);
+        /** @type {!kivi.CTag} */(this.cref.descriptor.tag).update_(ref, this.props_, b.props_);
       }
     }
 
@@ -796,8 +827,6 @@ kivi.VNode.prototype.sync = function(b, context) {
         }
       }
     }
-
-
   } else if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
     if (this.classes_ !== b.classes_) {
       className = (b.classes_ === null) ? '' : b.classes_;

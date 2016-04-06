@@ -23,6 +23,8 @@ kivi.CTag = function(flags, tag) {
   this.style_ = null;
   /** @type {?string} */
   this.classes_ = null;
+  /** @type {?function(!Node, *, *)} */
+  this.update_ = null;
   /** @type {?Element} */
   this.ref = null;
 };
@@ -148,5 +150,16 @@ kivi.CTag.prototype.classes = function(classes) {
  */
 kivi.CTag.prototype.enableCloning = function() {
   this.flags |= kivi.CTagFlags.ENABLE_CLONING;
+  return this;
+};
+
+/**
+ * Set update function.
+ *
+ * @param {function(!Node, *, *)} fn
+ * @returns {!kivi.CTag}
+ */
+kivi.CTag.prototype.update = function(fn) {
+  this.update_ = fn;
   return this;
 };
