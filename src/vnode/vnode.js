@@ -824,7 +824,7 @@ kivi.VNode.prototype.sync = function(b, context) {
         }
       }
     }
-  } else if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
+  } else /* if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) */ {
     if (this.classes_ !== b.classes_) {
       className = (b.classes_ === null) ? '' : b.classes_;
       // perf optimization for webkit/blink, probably will need to revisit this in the future.
