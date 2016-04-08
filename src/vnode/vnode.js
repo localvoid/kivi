@@ -176,6 +176,53 @@ kivi.VNode.createRoot = function() {
 };
 
 /**
+ * Create a [kivi.VNode] representing a [Element] node with [kivi.CTag] tag.
+ *
+ * @param {!kivi.CTag} ctag
+ * @param {*=} opt_props
+ * @returns {!kivi.VNode<?Object<string,*>>}
+ */
+kivi.VNode.createCElement = function(ctag, opt_props) {
+  if (opt_props === void 0) {
+    return new kivi.VNode(kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.CTAG, ctag, null);
+  }
+  return new kivi.VNode(
+      kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.CTAG | kivi.VNodeFlags.CTAG_UPDATE_HANDLER,
+      ctag, opt_props);
+};
+
+/**
+ * Create a [kivi.VNode] representing a [SVGElement] node with [kivi.CTag] tag.
+ *
+ * @param {!kivi.CTag} ctag
+ * @param {*=} opt_props
+ * @returns {!kivi.VNode<?Object<string,*>>}
+ */
+kivi.VNode.createCSvgElement = function(ctag, opt_props) {
+  if (opt_props === void 0) {
+    return new kivi.VNode(kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.SVG | kivi.VNodeFlags.CTAG, ctag, null);
+  }
+  return new kivi.VNode(
+      kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.SVG | kivi.VNodeFlags.CTAG | kivi.VNodeFlags.CTAG_UPDATE_HANDLER,
+      ctag, opt_props);
+};
+
+/**
+ * Create a [kivi.VNode] representing a root node with [kivi.CTag] tag.
+ *
+ * @param {*=} opt_props
+ * @returns {!kivi.VNode<?Object<string,*>>}
+ */
+kivi.VNode.createCRoot = function(opt_props) {
+  if (opt_props === void 0) {
+    return new kivi.VNode(kivi.VNodeFlags.ROOT | kivi.VNodeFlags.CTAG, null, null);
+  }
+  return new kivi.VNode(
+      kivi.VNodeFlags.ROOT | kivi.VNodeFlags.CTAG | kivi.VNodeFlags.CTAG_UPDATE_HANDLER,
+      null, opt_props);
+};
+
+/**
  * Set key.
  *
  * @param {*} key
@@ -232,18 +279,6 @@ kivi.VNode.prototype.data = function(data) {
     }
   }
   this.props_ = data;
-  return this;
-};
-
-/**
- * Set props for CTag update handler.
- *
- * @param {*} props
- * @returns {!kivi.VNode<P>}
- */
-kivi.VNode.prototype.updateProps = function(props) {
-  this.flags |= kivi.VNodeFlags.CTAG_UPDATE_HANDLER;
-  this.props_ = props;
   return this;
 };
 
@@ -576,9 +611,9 @@ kivi.VNode.prototype.render = function(context) {
       }
     } else {
       if ((flags & kivi.VNodeFlags.ROOT) === 0) {
-        /** @type {!kivi.CTag} */(this.tag).update_(ref, void 0, this.props_);
+        /** @type {!kivi.CTag} */(this.tag).updateHandler_(ref, void 0, this.props_);
       } else {
-        /** @type {!kivi.CTag} */(context.descriptor.tag).update_(ref, void 0, this.props_);
+        /** @type {!kivi.CTag} */(context.descriptor.tag).updateHandler_(ref, void 0, this.props_);
       }
     }
 
@@ -802,9 +837,9 @@ kivi.VNode.prototype.sync = function(b, context) {
 
     } else if (this.props_ !== b.props_) {
       if ((flags & kivi.VNodeFlags.ROOT) === 0) {
-        /** @type {!kivi.CTag} */(this.tag).update_(ref, this.props_, b.props_);
+        /** @type {!kivi.CTag} */(this.tag).updateHandler_(ref, this.props_, b.props_);
       } else {
-        /** @type {!kivi.CTag} */(context.descriptor.tag).update_(ref, this.props_, b.props_);
+        /** @type {!kivi.CTag} */(context.descriptor.tag).updateHandler_(ref, this.props_, b.props_);
       }
     }
 

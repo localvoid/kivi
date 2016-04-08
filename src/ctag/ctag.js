@@ -24,7 +24,7 @@ kivi.CTag = function(flags, tag) {
   /** @type {?string} */
   this.classes_ = null;
   /** @type {?function(!Node, *, *)} */
-  this.update_ = null;
+  this.updateHandler_ = null;
   /** @type {?Element} */
   this.ref = null;
 };
@@ -154,12 +154,12 @@ kivi.CTag.prototype.enableCloning = function() {
 };
 
 /**
- * Set update function.
+ * Set updateHandler function.
  *
  * @param {function(!Node, *, *)} fn
  * @returns {!kivi.CTag}
  */
-kivi.CTag.prototype.update = function(fn) {
-  this.update_ = fn;
+kivi.CTag.prototype.updateHandler = function(fn) {
+  this.updateHandler_ = fn;
   return this;
 };

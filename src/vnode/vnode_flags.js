@@ -37,8 +37,10 @@ kivi.VNodeFlags = {
   DYNAMIC_SHAPE_ATTRS:          0x10000,
   /** [kivi.VNode] has dynamic shape for props object */
   DYNAMIC_SHAPE_PROPS:          0x20000,
+  /** [kivi.VNode] is using CTag */
+  CTAG:                         0x40000,
   /** [kivi.VNode] should use CTag update handler to update */
-  CTAG_UPDATE_HANDLER:          0x40000
+  CTAG_UPDATE_HANDLER:          0x80000
 };
 
 /**
