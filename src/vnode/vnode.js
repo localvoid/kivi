@@ -267,22 +267,6 @@ kivi.VNode.prototype.dynamicShapeProps = function(props) {
 };
 
 /**
- * Set data.
- *
- * @param {*} data
- * @returns {!kivi.VNode<P>}
- */
-kivi.VNode.prototype.data = function(data) {
-  if (kivi.DEBUG) {
-    if ((this.flags & kivi.VNodeFlags.COMPONENT) === 0) {
-      throw new Error('Failed to set data on VNode: data method should be called on component nodes only.')
-    }
-  }
-  this.props_ = data;
-  return this;
-};
-
-/**
  * Set attrs.
  *
  * @param {?Object<string,string>} attrs
