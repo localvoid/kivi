@@ -23,12 +23,12 @@ function gen(item, keys) {
   } else if (Array.isArray(item)) {
     var result = [];
     for (var i = 0; i < item.length; i++) {
-      result.push(gen(item[i]));
+      result.push(gen(item[i], keys));
     }
     return result;
   } else {
-    var e = keys ? VNode.createElement('div').key(item.key) : VNode.createElement('div');
-    e.children(gen(item.children));
+    var e = keys ? VNode.createElement('div').key(item.key).trackByKey() : VNode.createElement('div');
+    e.children(gen(item.children, keys));
     if (keys) {
       e.trackByKey();
     }
@@ -36,13 +36,23 @@ function gen(item, keys) {
   }
 }
 
-function checkInnerHtmlEquals(ax, bx, cx) {
+function checkInnerHtmlEquals(ax, bx, cx, keys) {
   var a = VNode.createElement('div');
   var b = VNode.createElement('div');
   var c = VNode.createElement('div');
-  a.children = ax;
-  b.children = bx;
-  c.children = cx;
+  a.children(ax);
+  b.children(bx);
+  c.children(cx);
+
+  if (keys) {
+    a.trackByKey();
+    b.trackByKey();
+    c.trackByKey();
+  } else {
+    a.disableChildrenShapeError();
+    b.disableChildrenShapeError();
+    c.disableChildrenShapeError();
+  }
 
   var aDiv = document.createElement('div');
   var bDiv = document.createElement('div');
@@ -542,7 +552,6 @@ describe('syncChildren string children', function() {
     var b = VNode.createElement('div').children('cde');
     injectVNode(f, a, null);
     a.sync(b, null);
-    console.log(f);
     assert.equal(f.firstChild.childNodes.length, 1);
     assert.equal(f.firstChild.firstChild.nodeValue, 'cde');
   });
@@ -592,7 +601,7 @@ describe('syncChildren string children', function() {
 describe('syncChildren with keys', function() {
   TESTS.forEach(function(t) {
     var name = JSON.stringify(t[0]) + ' => ' + JSON.stringify(t[1]);
-    var testFn = function() { checkInnerHtmlEquals(gen(t[0], true), gen(t[1], true), gen(t[1], true)); };
+    var testFn = function() { checkInnerHtmlEquals(gen(t[0], true), gen(t[1], true), gen(t[1], true), true); };
 
     if (t.length === 3 && t[2].only === true) {
       it.only(name, testFn);
