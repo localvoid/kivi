@@ -1426,6 +1426,8 @@ kivi.VNode.prototype._syncChildrenTrackingByKeys = function(a, b, context) {
       aStartNode = a[aStart];
       bEndNode = b[bEnd];
       stop = false;
+      // In real-world scenarios there is a higher chance that next node after we move
+      // this one will be the same, so we are jumping to the top of this loop immediately.
       continue outer;
     }
 
@@ -1446,6 +1448,7 @@ kivi.VNode.prototype._syncChildrenTrackingByKeys = function(a, b, context) {
       aEndNode = a[aEnd];
       bStartNode = b[bStart];
       stop = false;
+      continue outer;
     }
   } while (!stop && aStart <= aEnd && bStart <= bEnd);
 
