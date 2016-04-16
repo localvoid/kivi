@@ -1,19 +1,52 @@
 # kivi
 
-Library for building web UIs with large code base **>50kb**, incompatible
-with [React](https://facebook.github.io/react/) API and it works only with
-[google-closure-compiler](https://github.com/google/closure-compiler)
-, because obviously author is a fan of Java and OOP, so you should better
-go find something more lightweight and *functional*.
+Javascript UI library.
+ 
+Kivi started as an experiment to check viability of UI applications with
+pull-based(lazy evaluation) architecture and now it is full-featured UI
+library.
 
-The core component of this library is a *virtual dom*, invented by React
-developers, so don't expect that rendering will be fast, vanilla js
-ninjas showed that this isn't the case for *virtual dom*.
+It was heavily inspired by [React](https://facebook.github.io/react/)
+library, but implementation and many architecture decisions are completely
+different.
+
+Kivi doesn't have a goal to provide a small sized library and code base is
+larger than many lightweight UI libraries. But even for an average app,
+there is a high chance that code compiled with 
+[google-closure-compiler](https://github.com/google/closure-compiler)
+and advanced optimizations like
+[Type Based Property Renaming](https://github.com/google/closure-compiler/wiki/Type-Based-Property-Renaming)
+will be way much smaller than code compiled by traditional js compiler
+stacks.
+
+## Virtual DOM
+
+kivi Virtual DOM implementation is
+[extremely fast](https://localvoid.github.io/uibench/) and has many
+different optimizations:
+
+- Minimum number of DOM operations for children reconciliation (most of the
+  virtual DOM implementations will perform N-1 `insertBefore` operations even
+  for simple move of one child).
+- Virtual DOM nodes store references to the actual DOM nodes, so they can't
+  be reused to render several different nodes. Immutable VNodes pros aren't
+  worth it in real projects, kivi implementation is optimized for real use
+  cases.
+- Element templates to remove unnecessary diffing for static properties.
+- Overriding diffing algorithm for elements that use element templates.
+- Components (with DOM nodes) recycling. It is disabled by default, and
+  should be explicitly enabled for each Component type.
+- Components store last modification time (internal monotonically increasing
+  clock) and it is easy to implement fast `shouldComponentUpdate` methods
+  without using immutable data structures.
+
+## Scheduler
+
+- Invalidated components updated in the lowest depth order to prevent
+  unnecessary computation.
+- Different task queues for DOM read and write to prevent layout thrashing.
 
 ## Example
-
-Just look how much Java in this code, who would ever want to write
-javascript code in that style:
 
 ```js
 goog.provide('app');
@@ -61,7 +94,7 @@ goog.scope(function() {
   };
   
   /** @const {!kivi.CDescriptor<string, null>} */
-  app.main.d = new kivi.CDescriptor('Main');
+  app.main.d = kivi.CDescriptor.create('Main');
   
   /** @param {!kivi.Component<string, null>} c */
   app.main.d.update = function(c) {
