@@ -142,7 +142,7 @@ kivi.CDescriptor.prototype.clone = function(name) {
   d.attached = this.attached;
   d.detached = this.detached;
   d.disposed = this.disposed;
-  
+
   if (kivi.ENABLE_COMPONENT_RECYCLING) {
     d.recycled = this.recycled;
     d.maxRecycled = this.maxRecycled;

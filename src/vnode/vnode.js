@@ -925,9 +925,6 @@ kivi.VNode.prototype.detach = function() {
       }
     }
   } else {
-    if (this.cref === null) {
-      console.error(this);
-    }
     this.cref.detach();
   }
 };
