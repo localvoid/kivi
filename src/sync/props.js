@@ -21,7 +21,7 @@ kivi.sync.staticShapeProps = function(a, b, node) {
     }
   }
 
-  keys = Object.keys(a);
+  keys = Object.keys(/** @type {!Object} */(a));
   for (i = 0, il = keys.length; i < il; i++) {
     key = keys[i];
     if (kivi.DEBUG) {
@@ -37,7 +37,7 @@ kivi.sync.staticShapeProps = function(a, b, node) {
     }
   }
   if (kivi.DEBUG) {
-    keys = Object.keys(b);
+    keys = Object.keys(/** @type {!Object} */(b));
     for (i = 0, il = keys.length; i < il; i++) {
       key = keys[i];
       if (!a.hasOwnProperty(key)) {
