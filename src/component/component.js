@@ -94,12 +94,6 @@ kivi.CDescriptor = function(name, opt_flags) {
    */
   this.disposed = null;
 
-  /**
-   *
-   * @type {?kivi.CDescriptor}
-   */
-  this.data = null;
-
   if (kivi.ENABLE_COMPONENT_RECYCLING) {
     /** @type {?Array<!kivi.Component<D, S>>} */
     this.recycled = null;
@@ -132,15 +126,28 @@ kivi.CDescriptor.createSvg = function(name) {
 };
 
 /**
- * Creates a Component Descriptor Wrapper.
+ * Clone a descriptor and assign a new name.
  *
- * @param {!kivi.CDescriptor} d
+ * @param {string} name
  * @returns {!kivi.CDescriptor}
  */
-kivi.CDescriptor.createWrapper = function(d) {
-  var r = new kivi.CDescriptor(d.name, kivi.CDescriptorFlags.WRAPPER);
-  r.flags |= d.flags & kivi.CDescriptorFlags.SVG;
-  r.tag = d.tag;
+kivi.CDescriptor.prototype.clone = function(name) {
+  var d = new kivi.CDescriptor(name, this.flags);
+  d.tag = this.tag;
+  d.setData = this.setData;
+  d.setChildren = this.setChildren;
+  d.init = this.init;
+  d.update = this.update;
+  d.invalidated = this.invalidated;
+  d.attached = this.attached;
+  d.detached = this.detached;
+  d.disposed = this.disposed;
+  
+  if (kivi.ENABLE_COMPONENT_RECYCLING) {
+    d.recycled = this.recycled;
+    d.maxRecycled = this.maxRecycled;
+  }
+
   return d;
 };
 
@@ -199,21 +206,6 @@ kivi.CDescriptor.prototype.createComponent = function(context) {
  */
 kivi.CDescriptor.prototype.mountComponent = function(context, element) {
   var c = new kivi.Component(kivi.ComponentFlags.DIRTY | kivi.ComponentFlags.MOUNTING, this, context, element);
-  if (this.init !== null) {
-    this.init(c);
-  }
-  return c;
-};
-
-/**
- * Wrap Component.
- *
- * @param {?kivi.Component} context
- * @param {!Element} element
- * @returns {!kivi.Component<D, S>}
- */
-kivi.CDescriptor.prototype.wrapComponent = function(context, element) {
-  var c = new kivi.Component(kivi.ComponentFlags.DIRTY, this, context, element);
   if (this.init !== null) {
     this.init(c);
   }
@@ -366,29 +358,6 @@ kivi.Component.prototype.syncVRoot = function(newRoot) {
     this.root.sync(newRoot, this);
   }
   this.root = newRoot;
-};
-
-/**
- * Synchronize internal component.
- *
- * @param {*} newProps
- * @param {?Array<!kivi.VNode>|string=} opt_newChildren
- */
-kivi.Component.prototype.syncComponent = function(newProps, opt_newChildren) {
-  if (opt_newChildren === void 0) opt_newChildren = null;
-
-  var c = this.root;
-  if (c === null) {
-    var descriptor = /** @type {!kivi.CDescriptor} */(this.descriptor.data);
-    if ((this.flags & kivi.ComponentFlags.MOUNTING) === 0) {
-      c = descriptor.wrapComponent(this, this.element);
-    } else {
-      c = descriptor.mountComponent(this, this.element);
-    }
-  }
-  c.setData(newProps);
-  c.setChildren(opt_newChildren);
-  c.update();
 };
 
 /**

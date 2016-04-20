@@ -10,8 +10,8 @@ It was heavily inspired by [React](https://facebook.github.io/react/)
 library, but implementation and many architecture decisions are completely
 different.
 
-Kivi doesn't have a goal to provide a small sized library and code base is
-larger than many lightweight UI libraries. But even for an average app,
+Kivi doesn't have a goal to provide a small sized library and its code base
+is larger than many lightweight UI libraries. But even for an average app,
 there is a high chance that code compiled with 
 [google-closure-compiler](https://github.com/google/closure-compiler)
 and advanced optimizations like
