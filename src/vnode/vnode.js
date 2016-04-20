@@ -2,6 +2,7 @@ goog.provide('kivi.VNode');
 goog.require('kivi');
 goog.require('kivi.CTag');
 goog.require('kivi.Component');
+goog.require('kivi.ContainerManager');
 goog.require('kivi.HtmlNamespace');
 goog.require('kivi.VNodeDebugFlags');
 goog.require('kivi.VNodeFlags');
@@ -82,7 +83,7 @@ kivi.VNode = function(flags, tag, props) {
    * time [kivi.VNode] is synced, reference to the [kivi.Component] is transferred from the previous node to
    * the new one.
    *
-   * @type {?kivi.Component}
+   * @type {?kivi.Component|?kivi.ContainerManager}
    */
   this.cref = null;
 
@@ -395,17 +396,20 @@ kivi.VNode.prototype.trackByKey = function() {
 };
 
 /**
- * Owner [kivi.Component] will be responsible for managing children lifecycle.
+ * Set container manager for this node, it will be responsible for
+ * inserting/removing/moving nodes.
  *
+ * @param {!kivi.ContainerManager} manager
  * @returns {!kivi.VNode<P>}
  */
-kivi.VNode.prototype.managedContainer = function() {
+kivi.VNode.prototype.managedContainer = function(manager) {
   if (kivi.DEBUG) {
     if ((this.flags & (kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.ROOT)) === 0) {
       throw new Error('Failed to set managedContainer mode on VNode: managedContainer method should be called on element or component root nodes only.')
     }
   }
   this.flags |= kivi.VNodeFlags.MANAGED_CONTAINER;
+  this.cref = manager;
   return this;
 };
 
@@ -1006,8 +1010,8 @@ kivi.VNode.prototype._freeze = function() {
  * @param {!kivi.Component} context Current context.
  */
 kivi.VNode.prototype._insertChild = function(node, nextRef, context) {
-  if (((this.flags & kivi.VNodeFlags.MANAGED_CONTAINER) !== 0) && context.descriptor.insertChild !== null) {
-    context.descriptor.insertChild(context, this, node, nextRef);
+  if (((this.flags & kivi.VNodeFlags.MANAGED_CONTAINER) !== 0) && node.cref.descriptor.insertChild !== null) {
+    node.cref.descriptor.insertChild(/** @type {!kivi.ContainerManager} */(node.cref), this, node, nextRef, context);
   } else {
     node.create(context);
     this.ref.insertBefore(node.ref, nextRef);
@@ -1025,8 +1029,8 @@ kivi.VNode.prototype._insertChild = function(node, nextRef, context) {
  * @param {!kivi.Component} context Current context.
  */
 kivi.VNode.prototype._replaceChild = function(newNode, refNode, context) {
-  if (((this.flags & kivi.VNodeFlags.MANAGED_CONTAINER) !== 0) && context.descriptor.replaceChild !== null) {
-    context.descriptor.replaceChild(context, this, newNode, refNode);
+  if (((this.flags & kivi.VNodeFlags.MANAGED_CONTAINER) !== 0) && newNode.cref.descriptor.replaceChild !== null) {
+    newNode.cref.descriptor.replaceChild(/** @type {!kivi.ContainerManager} */(newNode.cref), this, newNode, refNode, context);
   } else {
     newNode.create(context);
     this.ref.replaceChild(newNode.ref, refNode.ref);
@@ -1045,8 +1049,8 @@ kivi.VNode.prototype._replaceChild = function(newNode, refNode, context) {
  * @param {!kivi.Component} context Current context.
  */
 kivi.VNode.prototype._moveChild = function(node, nextRef, context) {
-  if (((this.flags & kivi.VNodeFlags.MANAGED_CONTAINER) !== 0) && context.descriptor.moveChild !== null) {
-    context.descriptor.moveChild(context, this, node, nextRef);
+  if (((this.flags & kivi.VNodeFlags.MANAGED_CONTAINER) !== 0) && node.cref.descriptor.moveChild !== null) {
+    node.cref.descriptor.moveChild(/** @type {!kivi.ContainerManager} */(node.cref), this, node, nextRef, context);
   } else {
     this.ref.insertBefore(node.ref, nextRef);
   }
@@ -1060,8 +1064,8 @@ kivi.VNode.prototype._moveChild = function(node, nextRef, context) {
  * @param {!kivi.Component} context Current context.
  */
 kivi.VNode.prototype._removeChild = function(node, context) {
-  if (((this.flags & kivi.VNodeFlags.MANAGED_CONTAINER) !== 0) && context.descriptor.removeChild !== null) {
-    context.descriptor.removeChild(context, this, node);
+  if (((this.flags & kivi.VNodeFlags.MANAGED_CONTAINER) !== 0) && node.cref.descriptor.removeChild !== null) {
+    node.cref.descriptor.removeChild(/** @type {!kivi.ContainerManager} */(node.cref), this, node, context);
   } else {
     this.ref.removeChild(node.ref);
     node.dispose();

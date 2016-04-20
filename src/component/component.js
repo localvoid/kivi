@@ -95,34 +95,6 @@ kivi.CDescriptor = function(name, opt_flags) {
   this.disposed = null;
 
   /**
-   * Insert child hook for Managed Containers.
-   *
-   * @type {?function (!kivi.Component<D, S>, !kivi.VNode, !kivi.VNode, ?Node)}
-   */
-  this.insertChild = null;
-
-  /**
-   * Replace child hook for Managed Containers.
-   *
-   * @type {?function (!kivi.Component<D, S>, !kivi.VNode, !kivi.VNode, !kivi.VNode)}
-   */
-  this.replaceChild = null;
-
-  /**
-   * Move child hook for Managed Containers.
-   *
-   * @type {?function (!kivi.Component<D, S>, !kivi.VNode, !kivi.VNode, ?Node)}
-   */
-  this.moveChild = null;
-
-  /**
-   * Remove child hook for Managed Containers.
-   *
-   * @type {?function (!kivi.Component<D, S>, !kivi.VNode, !kivi.VNode)}
-   */
-  this.removeChild = null;
-
-  /**
    *
    * @type {?kivi.CDescriptor}
    */
