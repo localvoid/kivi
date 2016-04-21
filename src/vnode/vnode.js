@@ -494,7 +494,7 @@ kivi.VNode.prototype.create = function(context) {
     } else {
       this.ref = /** @type {!kivi.CTag} */(this.tag).createElement();
     }
-  } else if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
+  } else {
     var component = /** @type {!kivi.CDescriptor} */(this.tag).createComponent(context);
     this.ref = component.element;
     this.cref = component;
