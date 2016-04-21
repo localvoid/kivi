@@ -34,11 +34,8 @@ different optimizations:
   cases.
 - Element templates to remove unnecessary diffing for static properties.
 - Overriding diffing algorithm for elements that use element templates.
-- Components (with DOM nodes) recycling. It is disabled by default, and
-  should be explicitly enabled for each Component type.
-- Components store last modification time (internal monotonically increasing
-  clock) and it is easy to implement fast `shouldComponentUpdate` methods
-  without using immutable data structures.
+- Components recycling. It is disabled by default, and should be explicitly
+  enabled for each Component type.
 
 ## Scheduler
 
