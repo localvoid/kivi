@@ -10,7 +10,7 @@ function injectVNode(parent, node, nextRef) {
 }
 
 function ee(key, c) {
-  return VNode.createElement('div').key(key).trackByKey().children(c === void 0 ? null : c);
+  return VNode.createElement('div').key(key).trackByKeyChildren(c === void 0 ? null : c);
 }
 
 function ei(c) {
@@ -27,10 +27,11 @@ function gen(item, keys) {
     }
     return result;
   } else {
-    var e = keys ? VNode.createElement('div').key(item.key).trackByKey() : VNode.createElement('div');
-    e.children(gen(item.children, keys));
+    var e = VNode.createElement('div').key(item.key);
     if (keys) {
-      e.trackByKey();
+      e.trackByKeyChildren(gen(item.children, keys));
+    } else {
+      e.children(gen(item.children, keys));
     }
     return e;
   }
@@ -40,18 +41,15 @@ function checkInnerHtmlEquals(ax, bx, cx, keys) {
   var a = VNode.createElement('div');
   var b = VNode.createElement('div');
   var c = VNode.createElement('div');
-  a.children(ax);
-  b.children(bx);
-  c.children(cx);
 
   if (keys) {
-    a.trackByKey();
-    b.trackByKey();
-    c.trackByKey();
+    a.trackByKeyChildren(ax);
+    b.trackByKeyChildren(bx);
+    c.trackByKeyChildren(cx);
   } else {
-    a.disableChildrenShapeError();
-    b.disableChildrenShapeError();
-    c.disableChildrenShapeError();
+    a.children(ax).disableChildrenShapeError();
+    b.children(bx).disableChildrenShapeError();
+    c.children(cx).disableChildrenShapeError();
   }
 
   var aDiv = document.createElement('div');

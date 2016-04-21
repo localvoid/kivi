@@ -349,6 +349,30 @@ kivi.VNode.prototype.children = function(children) {
 };
 
 /**
+ * Set children that should be tracked by key.
+ *
+ * @param {?Array<!kivi.VNode>} children
+ * @returns {!kivi.VNode<P>}
+ */
+kivi.VNode.prototype.trackByKeyChildren = function(children) {
+  if (kivi.DEBUG) {
+    if ((this.flags & (kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.ROOT)) === 0) {
+      throw new Error('Failed to set children on VNode: trackByKeyChildren method should be called on element or component root nodes only.')
+    }
+    if (children !== null) {
+      for (var i = 0; i < children.length; i++) {
+        if (children[i].key_ === null) {
+          throw new Error('Failed to set children on VNode: trackByKeyChildren method expects all children to have a key.');
+        }
+      }
+    }
+  }
+  this.flags |= kivi.VNodeFlags.TRACK_BY_KEY;
+  this.children_ = children;
+  return this;
+};
+
+/**
  * Set text value for Input Elements.
  *
  * @param {string} value
@@ -377,21 +401,6 @@ kivi.VNode.prototype.checked = function(value) {
     }
   }
   this.children_ = value;
-  return this;
-};
-
-/**
- * Enable Track By Key mode for children reconciliation.
- *
- * @returns {!kivi.VNode<P>}
- */
-kivi.VNode.prototype.trackByKey = function() {
-  if (kivi.DEBUG) {
-    if ((this.flags & (kivi.VNodeFlags.ELEMENT | kivi.VNodeFlags.ROOT)) === 0) {
-      throw new Error('Failed to set trackByKey mode on VNode: trackByKey method should be called on element or component root nodes only.')
-    }
-  }
-  this.flags |= kivi.VNodeFlags.TRACK_BY_KEY;
   return this;
 };
 
@@ -530,17 +539,6 @@ kivi.VNode.prototype.render = function(context) {
       throw new Error('Failed to render VNode: VNode cannot be rendered after mount.');
     }
     this._debugProperties.flags |= kivi.VNodeDebugFlags.RENDERED;
-
-    if (this.children_ !== null && typeof this.children_ !== 'string') {
-      if ((this.flags & kivi.VNodeFlags.TRACK_BY_KEY) !== 0) {
-        for (i = 0; i < this.children_.length; i++) {
-          if (/** @type {!Array<!kivi.VNode>} */(this.children_)[i].key_ === null) {
-            throw new Error('Failed to render VNode: rendering children with trackByKey requires that all' +
-                ' children have keys.');
-          }
-        }
-      }
-    }
   }
 
   /** @type {number} */
@@ -672,18 +670,6 @@ kivi.VNode.prototype.mount = function(node, context) {
   var children = this.children_;
   var i;
 
-  if (kivi.DEBUG) {
-    if (children !== null && typeof children !== 'string') {
-      if ((flags & kivi.VNodeFlags.TRACK_BY_KEY) !== 0) {
-        for (i = 0; i < children.length; i++) {
-          if (/** @type {!Array<!kivi.VNode>} */(children)[i].key_ === null) {
-            throw new Error('Failed to mount VNode: mounting children with trackByKey requires that all' +
-                            ' children have keys.');
-          }
-        }
-      }
-    }
-  }
   this.ref = node;
 
   if ((flags & kivi.VNodeFlags.COMPONENT) !== 0) {
@@ -762,16 +748,6 @@ kivi.VNode.prototype.sync = function(b, context) {
     }
     if (b.ref !== null && this.ref !== b.ref) {
       throw new Error('Failed to sync VNode: reusing VNodes isn\'t allowed unless it has the same ref.');
-    }
-    if (b.children_ !== null && typeof b.children_ !== 'string') {
-      if ((b.flags & kivi.VNodeFlags.TRACK_BY_KEY) !== 0) {
-        for (var i = 0; i < b.children_.length; i++) {
-          if (/** @type {!Array<!kivi.VNode>} */(b.children_)[i].key_ === null) {
-            throw new Error('Failed to sync VNode: syncing children with trackByKey requires that all' +
-                            ' children have keys.');
-          }
-        }
-      }
     }
   }
 
@@ -1082,15 +1058,6 @@ kivi.VNode.prototype.syncChildren = function(a, b, context) {
   var i = 0;
   var synced = false;
 
-  if (kivi.DEBUG) {
-    if (((this.flags & kivi.VNodeFlags.TRACK_BY_KEY) !== 0)) {
-      if (typeof a === 'string' || typeof b === 'string') {
-        throw new Error('VNode sync children failed: children property cannot have type string when track by' +
-                        ' key is enabled.');
-      }
-    }
-  }
-
   if (typeof a === 'string') {
     if (b === null) {
       this.ref.removeChild(this.ref.firstChild);
@@ -1140,7 +1107,7 @@ kivi.VNode.prototype.syncChildren = function(a, b, context) {
               if ((this._debugProperties.flags & kivi.VNodeDebugFlags.DISABLE_CHILDREN_SHAPE_ERROR) === 0) {
                 kivi.debug.printError(
                     'VNode sync children: children shape is changing, you should enable tracking by key with ' +
-                    'VNode method trackByKey().\n' +
+                    'VNode method trackByKeyChildren(children).\n' +
                     'If you certain that children shape changes won\'t cause any problems with losing ' +
                     'state, you can remove this warning with VNode method disableChildrenShapeError().');
               }
@@ -1185,7 +1152,7 @@ kivi.VNode.prototype.syncChildren = function(a, b, context) {
               if ((this._debugProperties.flags & kivi.VNodeDebugFlags.DISABLE_CHILDREN_SHAPE_ERROR) === 0) {
                 kivi.debug.printError(
                     'VNode sync children: children shape is changing, you should enable tracking by key with ' +
-                    'VNode method trackByKey().\n' +
+                    'VNode method trackByKeyChildren(children).\n' +
                     'If you certain that children shape changes won\'t cause any problems with losing ' +
                     'state, you can remove this warning with VNode method disableChildrenShapeError().');
               }
@@ -1297,7 +1264,7 @@ kivi.VNode.prototype._syncChildren = function(a, b, context) {
         ((this._debugProperties.flags & kivi.VNodeDebugFlags.DISABLE_CHILDREN_SHAPE_ERROR) === 0)) {
       kivi.debug.printError(
           'VNode sync children: children shape is changing, you should enable tracking by key with ' +
-          'VNode method trackByKey().\n' +
+          'VNode method trackByKeyChildren(children).\n' +
           'If you certain that children shape changes won\'t cause any problems with losing ' +
           'state, you can remove this warning with VNode method disableChildrenShapeError().');
     }
