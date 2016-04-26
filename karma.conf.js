@@ -1,29 +1,31 @@
 module.exports = function(config) {
   config.set({
+    frameworks: ['systemjs', 'jasmine'],
+    files: ['tests/*.spec.ts'],
+
+    colors: true,
+    autoWatch: true,
+
     browsers: ['Chrome'],
-    frameworks: ['mocha', 'chai'],
+    reporters: ['progress'],
 
-    files: [
-      'build/tests/*.spec.js'
-    ],
-
-    preprocessors: {
-      '**/*.js': ['sourcemap']
-    },
-
-    reporters: ['mocha'],
-
-    mochaReporter: {
-      colors: {
-        success: 'green',
-        info: 'bgYellow',
-        warning: 'cyan',
-        error: 'bgRed'
+    systemjs: {
+      config: {
+        transpiler: 'typescript',
+        packages: {
+          'lib': {'defaultExtension': 'ts'},
+          'tests': {'defaultExtension': 'ts'}
+        },
+        paths: {
+          'systemjs': 'node_modules/systemjs/dist/system.js',
+          'system-polyfills': 'node_modules/systemjs/dist/system-polyfills.js',
+          'es6-module-loader': 'node_modules/es6-module-loader/dist/es6-module-loader.js',
+          'typescript': 'node_modules/typescript/lib/typescript.js',
+        }
       },
-      divider: ''
-    },
-
-    port: 9876,
-    colors: true
-  });
+      serveFiles: [
+        'lib/**/*.ts'
+      ]
+    }
+  })
 };

@@ -1,39 +1,30 @@
 var gulp = require('gulp');
-var del = require('del');
-var sourcemaps = require('gulp-sourcemaps');
-var closureCompiler = require('google-closure-compiler').gulp();
-var KarmaServer = require('karma').Server;
+var ts = require('gulp-typescript');
+var tsConfig = require('./tsconfig.json');
 
-var DEST = './build';
-var CLOSURE_OPTS = {
-  define: [
-    'kivi.DEBUG=true'
-  ],
-  dependency_mode: 'STRICT',
-  entry_point: 'goog:tests',
-  compilation_level: 'SIMPLE_OPTIMIZATIONS',
-  formatting: 'PRETTY_PRINT',
-  language_in: 'ECMASCRIPT6_STRICT',
-  language_out: 'ECMASCRIPT5_STRICT',
-  externs: ['./node_modules/closure-externs-mocha/mocha.js'],
-  output_wrapper: '(function(){%output%}).call();',
-  summary_detail_level: 3
-};
-
-gulp.task('clean', del.bind(null, [DEST]));
-
-gulp.task('js:tests:vdom', function() {
-  var opts = Object.create(CLOSURE_OPTS);
-  opts['js_output_file'] = 'vdom.spec.js';
-
-  return gulp.src(['tests/vdom.spec.js', 'src/**/*.js'])
-      .pipe(sourcemaps.init())
-      .pipe(closureCompiler(opts))
-      .pipe(sourcemaps.write(DEST + '/tests/'))
-      .pipe(gulp.dest(DEST + '/tests/'));
+gulp.task('dist:cjs', function() {
+  return gulp.src(['index.ts', 'lib/**/*.ts', 'typings/browser.d.ts'])
+    .pipe(ts(Object.assign(tsConfig.compilerOptions, {
+      target: 'es5',
+      module: 'commonjs'
+    })))
+    .pipe(gulp.dest('dist/cjs'));
 });
 
-gulp.task('test', ['js:tests:vdom'], function(done) {
+gulp.task('dist:es6', function() {
+  return gulp.src(['index.ts', 'lib/**/*.ts'])
+    .pipe(ts(Object.assign(tsConfig.compilerOptions, {
+      target: 'es6',
+      module: undefined,
+    })))
+    .pipe(gulp.dest('dist/es6'));
+});
+
+gulp.task('dist', ['dist:cjs', 'dist:es6']);
+
+gulp.task('test', function(done) {
+  var KarmaServer = require('karma').Server;
+
   new KarmaServer({
     configFile: __dirname + '/karma.conf.js',
     singleRun: true

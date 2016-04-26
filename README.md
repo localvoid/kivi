@@ -1,23 +1,6 @@
 # kivi
 
-Javascript UI library.
- 
-Kivi started as an experiment to check viability of UI applications with
-pull-based(lazy evaluation) architecture and now it is full-featured UI
-library.
-
-It was heavily inspired by [React](https://facebook.github.io/react/)
-library, but implementation and many architecture decisions are completely
-different.
-
-Kivi doesn't have a goal to provide a small sized library and its code base
-is larger than many lightweight UI libraries. But even for an average app,
-there is a high chance that code compiled with 
-[google-closure-compiler](https://github.com/google/closure-compiler)
-and advanced optimizations like
-[Type Based Property Renaming](https://github.com/google/closure-compiler/wiki/Type-Based-Property-Renaming)
-will be way much smaller than code compiled by traditional js compiler
-stacks.
+TypeScript (javascript) UI library.
 
 ## Virtual DOM
 
@@ -45,31 +28,24 @@ different optimizations:
 
 ## Example
 
-```js
-goog.provide('app');
-goog.provide('app.box');
-goog.provide('app.main');
-goog.require('kivi.CDescriptor');
-goog.require('kivi.VNode');
-goog.require('kivi.injectComponent');
-goog.require('kivi.start');
+```ts
+import {
+  createRoot,
+  createElement,
+  ComponentDescriptor,
+  scheduler,
+  injectComponent
+} from 'kivi';
 
-goog.scope(function() {
-  var VNode = kivi.VNode;
-  var $e = VNode.createElement;
-  var $c = VNode.createComponent;
-  
-  // Component Descriptor is an object that stores the behavior of
-  // the Component.
-  // First parameter is the name that is used for debugging purposes,
-  // and will be automatically removed from production builds.
-  // First generic type parameter is an input data type, and the
-  // second is a state type.
-  /** @const {!kivi.CDescriptor<string, null>} */
-  app.box.d = kivi.CDescriptor.create('Box');
+// Component Descriptor is an object that stores the behavior of
+// the Component.
+// First parameter is the name that is used for debugging purposes,
+// and will be automatically removed from production builds.
+// First generic type parameter is an input data type, and the
+// second is a state type.
+const Box = new ComponentDescriptor<string, any>('Box')
   // Tag name of the root element for this Component. Default tag is 'div'.
-  app.box.d.tag = 'span';
-  
+  .rootTag('span')
   // Function that responsible for updating internal state and the view
   // of the Component.
   // Each time when Component is invalidated (new data is passed, or
@@ -83,29 +59,25 @@ goog.scope(function() {
   // any method that is best suited for updates.
   //
   // First parameter is an instance of the Component.
-  /** @param {!kivi.Component<string, null>} c */
-  app.box.d.update = function(c) {
-    // syncVRoot method is used to update internal representation using
+  .update((c) => {
+    // sync method is used to update internal representation using
     // Virtual DOM API.
-    c.syncVRoot(VNode.createRoot().children(c.data));
-  };
-  
-  /** @const {!kivi.CDescriptor<string, null>} */
-  app.main.d = kivi.CDescriptor.create('Main');
-  
-  /** @param {!kivi.Component<string, null>} c */
-  app.main.d.update = function(c) {
-    c.syncVRoot(VNode.createRoot().children([
-      $e('span').children('Hello '),
-      $c(app.box.d, c.data)
+    c.sync(createRoot().children(c.data));
+  });
+
+const Main = new ComponentDescriptor('Main')
+  update((c) => {
+    c.sync(createRoot().children([
+      createElement('span').children('Hello '),
+      Box.createVNode(c.data)
     ]));
   };
-  
-  // start function is necessary, because we need to advance scheduler
+
+  // start method is necessary, because we need to advance scheduler
   // internal clock after DOM modifications that involve kivi Components.
-  kivi.start(function() {
+  scheduler.start(() => {
     // Instantiate and inject component into document body.
-    kivi.injectComponent(app.main.d, 'kivi', document.body);
+    injectComponent(Main, 'kivi', document.body);
   });
 });
 ```
