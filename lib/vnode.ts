@@ -6,7 +6,7 @@ import {ContainerManager} from './container_manager';
 import {syncStaticShapeProps, syncDynamicShapeProps} from './sync/props';
 import {syncStaticShapeAttrs, syncDynamicShapeAttrs, setAttr} from './sync/attrs';
 
-const enum VNodeFlags {
+export const enum VNodeFlags {
   Text                  = 1,
   Element               = 1 << 1,
   Component             = 1 << 2,
@@ -22,9 +22,9 @@ const enum VNodeFlags {
   /**
    * 16-23 bits: shared flags between kivi objects
    */
-  Svg                   = 1 << 16,
-  IsVModel              = 1 << 20,
-  VModelUpdateHandler   = 1 << 21,
+  Svg                   = 1 << 15,
+  IsVModel              = 1 << 19,
+  VModelUpdateHandler   = 1 << 20,
 }
 
 const enum VNodeDebugFlags {
@@ -96,7 +96,7 @@ export class VNode {
     this.ref = null;
     this.cref = null;
 
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       this._debugProperties = {
         flags: 0,
       }
@@ -122,7 +122,7 @@ export class VNode {
    * Set props
    */
   props(props: any) : VNode {
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error('Failed to set props on VNode: props method should be called on element or component root nodes only.')
       }
@@ -135,7 +135,7 @@ export class VNode {
    * Set props with dynamic shape
    */
   dynamicShapeProps(props: any) : VNode {
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error('Failed to set props on VNode: props method should be called on element or component root nodes only.')
       }
@@ -149,7 +149,7 @@ export class VNode {
    * Set attrs with static shape
    */
   attrs(attrs: Object) : VNode {
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error('Failed to set attrs on VNode: attrs method should be called on element or component root nodes only.')
       }
@@ -162,7 +162,7 @@ export class VNode {
    * Set attrs with dynamic shape
    */
   dynamicShapeAttrs(attrs: Object) : VNode {
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error('Failed to set attrs on VNode: attrs method should be called on element or component root nodes only.')
       }
@@ -176,7 +176,7 @@ export class VNode {
    * Set style in css string format
    */
   style(style: string) : VNode {
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error('Failed to set style on VNode: style method should be called on element or component root nodes only.')
       }
@@ -189,7 +189,7 @@ export class VNode {
    * Set className
    */
   className(className: string) : VNode {
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error('Failed to set classes on VNode: classes method should be called on element or component root nodes only.')
       }
@@ -202,7 +202,7 @@ export class VNode {
    * Set children
    */
   children(children: VNode[]|string) : VNode {
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root | VNodeFlags.Component)) === 0) {
         throw new Error('Failed to set children on VNode: children method should be called on element, component or component root nodes only.')
       }
@@ -218,7 +218,7 @@ export class VNode {
    * property.
    */
   trackByKeyChildren(children: VNode[]) : VNode {
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root | VNodeFlags.Component)) === 0) {
         throw new Error('Failed to set children on VNode: children method should be called on element, component or component root nodes only.')
       }
@@ -239,7 +239,7 @@ export class VNode {
    * Set text value for Input Elements
    */
   value(value: string) : VNode {
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this.flags & (VNodeFlags.Element | VNodeFlags.TextInputElement)) === 0) {
         throw new Error('Failed to set value on VNode: value method should be called on input elements.')
       }
@@ -252,7 +252,7 @@ export class VNode {
    * Set checked value for Input Elements
    */
   checked(value: boolean) : VNode {
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this.flags & (VNodeFlags.Element | VNodeFlags.CheckedInputElement)) === 0) {
         throw new Error('Failed to set value on VNode: value method should be called on input elements.')
       }
@@ -269,7 +269,7 @@ export class VNode {
    * moving children nodes.
    */
   managedContainer(manager: ContainerManager<any>) : VNode {
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error('Failed to set managedContainer mode on VNode: managedContainer method should be called on element or component root nodes only.')
       }
@@ -283,7 +283,7 @@ export class VNode {
    * Disable children shape errors in DEBUG mode
    */
   disableChildrenShapeError() : VNode {
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error('Failed to disable children shape error on VNode: disableChildrenShapeError method should' +
                         ' be called on element or component root nodes only.')
@@ -302,7 +302,7 @@ export class VNode {
    * already up to date (prevents spellchecker flickering).
    */
   disableFreeze() : VNode {
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       this._debugProperties.flags |= VNodeDebugFlags.DisableFreeze;
     }
     return this;
@@ -326,7 +326,7 @@ export class VNode {
   create(owner: Component<any, any>) : void {
     let flags = this.flags;
 
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if (this.ref !== null && ((flags & VNodeFlags.CommentPlaceholder) === 0)) {
         throw new Error('Failed to create VNode: VNode already has a reference to the DOM node.');
       }
@@ -338,9 +338,9 @@ export class VNode {
     } else if ((flags & VNodeFlags.Element) !== 0) {
       if ((flags & VNodeFlags.IsVModel) === 0) {
         if ((flags & VNodeFlags.Svg) === 0) {
-          this.ref = document.createElement(<string>this.tag);
+          this.ref = document.createElement(this.tag as string);
         } else {
-          this.ref = document.createElementNS(SvgNamespace, <string>this.tag);
+          this.ref = document.createElementNS(SvgNamespace, this.tag as string);
         }
       } else {
         this.ref = (this.tag as VModel<any>).createElement();
@@ -357,8 +357,8 @@ export class VNode {
    *
    * Comment placeholder can be used to delay element appearance in animations.
    */
-  createCommentPlaceholder() {
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+  createCommentPlaceholder() : void {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if (this.ref !== null) {
         throw new Error('Failed to create VNode Comment Placeholder: VNode already has a reference to the DOM node.');
       }
@@ -370,10 +370,10 @@ export class VNode {
   /**
    * Render internal representation of the Virtual DOM Node
    */
-  render(owner: Component<any, any>) {
+  render(owner: Component<any, any>) : void {
     let i: number;
 
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if (this.ref === null) {
         throw new Error('Failed to render VNode: VNode should be created before render.');
       }
@@ -412,12 +412,12 @@ export class VNode {
           keys = Object.keys(this._attrs);
           for (i = 0, il = keys.length; i < il; i++) {
             key = keys[i];
-            setAttr(ref, key, (<any>this._attrs)[key]);
+            setAttr(ref, key, (this._attrs as any)[key]);
           }
         }
 
         if (this._style !== null) {
-          // perf optimization for webkit/blink, probably will need to revisit this in the future.
+          // perf optimization for webkit/blink, probably will need to revisit this in the future
           if ((flags & VNodeFlags.Svg) === 0) {
             (ref as HTMLElement).style.cssText = this._style;
           } else {
@@ -426,14 +426,14 @@ export class VNode {
         }
 
         if (this._className !== null) {
-          if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+          if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
             let className = ref.getAttribute('class');
             if ((flags & VNodeFlags.Root) !== 0 && className) {
               printError(`VNode render: Component root node overwrited className property` +
                   ` "${className}" with "${this._className}".`)
             }
           }
-          // perf optimization for webkit/blink, probably will need to revisit this in the future.
+          // perf optimization for webkit/blink, probably will need to revisit this in the future
           if ((flags & VNodeFlags.Svg) === 0) {
             (ref as HTMLElement).className = this._className;
           } else {
@@ -471,7 +471,7 @@ export class VNode {
       ref = this.ref as Element;
 
       if (this._className !== null) {
-        // perf optimization for webkit/blink, probably will need to revisit this in the future.
+        // perf optimization for webkit/blink, probably will need to revisit this in the future
         if ((flags & VNodeFlags.Svg) === 0) {
           (ref as HTMLElement).className = this._className;
         } else {
@@ -488,10 +488,10 @@ export class VNode {
   }
 
   /**
-   * Mount VNode on top of existing html document.
+   * Mount VNode on top of existing html document
    */
-  mount(node: Node, owner: Component<any, any>) {
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+  mount(node: Node, owner: Component<any, any>) : void {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if (this.ref !== null) {
         throw new Error('Failed to mount VNode: VNode cannot be mounted if it already has a reference to DOM Node.');
       }
@@ -522,7 +522,7 @@ export class VNode {
       if (children !== null && typeof children !== 'string' && (children as VNode[]).length > 0) {
         let child = node.firstChild;
 
-        // Adjacent text nodes should be separated by Comment node "<!---->", so we can properly mount them.
+        // Adjacent text nodes should be separated by Comment node "<!---->", so we can properly mount them
         let commentNode: Node;
         while (child.nodeType === 8) {
           commentNode = child;
@@ -530,7 +530,7 @@ export class VNode {
           node.removeChild(commentNode);
         }
         for (i = 0; i < (children as VNode[]).length; i++) {
-          if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+          if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
             if (!child) {
               throw new Error('Failed to mount VNode: cannot find matching node.');
             }
@@ -550,13 +550,13 @@ export class VNode {
   }
 
   /**
-   * Sync this VNode with other VNode.
+   * Sync this VNode with other VNode
    *
    * When this node is synced with other node, this node should be considered as
    * destroyed, and any access to it after sync is an undefined behavior.
    */
-  sync(other: VNode, owner: Component<any, any>) {
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+  sync(other: VNode, owner: Component<any, any>) : void {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this._debugProperties.flags & (VNodeDebugFlags.Rendered | VNodeDebugFlags.Mounted)) === 0) {
         throw new Error('Failed to sync VNode: VNode should be rendered or mounted before sync.');
       }
@@ -565,12 +565,12 @@ export class VNode {
            VNodeDebugFlags.Attached | VNodeDebugFlags.Detached);
     }
 
-    let ref = <Element>this.ref;
+    let ref = this.ref as Element;
     let flags = this.flags;
     let component: Component<any, any>;
     let className: string;
 
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if (this.flags !== other.flags) {
         throw new Error(`Failed to sync VNode: flags does not match (old: ${this.flags}, new: ${other.flags})`);
       }
@@ -589,7 +589,7 @@ export class VNode {
 
     if ((flags & VNodeFlags.Text) !== 0) {
       if (this._props !== other._props) {
-        this.ref.nodeValue = <string>other._props;
+        this.ref.nodeValue = other._props as string;
       }
     } else if ((flags & (VNodeFlags.Element | VNodeFlags.Root)) !== 0) {
       if ((flags & VNodeFlags.VModelUpdateHandler) === 0) {
@@ -609,7 +609,7 @@ export class VNode {
         }
         if (this._style !== other._style) {
           let style = other._style === null ? '' : other._style;
-          // perf optimization for webkit/blink, probably will need to revisit this in the future.
+          // perf optimization for webkit/blink, probably will need to revisit this in the future
           if ((flags & VNodeFlags.Svg) === 0) {
             (ref as HTMLElement).style.cssText = style;
           } else {
@@ -619,7 +619,7 @@ export class VNode {
 
         if (this._className !== other._className) {
           className = (other._className === null) ? '' : other._className;
-          // perf optimization for webkit/blink, probably will need to revisit this in the future.
+          // perf optimization for webkit/blink, probably will need to revisit this in the future
           if ((flags & VNodeFlags.Svg) === 0) {
             (ref as HTMLElement).className = className;
           } else {
@@ -656,7 +656,7 @@ export class VNode {
     } else /* if ((flags & VNodeFlags.Component) !== 0) */ {
       if (this._className !== other._className) {
         className = (other._className === null) ? '' : other._className;
-        // perf optimization for webkit/blink, probably will need to revisit this in the future.
+        // perf optimization for webkit/blink, probably will need to revisit this in the future
         if ((flags & VNodeFlags.Svg) === 0) {
           (ref as HTMLElement).className = className;
         } else {
@@ -674,10 +674,10 @@ export class VNode {
   }
 
   /**
-   * Recursively attach all nodes.
+   * Recursively attach all nodes
    */
-  attach() {
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+  attach() : void {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this._debugProperties.flags & VNodeDebugFlags.Attached) !== 0) {
         throw new Error('Failed to attach VNode: VNode is already attached.');
       }
@@ -702,8 +702,8 @@ export class VNode {
    * as soon as they created and children nodes aren't attached at this
    * time.
    */
-  public attached() {
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+  attached() : void {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this._debugProperties.flags & VNodeDebugFlags.Attached) !== 0) {
         throw new Error('Failed to attach VNode: VNode is already attached.');
       }
@@ -716,10 +716,10 @@ export class VNode {
   }
 
   /**
-   * Recursively detach all nodes.
+   * Recursively detach all nodes
    */
-  detach() {
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+  detach() : void {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this._debugProperties.flags & VNodeDebugFlags.Detached) !== 0) {
         throw new Error('Failed to detach VNode: VNode is already detached.');
       }
@@ -739,10 +739,10 @@ export class VNode {
   }
 
   /**
-   * Recursively dispose all nodes.
+   * Recursively dispose all nodes
    */
-  dispose() {
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+  dispose() : void {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this._debugProperties.flags & VNodeDebugFlags.Disposed) !== 0) {
         throw new Error('Failed to dispose VNode: VNode is already disposed.')
       }
@@ -752,7 +752,7 @@ export class VNode {
       this._debugProperties.flags |= VNodeDebugFlags.Disposed;
     }
     if ((this.flags & VNodeFlags.Component) !== 0) {
-      (<Component<any, any>>this.cref).dispose();
+      (this.cref as Component<any, any>).dispose();
     } else if (this._children !== null) {
       let children = this._children;
       if (typeof children !== 'string') {
@@ -764,9 +764,9 @@ export class VNode {
   }
 
   /**
-   * Sync old children list with the new one.
+   * Sync old children list with the new one
    */
-  syncChildren(a: VNode[]|string, b: VNode[]|string, owner: Component<any, any>) {
+  syncChildren(a: VNode[]|string, b: VNode[]|string, owner: Component<any, any>) : void {
     let aNode: VNode;
     let bNode: VNode;
     let i = 0;
@@ -798,13 +798,13 @@ export class VNode {
     } else {
       if (a !== null && a.length !== 0) {
         if (b === null || b.length === 0) {
-          // b is empty, remove all children from a.
+          // b is empty, remove all children from a
           while(i < a.length) {
             this._removeChild(a[i++], owner);
           }
         } else {
           if (a.length === 1 && b.length === 1) {
-            // Fast path when a and b have only one child.
+            // Fast path when a and b have only one child
             aNode = a[0];
             bNode = b[0];
 
@@ -814,10 +814,10 @@ export class VNode {
               this._replaceChild(bNode, aNode, owner);
             }
           } else if (a.length === 1) {
-            // Fast path when a have 1 child.
+            // Fast path when a have 1 child
             aNode = a[0];
             if ((this.flags & VNodeFlags.TrackByKeyChildren) === 0) {
-              if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+              if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
                 if ((this._debugProperties.flags & VNodeDebugFlags.DisableChildrenShapeError) === 0) {
                   printError(
                       'VNode sync children: children shape is changing, you should enable tracking by key with ' +
@@ -839,7 +839,7 @@ export class VNode {
               while (i < b.length) {
                 bNode = b[i++];
                 if (aNode._key === bNode._key) {
-                  if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+                  if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
                     if (!aNode._canSync(bNode)) {
                       throw new Error('VNode sync children failed: cannot sync two different children with the same key.');
                     }
@@ -859,10 +859,10 @@ export class VNode {
               this._removeChild(aNode, owner);
             }
           } else if (b.length === 1) {
-            // Fast path when b have 1 child.
+            // Fast path when b have 1 child
             bNode = b[0];
             if ((this.flags & VNodeFlags.TrackByKeyChildren) === 0) {
-              if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+              if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
                 if ((this._debugProperties.flags & VNodeDebugFlags.DisableChildrenShapeError) === 0) {
                   printError(
                       'VNode sync children: children shape is changing, you should enable tracking by key with ' +
@@ -884,7 +884,7 @@ export class VNode {
               while (i < a.length) {
                 aNode = a[i++];
                 if (aNode._key === bNode._key) {
-                  if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+                  if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
                     if (!aNode._canSync(bNode)) {
                       throw new Error('VNode sync children failed: cannot sync two different children with the same key.');
                     }
@@ -905,7 +905,7 @@ export class VNode {
               this._insertChild(bNode, null, owner);
             }
           } else {
-            // a and b have more than 1 child.
+            // a and b have more than 1 child
             if ((this.flags & VNodeFlags.TrackByKeyChildren) === 0) {
               this._syncChildren(a, b, owner);
             } else {
@@ -923,13 +923,13 @@ export class VNode {
   }
 
   /**
-   * Sync children.
+   * Sync children
    *
    * Any heuristics that is used in this algorithm is an undefined behaviour,
    * and external dependencies should not rely on the knowledge about this
    * algorithm, because it can be changed in any time.
    */
-  private _syncChildren(a: VNode[], b: VNode[], owner: Component<any, any>) {
+  private _syncChildren(a: VNode[], b: VNode[], owner: Component<any, any>) : void {
     let aStart = 0;
     let bStart = 0;
     let aEnd = a.length - 1;
@@ -939,7 +939,7 @@ export class VNode {
     let nextPos: number;
     let next: Node;
 
-    // Sync similar nodes at the beginning.
+    // Sync similar nodes at the beginning
     while (aStart <= aEnd && bStart <= bEnd) {
       aNode = a[aStart];
       bNode = b[bStart];
@@ -954,7 +954,7 @@ export class VNode {
       aNode.sync(bNode, owner);
     }
 
-    // Sync similar nodes at the end.
+    // Sync similar nodes at the end
     while (aStart <= aEnd && bStart <= bEnd) {
       aNode = a[aEnd];
       bNode = b[bEnd];
@@ -969,7 +969,7 @@ export class VNode {
       aNode.sync(bNode, owner);
     }
 
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((aStart <= aEnd || bStart <= bEnd) &&
           ((this._debugProperties.flags & VNodeDebugFlags.DisableChildrenShapeError) === 0)) {
         printError(
@@ -993,12 +993,12 @@ export class VNode {
     }
 
     if (aStart <= aEnd) {
-      // All nodes from a are synced, remove the rest.
+      // All nodes from a are synced, remove the rest
       do {
         this._removeChild(a[aStart++], owner);
       } while (aStart <= aEnd);
     } else if (bStart <= bEnd) {
-      // All nodes from b are synced, insert the rest.
+      // All nodes from b are synced, insert the rest
       nextPos = bEnd + 1;
       next = nextPos < b.length ? b[nextPos].ref : null;
       do {
@@ -1008,9 +1008,9 @@ export class VNode {
   }
 
   /**
-   * Sync children tracking by keys.
+   * Sync children tracking by keys
    */
-  private _syncChildrenTrackingByKeys(a: VNode[], b: VNode[], owner: Component<any, any>) {
+  private _syncChildrenTrackingByKeys(a: VNode[], b: VNode[], owner: Component<any, any>) : void {
     let aStart = 0;
     let bStart = 0;
     let aEnd = a.length - 1;
@@ -1030,7 +1030,7 @@ export class VNode {
     let pos: number;
     let node: VNode;
 
-    // Algorithm that works on simple cases with basic list transformations.
+    // Algorithm that works on simple cases with basic list transformations
     //
     // It tries to reduce the diff problem by simultaneously iterating from the beginning and the end of both
     // lists, if keys are the same, they're synced, if node is moved from the beginning to the end of the
@@ -1039,9 +1039,9 @@ export class VNode {
     outer: do {
       stop = true;
 
-      // Sync nodes with the same key at the beginning.
+      // Sync nodes with the same key at the beginning
       while (aStartNode._key === bStartNode._key) {
-        if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+        if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
           if (!aStartNode._canSync(bStartNode)) {
             throw new Error('VNode sync children failed: cannot sync two different children with the same key.');
           }
@@ -1057,9 +1057,9 @@ export class VNode {
         stop = false;
       }
 
-      // Sync nodes with the same key at the end.
+      // Sync nodes with the same key at the end
       while (aEndNode._key === bEndNode._key) {
-        if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+        if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
           if (!aEndNode._canSync(bEndNode)) {
             throw new Error('VNode sync children failed: cannot sync two different children with the same key.');
           }
@@ -1075,9 +1075,9 @@ export class VNode {
         stop = false;
       }
 
-      // Move and sync nodes from left to right.
+      // Move and sync nodes from left to right
       while (aStartNode._key === bEndNode._key) {
-        if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+        if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
           if (!aStartNode._canSync(bEndNode)) {
             throw new Error('VNode sync children failed: cannot sync two different children with the same key.');
           }
@@ -1099,9 +1099,9 @@ export class VNode {
         continue outer;
       }
 
-      // Move and sync nodes from right to left.
+      // Move and sync nodes from right to left
       while (aEndNode._key === bStartNode._key) {
-        if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+        if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
           if (!aEndNode._canSync(bStartNode)) {
             throw new Error('VNode sync children failed: cannot sync two different children with the same key.');
           }
@@ -1121,19 +1121,19 @@ export class VNode {
     } while (!stop && aStart <= aEnd && bStart <= bEnd);
 
     if (aStart > aEnd) {
-      // All nodes from a are synced, insert the rest from b.
+      // All nodes from a are synced, insert the rest from b
       nextPos = bEnd + 1;
       next = nextPos < b.length ? b[nextPos].ref : null;
       while (bStart <= bEnd) {
         this._insertChild(b[bStart++], next, owner);
       }
     } else if (bStart > bEnd) {
-      // All nodes from b are synced, remove the rest from a.
+      // All nodes from b are synced, remove the rest from a
       while (aStart <= aEnd) {
         this._removeChild(a[aStart++], owner);
       }
     } else {
-      // Perform more complex sync algorithm on the remaining nodes.
+      // Perform more complex sync algorithm on the remaining nodes
       //
       // We start by marking all nodes from b as inserted, then we try to find all removed nodes and
       // simultaneously perform syncs on nodes that exists in both lists and replacing "inserted"
@@ -1144,7 +1144,7 @@ export class VNode {
       let bLength = bEnd - bStart + 1;
       let sources = new Array<number>(bLength);
 
-      // Mark all nodes as inserted.
+      // Mark all nodes as inserted
       for (i = 0; i < bLength; i++) {
         sources[i] = -1;
       }
@@ -1152,7 +1152,7 @@ export class VNode {
       let moved = false;
       let removeOffset = 0;
 
-      // When lists a and b are small, we are using naive O(M*N) algorithm to find removed children.
+      // When lists a and b are small, we are using naive O(M*N) algorithm to find removed children
       if (aLength * bLength <= 16) {
         for (i = aStart; i <= aEnd; i++) {
           let removed = true;
@@ -1167,7 +1167,7 @@ export class VNode {
               } else {
                 lastTarget = j;
               }
-              if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+              if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
                 if (!aNode._canSync(bNode)) {
                   throw new Error('VNode sync children failed: cannot sync two different children with the same key.');
                 }
@@ -1202,7 +1202,7 @@ export class VNode {
             } else {
               lastTarget = j;
             }
-            if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+            if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
               if (!aNode._canSync(bNode)) {
                 throw new Error('VNode sync children failed: cannot sync two different children with the same key.');
               }
@@ -1254,7 +1254,7 @@ export class VNode {
     }
   }
 
-  private _insertChild(node: VNode, nextRef: Node, owner: Component<any, any>) {
+  private _insertChild(node: VNode, nextRef: Node, owner: Component<any, any>) : void {
     if (((this.flags & VNodeFlags.ManagedContainer) !== 0) &&
         (node.cref as ContainerManager<any>).descriptor.insertChild !== null) {
       (node.cref as ContainerManager<any>).descriptor.insertChild(
@@ -1267,7 +1267,7 @@ export class VNode {
     }
   }
 
-  private _replaceChild(newNode: VNode, refNode: VNode, owner: Component<any, any>) {
+  private _replaceChild(newNode: VNode, refNode: VNode, owner: Component<any, any>) : void {
     if (((this.flags & VNodeFlags.ManagedContainer) !== 0) &&
         (newNode.cref as ContainerManager<any>).descriptor.replaceChild !== null) {
       (newNode.cref as ContainerManager<any>).descriptor.replaceChild(
@@ -1281,7 +1281,7 @@ export class VNode {
     }
   }
 
-  private _moveChild(node: VNode, nextRef: Node, owner: Component<any, any>) {
+  private _moveChild(node: VNode, nextRef: Node, owner: Component<any, any>) : void {
     if (((this.flags & VNodeFlags.ManagedContainer) !== 0) &&
         (node.cref as ContainerManager<any>).descriptor.moveChild !== null) {
       (node.cref as ContainerManager<any>).descriptor.moveChild(
@@ -1291,7 +1291,7 @@ export class VNode {
     }
   }
 
-  private _removeChild(node: VNode, owner: Component<any, any>) {
+  private _removeChild(node: VNode, owner: Component<any, any>) : void {
     if (((this.flags & VNodeFlags.ManagedContainer) !== 0) &&
         (node.cref as ContainerManager<any>).descriptor.removeChild !== null) {
       (node.cref as ContainerManager<any>).descriptor.removeChild(
@@ -1302,8 +1302,8 @@ export class VNode {
     }
   }
 
-  private _freeze() {
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+  private _freeze() : void {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this._debugProperties.flags & VNodeDebugFlags.DisableFreeze) === 0) {
         Object.freeze(this);
         if (this._attrs !== null && !Object.isFrozen(this._attrs)) {
@@ -1385,67 +1385,43 @@ function _lis(a: number[]) : number[] {
 }
 
 /**
- * Create a VNode representing a [Text] node.
+ * Create a VNode representing a [Text] node
  */
 export function createText(content: string) : VNode {
   return new VNode(VNodeFlags.Text, null, content);
 }
 
 /**
- * Create a VNode representing an [Element] node.
+ * Create a VNode representing an [Element] node
  */
 export function createElement(tag: string) : VNode {
   return new VNode(VNodeFlags.Element, tag, null);
 }
 
 /**
- * Create a VNode representing a [SVGElement] node.
+ * Create a VNode representing a [SVGElement] node
  */
 export function createSvgElement(tag: string) : VNode {
   return new VNode(VNodeFlags.Element | VNodeFlags.Svg, tag, null);
 }
 
 /**
- * Create a VNode representing a [HTMLInputElement] node with text value.
+ * Create a VNode representing a [HTMLInputElement] node with text value
  */
 export function createTextInput() : VNode {
   return new VNode(VNodeFlags.Element | VNodeFlags.TextInputElement, 'input', null);
 };
 
 /**
- * Create a VNode representing a [HTMLInputElement] node with boolean value.
+ * Create a VNode representing a [HTMLInputElement] node with boolean value
  */
 export function createCheckedInput() : VNode {
   return new VNode(VNodeFlags.Element | VNodeFlags.CheckedInputElement, 'input', null);
 };
 
 /**
- * Create a VNode representing a Component node.
- */
-export function createComponent<D, S>(descriptor: ComponentDescriptor<D, S>, data?: D) : VNode {
-  return new VNode(VNodeFlags.Component, descriptor, (data === void 0) ? null : data);
-};
-
-/**
- * Create a VNode representing a Component root node.
+ * Create a VNode representing a Component root node
  */
 export function createRoot() : VNode {
   return new VNode(VNodeFlags.Root, null, null);
-};
-
-/**
- * Create a VNode built with VModel.
- */
-export function createElementFromModel<D>(model: VModel<D>, data?: D) : VNode {
-  return new VNode(
-    VNodeFlags.Element | model.markFlags,
-    model,
-    (data === void 0) ? null : data);
-};
-
-/**
- * Create a Component root VNode built with VModel.
- */
-export function createRootFromModel<D>(model: VModel<D>, data?: D) : VNode {
-  return new VNode(VNodeFlags.Root | model.markFlags, model, (data === void 0) ? null : data);
 };

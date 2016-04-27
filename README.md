@@ -66,18 +66,17 @@ const Box = new ComponentDescriptor<string, any>('Box')
   });
 
 const Main = new ComponentDescriptor('Main')
-  update((c) => {
+  .update((c) => {
     c.sync(createRoot().children([
       createElement('span').children('Hello '),
       Box.createVNode(c.data)
     ]));
-  };
-
-  // start method is necessary, because we need to advance scheduler
-  // internal clock after DOM modifications that involve kivi Components.
-  scheduler.start(() => {
-    // Instantiate and inject component into document body.
-    injectComponent(Main, 'kivi', document.body);
   });
+
+// start method is necessary, because we need to advance scheduler
+// internal clock after DOM modifications that involve kivi Components.
+scheduler.start(() => {
+  // Instantiate and inject component into document body.
+  injectComponent(Main, 'kivi', document.body);
 });
 ```

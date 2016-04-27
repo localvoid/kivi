@@ -4,7 +4,7 @@ import {XmlNamespace, XlinkNamespace} from '../namespace';
  * Get attribute namespace
  */
 function _getAttrNamespace(key: string) : string {
-  if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+  if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
     if (key.substring(1, 4) === 'xml') {
       return XmlNamespace;
     } else if (key.substring(1, 6) === 'xlink') {
@@ -21,7 +21,7 @@ function _getAttrNamespace(key: string) : string {
  *
  * If attribute name starts with '$', treat it as a special attribute.
  */
-export function setAttr(node: Element, key: string, value: string) {
+export function setAttr(node: Element, key: string, value: string) : void {
   if (key[0] !== '$') {
     node.setAttribute(key, value);
   } else {
@@ -34,7 +34,7 @@ export function setAttr(node: Element, key: string, value: string) {
  *
  * If attribute name starts with '$', treat it as a special attribute.
  */
-export function removeAttr(node: Element, key: string) {
+export function removeAttr(node: Element, key: string) : void {
   if (key[0] !== '$') {
     node.removeAttribute(key);
   } else {
@@ -45,12 +45,12 @@ export function removeAttr(node: Element, key: string) {
 /**
  * Sync attributes with static shape
  */
-export function syncStaticShapeAttrs(a: any, b: any, node: Element) {
+export function syncStaticShapeAttrs(a: any, b: any, node: Element) : void {
   let keys = Object.keys(a);
   let key: string;
   let i: number;
 
-  if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+  if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
     if (a === null || b === null) {
       throw new Error('Failed to update attrs with static shape: attrs object have dynamic shape.');
     }
@@ -64,7 +64,7 @@ export function syncStaticShapeAttrs(a: any, b: any, node: Element) {
     }
   }
 
-  if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+  if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
     keys = Object.keys(b);
     for (i = 0; i < keys.length; i++) {
       key = keys[i];
@@ -78,9 +78,9 @@ export function syncStaticShapeAttrs(a: any, b: any, node: Element) {
 /**
  * Sync attributes with dynamic shape
  */
-export function syncDynamicShapeAttrs(a: any, b: any, node: Element) {
+export function syncDynamicShapeAttrs(a: any, b: any, node: Element) : void {
   let i: number;
-  let keys: Array<string>;
+  let keys: string[];
   let key: string;
 
   if (a !== null) {

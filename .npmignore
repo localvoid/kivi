@@ -5,6 +5,7 @@ system.config.js
 tsconfig.json
 typings.json
 
+build
 tests
 
 typings

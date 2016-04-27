@@ -20,7 +20,7 @@ const enum SchedulerFlags {
 /**
  * Microtask Scheduler based on MutationObserver
  */
-class MicroTaskScheduler {
+class MicrotaskScheduler {
   _observer: MutationObserver;
   _node: Text;
   _toggle: number;
@@ -32,7 +32,7 @@ class MicroTaskScheduler {
     this._observer.observe(this._node, {characterData: true});
   }
 
-  requestNextTick() {
+  requestNextTick() : void {
     this._toggle ^= 1;
     this._node.data = String.fromCharCode(this._toggle);
   }
@@ -41,7 +41,7 @@ class MicroTaskScheduler {
 /**
  * Macrotask Scheduler based on postMessage
  */
-class MacroTaskScheduler {
+class MacrotaskScheduler {
   _message: string;
 
   constructor(callback: ()=>void) {
@@ -55,14 +55,14 @@ class MacroTaskScheduler {
     });
   }
 
-  requestNextTick() {
+  requestNextTick() : void {
     window.postMessage(this._message, '*');
   }
 }
 
-export class FrameTasks {
+export class Frame {
   flags: number;
-  componentTasks: Array<Array<Component<any, any>>>;
+  componentTasks: Component<any, any>[][];
   writeTasks: SchedulerCallback[];
   readTasks: SchedulerCallback[];
   afterTasks: SchedulerCallback[];
@@ -80,7 +80,7 @@ export class FrameTasks {
   /**
    * Add Component to the components queue
    */
-  updateComponent(component: Component<any, any>) {
+  updateComponent(component: Component<any, any>) : void {
     let priority = component.depth;
 
     this.flags |= FrameTaskFlags.Component;
@@ -99,7 +99,7 @@ export class FrameTasks {
   /**
    * Add new task to the write task queue
    */
-  write(callback: SchedulerCallback) {
+  write(callback: SchedulerCallback) : void {
     this.flags |= FrameTaskFlags.Write;
     if (this.writeTasks === null) {
       this.writeTasks = [];
@@ -107,7 +107,7 @@ export class FrameTasks {
     this.writeTasks.push(callback);
   }
 
-  read(callback: SchedulerCallback) {
+  read(callback: SchedulerCallback) : void {
     this.flags |= FrameTaskFlags.Read;
     if (this.readTasks === null) {
       this.readTasks = [];
@@ -115,7 +115,7 @@ export class FrameTasks {
     this.readTasks.push(callback);
   }
 
-  after(callback: SchedulerCallback) {
+  after(callback: SchedulerCallback) : void {
     this.flags |= FrameTaskFlags.After;
     if (this.afterTasks === null) {
       this.afterTasks = [];
@@ -123,7 +123,7 @@ export class FrameTasks {
     this.afterTasks.push(callback);
   }
 
-  setFocus(node: Element|VNode) {
+  setFocus(node: Element|VNode) : void {
     this.focus = node;
   }
 }
@@ -148,204 +148,206 @@ export class Scheduler {
    * Cached timestamp. Updates every time when scheduler starts executing new batch of tasks.
    */
   time: number;
-  private _microTasks: SchedulerCallback[];
-  private _macroTasks: SchedulerCallback[];
-  private _currentFrameTasks: FrameTasks;
-  private _nextFrameTasks: FrameTasks;
+  private _microtasks: SchedulerCallback[];
+  private _macrotasks: SchedulerCallback[];
+  private _currentFrame: Frame;
+  private _nextFrame: Frame;
   /**
    * Components array that should be updated on each frame.
    */
   private _updateComponents: Component<any, any>[];
 
-  private _microTaskScheduler: MicroTaskScheduler;
-  private _macroTaskScheduler: MacroTaskScheduler;
-  private _handleAnimationFrame: (t: number) => void;
+  private _microtaskScheduler: MicrotaskScheduler;
+  private _macrotaskScheduler: MacrotaskScheduler;
 
   constructor() {
     this.flags = 0;
     this.clock = 1;
     this.time = 0;
-    this._microTasks = [];
-    this._macroTasks = [];
-    this._currentFrameTasks = new FrameTasks();
-    this._nextFrameTasks = new FrameTasks();
+    this._microtasks = [];
+    this._macrotasks = [];
+    this._currentFrame = new Frame();
+    this._nextFrame = new Frame();
     this._updateComponents = [];
-
-    this._microTaskScheduler = new MicroTaskScheduler(() => {
-      this.flags |= SchedulerFlags.Running;
-      this.time = Date.now();
-
-      while (this._microTasks.length > 0) {
-        let tasks = this._microTasks;
-        this._microTasks = [];
-        for (let i = 0; i < tasks.length; i++) {
-          tasks[i]();
-        }
-      }
-
-      this.clock++;
-      this.flags &= ~(SchedulerFlags.MicrotaskPending | SchedulerFlags.Running);
-    });
-
-    this._macroTaskScheduler = new MacroTaskScheduler(() => {
-      this.flags &= ~SchedulerFlags.MacrotaskPending;
-      this.flags |= SchedulerFlags.Running;
-      this.time = Date.now();
-
-      let tasks = this._macroTasks;
-      this._macroTasks = [];
-      for (let i = 0; i < tasks.length; i++) {
-        tasks[i]();
-      }
-
-      this.clock++;
-      this.flags &= ~SchedulerFlags.Running;
-    });
-
-    this._handleAnimationFrame = (t: number) => {
-      let updateComponents = this._updateComponents;
-      let tasks: SchedulerCallback[];
-      let i: number;
-      let j: number;
-
-      this.flags &= ~SchedulerFlags.FrametaskPending;
-      this.flags |= SchedulerFlags.Running;
-      this.time = Date.now();
-
-      let frame = this._nextFrameTasks;
-      this._nextFrameTasks = this._currentFrameTasks;
-      this._currentFrameTasks = frame;
-
-      // Mark all update components as dirty. But don't update until all write tasks
-      // are finished. It is possible that we won't need to update Component if it
-      // is removed.
-      for (i = 0; i < updateComponents.length; i++) {
-        updateComponents[i].markDirty();
-      }
-
-      do {
-        while ((frame.flags & (FrameTaskFlags.Component | FrameTaskFlags.Write)) !== 0) {
-          if ((frame.flags & FrameTaskFlags.Component) !== 0) {
-            frame.flags &= ~FrameTaskFlags.Component;
-            let groups = frame.componentTasks;
-
-            for (i = 0; i < groups.length; i++) {
-              let group = groups[i];
-              if (group !== null) {
-                groups[i] = null;
-                for (j = 0; j < group.length; j++) {
-                  group[j].update();
-                }
-              }
-            }
-          }
-
-          if ((frame.flags & FrameTaskFlags.Write) !== 0) {
-            frame.flags &= ~FrameTaskFlags.Write;
-            tasks = frame.writeTasks;
-            for (i = 0; i < tasks.length; i++) {
-              tasks[i]();
-            }
-          }
-        }
-
-        // Update components registered for updating on each frame.
-        // Remove components that doesn't have UPDATE_EACH_FRAME flag.
-        i = 0;
-        j = updateComponents.length;
-        while (i < j) {
-          let component = updateComponents[i++];
-          if ((component.flags & ComponentFlags.UpdateEachFrame) === 0) {
-            component.flags &= ~ComponentFlags.InUpdateQueue;
-            if (i === j) {
-              updateComponents.pop();
-            } else {
-              updateComponents[--i] = updateComponents.pop();
-            }
-          } else {
-            component.update();
-          }
-        }
-
-        while ((frame.flags & FrameTaskFlags.Read) !== 0) {
-          frame.flags &= ~FrameTaskFlags.Read;
-          tasks = frame.readTasks;
-          frame.readTasks = null;
-
-          for (i = 0; i < tasks.length; i++) {
-            tasks[i]();
-          }
-        }
-      } while ((frame.flags & (FrameTaskFlags.Component | FrameTaskFlags.Write)) !== 0);
-
-      while ((frame.flags & FrameTaskFlags.After) !== 0) {
-        frame.flags &= ~FrameTaskFlags.After;
-
-        tasks = frame.afterTasks;
-        for (i = 0; i < tasks.length; i++) {
-          tasks[i]();
-        }
-      }
-
-      if (frame.focus !== null) {
-        if (frame.focus.constructor === VNode) {
-          (<HTMLElement>(<VNode>frame.focus).ref).focus();
-        } else {
-          (<HTMLElement>frame.focus).focus();
-        }
-        frame.focus = null;
-      }
-
-      if (updateComponents.length > 0) {
-        this.requestAnimationFrame();
-      }
-
-      this.clock++;
-      this.flags &= ~SchedulerFlags.Running;
-    };
+    this._microtaskScheduler = new MicrotaskScheduler(this._handleMicrotaskScheduler);
+    this._macrotaskScheduler = new MacrotaskScheduler(this._handleMacrotaskScheduler);
   }
 
-  requestAnimationFrame() {
+  requestAnimationFrame() : void {
     if ((this.flags & SchedulerFlags.FrametaskPending) === 0) {
       this.flags |= SchedulerFlags.FrametaskPending;
       requestAnimationFrame(this._handleAnimationFrame);
     }
   }
 
-  currentFrame() : FrameTasks {
-    return this._currentFrameTasks;
+  currentFrame() : Frame {
+    return this._currentFrame;
   }
 
-  nextFrame() : FrameTasks {
+  nextFrame() : Frame {
     this.requestAnimationFrame();
-    return this._nextFrameTasks;
+    return this._nextFrame;
   }
 
-  startUpdateComponentEachFrame(component: Component<any, any>) {
+  startUpdateComponentEachFrame(component: Component<any, any>) : void {
     this.requestAnimationFrame();
     this._updateComponents.push(component);
   }
 
-  scheduleMicrotask(callback: SchedulerCallback) {
+  scheduleMicrotask(callback: SchedulerCallback) : void {
     if ((this.flags & SchedulerFlags.MicrotaskPending) === 0) {
       this.flags |= SchedulerFlags.MicrotaskPending;
-      this._microTaskScheduler.requestNextTick();
+      this._microtaskScheduler.requestNextTick();
     }
-    this._microTasks.push(callback);
+    this._microtasks.push(callback);
   }
 
-  scheduleMacrotask(callback: SchedulerCallback) {
+  scheduleMacrotask(callback: SchedulerCallback) : void {
     if ((this.flags & SchedulerFlags.MacrotaskPending) === 0) {
       this.flags |= SchedulerFlags.MacrotaskPending;
-      this._macroTaskScheduler.requestNextTick();
+      this._macrotaskScheduler.requestNextTick();
     }
-    this._macroTasks.push(callback);
+    this._macrotasks.push(callback);
   }
 
-  start(callback: SchedulerCallback) {
+  start(callback: SchedulerCallback) : void {
     this.flags |= SchedulerFlags.Running;
     this.time = Date.now();
     callback();
+    this.clock++;
+    this.flags &= ~SchedulerFlags.Running;
+  }
+
+  private _handleMicrotaskScheduler = () => {
+    this.flags |= SchedulerFlags.Running;
+    this.time = Date.now();
+
+    while (this._microtasks.length > 0) {
+      let tasks = this._microtasks;
+      this._microtasks = [];
+      for (let i = 0; i < tasks.length; i++) {
+        tasks[i]();
+      }
+    }
+
+    this.clock++;
+    this.flags &= ~(SchedulerFlags.MicrotaskPending | SchedulerFlags.Running);
+  }
+
+  private _handleMacrotaskScheduler = () => {
+    this.flags &= ~SchedulerFlags.MacrotaskPending;
+    this.flags |= SchedulerFlags.Running;
+    this.time = Date.now();
+
+    let tasks = this._macrotasks;
+    this._macrotasks = [];
+    for (let i = 0; i < tasks.length; i++) {
+      tasks[i]();
+    }
+
+    this.clock++;
+    this.flags &= ~SchedulerFlags.Running;
+  }
+
+  private _handleAnimationFrame = (t: number) => {
+    let updateComponents = this._updateComponents;
+    let tasks: SchedulerCallback[];
+    let i: number;
+    let j: number;
+
+    this.flags &= ~SchedulerFlags.FrametaskPending;
+    this.flags |= SchedulerFlags.Running;
+    this.time = Date.now();
+
+    let frame = this._nextFrame;
+    this._nextFrame = this._currentFrame;
+    this._currentFrame = frame;
+
+    // Mark all update components as dirty. But don't update until all write tasks
+    // are finished. It is possible that we won't need to update Component if it
+    // is removed.
+    for (i = 0; i < updateComponents.length; i++) {
+      updateComponents[i].markDirty();
+    }
+
+    do {
+      while ((frame.flags & (FrameTaskFlags.Component | FrameTaskFlags.Write)) !== 0) {
+        if ((frame.flags & FrameTaskFlags.Component) !== 0) {
+          frame.flags &= ~FrameTaskFlags.Component;
+          let groups = frame.componentTasks;
+
+          for (i = 0; i < groups.length; i++) {
+            let group = groups[i];
+            if (group !== null) {
+              groups[i] = null;
+              for (j = 0; j < group.length; j++) {
+                group[j].update();
+              }
+            }
+          }
+        }
+
+        if ((frame.flags & FrameTaskFlags.Write) !== 0) {
+          frame.flags &= ~FrameTaskFlags.Write;
+          tasks = frame.writeTasks;
+          for (i = 0; i < tasks.length; i++) {
+            tasks[i]();
+          }
+        }
+      }
+
+      // Update components registered for updating on each frame.
+      // Remove components that doesn't have UPDATE_EACH_FRAME flag.
+      i = 0;
+      j = updateComponents.length;
+
+      while (i < j) {
+        let component = updateComponents[i++];
+        if ((component.flags & ComponentFlags.UpdateEachFrame) === 0) {
+          component.flags &= ~ComponentFlags.InUpdateQueue;
+          if (i === j) {
+            updateComponents.pop();
+          } else {
+            updateComponents[--i] = updateComponents.pop();
+          }
+        } else {
+          component.update();
+        }
+      }
+
+      while ((frame.flags & FrameTaskFlags.Read) !== 0) {
+        frame.flags &= ~FrameTaskFlags.Read;
+        tasks = frame.readTasks;
+        frame.readTasks = null;
+
+        for (i = 0; i < tasks.length; i++) {
+          tasks[i]();
+        }
+      }
+    } while ((frame.flags & (FrameTaskFlags.Component | FrameTaskFlags.Write)) !== 0);
+
+    while ((frame.flags & FrameTaskFlags.After) !== 0) {
+      frame.flags &= ~FrameTaskFlags.After;
+
+      tasks = frame.afterTasks;
+      for (i = 0; i < tasks.length; i++) {
+        tasks[i]();
+      }
+    }
+
+    if (frame.focus !== null) {
+      if (frame.focus.constructor === VNode) {
+        ((frame.focus as VNode).ref as HTMLElement).focus();
+      } else {
+        (frame.focus as HTMLElement).focus();
+      }
+      frame.focus = null;
+    }
+
+    if (updateComponents.length > 0) {
+      this.requestAnimationFrame();
+    }
+
     this.clock++;
     this.flags &= ~SchedulerFlags.Running;
   }

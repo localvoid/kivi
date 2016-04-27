@@ -1,8 +1,8 @@
 {
   "name": "kivi",
-  "main": "dist/cjs/index.js",
-  "jsnext:main": "dist/es6/index.js",
-  "typings": "index.ts",
+  "main": "dist/cjs/kivi.js",
+  "jsnext:main": "dist/es6/kivi.js",
+  "typings": "dist/typings/kivi.d.ts",
   "version": "0.9.0",
   "description": "Web UI library",
   "license": "MIT",
@@ -31,15 +31,17 @@
   "github": "https://github.com/localvoid/kivi",
   "dependencies": {},
   "devDependencies": {
-    "es6-module-loader": "^0.17.11",
+    "del": "^2.2.0",
     "gulp": "^3.9.1",
     "gulp-typescript": "^2.13.0",
     "jasmine-core": "^2.2.0",
     "karma": "^0.13.22",
     "karma-chrome-launcher": "^0.2.3",
     "karma-jasmine": "^0.3.8",
-    "karma-systemjs": "^0.13.0",
-    "systemjs": "^0.19.26",
+    "merge2": "^1.0.2",
+    "rollup": "^0.26.0",
+    "rollup-plugin-replace": "^1.1.0",
+    "rollup-plugin-typescript": "^0.7.5",
     "typescript": "^1.8.10"
   }
 }

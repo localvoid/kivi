@@ -1,12 +1,12 @@
 /**
  * Sync properties with static shape
  */
-export function syncStaticShapeProps(a: any, b: any, node: Element) {
+export function syncStaticShapeProps(a: any, b: any, node: Element) : void {
   let keys = Object.keys(a);
   let key: string;
   let i: number;
 
-  if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+  if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
     if (a === null || b === null) {
       throw new Error('Failed to update props with static shape: props object have dynamic shape.');
     }
@@ -20,7 +20,7 @@ export function syncStaticShapeProps(a: any, b: any, node: Element) {
     }
   }
 
-  if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+  if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
     keys = Object.keys(b);
     for (i = 0; i < keys.length; i++) {
       key = keys[i];
@@ -34,9 +34,9 @@ export function syncStaticShapeProps(a: any, b: any, node: Element) {
 /**
  * Sync properties with dynamic shape
  */
-export function syncDynamicShapeProps(a: any, b: any, node: Element) {
+export function syncDynamicShapeProps(a: any, b: any, node: Element) : void {
   let i: number;
-  let keys: Array<string>;
+  let keys: string[];
   let key: string;
 
   if (a !== null) {

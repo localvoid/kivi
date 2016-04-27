@@ -1,6 +1,6 @@
 import {SvgNamespace} from './namespace';
 import {VModel} from './vmodel';
-import {VNode, createComponent} from './vnode';
+import {VNode, VNodeFlags} from './vnode';
 import {InvalidatorSubscription, Invalidator} from './invalidator';
 import {scheduler} from './scheduler';
 
@@ -8,10 +8,10 @@ const enum ComponentDescriptorFlags {
   /**
    * 16-23 bits: shared flags between kivi objects
    */
-  Svg              = 1 << 16,
-  Canvas           = 1 << 17,
-  EnabledRecycling = 1 << 18,
-  IsVModel         = 1 << 20,
+  Svg              = 1 << 15,
+  Canvas           = 1 << 16,
+  EnabledRecycling = 1 << 17,
+  IsVModel         = 1 << 19,
 }
 
 export const enum ComponentFlags {
@@ -26,9 +26,9 @@ export const enum ComponentFlags {
   /**
    * 16-23 bits: shared flags between kivi objects
    */
-  Svg              = 1 << 16,
-  Canvas           = 1 << 17,
-  EnabledRecycling = 1 << 18,
+  Svg              = 1 << 15,
+  Canvas           = 1 << 16,
+  EnabledRecycling = 1 << 17,
 }
 
 /**
@@ -43,7 +43,7 @@ export class ComponentDescriptor<D, S> {
   markFlags: number;
   flags: number;
   /**
-   * Tag name of the root element
+   * Tag name of the root element or reference to a model
    */
   _tag: string|VModel<any>;
   /**
@@ -87,11 +87,10 @@ export class ComponentDescriptor<D, S> {
 
   _recycled: Component<D, S>[];
   _maxRecycled: number;
-  name: string;
 
-  constructor(name: string, flags: number = 0) {
+  constructor() {
     this.markFlags = ComponentFlags.Dirty;
-    this.flags = flags;
+    this.flags = 0;
     this._tag = 'div';
     this._setData = null;
     this._setChildren = null;
@@ -101,12 +100,9 @@ export class ComponentDescriptor<D, S> {
     this._attached = null;
     this._detached = null;
     this._disposed = null;
-    if ('<@KIVI_COMPONENT_RECYCLING@>' === 'KIVI_COMPONENT_RECYCLING_ENABLED') {
+    if ('<@KIVI_COMPONENT_RECYCLING@>' === 'COMPONENT_RECYCLING_ENABLED') {
       this._recycled = null;
       this._maxRecycled = 0;
-    }
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
-      this.name = name;
     }
   }
 
@@ -130,7 +126,7 @@ export class ComponentDescriptor<D, S> {
   /**
    * Set VModel for the root element
    */
-  rootModel(model: VModel<any>) : ComponentDescriptor<D, S> {
+  rootVModel(model: VModel<any>) : ComponentDescriptor<D, S> {
     this.markFlags |= model.markFlags;
     this.flags |= model.markFlags;
     this._tag = model;
@@ -221,7 +217,7 @@ export class ComponentDescriptor<D, S> {
    * Enable Component recycling
    */
   enableRecycling(maxRecycled: number) : ComponentDescriptor<D, S> {
-    if ('<@KIVI_COMPONENT_RECYCLING@>' === 'KIVI_COMPONENT_RECYCLING_ENABLED') {
+    if ('<@KIVI_COMPONENT_RECYCLING@>' === 'COMPONENT_RECYCLING_ENABLED') {
       this.markFlags |= ComponentFlags.EnabledRecycling;
       this.flags |= ComponentDescriptorFlags.EnabledRecycling;
       this._recycled = [];
@@ -233,8 +229,8 @@ export class ComponentDescriptor<D, S> {
   /**
    * Create a Virtual DOM Node
    */
-  createVNode(data: D) : VNode {
-    return createComponent(this, data);
+  createVNode(data: D = null) : VNode {
+    return new VNode(VNodeFlags.Component, this, data);
   }
 
   /**
@@ -244,7 +240,7 @@ export class ComponentDescriptor<D, S> {
     let element: Element;
     let component: Component<D, S>;
 
-    if ('<@KIVI_COMPONENT_RECYCLING@>' !== 'KIVI_COMPONENT_RECYCLING_ENABLED' ||
+    if ('<@KIVI_COMPONENT_RECYCLING@>' !== 'COMPONENT_RECYCLING_ENABLED' ||
         ((this.flags & ComponentDescriptorFlags.EnabledRecycling) === 0) ||
         (this._recycled.length === 0)) {
 
@@ -384,7 +380,7 @@ export class Component<D, S> {
    * mounted on top of the existing document tree.
    */
   sync(newRoot: VNode) : void {
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if (newRoot.isRoot()) {
         throw new Error('Failed to sync: sync methods accepts only VNodes representing root node.');
       }
@@ -448,13 +444,13 @@ export class Component<D, S> {
   }
 
   attached() : void {
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this.flags & ComponentFlags.Attached) !== 0) {
         throw new Error('Failed to attach Component: component is already attached.');
       }
     }
     this.flags |= ComponentFlags.Attached;
-    if ('<@KIVI_COMPONENT_RECYCLING@>' === 'KIVI_COMPONENT_RECYCLING_ENABLED') {
+    if ('<@KIVI_COMPONENT_RECYCLING@>' === 'COMPONENT_RECYCLING_ENABLED') {
       this.flags &= ~ComponentFlags.Recycled;
     }
 
@@ -475,8 +471,8 @@ export class Component<D, S> {
     this.detached();
   }
 
-  detached() {
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+  detached() : void {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this.flags & ComponentFlags.Attached) === 0) {
         throw new Error('Failed to detach Component: component is already detached.');
       }
@@ -491,14 +487,14 @@ export class Component<D, S> {
     }
   }
 
-  dispose() {
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+  dispose() : void {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this.flags & ComponentFlags.Disposed) !== 0) {
         throw new Error('Failed to dispose Component: component is already disposed');
       }
     }
 
-    if ('<@KIVI_COMPONENT_RECYCLING@>' !== 'KIVI_COMPONENT_RECYCLING_ENABLED' ||
+    if ('<@KIVI_COMPONENT_RECYCLING@>' !== 'COMPONENT_RECYCLING_ENABLED' ||
         ((this.flags & ComponentFlags.EnabledRecycling) === 0) ||
         (this.descriptor._recycled.length >= this.descriptor._maxRecycled)) {
       this.flags |= ComponentFlags.Disposed;
@@ -517,7 +513,10 @@ export class Component<D, S> {
     }
   }
 
-  subscribe(invalidator: Invalidator) {
+  /**
+   * Subscribe to invalidator object
+   */
+  subscribe(invalidator: Invalidator) : void {
     let s = invalidator.subscribeComponent(this);
     let subscriptions = this._subscriptions;
     if (subscriptions === null) {
@@ -529,7 +528,13 @@ export class Component<D, S> {
     }
   }
 
-  transientSubscribe(invalidator: Invalidator) {
+  /**
+   * Transiently subscribe to invalidator object
+   *
+   * Each time component is invalidated, all transient subscriptions will be
+   * canceled.
+   */
+  transientSubscribe(invalidator: Invalidator) : void {
     let s = invalidator.transientSubscribeComponent(this);
     let subscriptions = this._transientSubscriptions;
     if (subscriptions === null) {
@@ -541,11 +546,11 @@ export class Component<D, S> {
     }
   }
 
-  removeSubscription(subscription: InvalidatorSubscription) {
+  removeSubscription(subscription: InvalidatorSubscription) : void {
     let subscriptions = this._subscriptions;
     if (subscriptions.constructor === InvalidatorSubscription ||
         (subscriptions as InvalidatorSubscription[]).length === 1) {
-      if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+      if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
         if (subscriptions.constructor === InvalidatorSubscription) {
           if (subscriptions !== subscription) {
             throw new Error('Failed to remove subscription from Component: cannot find appropriate subscription');
@@ -559,7 +564,7 @@ export class Component<D, S> {
       this._subscriptions = null;
     } else {
       let i = (subscriptions as InvalidatorSubscription[]).indexOf(subscription);
-      if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+      if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
         if (i === -1) {
           throw new Error('Failed to remove subscription from Component: cannot find appropriate subscription');
         }
@@ -568,11 +573,11 @@ export class Component<D, S> {
     }
   }
 
-  removeTransientSubscription(subscription: InvalidatorSubscription) {
+  removeTransientSubscription(subscription: InvalidatorSubscription) : void {
     let subscriptions = this._transientSubscriptions;
     if (subscriptions.constructor === InvalidatorSubscription ||
         (subscriptions as InvalidatorSubscription[]).length === 1) {
-      if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+      if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
         if (subscriptions.constructor === InvalidatorSubscription) {
           if (subscriptions !== subscription) {
             throw new Error('Failed to remove subscription from Component: cannot find appropriate subscription');
@@ -586,7 +591,7 @@ export class Component<D, S> {
       this._transientSubscriptions = null;
     } else {
       let i = (subscriptions as InvalidatorSubscription[]).indexOf(subscription);
-      if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+      if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
         if (i === -1) {
           throw new Error('Failed to remove subscription from Component: cannot find appropriate subscription');
         }
@@ -598,7 +603,7 @@ export class Component<D, S> {
   /**
    * Cancel all subscriptions
    */
-  cancelSubscriptions() {
+  cancelSubscriptions() : void {
     let subscriptions = this._subscriptions;
     if (subscriptions !== null) {
       if (subscriptions.constructor === InvalidatorSubscription) {

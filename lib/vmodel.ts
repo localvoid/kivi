@@ -1,5 +1,6 @@
 import {SvgNamespace} from './namespace';
 import {setAttr} from './sync/attrs';
+import {VNodeFlags, VNode} from './vnode';
 
 /**
  * VModel flags
@@ -9,12 +10,18 @@ const enum VModelFlags {
   /**
    * 16-23 bits: shared flags between kivi objects
    */
-  Svg                  = 1 << 16,
-  IsVModel             = 1 << 20,
-  VModelUpdateHandler  = 1 << 21,
+  Svg                  = 1 << 15,
+  IsVModel             = 1 << 19,
+  VModelUpdateHandler  = 1 << 20,
 }
 
-export type VModelUpdateHandler<D> = (node: Node, oldProps: D, newProps: D) => void;
+/**
+ * Update handler used to override default diff/patch behavior
+ *
+ * When oldProps is undefined, it means that element was created for the
+ * first time.
+ */
+export type VModelUpdateHandler<D> = (element: Element, oldProps: D, newProps: D) => void;
 
 /**
  * Model for DOM Elements
@@ -47,43 +54,81 @@ export class VModel<D> {
     this._ref = null;
   }
 
+  /**
+   * Use svg namespace for the dom element
+   */
   svg() : VModel<D> {
     this.markFlags |= VModelFlags.Svg;
     this._flags |= VModelFlags.Svg;
     return this;
   }
 
+  /**
+   * Set properties
+   */
   props(props: any) : VModel<D> {
     this._props = props;
     return this;
   }
 
+  /**
+   * Set attributes
+   */
   attrs(attrs: any) : VModel<D> {
     this._attrs = attrs;
     return this;
   }
 
+  /**
+   * Set style in css string format
+   */
   style(style: string) : VModel<D> {
     this._style = style;
     return this;
   }
 
+  /**
+   * Set className
+   */
   className(classes: string) : VModel<D> {
     this._className = classes;
     return this;
   }
 
+  /**
+   * Enable use of Node.cloneNode(false) to clone DOM elements
+   */
   enableCloning() : VModel<D> {
     this._flags |= VModelFlags.EnabledCloning;
     return this;
   }
 
+  /**
+   * Set update handler
+   */
   updateHandler(handler: VModelUpdateHandler<D>) : VModel<D> {
     this.markFlags |= VModelFlags.VModelUpdateHandler;
     this._updateHandler = handler;
     return this;
   }
 
+  /**
+   * Create a Virtual DOM Node from this model
+   */
+  createVNode(data: D = null) : VNode {
+    return new VNode(VNodeFlags.Element | this.markFlags, this, data);
+  }
+
+  /**
+   * Create a Virtual DOM Node for Component root from this model
+   */
+  createVRoot(data: D = null) : VNode {
+    return new VNode(VNodeFlags.Root | this.markFlags, this, data);
+  }
+
+  /**
+   * Create a DOM Element from this model
+   */
   createElement() : Element {
     let ref: Element;
     let i: number;
@@ -131,7 +176,10 @@ export class VModel<D> {
     }
   }
 
-  update(node: Node, oldProps: D, newProps: D) {
-    this._updateHandler(node, oldProps, newProps);
+  /**
+   * Update DOM Node with an update handler
+   */
+  update(element: Element, oldProps: D, newProps: D) : void {
+    this._updateHandler(element, oldProps, newProps);
   }
 }

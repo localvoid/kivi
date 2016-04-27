@@ -25,13 +25,13 @@ export class InvalidatorSubscription {
     this._component = component;
     this._callback = callback;
 
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       this._isCanceled = false;
     }
   }
 
-  cancel() {
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+  cancel() : void {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if (this._isCanceled) {
         throw new Error('Failed to cancel InvalidatorSubscription: subscription cannot be canceled twice.');
       }
@@ -50,7 +50,7 @@ export class InvalidatorSubscription {
     }
   }
 
-  invalidate() {
+  invalidate() : void {
     if ((this._flags & InvalidatorSubscriptionFlags.Component) !== 0) {
       this._component.invalidate();
     } else {
@@ -112,7 +112,7 @@ export class Invalidator {
             this._transientSubscriptions !== null);
   }
 
-  invalidate() {
+  invalidate() : void {
     let now = scheduler.clock;
     if (this.mtime < now) {
       this.mtime = now;
@@ -137,7 +137,7 @@ export class Invalidator {
     }
   }
 
-  _addSubscription(subscription: InvalidatorSubscription) {
+  _addSubscription(subscription: InvalidatorSubscription) : void {
     if (this._subscription !== null) {
       this._subscriptions = [this._subscription, subscription];
       this._subscription = null;
@@ -148,7 +148,7 @@ export class Invalidator {
     }
   }
 
-  _addTransientSubscription(subscription: InvalidatorSubscription) {
+  _addTransientSubscription(subscription: InvalidatorSubscription) : void {
     if (this._transientSubscription !== null) {
       this._transientSubscriptions = [this._transientSubscription, subscription];
       this._transientSubscription = null;
@@ -159,8 +159,8 @@ export class Invalidator {
     }
   }
 
-  removeSubscription(subscription: InvalidatorSubscription) {
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+  removeSubscription(subscription: InvalidatorSubscription) : void {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this._subscription !== null && this._subscription !== subscription) ||
           this._subscriptions === null ||
           this._subscriptions.indexOf(subscription) === -1) {
@@ -178,8 +178,8 @@ export class Invalidator {
     }
   }
 
-  removeTransientSubscription(subscription: InvalidatorSubscription) {
-    if ('<@KIVI_DEBUG@>' !== 'KIVI_DEBUG_DISABLED') {
+  removeTransientSubscription(subscription: InvalidatorSubscription) : void {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this._transientSubscription !== null && this._transientSubscription !== subscription) ||
           this._transientSubscriptions === null ||
           this._transientSubscriptions.indexOf(subscription) === -1) {
