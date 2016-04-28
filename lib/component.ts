@@ -9,7 +9,7 @@ const enum ComponentDescriptorFlags {
    * 16-23 bits: shared flags between kivi objects
    */
   Svg              = 1 << 15,
-  Canvas           = 1 << 16,
+  Canvas2D         = 1 << 16,
   EnabledRecycling = 1 << 17,
   IsVModel         = 1 << 19,
 }
@@ -27,7 +27,7 @@ export const enum ComponentFlags {
    * 16-23 bits: shared flags between kivi objects
    */
   Svg              = 1 << 15,
-  Canvas           = 1 << 16,
+  Canvas2D         = 1 << 16,
   EnabledRecycling = 1 << 17,
   IsVModel         = 1 << 19,
 }
@@ -138,8 +138,8 @@ export class ComponentDescriptor<D, S> {
    * Component is a Canvas object
    */
   canvas() : ComponentDescriptor<D, S> {
-    this.markFlags |= ComponentFlags.Canvas;
-    this.flags |= ComponentDescriptorFlags.Canvas;
+    this.markFlags |= ComponentFlags.Canvas2D;
+    this.flags |= ComponentDescriptorFlags.Canvas2D;
     this._tag = 'canvas';
     return this;
   }
@@ -318,7 +318,7 @@ export class Component<D, S> {
     this.data = null;
     this.children = null;
     this.element = element;
-    this.root = null;
+    this.root = ((flags & ComponentFlags.Canvas2D) === 0) ? null : (element as HTMLCanvasElement).getContext('2d');
     this._subscriptions = null;
     this._transientSubscriptions = null;
   }
@@ -351,6 +351,18 @@ export class Component<D, S> {
     } else {
       setter(this, newData);
     }
+  }
+
+  /**
+   * Get canvas 2d rendering context
+   */
+  get2DContext() : CanvasRenderingContext2D {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+      if ((this.flags & ComponentFlags.Canvas2D) === 0) {
+        throw new Error('Failed to get 2d context: component isn\t a canvas');
+      }
+    }
+    return this.root as CanvasRenderingContext2D;
   }
 
   /**
@@ -448,7 +460,7 @@ export class Component<D, S> {
    */
   attach() : void {
     this.attached();
-    if (this.root !== null && ((this.flags & ComponentFlags.Canvas) === 0)) {
+    if (this.root !== null && ((this.flags & ComponentFlags.Canvas2D) === 0)) {
       (this.root as VNode).attach();
     }
   }
@@ -475,7 +487,7 @@ export class Component<D, S> {
    * document.
    */
   detach() : void {
-    if (this.root !== null && ((this.flags & ComponentFlags.Canvas) === 0)) {
+    if (this.root !== null && ((this.flags & ComponentFlags.Canvas2D) === 0)) {
       (this.root as VNode).detach();
     }
     this.detached();
@@ -509,7 +521,7 @@ export class Component<D, S> {
         (this.descriptor._recycled.length >= this.descriptor._maxRecycled)) {
       this.flags |= ComponentFlags.Disposed;
 
-      if (this.root !== null && ((this.flags & ComponentFlags.Canvas) === 0)) {
+      if (this.root !== null && ((this.flags & ComponentFlags.Canvas2D) === 0)) {
         (this.root as VNode).dispose();
       }
 
