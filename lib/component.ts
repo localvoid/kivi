@@ -267,11 +267,12 @@ export class ComponentDescriptor<D, S> {
   /**
    * Mount Component on top of existing html element
    */
-  mountComponent(parent: Component<any, any>, element: Element) : Component<D, S> {
+  _mountComponent(parent: Component<any, any>, element: Element) : Component<D, S> {
     let component = new Component(this.markFlags | ComponentFlags.Mounting, this, parent, element);
     if (this._init !== null) {
       this._init(component);
     }
+    component.attached();
     return component;
   }
 
@@ -291,8 +292,7 @@ export class ComponentDescriptor<D, S> {
    * Mount component on top of existing DOM
    */
   mount(data: D, element: Element) : Component<D, S> {
-    let c = this.mountComponent(null, element);
-    c.attached();
+    let c = this._mountComponent(null, element);
     c.setData(data);
     c.update();
     return c;
