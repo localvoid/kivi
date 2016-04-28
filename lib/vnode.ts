@@ -19,6 +19,7 @@ export const enum VNodeFlags {
   TextInputElement      = 1 << 9,
   CheckedInputElement   = 1 << 10,
   InputElement          = TextInputElement | CheckedInputElement,
+  KeepAlive             = 1 << 11,
   /**
    * 16-23 bits: shared flags between kivi objects
    */
@@ -355,6 +356,16 @@ export class VNode {
     }
     this.flags |= VNodeFlags.CheckedInputElement;
     this._children = value;
+    return this;
+  }
+
+  /**
+   * Keep alive Node when removing from the document
+   *
+   * Keep alive nodes should be manually disposed by Component
+   */
+  keepAlive() : VNode {
+    this.flags |= VNodeFlags.KeepAlive;
     return this;
   }
 
@@ -1367,10 +1378,7 @@ export class VNode {
       (node.cref as ContainerManager<any>).descriptor._insertChild(
         (node.cref as ContainerManager<any>), this, node, nextRef, owner);
     } else {
-      node.create(owner);
-      this.ref.insertBefore(node.ref, nextRef);
-      node.attached();
-      node.render(owner);
+      insertVNodeBefore(this, node, nextRef, owner);
     }
   }
 
@@ -1380,11 +1388,7 @@ export class VNode {
       (newNode.cref as ContainerManager<any>).descriptor._replaceChild(
         (newNode.cref as ContainerManager<any>), this, newNode, refNode, owner);
     } else {
-      newNode.create(owner);
-      this.ref.replaceChild(newNode.ref, refNode.ref);
-      refNode.dispose();
-      newNode.attached();
-      newNode.render(owner);
+      replaceVNode(this, newNode, refNode, owner);
     }
   }
 
@@ -1394,7 +1398,7 @@ export class VNode {
       (node.cref as ContainerManager<any>).descriptor._moveChild(
         (node.cref as ContainerManager<any>), this, node, nextRef, owner);
     } else {
-      this.ref.insertBefore(node.ref, nextRef);
+      moveVNode(this, node, nextRef, owner);
     }
   }
 
@@ -1404,8 +1408,7 @@ export class VNode {
       (node.cref as ContainerManager<any>).descriptor._removeChild(
         (node.cref as ContainerManager<any>), this, node, owner);
     } else {
-      this.ref.removeChild(node.ref);
-      node.dispose();
+      removeVNode(this, node, owner);
     }
   }
 
@@ -1489,6 +1492,68 @@ function _lis(a: number[]) : number[] {
   }
 
   return result;
+}
+
+/**
+ * Insert VNode before [nextRef] DOM Node
+ *
+ * Can be used as a generic method to insert nodes in ContainerManager
+ */
+export function insertVNodeBefore(container: VNode, node: VNode, nextRef: Node, owner: Component<any, any>) : void {
+  if (node.ref === null) {
+    node.create(owner);
+    container.ref.insertBefore(node.ref, nextRef);
+    node.attached();
+    node.render(owner);
+  } else {
+    container.ref.insertBefore(node.ref, nextRef);
+    node.attach();
+  }
+}
+
+/**
+ * Replace VNode
+ *
+ * Can be used as a generic method to replace nodes in ContainerManager
+ */
+export function replaceVNode(container: VNode, newNode: VNode, refNode: VNode, owner: Component<any, any>) : void {
+  if (newNode.ref === null) {
+    newNode.create(owner);
+    container.ref.replaceChild(newNode.ref, refNode.ref);
+    newNode.attached();
+    newNode.render(owner);
+  } else {
+    container.ref.replaceChild(newNode.ref, refNode.ref);
+    newNode.attach();
+  }
+  if ((refNode.flags & VNodeFlags.KeepAlive) === 0) {
+    refNode.dispose();
+  } else {
+    refNode.detach();
+  }
+}
+
+/**
+ * Move VNode in before [nextRef] DOM node
+ *
+ * Can be used as a generic method to move nodes in ContainerManager
+ */
+export function moveVNode(container: VNode, node: VNode, nextRef: Node, owner: Component<any, any>) : void {
+  container.ref.insertBefore(node.ref, nextRef);
+}
+
+/**
+ * Remove VNode
+ *
+ * Can be used as a generic method to remove nodes in ContainerManager
+ */
+export function removeVNode(container: VNode, node: VNode, owner: Component<any, any>) {
+  container.ref.removeChild(node.ref);
+  if ((node.flags & VNodeFlags.KeepAlive) === 0) {
+    node.dispose();
+  } else {
+    node.detach();
+  }
 }
 
 /**

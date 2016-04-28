@@ -526,7 +526,9 @@ export class Component<D, S> {
         (this.root as VNode).dispose();
       }
 
-      this.detached();
+      if ((this.flags & ComponentFlags.Attached) !== 0) {
+        this.detached();
+      }
       if (this.descriptor._disposed !== null) {
         this.descriptor._disposed(this);
       }
