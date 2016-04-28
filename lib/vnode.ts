@@ -1506,6 +1506,11 @@ export function insertVNodeBefore(container: VNode, node: VNode, nextRef: Node, 
     node.attached();
     node.render(owner);
   } else {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+      if ((node.flags & VNodeFlags.KeepAlive) === 0) {
+        throw new Error('Failed to replace node: VNode instance already has been used to create DOM node');
+      }
+    }
     container.ref.insertBefore(node.ref, nextRef);
     node.attach();
   }
@@ -1523,6 +1528,11 @@ export function replaceVNode(container: VNode, newNode: VNode, refNode: VNode, o
     newNode.attached();
     newNode.render(owner);
   } else {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+      if ((newNode.flags & VNodeFlags.KeepAlive) === 0) {
+        throw new Error('Failed to replace node: VNode instance already has been used to create DOM node');
+      }
+    }
     container.ref.replaceChild(newNode.ref, refNode.ref);
     newNode.attach();
   }
