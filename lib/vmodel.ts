@@ -16,6 +16,14 @@ const enum VModelFlags {
 }
 
 /**
+ * VModel debug flags
+ */
+export const enum VModelDebugFlags {
+  AssignedStyle     = 1,
+  AssignedClassName = 1 << 1,
+}
+
+/**
  * Update handler used to override default diff/patch behavior
  *
  * When oldProps is undefined, it means that element was created for the
@@ -30,6 +38,13 @@ export type VModelUpdateHandler<D> = (element: Element, oldProps: D, newProps: D
  */
 export class VModel<D> {
   /**
+   * TODO:
+   * - add support for ContainerManager
+   * - render static children
+   * - add input element flags in markFlags
+   */
+
+  /**
    * Flags marked on VNode/ComponentDescriptor when it is created
    */
   markFlags: number;
@@ -41,6 +56,7 @@ export class VModel<D> {
   private _className: string;
   private _ref: Element;
   private _updateHandler: VModelUpdateHandler<D>;
+  _debugFlags: number;
 
   constructor(tag: string) {
     this.markFlags = VModelFlags.IsVModel;
@@ -52,6 +68,10 @@ export class VModel<D> {
     this._className = null;
     this._updateHandler = null;
     this._ref = null;
+
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+      this._debugFlags = 0;
+    }
   }
 
   /**
@@ -83,6 +103,10 @@ export class VModel<D> {
    * Set style in css string format
    */
   style(style: string) : VModel<D> {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+      this._debugFlags |= VModelDebugFlags.AssignedStyle;
+    }
+
     this._style = style;
     return this;
   }
@@ -91,6 +115,10 @@ export class VModel<D> {
    * Set className
    */
   className(classes: string) : VModel<D> {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+      this._debugFlags |= VModelDebugFlags.AssignedClassName;
+    }
+
     this._className = classes;
     return this;
   }

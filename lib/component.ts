@@ -29,6 +29,7 @@ export const enum ComponentFlags {
   Svg              = 1 << 15,
   Canvas           = 1 << 16,
   EnabledRecycling = 1 << 17,
+  IsVModel         = 1 << 19,
 }
 
 /**
@@ -381,8 +382,17 @@ export class Component<D, S> {
    */
   sync(newRoot: VNode) : void {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-      if (!newRoot.isRoot()) {
-        throw new Error('Failed to sync: sync methods accepts only VNodes representing root node.');
+      if ((newRoot.flags & VNodeFlags.Root) === 0) {
+        throw new Error('Failed to sync: sync methods accepts only VNodes representing root node');
+      }
+      if ((this.flags & ComponentFlags.IsVModel) !== (newRoot.flags & VNodeFlags.IsVModel)) {
+        if ((this.flags & ComponentFlags.IsVModel) === 0) {
+          throw new Error('Failed to sync: vdom root should have the same type as root registered in component ' +
+                          'descriptor, component descriptor is using vmodel root');
+        } else {
+          throw new Error('Failed to sync: vdom root should have the same type as root registered in component ' +
+                          'descriptor, component descriptor is using simple tag');
+        }
       }
     }
     if (this.root === null) {
