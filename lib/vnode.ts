@@ -1,7 +1,7 @@
 import {printError} from './debug';
 import {SvgNamespace} from './namespace';
 import {Component, ComponentDescriptor} from './component';
-import {VModel, VModelDebugFlags} from './vmodel';
+import {VModel} from './vmodel';
 import {ContainerManager, ContainerManagerDescriptorDebugFlags} from './container_manager';
 import {syncStaticShapeProps, syncDynamicShapeProps} from './sync/props';
 import {syncStaticShapeAttrs, syncDynamicShapeAttrs, setAttr} from './sync/attrs';
@@ -124,6 +124,16 @@ export class VNode {
         if ((this.flags & VNodeFlags.VModelUpdateHandler) !== 0) {
           throw new Error('Failed to set props on VNode: VNode is using VModel with custom update handler');
         }
+        let model = this.tag as VModel<any>;
+        if (model._props !== null) {
+          let keys = Object.keys(props);
+          for (let i = 0; i < keys.length; i++) {
+            if (model._attrs.hasOwnProperty(keys[i])) {
+              throw new Error(`Failed to set props on VNode: VNode is using VModel that uses the same` +
+                              ` property "${keys[i]}"`);
+            }
+          }
+        }
       }
     }
     this._props = props;
@@ -142,6 +152,16 @@ export class VNode {
       if ((this.flags & VNodeFlags.IsVModel) !== 0) {
         if ((this.flags & VNodeFlags.VModelUpdateHandler) !== 0) {
           throw new Error('Failed to set props on VNode: VNode is using VModel with custom update handler');
+        }
+        let model = this.tag as VModel<any>;
+        if (model._props !== null) {
+          let keys = Object.keys(props);
+          for (let i = 0; i < keys.length; i++) {
+            if (model._attrs.hasOwnProperty(keys[i])) {
+              throw new Error(`Failed to set props on VNode: VNode is using VModel that uses the same` +
+                              ` property "${keys[i]}"`);
+            }
+          }
         }
       }
     }
@@ -163,6 +183,16 @@ export class VNode {
         if ((this.flags & VNodeFlags.VModelUpdateHandler) !== 0) {
           throw new Error('Failed to set attrs on VNode: VNode is using VModel with custom update handler');
         }
+        let model = this.tag as VModel<any>;
+        if (model._attrs !== null) {
+          let keys = Object.keys(attrs);
+          for (let i = 0; i < keys.length; i++) {
+            if (model._attrs.hasOwnProperty(keys[i])) {
+              throw new Error(`Failed to set attrs on VNode: VNode is using VModel that uses the same` +
+                              ` attribute "${keys[i]}"`);
+            }
+          }
+        }
       }
     }
     this._attrs = attrs;
@@ -181,6 +211,16 @@ export class VNode {
       if ((this.flags & VNodeFlags.IsVModel) !== 0) {
         if ((this.flags & VNodeFlags.VModelUpdateHandler) !== 0) {
           throw new Error('Failed to set attrs on VNode: VNode is using VModel with custom update handler');
+        }
+        let model = this.tag as VModel<any>;
+        if (model._attrs !== null) {
+          let keys = Object.keys(attrs);
+          for (let i = 0; i < keys.length; i++) {
+            if (model._attrs.hasOwnProperty(keys[i])) {
+              throw new Error(`Failed to set attrs on VNode: VNode is using VModel that uses the same` +
+                              ` attribute "${keys[i]}"`);
+            }
+          }
         }
       }
     }
@@ -202,7 +242,7 @@ export class VNode {
         if ((this.flags & VNodeFlags.VModelUpdateHandler) !== 0) {
           throw new Error('Failed to set style on VNode: VNode is using VModel with custom update handler');
         }
-        if (((this.tag as VModel<any>)._debugFlags & VModelDebugFlags.AssignedStyle) !== 0) {
+        if (((this.tag as VModel<any>)._style) !== null) {
           throw new Error('Failed to set style on VNode: VNode is using VModel with assigned style');
         }
       }
@@ -224,7 +264,7 @@ export class VNode {
         if ((this.flags & VNodeFlags.VModelUpdateHandler) !== 0) {
           throw new Error('Failed to set style on VNode: vnode is using vmodel with custom update handler');
         }
-        if (((this.tag as VModel<any>)._debugFlags & VModelDebugFlags.AssignedClassName) !== 0) {
+        if (((this.tag as VModel<any>)._className) !== null) {
           throw new Error('Failed to set style on VNode: vnode is using vmodel with assigned className');
         }
       }
@@ -579,7 +619,7 @@ export class VNode {
     this.ref = node;
 
     if ((flags & VNodeFlags.Component) !== 0) {
-      let cref = this.cref = (this.tag as ComponentDescriptor<any, any>).mountComponent(owner, node as Element);
+      let cref = this.cref = (this.tag as ComponentDescriptor<any, any>)._mountComponent(owner, node as Element);
       cref.setData(this._props);
       cref.setChildren(this._children as VNode[]|string);
       cref.update();
