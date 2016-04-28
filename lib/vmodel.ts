@@ -13,9 +13,6 @@ const enum VModelFlags {
   Svg                  = 1 << 15,
   IsVModel             = 1 << 19,
   VModelUpdateHandler  = 1 << 20,
-  TextInputElement     = 1 << 21,
-  CheckedInputElement  = 1 << 22,
-  InputElement         = TextInputElement | CheckedInputElement,
 }
 
 /**
@@ -76,24 +73,6 @@ export class VModel<D> {
   svg() : VModel<D> {
     this.markFlags |= VModelFlags.Svg;
     this._flags |= VModelFlags.Svg;
-    return this;
-  }
-
-  /**
-   * VModel represents a text input element
-   */
-  textInput() : VModel<D> {
-    this.markFlags |= VModelFlags.TextInputElement;
-    this._flags |= VModelFlags.TextInputElement;
-    return this;
-  }
-
-  /**
-   * VModel represents a text input element
-   */
-  checkedInput() : VModel<D> {
-    this.markFlags |= VModelFlags.CheckedInputElement;
-    this._flags |= VModelFlags.CheckedInputElement;
     return this;
   }
 

@@ -16,15 +16,15 @@ export const enum VNodeFlags {
   CommentPlaceholder    = 1 << 6,
   DynamicShapeAttrs     = 1 << 7,
   DynamicShapeProps     = 1 << 8,
+  TextInputElement      = 1 << 9,
+  CheckedInputElement   = 1 << 10,
+  InputElement          = TextInputElement | CheckedInputElement,
   /**
    * 16-23 bits: shared flags between kivi objects
    */
   Svg                   = 1 << 15,
   IsVModel              = 1 << 19,
   VModelUpdateHandler   = 1 << 20,
-  TextInputElement      = 1 << 21,
-  CheckedInputElement   = 1 << 22,
-  InputElement          = TextInputElement | CheckedInputElement,
 }
 
 const enum VNodeDebugFlags {
@@ -295,10 +295,11 @@ export class VNode {
    */
   value(value: string) : VNode {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-      if ((this.flags & VNodeFlags.TextInputElement) === 0) {
-        throw new Error('Failed to set value on VNode: value method should be called on input elements');
+      if (this._children !== null) {
+        throw new Error('Failed to set value on VNode: VNode is already have either children or checked property');
       }
     }
+    this.flags |= VNodeFlags.TextInputElement;
     this._children = value;
     return this;
   }
@@ -308,13 +309,13 @@ export class VNode {
    */
   checked(value: boolean) : VNode {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-      if ((this.flags & VNodeFlags.CheckedInputElement) === 0) {
-        throw new Error('Failed to set value on VNode: value method should be called on input elements');
+      if (this._children !== null) {
+        throw new Error('Failed to set checked on VNode: VNode is already have either children or value property');
       }
     }
+    this.flags |= VNodeFlags.CheckedInputElement;
     this._children = value;
     return this;
-
   }
 
   /**
@@ -1470,20 +1471,6 @@ export function createVElement(tag: string) : VNode {
 export function createVSvgElement(tag: string) : VNode {
   return new VNode(VNodeFlags.Element | VNodeFlags.Svg, tag, null);
 }
-
-/**
- * Create a VNode representing a [HTMLInputElement] node with text value
- */
-export function createVTextInput() : VNode {
-  return new VNode(VNodeFlags.Element | VNodeFlags.TextInputElement, 'input', null);
-};
-
-/**
- * Create a VNode representing a [HTMLInputElement] node with boolean value
- */
-export function createVCheckedInput() : VNode {
-  return new VNode(VNodeFlags.Element | VNodeFlags.CheckedInputElement, 'input', null);
-};
 
 /**
  * Create a VNode representing a Component root node
