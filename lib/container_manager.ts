@@ -1,34 +1,80 @@
 import {VNode} from './vnode';
 import {Component} from './component';
 
+export const enum ContainerManagerDescriptorDebugFlags {
+  AcceptKeyedChildrenOnly = 1
+}
+
+export type InsertChildHandler<S> = (manager: ContainerManager<S>,
+                                     container: VNode,
+                                     node: VNode,
+                                     nextRef: Node,
+                                     owner: Component<any, any>) => void;
+
+export type ReplaceChildHandler<S> = (manager: ContainerManager<S>,
+                                      container: VNode,
+                                      newNode: VNode,
+                                      refNode: VNode,
+                                      owner: Component<any, any>) => void;
+
+export type MoveChildHandler<S> = (manager: ContainerManager<S>,
+                                   container: VNode,
+                                   node: VNode,
+                                   nextRef: Node,
+                                   owner: Component<any, any>) => void;
+
+export type RemoveChildHandler<S> = (manager: ContainerManager<S>,
+                                     container: VNode,
+                                     now: VNode,
+                                     owner: Component<any, any>) => void;
 /**
  * Container Manager Descriptor
  *
  * @final
  */
 export class ContainerManagerDescriptor<S> {
-  insertChild: (manager: ContainerManager<S>,
-                container: VNode,
-                node: VNode,
-                nextRef: Node,
-                owner: Component<any, any>) => void;
+  _insertChild: InsertChildHandler<S>;
+  _replaceChild: ReplaceChildHandler<S>;
+  _moveChild: MoveChildHandler<S>;
+  _removeChild: RemoveChildHandler<S>;
+  _debugFlags: number;
 
-  replaceChild: (manager: ContainerManager<S>,
-                 container: VNode,
-                 newNode: VNode,
-                 refNode: VNode,
-                 owner: Component<any, any>) => void;
+  constructor() {
+    this._insertChild = null;
+    this._replaceChild = null;
+    this._moveChild = null;
+    this._removeChild = null;
 
-  moveChild: (manager: ContainerManager<S>,
-              container: VNode,
-              node: VNode,
-              nextRef: Node,
-              owner: Component<any, any>) => void;
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+      this._debugFlags = 0;
+    }
+  }
 
-  removeChild: (manager: ContainerManager<S>,
-                container: VNode,
-                now: VNode,
-                owner: Component<any, any>) => void;
+  insertChild(handler: InsertChildHandler<S>) : ContainerManagerDescriptor<S> {
+    this._insertChild = handler;
+    return this;
+  }
+
+  replaceChild(handler: ReplaceChildHandler<S>) : ContainerManagerDescriptor<S> {
+    this._replaceChild = handler;
+    return this;
+  }
+
+  moveChild(handler: MoveChildHandler<S>) : ContainerManagerDescriptor<S> {
+    this._moveChild = handler;
+    return this;
+  }
+
+  removeChild(handler: RemoveChildHandler<S>) : ContainerManagerDescriptor<S> {
+    this._removeChild = handler;
+    return this;
+  }
+
+  acceptKeyedChildrenOnly() : void {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+      this._debugFlags |= ContainerManagerDescriptorDebugFlags.AcceptKeyedChildrenOnly;
+    }
+  }
 }
 
 /**

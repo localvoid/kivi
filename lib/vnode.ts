@@ -2,7 +2,7 @@ import {printError} from './debug';
 import {SvgNamespace} from './namespace';
 import {Component, ComponentDescriptor} from './component';
 import {VModel, VModelDebugFlags} from './vmodel';
-import {ContainerManager} from './container_manager';
+import {ContainerManager, ContainerManagerDescriptorDebugFlags} from './container_manager';
 import {syncStaticShapeProps, syncDynamicShapeProps} from './sync/props';
 import {syncStaticShapeAttrs, syncDynamicShapeAttrs, setAttr} from './sync/attrs';
 
@@ -242,6 +242,20 @@ export class VNode {
         throw new Error('Failed to set children on VNode: children method should be called on element, component' +
                         ' or component root nodes only');
       }
+      if ((this.flags & VNodeFlags.InputElement) !== 0) {
+        throw new Error('Failed to set children on VNode: input elements can\'t have children');
+      }
+      if ((this.flags & VNodeFlags.ManagedContainer) !== 0) {
+        if (typeof children === 'string') {
+          throw new Error('Failed to set children on VNode: VNode is using ContainerManager that doesn\'t accept' +
+                          ' children with string type');
+        }
+        if (((this.cref as ContainerManager<any>).descriptor._debugFlags &
+            ContainerManagerDescriptorDebugFlags.AcceptKeyedChildrenOnly) !== 0) {
+          throw new Error('Failed to set children on VNode: VNode is using ContainerManager that accepts only' +
+                          ' children with keys');
+        }
+      }
     }
     this._children = children;
     return this;
@@ -258,6 +272,9 @@ export class VNode {
       if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root | VNodeFlags.Component)) === 0) {
         throw new Error('Failed to set children on VNode: children method should be called on element, component' +
                         ' or component root nodes only');
+      }
+      if ((this.flags & VNodeFlags.InputElement) !== 0) {
+        throw new Error('Failed to set children on VNode: input elements can\'t have children');
       }
       if (children !== null) {
         for (let i = 0; i < children.length; i++) {
@@ -278,7 +295,7 @@ export class VNode {
    */
   value(value: string) : VNode {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-      if ((this.flags & (VNodeFlags.Element | VNodeFlags.TextInputElement)) === 0) {
+      if ((this.flags & VNodeFlags.TextInputElement) === 0) {
         throw new Error('Failed to set value on VNode: value method should be called on input elements');
       }
     }
@@ -291,7 +308,7 @@ export class VNode {
    */
   checked(value: boolean) : VNode {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-      if ((this.flags & (VNodeFlags.Element | VNodeFlags.CheckedInputElement)) === 0) {
+      if ((this.flags & VNodeFlags.CheckedInputElement) === 0) {
         throw new Error('Failed to set value on VNode: value method should be called on input elements');
       }
     }
@@ -311,6 +328,14 @@ export class VNode {
       if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error('Failed to set managedContainer mode on VNode: managedContainer method should be called' +
                         ' on element or component root nodes only');
+      }
+      if ((this.flags & VNodeFlags.InputElement) !== 0) {
+        throw new Error('Failed to set managedContainer mode on VNode: managed container doesn\t work on input' +
+                        ' elements');
+      }
+      if (this._children !== null) {
+        throw new Error('Failed to set managedContainer mode on VNode: managedContainer method should be called' +
+                        ' before children assignment');
       }
     }
     this.flags |= VNodeFlags.ManagedContainer;
@@ -1297,8 +1322,8 @@ export class VNode {
 
   private _insertChild(node: VNode, nextRef: Node, owner: Component<any, any>) : void {
     if (((this.flags & VNodeFlags.ManagedContainer) !== 0) &&
-        (node.cref as ContainerManager<any>).descriptor.insertChild !== null) {
-      (node.cref as ContainerManager<any>).descriptor.insertChild(
+        (node.cref as ContainerManager<any>).descriptor._insertChild !== null) {
+      (node.cref as ContainerManager<any>).descriptor._insertChild(
         (node.cref as ContainerManager<any>), this, node, nextRef, owner);
     } else {
       node.create(owner);
@@ -1310,8 +1335,8 @@ export class VNode {
 
   private _replaceChild(newNode: VNode, refNode: VNode, owner: Component<any, any>) : void {
     if (((this.flags & VNodeFlags.ManagedContainer) !== 0) &&
-        (newNode.cref as ContainerManager<any>).descriptor.replaceChild !== null) {
-      (newNode.cref as ContainerManager<any>).descriptor.replaceChild(
+        (newNode.cref as ContainerManager<any>).descriptor._replaceChild !== null) {
+      (newNode.cref as ContainerManager<any>).descriptor._replaceChild(
         (newNode.cref as ContainerManager<any>), this, newNode, refNode, owner);
     } else {
       newNode.create(owner);
@@ -1324,8 +1349,8 @@ export class VNode {
 
   private _moveChild(node: VNode, nextRef: Node, owner: Component<any, any>) : void {
     if (((this.flags & VNodeFlags.ManagedContainer) !== 0) &&
-        (node.cref as ContainerManager<any>).descriptor.moveChild !== null) {
-      (node.cref as ContainerManager<any>).descriptor.moveChild(
+        (node.cref as ContainerManager<any>).descriptor._moveChild !== null) {
+      (node.cref as ContainerManager<any>).descriptor._moveChild(
         (node.cref as ContainerManager<any>), this, node, nextRef, owner);
     } else {
       this.ref.insertBefore(node.ref, nextRef);
@@ -1334,8 +1359,8 @@ export class VNode {
 
   private _removeChild(node: VNode, owner: Component<any, any>) : void {
     if (((this.flags & VNodeFlags.ManagedContainer) !== 0) &&
-        (node.cref as ContainerManager<any>).descriptor.removeChild !== null) {
-      (node.cref as ContainerManager<any>).descriptor.removeChild(
+        (node.cref as ContainerManager<any>).descriptor._removeChild !== null) {
+      (node.cref as ContainerManager<any>).descriptor._removeChild(
         (node.cref as ContainerManager<any>), this, node, owner);
     } else {
       this.ref.removeChild(node.ref);
