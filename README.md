@@ -1,16 +1,9 @@
-# kivi
-
 Javascript UI library with TypeScript typings.
 
 ## Example
 
 ```js
-import {
-  createVRoot,
-  createVElement,
-  ComponentDescriptor,
-  scheduler
-} from 'kivi';
+import { createVRoot, createVElement, ComponentDescriptor, scheduler, injectComponent } from 'kivi';
 
 // Component Descriptor is an object that stores the behavior of
 // the Component.
@@ -36,6 +29,10 @@ const Main = new ComponentDescriptor('Main')
 
 scheduler.start(() => {
   // Instantiate and inject component into document body.
-  Main.inject('kivi', document.body);
+  injectComponent(Main, 'kivi', document.body);
 });
 ```
+
+## License
+
+MIT

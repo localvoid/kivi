@@ -1517,4 +1517,4 @@ export function createVSvgElement(tag: string) : VNode {
  */
 export function createVRoot() : VNode {
   return new VNode(VNodeFlags.Root, null, null);
-};
+}

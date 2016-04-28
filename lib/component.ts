@@ -275,28 +275,6 @@ export class ComponentDescriptor<D, S> {
     component.attached();
     return component;
   }
-
-  /**
-   * Inject component into DOM
-   */
-  inject(data: D, container: Element) : Component<D, S> {
-    let c = this.createComponent(null);
-    container.appendChild(c.element);
-    c.attached();
-    c.setData(data);
-    c.update();
-    return c;
-  }
-
-  /**
-   * Mount component on top of existing DOM
-   */
-  mount(data: D, element: Element) : Component<D, S> {
-    let c = this._mountComponent(null, element);
-    c.setData(data);
-    c.update();
-    return c;
-  }
 }
 
 /**
@@ -680,4 +658,28 @@ export class Component<D, S> {
     }
     this._transientSubscriptions = null;
   }
+}
+
+/**
+ * Inject component into DOM
+ */
+export function injectComponent<D, S>(descriptor: ComponentDescriptor<D, S>, data: D, container: Element)
+    : Component<D, S> {
+  let c = descriptor.createComponent(null);
+  container.appendChild(c.element);
+  c.attached();
+  c.setData(data);
+  c.update();
+  return c;
+}
+
+  /**
+   * Mount component on top of existing DOM
+   */
+export function mountComponent<D, S>(descriptor: ComponentDescriptor<D, S>, data: D, element: Element)
+    : Component<D, S> {
+  let c = descriptor._mountComponent(null, element);
+  c.setData(data);
+  c.update();
+  return c;
 }
