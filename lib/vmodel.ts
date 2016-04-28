@@ -13,6 +13,9 @@ const enum VModelFlags {
   Svg                  = 1 << 15,
   IsVModel             = 1 << 19,
   VModelUpdateHandler  = 1 << 20,
+  TextInputElement     = 1 << 21,
+  CheckedInputElement  = 1 << 22,
+  InputElement         = TextInputElement | CheckedInputElement,
 }
 
 /**
@@ -38,13 +41,6 @@ export type VModelUpdateHandler<D> = (element: Element, oldProps: D, newProps: D
  */
 export class VModel<D> {
   /**
-   * TODO:
-   * - add support for ContainerManager
-   * - render static children
-   * - add input element flags in markFlags
-   */
-
-  /**
    * Flags marked on VNode/ComponentDescriptor when it is created
    */
   markFlags: number;
@@ -54,8 +50,8 @@ export class VModel<D> {
   private _attrs: any;
   private _style: string;
   private _className: string;
-  private _ref: Element;
   private _updateHandler: VModelUpdateHandler<D>;
+  private _ref: Element;
   _debugFlags: number;
 
   constructor(tag: string) {
@@ -80,6 +76,24 @@ export class VModel<D> {
   svg() : VModel<D> {
     this.markFlags |= VModelFlags.Svg;
     this._flags |= VModelFlags.Svg;
+    return this;
+  }
+
+  /**
+   * VModel represents a text input element
+   */
+  textInput() : VModel<D> {
+    this.markFlags |= VModelFlags.TextInputElement;
+    this._flags |= VModelFlags.TextInputElement;
+    return this;
+  }
+
+  /**
+   * VModel represents a text input element
+   */
+  checkedInput() : VModel<D> {
+    this.markFlags |= VModelFlags.CheckedInputElement;
+    this._flags |= VModelFlags.CheckedInputElement;
     return this;
   }
 
@@ -196,6 +210,7 @@ export class VModel<D> {
 
       if ((this._flags & VModelFlags.EnabledCloning) !== 0) {
         this._ref = ref;
+        return this._ref.cloneNode(false) as Element;
       }
 
       return ref;

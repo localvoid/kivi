@@ -13,18 +13,18 @@ export const enum VNodeFlags {
   Root                  = 1 << 3,
   TrackByKeyChildren    = 1 << 4,
   ManagedContainer      = 1 << 5,
-  TextInputElement      = 1 << 6,
-  CheckedInputElement   = 1 << 7,
-  InputElement          = TextInputElement | CheckedInputElement,
-  CommentPlaceholder    = 1 << 8,
-  DynamicShapeAttrs     = 1 << 9,
-  DynamicShapeProps     = 1 << 10,
+  CommentPlaceholder    = 1 << 6,
+  DynamicShapeAttrs     = 1 << 7,
+  DynamicShapeProps     = 1 << 8,
   /**
    * 16-23 bits: shared flags between kivi objects
    */
   Svg                   = 1 << 15,
   IsVModel              = 1 << 19,
   VModelUpdateHandler   = 1 << 20,
+  TextInputElement      = 1 << 21,
+  CheckedInputElement   = 1 << 22,
+  InputElement          = TextInputElement | CheckedInputElement,
 }
 
 const enum VNodeDebugFlags {
