@@ -381,7 +381,7 @@ export class Component<D, S> {
    */
   sync(newRoot: VNode) : void {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-      if (newRoot.isRoot()) {
+      if (!newRoot.isRoot()) {
         throw new Error('Failed to sync: sync methods accepts only VNodes representing root node.');
       }
     }

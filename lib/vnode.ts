@@ -104,7 +104,7 @@ export class VNode {
   }
 
   /**
-   * Returns true if VNode represents a container root
+   * Returns true if VNode represents a component root
    */
   isRoot() : boolean {
     return (this.flags & VNodeFlags.Root) !== 0;
@@ -1387,41 +1387,41 @@ function _lis(a: number[]) : number[] {
 /**
  * Create a VNode representing a [Text] node
  */
-export function createText(content: string) : VNode {
+export function createVText(content: string) : VNode {
   return new VNode(VNodeFlags.Text, null, content);
 }
 
 /**
  * Create a VNode representing an [Element] node
  */
-export function createElement(tag: string) : VNode {
+export function createVElement(tag: string) : VNode {
   return new VNode(VNodeFlags.Element, tag, null);
 }
 
 /**
  * Create a VNode representing a [SVGElement] node
  */
-export function createSvgElement(tag: string) : VNode {
+export function createVSvgElement(tag: string) : VNode {
   return new VNode(VNodeFlags.Element | VNodeFlags.Svg, tag, null);
 }
 
 /**
  * Create a VNode representing a [HTMLInputElement] node with text value
  */
-export function createTextInput() : VNode {
+export function createVTextInput() : VNode {
   return new VNode(VNodeFlags.Element | VNodeFlags.TextInputElement, 'input', null);
 };
 
 /**
  * Create a VNode representing a [HTMLInputElement] node with boolean value
  */
-export function createCheckedInput() : VNode {
+export function createVCheckedInput() : VNode {
   return new VNode(VNodeFlags.Element | VNodeFlags.CheckedInputElement, 'input', null);
 };
 
 /**
  * Create a VNode representing a Component root node
  */
-export function createRoot() : VNode {
+export function createVRoot() : VNode {
   return new VNode(VNodeFlags.Root, null, null);
 };
