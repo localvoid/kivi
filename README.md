@@ -9,8 +9,7 @@ import {
   createVRoot,
   createVElement,
   ComponentDescriptor,
-  scheduler,
-  injectComponent
+  scheduler
 } from 'kivi';
 
 // Component Descriptor is an object that stores the behavior of
@@ -37,6 +36,6 @@ const Main = new ComponentDescriptor('Main')
 
 scheduler.start(() => {
   // Instantiate and inject component into document body.
-  injectComponent(Main, 'kivi', document.body);
+  Main.inject('kivi', document.body);
 });
 ```
