@@ -1,7 +1,6 @@
 .gitignore
 gulpfile.js
 karma.conf.js
-system.config.js
 tsconfig.json
 typings.json
 
