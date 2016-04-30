@@ -1,11 +1,11 @@
-[kivi](github.com/localvoid/kivi) is a javascript library (with TypeScript
-typings) for building web interfaces. It provides Virtual DOM API for DOM
-manipulations, Components, Scheduler tightly integrated with Components,
-and several tools for advanced use cases. It doesn't have a router, or
-anything that is related to application state, kivi is just a view library.
+[kivi](http://github.com/localvoid/kivi) is a javascript library (with
+TypeScript typings) for building web interfaces. It provides Virtual DOM API
+for DOM manipulations, Components, Scheduler tightly integrated with
+Components, and several tools for advanced use cases. It doesn't have a router,
+or anything that is related to application state, kivi is just a view library.
 
 It was heavily inspired by the [React](https://facebook.github.io/react/)
-library, but it has completely different API, implementation and architecture.
+library, but has completely different API, implementation and architecture.
 
 ## Getting started
 
@@ -15,7 +15,7 @@ Install `kivi` library.
 npm install --save kivi
 ```
 
-Create a javascript file.
+Create a javascript file:
 
 ```js
 import { createVRoot, createVElement, ComponentDescriptor, scheduler, injectComponent } from 'kivi';
@@ -63,7 +63,8 @@ or [Google Closure Compiler](https://github.com/google/closure-compiler).
 
 Virtual DOM simplifies the way to manage DOM mutations, just describe how your
 Component should look at any point in time and Virtual DOM reconciliation
-algorithm will make all necessary DOM operations in a most efficient way.
+algorithm will make all necessary DOM operations to update the document in a
+most efficient way.
 
 In addition to standard Virtual DOM API, kivi provides different tools for
 advanced optimizations that can be used to reduce Virtual DOM overhead:
@@ -73,7 +74,7 @@ object is created, it will be unnecessary to set static properties on virtual
 node, and reconciliation algorithm will ignore this static properties.
 - `VModel.enableCloning()` enables DOM node cloning instead of creating them
 from scratch when creating DOM elements from this model.
-- Completely override reconciliation algorithm for a `VNode` with custom
+- Overriding reconciliation algorithm for a `VNode` with custom
 `VModel.update(handler: (e: Element, oldData: D, newData: D) => void)` handler.
 - Implementing custom `insertChild`, `removeChild`, `replaceChild`, `moveChild`
 hooks with `ContainerManager` to create efficient animations.
