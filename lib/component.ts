@@ -434,6 +434,11 @@ export class Component<D, S> {
       this.flags |= ComponentFlags.Dirty;
       this.cancelTransientSubscriptions();
       scheduler.nextFrame().updateComponent(this);
+
+      const invalidated = this.descriptor._invalidated;
+      if (invalidated !== null) {
+        invalidated(this);
+      }
     }
   }
 

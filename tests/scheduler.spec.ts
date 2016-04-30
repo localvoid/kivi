@@ -56,7 +56,7 @@ describe('Scheduler', () => {
   });
 
   describe('monotonically increasing clock', () => {
-    it('should have clock equal to 0 when created', () => {
+    it('should have clock equal to 1 when created', () => {
       const s = new Scheduler();
       expect(s.clock).toBe(1);
     });
