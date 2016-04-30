@@ -360,7 +360,7 @@ export class Component<D, S> {
   get2DContext() : CanvasRenderingContext2D {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this.flags & ComponentFlags.Canvas2D) === 0) {
-        throw new Error('Failed to get 2d context: component isn\t a canvas');
+        throw new Error('Failed to get 2d context: component isn\'t a canvas');
       }
     }
     return this.root as CanvasRenderingContext2D;
