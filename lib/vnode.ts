@@ -867,15 +867,19 @@ export class VNode {
       }
       this._debugProperties.flags |= VNodeDebugFlags.Disposed;
     }
-    if ((this.flags & VNodeFlags.Component) !== 0) {
-      (this.cref as Component<any, any>).dispose();
-    } else if (this._children !== null) {
-      let children = this._children;
-      if (typeof children !== 'string') {
-        for (let i = 0; i < (children as VNode[]).length; i++) {
-          (children as VNode[])[i].dispose();
+    if ((this.flags & VNodeFlags.KeepAlive) === 0) {
+      if ((this.flags & VNodeFlags.Component) !== 0) {
+        (this.cref as Component<any, any>).dispose();
+      } else if (this._children !== null) {
+        let children = this._children;
+        if (typeof children !== 'string') {
+          for (let i = 0; i < (children as VNode[]).length; i++) {
+            (children as VNode[])[i].dispose();
+          }
         }
       }
+    } else {
+      this.detach();
     }
   }
 
@@ -1536,11 +1540,7 @@ export function replaceVNode(container: VNode, newNode: VNode, refNode: VNode, o
     container.ref.replaceChild(newNode.ref, refNode.ref);
     newNode.attach();
   }
-  if ((refNode.flags & VNodeFlags.KeepAlive) === 0) {
-    refNode.dispose();
-  } else {
-    refNode.detach();
-  }
+  refNode.dispose();
 }
 
 /**
@@ -1559,11 +1559,7 @@ export function moveVNode(container: VNode, node: VNode, nextRef: Node, owner: C
  */
 export function removeVNode(container: VNode, node: VNode, owner: Component<any, any>) {
   container.ref.removeChild(node.ref);
-  if ((node.flags & VNodeFlags.KeepAlive) === 0) {
-    node.dispose();
-  } else {
-    node.detach();
-  }
+  node.dispose();
 }
 
 /**
