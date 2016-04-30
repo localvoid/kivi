@@ -35,7 +35,7 @@ gulp.task('dist', ['dist:cjs', 'dist:es6']);
 
 gulp.task('build:tests', function() {
   return rollup.rollup({
-    entry: 'tests/vdom.spec.ts',
+    entry: 'tests/index.spec.ts',
     plugins: [
       require('rollup-plugin-typescript')(),
       require('rollup-plugin-replace')({
@@ -43,7 +43,7 @@ gulp.task('build:tests', function() {
         values: {
           KIVI_COMPONENT_RECYCLING: 'COMPONENT_RECYCLING_ENABLED'
         }
-      })
+      }),
     ]
   }).then(function(bundle) {
     return bundle.write({

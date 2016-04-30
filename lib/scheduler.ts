@@ -8,6 +8,7 @@ const enum FrameTaskFlags {
   Write     = 1 << 1,
   Read      = 1 << 2,
   After     = 1 << 3,
+  RWLock    = 1 << 4,
 }
 
 const enum SchedulerFlags {
@@ -81,6 +82,13 @@ export class Frame {
    * Add Component to the components queue
    */
   updateComponent(component: Component<any, any>) : void {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+      if ((this.flags & FrameTaskFlags.RWLock) !== 0) {
+        throw new Error('Failed to add update component task to the current frame, current frame is locked for read' +
+                        ' and write tasks');
+      }
+    }
+
     let priority = component.depth;
 
     this.flags |= FrameTaskFlags.Component;
@@ -100,6 +108,13 @@ export class Frame {
    * Add new task to the write task queue
    */
   write(callback: SchedulerCallback) : void {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+      if ((this.flags & FrameTaskFlags.RWLock) !== 0) {
+        throw new Error('Failed to add update component task to the current frame, current frame is locked for read' +
+                        ' and write tasks');
+      }
+    }
+
     this.flags |= FrameTaskFlags.Write;
     if (this.writeTasks === null) {
       this.writeTasks = [];
@@ -108,6 +123,13 @@ export class Frame {
   }
 
   read(callback: SchedulerCallback) : void {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+      if ((this.flags & FrameTaskFlags.RWLock) !== 0) {
+        throw new Error('Failed to add update component task to the current frame, current frame is locked for read' +
+                        ' and write tasks');
+      }
+    }
+
     this.flags |= FrameTaskFlags.Read;
     if (this.readTasks === null) {
       this.readTasks = [];
@@ -125,6 +147,18 @@ export class Frame {
 
   setFocus(node: Element|VNode) : void {
     this.focus = node;
+  }
+
+  rwLock() : void {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+      this.flags |= FrameTaskFlags.RWLock;
+    }
+  }
+
+  rwUnlock() : void {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+      this.flags &= ~FrameTaskFlags.RWLock;
+    }
   }
 }
 
@@ -171,6 +205,8 @@ export class Scheduler {
     this._updateComponents = [];
     this._microtaskScheduler = new MicrotaskScheduler(this._handleMicrotaskScheduler);
     this._macrotaskScheduler = new MacrotaskScheduler(this._handleMacrotaskScheduler);
+
+    this._currentFrame.rwLock();
   }
 
   requestAnimationFrame() : void {
@@ -263,6 +299,9 @@ export class Scheduler {
     this._nextFrame = this._currentFrame;
     this._currentFrame = frame;
 
+    this._currentFrame.rwUnlock();
+    this._nextFrame.rwUnlock();
+
     // Mark all update components as dirty. But don't update until all write tasks
     // are finished. It is possible that we won't need to update Component if it
     // is removed.
@@ -290,6 +329,7 @@ export class Scheduler {
         if ((frame.flags & FrameTaskFlags.Write) !== 0) {
           frame.flags &= ~FrameTaskFlags.Write;
           tasks = frame.writeTasks;
+          frame.writeTasks = null;
           for (i = 0; i < tasks.length; i++) {
             tasks[i]();
           }
@@ -326,6 +366,7 @@ export class Scheduler {
       }
     } while ((frame.flags & (FrameTaskFlags.Component | FrameTaskFlags.Write)) !== 0);
 
+    this._currentFrame.rwLock();
     while ((frame.flags & FrameTaskFlags.After) !== 0) {
       frame.flags &= ~FrameTaskFlags.After;
 
