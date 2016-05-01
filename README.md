@@ -112,6 +112,83 @@ It also provides:
 - Task queues for DOM read and write operations for current and next frames.
 - Control of the user input focus.
 
+## High level API
+
+### Virtual DOM
+
+It is possible to use virtual dom without components, but it should be used
+only in advanced use cases.
+
+#### `createVElement(tag: string) : VNode`
+
+Creates a virtual node for a html element.
+
+#### `createVText(content: string): VNode`
+
+Creates a virtual node for a html text node.
+
+#### `VNode.attrs(attrs: any): VNode`
+
+Set attributes for an element.
+
+#### `VNode.props(props: any): VNode`
+
+Set properties for an element.
+
+#### `VNode.className(className: string): VNode`
+
+Set className for an element.
+
+#### `VNode.style(style: string): VNode`
+
+Set style in css string format for an element.
+
+#### `VNode.children(children: string|VNode[]): VNode`
+
+Set children.
+
+#### `VNode.key(any): VNode`
+
+Set key to make virtual node easily distinguishable among its siblings when
+performing children reconciliation algorithm.
+
+#### `VNode.trackByKeyChildren(children: VNode[]): VNode`
+
+Set children that should be tracked by its key.
+
+### Components
+
+#### `new ComponentDescriptor<DataType, StateType>()`
+
+Creates a new component descriptor.
+
+#### `ComponentDescriptor.rootTag(tag: string) : void`
+
+Set tag name of the root element.
+
+#### `ComponentDescriptor.init(initHandler: (c: Component) => void): void`
+
+Set init handler. Lifecycle method init will be invoked each time when
+component is instantiated from component descriptor.
+
+#### `ComponentDescriptor.update(updateHandler: (c: Component) => void): void`
+
+Set update handler. Lifecycle method update will be invoked each time when
+component is needs to update internal state or representation.
+
+#### `ComponentDescriptor<D, S>.createVNode(data?: D): void`
+
+Creates a new virtual node representing component.
+
+#### `Component.sync(newRoot: VNode): void`
+
+Sync DOM subtree using Virtual DOM API. `newRoot` node should be created by
+`createVRoot() : VNode` function.
+
+#### `injectComponent<D, S>(descriptor: ComponentDescriptor<D, S>, data: D, container: Element) : Component<D, S>`
+
+Instantiates new component from descriptor and injects into container element.
+
 ## License
 
 MIT
