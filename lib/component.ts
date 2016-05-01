@@ -118,7 +118,7 @@ export class ComponentDescriptor<D, S> {
   /**
    * Use SVG Namespace to create root element
    */
-  svg(tag: string) : ComponentDescriptor<D, S> {
+  svg() : ComponentDescriptor<D, S> {
     this.markFlags |= ComponentFlags.Svg;
     this.flags |= ComponentDescriptorFlags.Svg;
     return this;
