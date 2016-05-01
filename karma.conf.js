@@ -7,6 +7,10 @@ module.exports = function(config) {
       {pattern: 'tests/**/*.ts', included: false, watched: false},
     ],
 
+    preprocessors: {
+      'build/tests.js': ['sourcemap']
+    },
+
     colors: true,
     autoWatch: true,
 
