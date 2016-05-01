@@ -28,6 +28,14 @@ export const enum VNodeFlags {
   VModelUpdateHandler   = 1 << 20,
 }
 
+export const enum VNodeRenderFlags {
+  // prevents from rendering subcomponents
+  ShallowRender = 1,
+  // prevents from updating subcomponents
+  ShallowUpdate = 1 << 1,
+  Shallow       = ShallowRender | ShallowUpdate,
+}
+
 const enum VNodeDebugFlags {
   Rendered                  = 1,
   Mounted                   = 1 << 1,
@@ -487,7 +495,7 @@ export class VNode {
   /**
    * Render internal representation of the Virtual DOM Node
    */
-  render(owner: Component<any, any>) : void {
+  render(owner: Component<any, any>, renderFlags: number) : void {
     let i: number;
 
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
@@ -596,7 +604,9 @@ export class VNode {
         }
       }
 
-      c.update();
+      if ((renderFlags & VNodeRenderFlags.ShallowRender) === 0) {
+        c.update();
+      }
     }
 
     this._freeze();
@@ -671,7 +681,7 @@ export class VNode {
    * When this node is synced with other node, this node should be considered as
    * destroyed, and any access to it after sync is an undefined behavior.
    */
-  sync(other: VNode, owner: Component<any, any>) : void {
+  sync(other: VNode, owner: Component<any, any>, renderFlags: number) : void {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this._debugProperties.flags & (VNodeDebugFlags.Rendered | VNodeDebugFlags.Mounted)) === 0) {
         throw new Error('Failed to sync VNode: VNode should be rendered or mounted before sync');
@@ -756,7 +766,8 @@ export class VNode {
           this.syncChildren(
             this._children as VNode[]|string,
             other._children as VNode[]|string,
-            owner);
+            owner,
+            renderFlags);
         }
       } else {
         if ((flags & VNodeFlags.TextInputElement) !== 0) {
@@ -783,7 +794,9 @@ export class VNode {
       component = other.cref = this.cref as Component<any, any>;
       component.setData(other._props);
       component.setChildren(other._children as VNode[]|string);
-      component.update();
+      if ((renderFlags & VNodeRenderFlags.ShallowUpdate) === 0) {
+        component.update();
+      }
     }
 
     other._freeze();
@@ -886,7 +899,7 @@ export class VNode {
   /**
    * Sync old children list with the new one
    */
-  syncChildren(a: VNode[]|string, b: VNode[]|string, owner: Component<any, any>) : void {
+  syncChildren(a: VNode[]|string, b: VNode[]|string, owner: Component<any, any>, renderFlags: number) : void {
     let aNode: VNode;
     let bNode: VNode;
     let i = 0;
@@ -929,7 +942,7 @@ export class VNode {
             bNode = b[0];
 
             if (aNode._canSync(bNode)) {
-              aNode.sync(bNode, owner);
+              aNode.sync(bNode, owner, renderFlags);
             } else {
               this._replaceChild(bNode, aNode, owner);
             }
@@ -949,7 +962,7 @@ export class VNode {
               while (i < b.length) {
                 bNode = b[i++];
                 if (aNode._canSync(bNode)) {
-                  aNode.sync(bNode, owner);
+                  aNode.sync(bNode, owner, renderFlags);
                   synced = true;
                   break;
                 }
@@ -965,7 +978,7 @@ export class VNode {
                                       ' same key');
                     }
                   }
-                  aNode.sync(bNode, owner);
+                  aNode.sync(bNode, owner, renderFlags);
                   synced = true;
                   break;
                 }
@@ -995,7 +1008,7 @@ export class VNode {
               while (i < a.length) {
                 aNode = a[i++];
                 if (aNode._canSync(bNode)) {
-                  aNode.sync(bNode, owner);
+                  aNode.sync(bNode, owner, renderFlags);
                   synced = true;
                   break;
                 }
@@ -1011,7 +1024,7 @@ export class VNode {
                                       ' same key.');
                     }
                   }
-                  aNode.sync(bNode, owner);
+                  aNode.sync(bNode, owner, renderFlags);
                   synced = true;
                   break;
                 }
@@ -1029,9 +1042,9 @@ export class VNode {
           } else {
             // a and b have more than 1 child
             if ((this.flags & VNodeFlags.TrackByKeyChildren) === 0) {
-              this._syncChildren(a, b, owner);
+              this._syncChildren(a, b, owner, renderFlags);
             } else {
-              this._syncChildrenTrackingByKeys(a, b, owner);
+              this._syncChildrenTrackingByKeys(a, b, owner, renderFlags);
             }
           }
         }
@@ -1051,7 +1064,7 @@ export class VNode {
    * and external dependencies should not rely on the knowledge about this
    * algorithm, because it can be changed in any time.
    */
-  private _syncChildren(a: VNode[], b: VNode[], owner: Component<any, any>) : void {
+  private _syncChildren(a: VNode[], b: VNode[], owner: Component<any, any>, renderFlags: number) : void {
     let aStart = 0;
     let bStart = 0;
     let aEnd = a.length - 1;
@@ -1073,7 +1086,7 @@ export class VNode {
       aStart++;
       bStart++;
 
-      aNode.sync(bNode, owner);
+      aNode.sync(bNode, owner, renderFlags);
     }
 
     // Sync similar nodes at the end
@@ -1088,7 +1101,7 @@ export class VNode {
       aEnd--;
       bEnd--;
 
-      aNode.sync(bNode, owner);
+      aNode.sync(bNode, owner, renderFlags);
     }
 
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
@@ -1108,7 +1121,7 @@ export class VNode {
       aNode = a[aStart++];
       bNode = b[bStart++];
       if (aNode._canSync(bNode)) {
-        aNode.sync(bNode, owner);
+        aNode.sync(bNode, owner, renderFlags);
       } else {
         this._replaceChild(bNode, aNode, owner);
       }
@@ -1132,7 +1145,7 @@ export class VNode {
   /**
    * Sync children tracking by keys
    */
-  private _syncChildrenTrackingByKeys(a: VNode[], b: VNode[], owner: Component<any, any>) : void {
+  private _syncChildrenTrackingByKeys(a: VNode[], b: VNode[], owner: Component<any, any>, renderFlags: number) : void {
     let aStart = 0;
     let bStart = 0;
     let aEnd = a.length - 1;
@@ -1168,7 +1181,7 @@ export class VNode {
             throw new Error('VNode sync children failed: cannot sync two different children with the same key');
           }
         }
-        aStartNode.sync(bStartNode, owner);
+        aStartNode.sync(bStartNode, owner, renderFlags);
         aStart++;
         bStart++;
         if (aStart > aEnd || bStart > bEnd) {
@@ -1186,7 +1199,7 @@ export class VNode {
             throw new Error('VNode sync children failed: cannot sync two different children with the same key');
           }
         }
-        aEndNode.sync(bEndNode, owner);
+        aEndNode.sync(bEndNode, owner, renderFlags);
         aEnd--;
         bEnd--;
         if (aStart > aEnd || bStart > bEnd) {
@@ -1204,7 +1217,7 @@ export class VNode {
             throw new Error('VNode sync children failed: cannot sync two different children with the same key');
           }
         }
-        aStartNode.sync(bEndNode, owner);
+        aStartNode.sync(bEndNode, owner, renderFlags);
         nextPos = bEnd + 1;
         next = nextPos < b.length ? b[nextPos].ref : null;
         this._moveChild(bEndNode, next, owner);
@@ -1228,7 +1241,7 @@ export class VNode {
             throw new Error('VNode sync children failed: cannot sync two different children with the same key');
           }
         }
-        aEndNode.sync(bStartNode, owner);
+        aEndNode.sync(bStartNode, owner, renderFlags);
         this._moveChild(bStartNode, aStartNode.ref, owner);
         aEnd--;
         bStart++;
@@ -1294,7 +1307,7 @@ export class VNode {
                   throw new Error('VNode sync children failed: cannot sync two different children with the same key');
                 }
               }
-              aNode.sync(bNode, owner);
+              aNode.sync(bNode, owner, renderFlags);
               removed = false;
               break;
             }
@@ -1329,7 +1342,7 @@ export class VNode {
                 throw new Error('VNode sync children failed: cannot sync two different children with the same key');
               }
             }
-            aNode.sync(bNode, owner);
+            aNode.sync(bNode, owner, renderFlags);
           } else {
             this._removeChild(aNode, owner);
             removeOffset++;
@@ -1508,7 +1521,7 @@ export function insertVNodeBefore(container: VNode, node: VNode, nextRef: Node, 
     node.create(owner);
     container.ref.insertBefore(node.ref, nextRef);
     node.attached();
-    node.render(owner);
+    node.render(owner, 0);
   } else {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((node.flags & VNodeFlags.KeepAlive) === 0) {
@@ -1530,7 +1543,7 @@ export function replaceVNode(container: VNode, newNode: VNode, refNode: VNode, o
     newNode.create(owner);
     container.ref.replaceChild(newNode.ref, refNode.ref);
     newNode.attached();
-    newNode.render(owner);
+    newNode.render(owner, 0);
   } else {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((newNode.flags & VNodeFlags.KeepAlive) === 0) {

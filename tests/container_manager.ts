@@ -2,7 +2,6 @@ import {ContainerManager, ContainerManagerDescriptor} from '../lib/container_man
 import {VNode, createVElement} from '../lib/vnode';
 import {Component} from '../lib/component';
 
-
 describe('ContainerManager', () => {
   it('should invoke insertChild', () => {
     let testManager: ContainerManager = null;
@@ -27,8 +26,8 @@ describe('ContainerManager', () => {
 
     a.create(null);
     a.attached();
-    a.render(null);
-    a.sync(b, null);
+    a.render(null, 0);
+    a.sync(b, null, 0);
 
     expect(testManager).toBe(manager);
     expect(testContainer).toBe(a);
@@ -58,8 +57,8 @@ describe('ContainerManager', () => {
 
     a.create(null);
     a.attached();
-    a.render(null);
-    a.sync(b, null);
+    a.render(null, 0);
+    a.sync(b, null, 0);
 
     expect(testManager).toBe(manager);
     expect(testContainer).toBe(a);
@@ -93,8 +92,8 @@ describe('ContainerManager', () => {
 
     a.create(null);
     a.attached();
-    a.render(null);
-    a.sync(b, null);
+    a.render(null, 0);
+    a.sync(b, null, 0);
 
     expect(testManager).toBe(manager);
     expect(testContainer).toBe(a);
@@ -127,8 +126,8 @@ describe('ContainerManager', () => {
 
     a.create(null);
     a.attached();
-    a.render(null);
-    a.sync(b, null);
+    a.render(null, 0);
+    a.sync(b, null, 0);
 
     expect(testManager).toBe(manager);
     expect(testContainer).toBe(a);
