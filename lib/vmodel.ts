@@ -159,11 +159,19 @@ export class VModel<D> {
       }
 
       if (this._style !== null) {
-        (ref as HTMLElement).style.cssText = this._style;
+        if ((this._flags & VModelFlags.Svg) === 0) {
+          (ref as HTMLElement).style.cssText = this._style;
+        } else {
+          (ref as SVGElement).setAttribute('style', this._style);
+        }
       }
 
       if (this._className !== null) {
-        (ref as HTMLElement).className = this._className;
+        if ((this._flags & VModelFlags.Svg) === 0) {
+          (ref as HTMLElement).className = this._className;
+        } else {
+          (ref as SVGElement).setAttribute('class', this._className);
+        }
       }
 
       if ((this._flags & VModelFlags.EnabledCloning) !== 0) {

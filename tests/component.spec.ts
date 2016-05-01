@@ -24,7 +24,6 @@ describe('Component', () => {
         .rootTag('a')
         .svg();
       const c = d.createComponent(null);
-      expect(c.element.tagName).toBe('a');
       expect(c.element).isPrototypeOf(SVGElement);
     });
 
