@@ -110,7 +110,7 @@ export class ComponentDescriptor<D, S> {
   /**
    * Set tag name for the root element
    */
-  rootTag(tag: string) : ComponentDescriptor<D, S> {
+  tagName(tag: string) : ComponentDescriptor<D, S> {
     this._tag = tag;
     return this;
   }
@@ -127,7 +127,7 @@ export class ComponentDescriptor<D, S> {
   /**
    * Set VModel for the root element
    */
-  rootVModel(model: VModel<any>) : ComponentDescriptor<D, S> {
+  vModel(model: VModel<any>) : ComponentDescriptor<D, S> {
     this.markFlags |= model.markFlags;
     this.flags |= model.markFlags;
     this._tag = model;

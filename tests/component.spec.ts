@@ -13,7 +13,7 @@ describe('Component', () => {
 
     it('should create element with tag span', () => {
       const d = new ComponentDescriptor<any, any>()
-        .rootTag('span');
+        .tagName('span');
       const c = d.createComponent(null, null, null);
       expect(c.element.tagName).toBe('SPAN');
       expect(c.element).isPrototypeOf(HTMLElement);
@@ -21,7 +21,7 @@ describe('Component', () => {
 
     it('should create svg element with tag a', () => {
       const d = new ComponentDescriptor<any, any>()
-        .rootTag('a')
+        .tagName('a')
         .svg();
       const c = d.createComponent(null, null, null);
       expect(c.element).isPrototypeOf(SVGElement);
@@ -39,7 +39,7 @@ describe('Component', () => {
     it('should create element from vmodel', () => {
       const m = new VModel('span');
       const d = new ComponentDescriptor<any, any>()
-        .rootVModel(m);
+        .vModel(m);
       const c = d.createComponent(null, null, null);
       expect(c.element.tagName).toBe('SPAN');
       expect(c.element).isPrototypeOf(HTMLElement);

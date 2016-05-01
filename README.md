@@ -24,7 +24,7 @@ import { createVRoot, createVElement, ComponentDescriptor, scheduler, injectComp
 // the Component.
 const Box = new ComponentDescriptor()
   // Tag name of the root element for this Component. Default tag is 'div'.
-  .rootTag('span')
+  .tagName('span')
   // Function that responsible for updating internal state and the view
   // of the Component.
   // First parameter is an instance of the Component.
@@ -165,7 +165,7 @@ Set children that should be tracked by its key.
 
 Creates a new component descriptor.
 
-##### `ComponentDescriptor.rootTag(tag: string) : void`
+##### `ComponentDescriptor.tagName(tag: string) : void`
 
 Set tag name of the root element.
 
