@@ -50,6 +50,10 @@ export class ContainerManagerDescriptor<S> {
     }
   }
 
+  create(state: S) : ContainerManager<S> {
+    return new ContainerManager<S>(this, state);
+  }
+
   insertChild(handler: InsertChildHandler<S>) : ContainerManagerDescriptor<S> {
     this._insertChild = handler;
     return this;

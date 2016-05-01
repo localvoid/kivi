@@ -1378,9 +1378,9 @@ export class VNode {
 
   private _insertChild(node: VNode, nextRef: Node, owner: Component<any, any>) : void {
     if (((this.flags & VNodeFlags.ManagedContainer) !== 0) &&
-        (node.cref as ContainerManager<any>).descriptor._insertChild !== null) {
-      (node.cref as ContainerManager<any>).descriptor._insertChild(
-        (node.cref as ContainerManager<any>), this, node, nextRef, owner);
+        (this.cref as ContainerManager<any>).descriptor._insertChild !== null) {
+      (this.cref as ContainerManager<any>).descriptor._insertChild(
+        (this.cref as ContainerManager<any>), this, node, nextRef, owner);
     } else {
       insertVNodeBefore(this, node, nextRef, owner);
     }
@@ -1388,9 +1388,9 @@ export class VNode {
 
   private _replaceChild(newNode: VNode, refNode: VNode, owner: Component<any, any>) : void {
     if (((this.flags & VNodeFlags.ManagedContainer) !== 0) &&
-        (newNode.cref as ContainerManager<any>).descriptor._replaceChild !== null) {
-      (newNode.cref as ContainerManager<any>).descriptor._replaceChild(
-        (newNode.cref as ContainerManager<any>), this, newNode, refNode, owner);
+        (this.cref as ContainerManager<any>).descriptor._replaceChild !== null) {
+      (this.cref as ContainerManager<any>).descriptor._replaceChild(
+        (this.cref as ContainerManager<any>), this, newNode, refNode, owner);
     } else {
       replaceVNode(this, newNode, refNode, owner);
     }
@@ -1398,9 +1398,9 @@ export class VNode {
 
   private _moveChild(node: VNode, nextRef: Node, owner: Component<any, any>) : void {
     if (((this.flags & VNodeFlags.ManagedContainer) !== 0) &&
-        (node.cref as ContainerManager<any>).descriptor._moveChild !== null) {
-      (node.cref as ContainerManager<any>).descriptor._moveChild(
-        (node.cref as ContainerManager<any>), this, node, nextRef, owner);
+        (this.cref as ContainerManager<any>).descriptor._moveChild !== null) {
+      (this.cref as ContainerManager<any>).descriptor._moveChild(
+        (this.cref as ContainerManager<any>), this, node, nextRef, owner);
     } else {
       moveVNode(this, node, nextRef, owner);
     }
@@ -1408,9 +1408,9 @@ export class VNode {
 
   private _removeChild(node: VNode, owner: Component<any, any>) : void {
     if (((this.flags & VNodeFlags.ManagedContainer) !== 0) &&
-        (node.cref as ContainerManager<any>).descriptor._removeChild !== null) {
-      (node.cref as ContainerManager<any>).descriptor._removeChild(
-        (node.cref as ContainerManager<any>), this, node, owner);
+        (this.cref as ContainerManager<any>).descriptor._removeChild !== null) {
+      (this.cref as ContainerManager<any>).descriptor._removeChild(
+        (this.cref as ContainerManager<any>), this, node, owner);
     } else {
       removeVNode(this, node, owner);
     }
