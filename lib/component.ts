@@ -237,7 +237,7 @@ export class ComponentDescriptor<D, S> {
   /**
    * Create a Component
    */
-  createComponent(parent: Component<any, any>) : Component<D, S> {
+  createComponent(data: D, children: string|VNode[], parent: Component<any, any>) : Component<D, S> {
     let element: Element;
     let component: Component<D, S>;
 
@@ -252,7 +252,7 @@ export class ComponentDescriptor<D, S> {
       } else {
         element = (this._tag as VModel<any>).createElement();
       }
-      component = new Component<D, S>(this.markFlags, this, parent, element);
+      component = new Component<D, S>(this.markFlags, this, parent, data, children, element);
       if (this._init !== null) {
         this._init(component);
       }
@@ -267,8 +267,8 @@ export class ComponentDescriptor<D, S> {
   /**
    * Mount Component on top of existing html element
    */
-  _mountComponent(parent: Component<any, any>, element: Element) : Component<D, S> {
-    let component = new Component(this.markFlags | ComponentFlags.Mounting, this, parent, element);
+  mountComponent(data: D, children: string|VNode[], parent: Component<any, any>, element: Element) : Component<D, S> {
+    let component = new Component(this.markFlags | ComponentFlags.Mounting, this, parent, data, children, element);
     if (this._init !== null) {
       this._init(component);
     }
@@ -309,15 +309,15 @@ export class Component<D, S> {
   private _subscriptions: InvalidatorSubscription[]|InvalidatorSubscription;
   private _transientSubscriptions: InvalidatorSubscription[]|InvalidatorSubscription;
 
-  constructor(flags: number, descriptor: ComponentDescriptor<D, S>, parent: Component<any, any>, element: Element) {
+  constructor(flags: number, descriptor: ComponentDescriptor<D, S>, parent: Component<any, any>, data: D, children: string|VNode[], element: Element) {
     this.flags = flags;
     this.mtime = 0;
     this.descriptor = descriptor;
     this.parent = parent;
     this.depth = parent === null ? 0 : parent.depth + 1;
     this.state = null;
-    this.data = null;
-    this.children = null;
+    this.data = data;
+    this.children = children;
     this.element = element;
     this.root = ((flags & ComponentFlags.Canvas2D) === 0) ? null : (element as HTMLCanvasElement).getContext('2d');
     this._subscriptions = null;
@@ -672,11 +672,10 @@ export class Component<D, S> {
  */
 export function injectComponent<D, S>(descriptor: ComponentDescriptor<D, S>, data: D, container: Element)
     : Component<D, S> {
-  let c = descriptor.createComponent(null);
+  const c = descriptor.createComponent(data, null, null);
   scheduler.nextFrame().write(function() {
     container.appendChild(c.element);
     c.attached();
-    c.setData(data);
     c.update();
   });
   return c;
@@ -687,8 +686,7 @@ export function injectComponent<D, S>(descriptor: ComponentDescriptor<D, S>, dat
  */
 export function mountComponent<D, S>(descriptor: ComponentDescriptor<D, S>, data: D, element: Element)
     : Component<D, S> {
-  let c = descriptor._mountComponent(null, element);
-  c.setData(data);
+  const c = descriptor.mountComponent(data, null, null, element);
   c.update();
   return c;
 }

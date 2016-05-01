@@ -4,9 +4,11 @@ const Main = new kivi.ComponentDescriptor()
     c.state = {
       x: 0,
       y: 0,
-      init: false
     };
 
+    c.element.width = c.data.width;
+    c.element.height = c.data.height;
+    
     c.element.addEventListener('mousemove', (e) => {
       c.state.x = e.offsetX;
       c.state.y = e.offsetY;
@@ -14,12 +16,6 @@ const Main = new kivi.ComponentDescriptor()
     });
   })
   .update((c) => {
-    if (!c.state.init) {
-      c.element.width = c.data.width;
-      c.element.height = c.data.height;
-      c.state.init = true;
-    }
-
     const ctx = c.get2DContext();
     ctx.globalCompositeOperation = 'source-over';
     ctx.fillStyle = 'rgba(0, 0, 0, 1)';

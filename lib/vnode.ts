@@ -462,7 +462,8 @@ export class VNode {
         this.ref = (this.tag as VModel<any>).createElement();
       }
     } else {
-      let c = (this.tag as ComponentDescriptor<any, any>).createComponent(owner);
+      let c = (this.tag as ComponentDescriptor<any, any>)
+        .createComponent(this._props, this._children as string|VNode[], owner);
       this.ref = c.element;
       this.cref = c;
     }
@@ -595,8 +596,6 @@ export class VNode {
         }
       }
 
-      c.setData(this._props);
-      c.setChildren(this._children as VNode[]|string);
       c.update();
     }
 
@@ -630,7 +629,8 @@ export class VNode {
     this.ref = node;
 
     if ((flags & VNodeFlags.Component) !== 0) {
-      let cref = this.cref = (this.tag as ComponentDescriptor<any, any>)._mountComponent(owner, node as Element);
+      let cref = this.cref = (this.tag as ComponentDescriptor<any, any>)
+        .mountComponent(this._props, this._children as string|VNode[], owner, node as Element);
       cref.setData(this._props);
       cref.setChildren(this._children as VNode[]|string);
       cref.update();
