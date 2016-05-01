@@ -673,16 +673,18 @@ export class Component<D, S> {
 export function injectComponent<D, S>(descriptor: ComponentDescriptor<D, S>, data: D, container: Element)
     : Component<D, S> {
   let c = descriptor.createComponent(null);
-  container.appendChild(c.element);
-  c.attached();
-  c.setData(data);
-  c.update();
+  scheduler.nextFrame().write(function() {
+    container.appendChild(c.element);
+    c.attached();
+    c.setData(data);
+    c.update();
+  });
   return c;
 }
 
-  /**
-   * Mount component on top of existing DOM
-   */
+/**
+ * Mount component on top of existing DOM
+ */
 export function mountComponent<D, S>(descriptor: ComponentDescriptor<D, S>, data: D, element: Element)
     : Component<D, S> {
   let c = descriptor._mountComponent(null, element);

@@ -268,7 +268,7 @@ export class Scheduler {
 
     this.clock++;
     this.flags &= ~(SchedulerFlags.MicrotaskPending | SchedulerFlags.Running);
-  }
+  };
 
   private _handleMacrotaskScheduler = () => {
     this.flags &= ~SchedulerFlags.MacrotaskPending;
@@ -283,7 +283,7 @@ export class Scheduler {
 
     this.clock++;
     this.flags &= ~SchedulerFlags.Running;
-  }
+  };
 
   private _handleAnimationFrame = (t: number) => {
     let updateComponents = this._updateComponents;

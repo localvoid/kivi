@@ -54,6 +54,12 @@ like [Rollup](http://rollupjs.org/), and can be transpiled by
 [Babel](https://babeljs.io), [Buble](https://gitlab.com/Rich-Harris/buble),
 or [Google Closure Compiler](https://github.com/google/closure-compiler).
 
+## Examples
+
+- [Intro](https://github.com/localvoid/kivi/tree/master/examples/intro)
+- [Stateful Component](https://github.com/localvoid/kivi/tree/master/examples/stateful_component)
+- [Canvas](https://github.com/localvoid/kivi/tree/master/examples/canvas)
+
 ## Performance Benchmarks
 
 - [uibench](https://localvoid.github.io/uibench/)
