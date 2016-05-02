@@ -43,7 +43,7 @@ describe('ContainerManager', () => {
     let testOwner: Component = null;
 
     const CM = new ContainerManagerDescriptor()
-      .removeChild((manager: ContainerManager, container: Element, node: VNode, owner: Component, renderFlags: number) => {
+      .removeChild((manager: ContainerManager, container: Element, node: VNode, owner: Component) => {
         testManager = manager;
         testContainer = container;
         testNode = node;
@@ -74,7 +74,7 @@ describe('ContainerManager', () => {
     let testOwner: Component = null;
 
     const CM = new ContainerManagerDescriptor()
-      .moveChild((manager: ContainerManager, container: Element, node: VNode, nextRef: Node, owner: Component, renderFlags: number) => {
+      .moveChild((manager: ContainerManager, container: Element, node: VNode, nextRef: Node, owner: Component) => {
         testManager = manager;
         testContainer = container;
         testNode = node;
