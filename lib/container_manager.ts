@@ -9,24 +9,28 @@ export type InsertChildHandler<S> = (manager: ContainerManager<S>,
                                      container: Element,
                                      node: VNode,
                                      nextRef: Node,
-                                     owner: Component<any, any>) => void;
+                                     owner: Component<any, any>,
+                                     renderFlags: number) => void;
 
 export type ReplaceChildHandler<S> = (manager: ContainerManager<S>,
                                       container: Element,
                                       newNode: VNode,
                                       refNode: VNode,
-                                      owner: Component<any, any>) => void;
+                                      owner: Component<any, any>,
+                                      renderFlags: number) => void;
 
 export type MoveChildHandler<S> = (manager: ContainerManager<S>,
                                    container: Element,
                                    node: VNode,
                                    nextRef: Node,
-                                   owner: Component<any, any>) => void;
+                                   owner: Component<any, any>,
+                                   renderFlags: number) => void;
 
 export type RemoveChildHandler<S> = (manager: ContainerManager<S>,
                                      container: Element,
                                      now: VNode,
-                                     owner: Component<any, any>) => void;
+                                     owner: Component<any, any>,
+                                     renderFlags: number) => void;
 /**
  * Container Manager Descriptor
  *

@@ -580,7 +580,7 @@ export class VNode {
             ref.textContent = children;
           } else {
             for (i = 0, il = (children as VNode[]).length; i < il; i++) {
-              this._insertChild((children as VNode[])[i], null, owner);
+              this._insertChild((children as VNode[])[i], null, owner, renderFlags);
             }
           }
         } else {
@@ -592,7 +592,6 @@ export class VNode {
         }
       }
     } else if ((flags & VNodeFlags.Component) !== 0) {
-      const c = this.cref as Component<any, any>;
       ref = this.ref as Element;
 
       if (this._className !== null) {
@@ -605,7 +604,7 @@ export class VNode {
       }
 
       if ((renderFlags & VNodeRenderFlags.ShallowRender) === 0) {
-        c.update();
+        (this.cref as Component<any, any>).update();
       }
     }
 
@@ -918,7 +917,7 @@ export class VNode {
       } else {
         this.ref.removeChild(this.ref.firstChild);
         while (i < b.length) {
-          this._insertChild(b[i++], null, owner);
+          this._insertChild(b[i++], null, owner, renderFlags);
         }
       }
     } else if (typeof b === 'string') {
@@ -944,7 +943,7 @@ export class VNode {
             if (aNode._canSync(bNode)) {
               aNode.sync(bNode, owner, renderFlags);
             } else {
-              this._replaceChild(bNode, aNode, owner);
+              this._replaceChild(bNode, aNode, owner, renderFlags);
             }
           } else if (a.length === 1) {
             // Fast path when a have 1 child
@@ -966,7 +965,7 @@ export class VNode {
                   synced = true;
                   break;
                 }
-                this._insertChild(bNode, aNode.ref, owner);
+                this._insertChild(bNode, aNode.ref, owner, renderFlags);
               }
             } else {
               while (i < b.length) {
@@ -982,12 +981,12 @@ export class VNode {
                   synced = true;
                   break;
                 }
-                this._insertChild(bNode, aNode.ref, owner);
+                this._insertChild(bNode, aNode.ref, owner, renderFlags);
               }
             }
             if (synced) {
               while (i < b.length) {
-                this._insertChild(b[i++], null, owner);
+                this._insertChild(b[i++], null, owner, renderFlags);
               }
             } else {
               this._removeChild(aNode, owner);
@@ -1037,7 +1036,7 @@ export class VNode {
                 this._removeChild(a[i++], owner);
               }
             } else {
-              this._insertChild(bNode, null, owner);
+              this._insertChild(bNode, null, owner, renderFlags);
             }
           } else {
             // a and b have more than 1 child
@@ -1051,7 +1050,7 @@ export class VNode {
       } else if (b !== null && b.length > 0) {
         // a is empty, insert all children from b
         for (i = 0; i < b.length; i++) {
-          this._insertChild(b[i], null, owner);
+          this._insertChild(b[i], null, owner, renderFlags);
         }
       }
     }
@@ -1123,7 +1122,7 @@ export class VNode {
       if (aNode._canSync(bNode)) {
         aNode.sync(bNode, owner, renderFlags);
       } else {
-        this._replaceChild(bNode, aNode, owner);
+        this._replaceChild(bNode, aNode, owner, renderFlags);
       }
     }
 
@@ -1137,7 +1136,7 @@ export class VNode {
       nextPos = bEnd + 1;
       next = nextPos < b.length ? b[nextPos].ref : null;
       do {
-        this._insertChild(b[bStart++], next, owner);
+        this._insertChild(b[bStart++], next, owner, renderFlags);
       } while (bStart <= bEnd);
     }
   }
@@ -1260,7 +1259,7 @@ export class VNode {
       nextPos = bEnd + 1;
       next = nextPos < b.length ? b[nextPos].ref : null;
       while (bStart <= bEnd) {
-        this._insertChild(b[bStart++], next, owner);
+        this._insertChild(b[bStart++], next, owner, renderFlags);
       }
     } else if (bStart > bEnd) {
       // All nodes from b are synced, remove the rest from a
@@ -1362,7 +1361,7 @@ export class VNode {
             node = b[pos];
             nextPos = pos + 1;
             next = nextPos < b.length ? b[nextPos].ref : null;
-            this._insertChild(node, next, owner);
+            this._insertChild(node, next, owner, renderFlags);
           } else {
             if (j < 0 || i !== seq[j]) {
               pos = i + bStart;
@@ -1382,30 +1381,30 @@ export class VNode {
             node = b[pos];
             nextPos = pos + 1;
             next = nextPos < b.length ? b[nextPos].ref : null;
-            this._insertChild(node, next, owner);
+            this._insertChild(node, next, owner, renderFlags);
           }
         }
       }
     }
   }
 
-  private _insertChild(node: VNode, nextRef: Node, owner: Component<any, any>) : void {
+  private _insertChild(node: VNode, nextRef: Node, owner: Component<any, any>, renderFlags: number) : void {
     if (((this.flags & VNodeFlags.ManagedContainer) !== 0) &&
         (this.cref as ContainerManager<any>).descriptor._insertChild !== null) {
       (this.cref as ContainerManager<any>).descriptor._insertChild(
         this.cref as ContainerManager<any>, this.ref as Element, node, nextRef, owner);
     } else {
-      insertVNodeBefore(this, node, nextRef, owner);
+      insertVNodeBefore(this, node, nextRef, owner, renderFlags);
     }
   }
 
-  private _replaceChild(newNode: VNode, refNode: VNode, owner: Component<any, any>) : void {
+  private _replaceChild(newNode: VNode, refNode: VNode, owner: Component<any, any>, renderFlags: number) : void {
     if (((this.flags & VNodeFlags.ManagedContainer) !== 0) &&
         (this.cref as ContainerManager<any>).descriptor._replaceChild !== null) {
       (this.cref as ContainerManager<any>).descriptor._replaceChild(
         this.cref as ContainerManager<any>, this.ref as Element, newNode, refNode, owner);
     } else {
-      replaceVNode(this, newNode, refNode, owner);
+      replaceVNode(this, newNode, refNode, owner, renderFlags);
     }
   }
 
@@ -1516,12 +1515,12 @@ function _lis(a: number[]) : number[] {
  *
  * Can be used as a generic method to insert nodes in ContainerManager
  */
-export function insertVNodeBefore(container: VNode, node: VNode, nextRef: Node, owner: Component<any, any>) : void {
+export function insertVNodeBefore(container: VNode, node: VNode, nextRef: Node, owner: Component<any, any>, renderFlags: number) : void {
   if (node.ref === null) {
     node.create(owner);
     container.ref.insertBefore(node.ref, nextRef);
     node.attached();
-    node.render(owner, 0);
+    node.render(owner, renderFlags);
   } else {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((node.flags & VNodeFlags.KeepAlive) === 0) {
@@ -1538,12 +1537,12 @@ export function insertVNodeBefore(container: VNode, node: VNode, nextRef: Node, 
  *
  * Can be used as a generic method to replace nodes in ContainerManager
  */
-export function replaceVNode(container: VNode, newNode: VNode, refNode: VNode, owner: Component<any, any>) : void {
+export function replaceVNode(container: VNode, newNode: VNode, refNode: VNode, owner: Component<any, any>, renderFlags: number) : void {
   if (newNode.ref === null) {
     newNode.create(owner);
     container.ref.replaceChild(newNode.ref, refNode.ref);
     newNode.attached();
-    newNode.render(owner, 0);
+    newNode.render(owner, renderFlags);
   } else {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((newNode.flags & VNodeFlags.KeepAlive) === 0) {

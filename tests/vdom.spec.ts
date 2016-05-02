@@ -1,5 +1,6 @@
-import {VNode, createVElement, createVText} from '../lib/kivi';
+import {VNode, VNodeRenderFlags, createVElement, createVText} from '../lib/kivi';
 import {LifecycleComponent} from './lifecycle';
+import {VNodeRenderFlags} from '../lib/vnode';
 
 function injectVNode(parent: DocumentFragment, node: VNode, nextRef: Element) : void {
   node.create(null);
@@ -734,6 +735,41 @@ describe('VNode', () => {
       expect(component.cref.state.checkDisposed).toBe(-1);
 
       expect(c.ref.firstChild).toBe(component.ref);
+    });
+
+    it('shouldn\'t render component when shallow rendering is used', () => {
+      const component = LifecycleComponent.createVNode();
+      const a = createVElement('div').children([component]);
+      a.create(null);
+      a.attached();
+      a.render(null, VNodeRenderFlags.ShallowRender);
+      expect(component.cref.state.checkInit).toBe(0);
+      expect(component.cref.state.checkAttached).toBe(1);
+      expect(component.cref.state.checkUpdate).toBe(-1);
+      expect(component.cref.state.checkDetached).toBe(-1);
+      expect(component.cref.state.checkDisposed).toBe(-1);
+    });
+
+    it('shouldn\'t update component when shallow updating is used', () => {
+      const componentA = LifecycleComponent.createVNode();
+      const componentB = LifecycleComponent.createVNode();
+      const a = createVElement('div').children([componentA]);
+      const b = createVElement('div').children([componentB]);
+      a.create(null);
+      a.attached();
+      a.render(null, 0);
+      expect(componentA.cref.state.checkInit).toBe(0);
+      expect(componentA.cref.state.checkAttached).toBe(1);
+      expect(componentA.cref.state.checkUpdate).toBe(2);
+      expect(componentA.cref.state.checkDetached).toBe(-1);
+      expect(componentA.cref.state.checkDisposed).toBe(-1);
+
+      a.sync(b, null, VNodeRenderFlags.ShallowUpdate);
+      expect(componentB.cref.state.checkInit).toBe(0);
+      expect(componentB.cref.state.checkAttached).toBe(1);
+      expect(componentB.cref.state.checkUpdate).toBe(2);
+      expect(componentB.cref.state.checkDetached).toBe(-1);
+      expect(componentB.cref.state.checkDisposed).toBe(-1);
     });
   });
 });

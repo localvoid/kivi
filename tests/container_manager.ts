@@ -11,7 +11,7 @@ describe('ContainerManager', () => {
     let testOwner: Component = null;
 
     const CM = new ContainerManagerDescriptor()
-      .insertChild((manager: ContainerManager, container: Element, node: VNode, nextRef: Node, owner: Component) => {
+      .insertChild((manager: ContainerManager, container: Element, node: VNode, nextRef: Node, owner: Component, renderFlags: number) => {
         testManager = manager;
         testContainer = container;
         testNode = node;
@@ -43,7 +43,7 @@ describe('ContainerManager', () => {
     let testOwner: Component = null;
 
     const CM = new ContainerManagerDescriptor()
-      .removeChild((manager: ContainerManager, container: Element, node: VNode, owner: Component) => {
+      .removeChild((manager: ContainerManager, container: Element, node: VNode, owner: Component, renderFlags: number) => {
         testManager = manager;
         testContainer = container;
         testNode = node;
@@ -74,7 +74,7 @@ describe('ContainerManager', () => {
     let testOwner: Component = null;
 
     const CM = new ContainerManagerDescriptor()
-      .moveChild((manager: ContainerManager, container: Element, node: VNode, nextRef: Node, owner: Component) => {
+      .moveChild((manager: ContainerManager, container: Element, node: VNode, nextRef: Node, owner: Component, renderFlags: number) => {
         testManager = manager;
         testContainer = container;
         testNode = node;
@@ -110,7 +110,7 @@ describe('ContainerManager', () => {
     let testOwner: Component = null;
 
     const CM = new ContainerManagerDescriptor()
-      .replaceChild((manager: ContainerManager, container: Element, newNode: VNode, refNode: VNode, owner: Component) => {
+      .replaceChild((manager: ContainerManager, container: Element, newNode: VNode, refNode: VNode, owner: Component, renderFlags: number) => {
         testManager = manager;
         testContainer = container;
         testNewNode = newNode;
