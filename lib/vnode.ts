@@ -59,7 +59,7 @@ export class VNode {
    */
   _key: any;
   _props: any;
-  _attrs: Object;
+  _attrs: {[key: string]: any};
   /**
    * Style in css string format
    */
@@ -123,7 +123,7 @@ export class VNode {
   /**
    * Set props
    */
-  props(props: any) : VNode {
+  props(props: {[key: string]: any}) : VNode {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error('Failed to set props on VNode: props method should be called on element or component' +
@@ -152,7 +152,7 @@ export class VNode {
   /**
    * Set props with dynamic shape
    */
-  dynamicShapeProps(props: any) : VNode {
+  dynamicShapeProps(props: {[key: string]: any}) : VNode {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error('Failed to set props on VNode: props method should be called on element or component' +
@@ -182,7 +182,7 @@ export class VNode {
   /**
    * Set attrs with static shape
    */
-  attrs(attrs: Object) : VNode {
+  attrs(attrs: {[key: string]: any}) : VNode {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error('Failed to set attrs on VNode: attrs method should be called on element or component' +
@@ -211,7 +211,7 @@ export class VNode {
   /**
    * Set attrs with dynamic shape
    */
-  dynamicShapeAttrs(attrs: Object) : VNode {
+  dynamicShapeAttrs(attrs: {[key: string]: any}) : VNode {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error('Failed to set attrs on VNode: attrs method should be called on element or component' +

@@ -131,11 +131,11 @@ Creates a virtual node for a html element.
 
 Creates a virtual node for a html text node.
 
-##### `VNode.attrs(attrs: any): VNode`
+##### `VNode.attrs(attrs: {[key: string]: any}): VNode`
 
 Set attributes for an element.
 
-##### `VNode.props(props: any): VNode`
+##### `VNode.props(props: {[key: string]: any}): VNode`
 
 Set properties for an element.
 

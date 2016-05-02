@@ -1,20 +1,13 @@
 import {VNode, VNodeRenderFlags, createVElement, createVText} from '../lib/kivi';
 import {LifecycleComponent} from './lifecycle';
-import {VNodeRenderFlags} from '../lib/vnode';
+import {VNodeRenderFlags, createVSvgElement} from '../lib/vnode';
 import {Component} from '../lib/component';
+import {XlinkNamespace} from '../lib/namespace';
 
 function injectVNode(parent: DocumentFragment, node: VNode, nextRef: Element) : void {
   node.create(null);
   parent.insertBefore(node.ref, nextRef);
   node.render(null, 0);
-}
-
-function ee(key: any, c: VNode[]) : VNode {
-  return createVElement('div').key(key).trackByKeyChildren(c === void 0 ? null : c);
-}
-
-function ei(c: VNode[]) : VNode {
-  return createVElement('div').children(c === void 0 ? null : c);
 }
 
 function gen(item: any, keys: boolean) : VNode|VNode[] {
@@ -65,8 +58,8 @@ function checkInnerHtmlEquals(ax: VNode[], bx: VNode[], cx: VNode[], keys: boole
 describe('VNode', () => {
   describe('render', () => {
     it('should create empty div', () => {
-      let f = document.createDocumentFragment();
-      let a = createVElement('div');
+      const f = document.createDocumentFragment();
+      const a = createVElement('div');
       injectVNode(f, a, null);
       expect((f.firstChild as Element).tagName).toBe('DIV');
     });
@@ -78,7 +71,31 @@ describe('VNode', () => {
       expect((f.firstChild as Element).tagName).toBe('SPAN');
     });
 
-    it('should create div with 1 attribute', () => {
+    it('should create div with 1 static shape attribute', () => {
+      const f = document.createDocumentFragment();
+      const a = createVElement('div');
+      a.attrs({
+        a: '1'
+      });
+      injectVNode(f, a, null);
+      expect((f.firstChild as Element).hasAttributes()).toBeTruthy();
+      expect((f.firstChild as Element).getAttribute('a')).toBe('1');
+    });
+
+    it('should create div with 1 static shape attributes', () => {
+      const f = document.createDocumentFragment();
+      const a = createVElement('div');
+      a.attrs({
+        a: '1',
+        b: '2',
+      });
+      injectVNode(f, a, null);
+      expect((f.firstChild as Element).hasAttributes()).toBeTruthy();
+      expect((f.firstChild as Element).getAttribute('a')).toBe('1');
+      expect((f.firstChild as Element).getAttribute('b')).toBe('2');
+    });
+
+    it('should create div with 1 dynamic shape attribute', () => {
       const f = document.createDocumentFragment();
       const a = createVElement('div');
       a.dynamicShapeAttrs({
@@ -89,7 +106,7 @@ describe('VNode', () => {
       expect((f.firstChild as Element).getAttribute('a')).toBe('1');
     });
 
-    it('should create div with 2 attributes', () => {
+    it('should create div with 2 dynamic shape attributes', () => {
       const f = document.createDocumentFragment();
       const a = createVElement('div').dynamicShapeAttrs({
         a: '1',
@@ -99,6 +116,50 @@ describe('VNode', () => {
       expect((f.firstChild as Element).hasAttributes()).toBeTruthy();
       expect((f.firstChild as Element).getAttribute('a')).toBe('1');
       expect((f.firstChild as Element).getAttribute('b')).toBe('2');
+    });
+
+    it('should create div with 1 static shape property', () => {
+      const f = document.createDocumentFragment();
+      const a = createVElement('div');
+      a.props({
+        xtag: '1'
+      });
+      injectVNode(f, a, null);
+      expect((f.firstChild as {xtag: string}).xtag).toBe('1');
+    });
+
+    it('should create div with 2 static shape properties', () => {
+      const f = document.createDocumentFragment();
+      const a = createVElement('div');
+      a.props({
+        xtag1: '1',
+        xtag2: '2'
+      });
+      injectVNode(f, a, null);
+      expect((f.firstChild as {xtag1: string}).xtag1).toBe('1');
+      expect((f.firstChild as {xtag2: string}).xtag2).toBe('2');
+    });
+
+    it('should create div with 1 dynamic shape property', () => {
+      const f = document.createDocumentFragment();
+      const a = createVElement('div');
+      a.dynamicShapeProps({
+        xtag: '1'
+      });
+      injectVNode(f, a, null);
+      expect((f.firstChild as {xtag: string}).xtag).toBe('1');
+    });
+
+    it('should create div with 2 dynamic shape properties', () => {
+      const f = document.createDocumentFragment();
+      const a = createVElement('div');
+      a.dynamicShapeProps({
+        xtag1: '1',
+        xtag2: '2'
+      });
+      injectVNode(f, a, null);
+      expect((f.firstChild as {xtag1: string}).xtag1).toBe('1');
+      expect((f.firstChild as {xtag2: string}).xtag2).toBe('2');
     });
 
     it('should create div with style', () => {
@@ -114,6 +175,27 @@ describe('VNode', () => {
       injectVNode(f, a, null);
       expect((f.firstChild as Element).classList.length).toBe(1);
       expect((f.firstChild as Element).classList[0]).toBe('a');
+    });
+
+    it('should create svg element with style', () => {
+      const f = document.createDocumentFragment();
+      const a = createVSvgElement('circle').style('top: 10px');
+      injectVNode(f, a, null);
+      expect((f.firstChild as SVGElement).getAttribute('style')).toContain('10px');
+    });
+
+    it('should create svg element with className', () => {
+      const f = document.createDocumentFragment();
+      const a = createVSvgElement('circle').className('a');
+      injectVNode(f, a, null);
+      expect((f.firstChild as SVGElement).getAttribute('class')).toBe('a');
+    });
+
+    it('should create svg element with xlink:href attribute', () => {
+      const f = document.createDocumentFragment();
+      const a = createVSvgElement('circle').attrs({'xlink:href': 'a'});
+      injectVNode(f, a, null);
+      expect((f.firstChild as SVGElement).getAttributeNS(XlinkNamespace, 'href')).toBe('a');
     });
 
     it('should create div with 1 child', () => {

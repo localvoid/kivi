@@ -20,16 +20,16 @@ export function setAttr(node: Element, key: string, value: string) : void {
 /**
  * Sync attributes with static shape
  */
-export function syncStaticShapeAttrs(a: any, b: any, node: Element) : void {
-  let keys = Object.keys(a);
-  let key: string;
-  let i: number;
-
+export function syncStaticShapeAttrs(a: {[key: string]: any}, b: {[key: string]: any}, node: Element) : void {
   if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
     if (a === null || b === null) {
       throw new Error('Failed to update attrs with static shape: attrs object have dynamic shape.');
     }
   }
+
+  let keys = Object.keys(a);
+  let key: string;
+  let i: number;
 
   for (i = 0; i < keys.length; i++) {
     key = keys[i];
@@ -53,7 +53,7 @@ export function syncStaticShapeAttrs(a: any, b: any, node: Element) : void {
 /**
  * Sync attributes with dynamic shape
  */
-export function syncDynamicShapeAttrs(a: any, b: any, node: Element) : void {
+export function syncDynamicShapeAttrs(a: {[key: string]: any}, b: {[key: string]: any}, node: Element) : void {
   let i: number;
   let keys: string[];
   let key: string;
