@@ -7,6 +7,8 @@ var rollup = require('rollup');
 var rollupTypeScript = require('rollup-plugin-typescript');
 var rollupReplace = require('rollup-plugin-replace');
 var rollupBabel = require('rollup-plugin-babel');
+var uglify = require('gulp-uglify');
+var rename = require('gulp-rename');
 
 gulp.task('clean', del.bind(null, ['dist']));
 
@@ -33,11 +35,10 @@ gulp.task('dist:es6', function() {
   ]);
 });
 
-gulp.task('dist:umd', function() {
+gulp.task('dist:umd', ['dist:es6'], function() {
   return rollup.rollup({
-    entry: 'lib/kivi.ts',
+    entry: 'dist/es6/kivi.js',
     plugins: [
-      rollupTypeScript(),
       rollupReplace({
         delimiters: ['<@', '@>'],
         values: {
@@ -57,7 +58,14 @@ gulp.task('dist:umd', function() {
   });
 });
 
-gulp.task('dist', ['dist:cjs', 'dist:es6', 'dist:umd']);
+gulp.task('dist:umd.min', ['dist:umd'], function() {
+  return gulp.src('dist/umd/kivi.js')
+    .pipe(uglify())
+    .pipe(rename('kivi.min.js'))
+    .pipe(gulp.dest('dist/umd'));
+});
+
+gulp.task('dist', ['dist:cjs', 'dist:es6', 'dist:umd.min']);
 
 gulp.task('build:tests', function() {
   return rollup.rollup({
