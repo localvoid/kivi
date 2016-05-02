@@ -225,7 +225,7 @@ describe('VNode', () => {
   });
 
   describe('sync', () => {
-    describe('dynamic shape attrs', () => {
+    describe('static shape attrs', () => {
       it('null => null', () => {
         const f = document.createDocumentFragment();
         const a = createVElement('div');
@@ -235,6 +235,110 @@ describe('VNode', () => {
         expect((f.firstChild as Element).hasAttributes()).toBeFalsy();
       });
 
+      it('null => {} should throw exception', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div');
+        const b = createVElement('div').attrs({});
+        injectVNode(f, a, null);
+        expect(() => a.sync(b, null, 0)).toThrow();
+      });
+
+      it('{} => null should throw exception', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').attrs({});
+        const b = createVElement('div');
+        injectVNode(f, a, null);
+        expect(() => a.sync(b, null, 0)).toThrow();
+      });
+
+      it('{} => {}', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').attrs({});
+        const b = createVElement('div').attrs({});
+        injectVNode(f, a, null);
+        a.sync(b, null, 0);
+        expect((f.firstChild as Element).hasAttributes()).toBeFalsy();
+      });
+
+      it('null => {a: 1} should throw exception', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div');
+        const b = createVElement('div').attrs({ a: '1' });
+        injectVNode(f, a, null);
+        expect(() => a.sync(b, null, 0)).toThrow();
+      });
+
+      it('{} => {a: 1} should throw exception', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').attrs({});
+        const b = createVElement('div').attrs({ a: '1' });
+        injectVNode(f, a, null);
+        expect(() => a.sync(b, null, 0)).toThrow();
+      });
+
+      it('{} => {a: 1, b: 2}', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').attrs({});
+        const b = createVElement('div').attrs({ a: '1', b: '2' });
+        injectVNode(f, a, null);
+        expect(() => a.sync(b, null, 0)).toThrow();
+      });
+
+      it('{a: 1} => null', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').attrs({ a: '1' });
+        const b = createVElement('div');
+        injectVNode(f, a, null);
+        expect(() => a.sync(b, null, 0)).toThrow();
+      });
+
+      it('{a: 1} => {}', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').attrs({ a: '1' });
+        const b = createVElement('div').attrs({});
+        injectVNode(f, a, null);
+        expect(() => a.sync(b, null, 0)).toThrow();
+      });
+
+      it('{a: 1, b: 2} => {}', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').attrs({ a: '1', b: '2' });
+        const b = createVElement('div').attrs({});
+        injectVNode(f, a, null);
+        expect(() => a.sync(b, null, 0)).toThrow();
+      });
+
+      it('{a: 1} => {b: 2}', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').attrs({ a: '1' });
+        const b = createVElement('div').attrs({ b: '2' });
+        injectVNode(f, a, null);
+        expect(() => a.sync(b, null, 0)).toThrow();
+      });
+
+      it('{a: 1} => {a: 10}', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').attrs({ a: '1' });
+        const b = createVElement('div').attrs({ a: '10' });
+        injectVNode(f, a, null);
+        a.sync(b, null, 0);
+        expect((f.firstChild as Element).hasAttributes()).toBeTruthy();
+        expect((f.firstChild as Element).getAttribute('a')).toBe('10');
+      });
+
+      it('{a: 1, b: 2} => {a: 10, b: 20}', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').attrs({ a: '1', b: '2' });
+        const b = createVElement('div').attrs({ a: '10', b: '20' });
+        injectVNode(f, a, null);
+        a.sync(b, null, 0);
+        expect((f.firstChild as Element).hasAttributes()).toBeTruthy();
+        expect((f.firstChild as Element).getAttribute('a')).toBe('10');
+        expect((f.firstChild as Element).getAttribute('b')).toBe('20');
+      });
+    });
+
+    describe('dynamic shape attrs', () => {
       it('null => {}', () => {
         const f = document.createDocumentFragment();
         const a = createVElement('div').dynamicShapeAttrs(null);
@@ -375,6 +479,241 @@ describe('VNode', () => {
         expect((f.firstChild as Element).hasAttributes()).toBeTruthy();
         expect((f.firstChild as Element).getAttribute('a')).toBe('10');
         expect((f.firstChild as Element).getAttribute('b')).toBe('20');
+      });
+    });
+
+    describe('static shape props', () => {
+      it('null => {} should throw exception', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div');
+        const b = createVElement('div').props({});
+        injectVNode(f, a, null);
+        expect(() => a.sync(b, null, 0)).toThrow();
+      });
+
+      it('{} => null should throw exception', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').props({});
+        const b = createVElement('div');
+        injectVNode(f, a, null);
+        expect(() => a.sync(b, null, 0)).toThrow();
+      });
+
+      it('{} => {}', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').props({});
+        const b = createVElement('div').props({});
+        injectVNode(f, a, null);
+        a.sync(b, null, 0);
+      });
+
+      it('null => {a: 1} should throw exception', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div');
+        const b = createVElement('div').props({ a: '1' });
+        injectVNode(f, a, null);
+        expect(() => a.sync(b, null, 0)).toThrow();
+      });
+
+      it('{} => {a: 1} should throw exception', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').props({});
+        const b = createVElement('div').props({ a: '1' });
+        injectVNode(f, a, null);
+        expect(() => a.sync(b, null, 0)).toThrow();
+      });
+
+      it('{} => {a: 1, b: 2}', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').props({});
+        const b = createVElement('div').props({ a: '1', b: '2' });
+        injectVNode(f, a, null);
+        expect(() => a.sync(b, null, 0)).toThrow();
+      });
+
+      it('{a: 1} => null', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').props({ a: '1' });
+        const b = createVElement('div');
+        injectVNode(f, a, null);
+        expect(() => a.sync(b, null, 0)).toThrow();
+      });
+
+      it('{a: 1} => {}', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').props({ a: '1' });
+        const b = createVElement('div').props({});
+        injectVNode(f, a, null);
+        expect(() => a.sync(b, null, 0)).toThrow();
+      });
+
+      it('{a: 1, b: 2} => {}', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').props({ a: '1', b: '2' });
+        const b = createVElement('div').props({});
+        injectVNode(f, a, null);
+        expect(() => a.sync(b, null, 0)).toThrow();
+      });
+
+      it('{a: 1} => {b: 2}', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').props({ a: '1' });
+        const b = createVElement('div').props({ b: '2' });
+        injectVNode(f, a, null);
+        expect(() => a.sync(b, null, 0)).toThrow();
+      });
+
+      it('{a: 1} => {a: 10}', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').props({ a: '1' });
+        const b = createVElement('div').props({ a: '10' });
+        injectVNode(f, a, null);
+        a.sync(b, null, 0);
+        expect((f.firstChild as {a: string}).a).toBe('10');
+      });
+
+      it('{a: 1, b: 2} => {a: 10, b: 20}', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').props({ a: '1', b: '2' });
+        const b = createVElement('div').props({ a: '10', b: '20' });
+        injectVNode(f, a, null);
+        a.sync(b, null, 0);
+        expect((f.firstChild as {a: string}).a).toBe('10');
+        expect((f.firstChild as {b: string}).b).toBe('20');
+      });
+    });
+
+    describe('dynamic shape props', () => {
+      it('null => {}', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').dynamicShapeProps(null);
+        const b = createVElement('div').dynamicShapeProps({});
+        injectVNode(f, a, null);
+        expect(() => a.sync(b, null, 0)).not.toThrow();
+      });
+
+      it('{} => null', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').dynamicShapeProps({});
+        const b = createVElement('div').dynamicShapeProps(null);
+        injectVNode(f, a, null);
+        expect(() => a.sync(b, null, 0)).not.toThrow();
+      });
+
+      it('{} => {}', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').dynamicShapeProps({});
+        const b = createVElement('div').dynamicShapeProps({});
+        injectVNode(f, a, null);
+        expect(() => a.sync(b, null, 0)).not.toThrow();
+      });
+
+      it('null => {a: 1}', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').dynamicShapeProps(null);
+        const b = createVElement('div').dynamicShapeProps({ a: '1' });
+        injectVNode(f, a, null);
+        a.sync(b, null, 0);
+        expect((f.firstChild as {a: string}).a).toBe('1');
+      });
+
+      it('{} => {a: 1}', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').dynamicShapeProps({});
+        const b = createVElement('div').dynamicShapeProps({ a: '1' });
+        injectVNode(f, a, null);
+        a.sync(b, null, 0);
+        expect((f.firstChild as {a: string}).a).toBe('1');
+      });
+
+      it('{} => {a: 1, b: 2}', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').dynamicShapeProps({});
+        const b = createVElement('div').dynamicShapeProps({ a: '1', b: '2' });
+        injectVNode(f, a, null);
+        a.sync(b, null, 0);
+        expect((f.firstChild as {a: string}).a).toBe('1');
+        expect((f.firstChild as {b: string}).b).toBe('2');
+      });
+
+      it('{} => {a: 1, b: 2, c: 3}', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').dynamicShapeProps({});
+        const b = createVElement('div').dynamicShapeProps({ a: '1', b: '2', c: '3' });
+        injectVNode(f, a, null);
+        a.sync(b, null, 0);
+        expect((f.firstChild as {a: string}).a).toBe('1');
+        expect((f.firstChild as {b: string}).b).toBe('2');
+        expect((f.firstChild as {c: string}).c).toBe('3');
+      });
+
+      it('{a: 1} => null', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').dynamicShapeProps({ a: '1' });
+        const b = createVElement('div').dynamicShapeProps(null);
+        injectVNode(f, a, null);
+        a.sync(b, null, 0);
+        expect((f.firstChild as {a: string}).a).toBeUndefined();
+      });
+
+      it('{a: 1} => {}', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').dynamicShapeProps({ a: '1' });
+        const b = createVElement('div').dynamicShapeProps({});
+        injectVNode(f, a, null);
+        a.sync(b, null, 0);
+        expect((f.firstChild as {a: string}).a).toBeUndefined();
+      });
+
+      it('{a: 1, b: 2} => {}', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').dynamicShapeProps({ a: '1', b: '2' });
+        const b = createVElement('div').dynamicShapeProps({});
+        injectVNode(f, a, null);
+        a.sync(b, null, 0);
+        expect((f.firstChild as {a: string}).a).toBeUndefined();
+        expect((f.firstChild as {b: string}).b).toBeUndefined();
+      });
+
+      it('{a: 1} => {b: 2}', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').dynamicShapeProps({ a: '1' });
+        const b = createVElement('div').dynamicShapeProps({ b: '2' });
+        injectVNode(f, a, null);
+        a.sync(b, null, 0);
+        expect((f.firstChild as {a: string}).a).toBeUndefined();
+        expect((f.firstChild as {b: string}).b).toBe('2');
+      });
+
+      it('{a: 1, b: 2} => {c: 3: d: 4}', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').dynamicShapeProps({ a: '1', b: '2' });
+        const b = createVElement('div').dynamicShapeProps({ c: '3', d: '4' });
+        injectVNode(f, a, null);
+        a.sync(b, null, 0);
+        expect((f.firstChild as {a: string}).a).toBeUndefined();
+        expect((f.firstChild as {b: string}).b).toBeUndefined();
+        expect((f.firstChild as {c: string}).c).toBe('3');
+        expect((f.firstChild as {d: string}).d).toBe('4');
+      });
+
+      it('{a: 1} => {a: 10}', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').dynamicShapeProps({ a: '1' });
+        const b = createVElement('div').dynamicShapeProps({ a: '10' });
+        injectVNode(f, a, null);
+        a.sync(b, null, 0);
+        expect((f.firstChild as {a: string}).a).toBe('10');
+      });
+
+      it('{a: 1, b: 2} => {a: 10, b: 20}', () => {
+        const f = document.createDocumentFragment();
+        const a = createVElement('div').dynamicShapeProps({ a: '1', b: '2' });
+        const b = createVElement('div').dynamicShapeProps({ a: '10', b: '20' });
+        injectVNode(f, a, null);
+        a.sync(b, null, 0);
+        expect((f.firstChild as {a: string}).a).toBe('10');
+        expect((f.firstChild as {b: string}).b).toBe('20');
       });
     });
 

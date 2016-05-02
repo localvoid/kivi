@@ -14,7 +14,12 @@ export function syncStaticShapeProps(a: {[key: string]: any}, b: {[key: string]:
 
   for (i = 0; i < keys.length; i++) {
     key = keys[i];
-    let bValue = b[key];
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+      if (!b.hasOwnProperty(key)) {
+        throw new Error('Failed to update props with static shape: props object have dynamic shape.');
+      }
+    }
+    const bValue = b[key];
     if (a[key] !== bValue) {
       (node as any)[key] = bValue;
     }
