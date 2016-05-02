@@ -670,14 +670,20 @@ export class Component<D, S> {
 /**
  * Inject component into DOM
  */
-export function injectComponent<D, S>(descriptor: ComponentDescriptor<D, S>, data: D, container: Element)
+export function injectComponent<D, S>(descriptor: ComponentDescriptor<D, S>, data: D, container: Element, sync?: boolean)
     : Component<D, S> {
   const c = descriptor.createComponent(data, null, null);
-  scheduler.nextFrame().write(function() {
+  if (sync) {
     container.appendChild(c.element);
     c.attached();
     c.update();
-  });
+  } else {
+    scheduler.nextFrame().write(function() {
+      container.appendChild(c.element);
+      c.attached();
+      c.update();
+    });
+  }
   return c;
 }
 
