@@ -1269,7 +1269,7 @@ describe('VNode', () => {
       e.appendChild(document.createTextNode('def'));
 
       const t1 = createVText('abc');
-      const t2 = createVText('abc');
+      const t2 = createVText('def');
       const v = createVElement('div').children([t1, t2]);
       v.mount(e, null);
       expect(v.ref).toBe(e);
@@ -1286,7 +1286,7 @@ describe('VNode', () => {
       e.appendChild(document.createTextNode('def'));
 
       const t1 = createVText('abc');
-      const t2 = createVText('abc');
+      const t2 = createVText('def');
       const t3 = createVText('123');
       const s = createVElement('span').children([t3]);
       const v = createVElement('div').children([t1, s, t2]);
@@ -1308,7 +1308,7 @@ describe('VNode', () => {
       e.appendChild(document.createTextNode('def'));
 
       const t1 = createVText('abc');
-      const t2 = createVText('abc');
+      const t2 = createVText('def');
       const v = createVElement('div').children([t1, component, t2]);
       v.mount(e, null);
       expect(v.ref).toBe(e);

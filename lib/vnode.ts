@@ -1,6 +1,6 @@
 import {printError} from './debug';
 import {SvgNamespace} from './namespace';
-import {Component, ComponentDescriptor} from './component';
+import {Component, ComponentDescriptor, ComponentDescriptorFlags} from './component';
 import {VModel} from './vmodel';
 import {ContainerManager, ContainerManagerDescriptorDebugFlags} from './container_manager';
 import {syncStaticShapeProps, syncDynamicShapeProps} from './sync/props';
@@ -638,34 +638,110 @@ export class VNode {
     this.ref = node;
 
     if ((flags & VNodeFlags.Component) !== 0) {
-      let cref = this.cref = (this.tag as ComponentDescriptor<any, any>)
+      const cref = this.cref = (this.tag as ComponentDescriptor<any, any>)
         .mountComponent(this._props, this._children as string|VNode[], owner, node as Element);
+      if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+        const dflags = cref.descriptor.flags;
+        if (node.nodeType !== 1) {
+          throw new Error('Failed to mount VNode: invalid node type, components can be mounted on element nodes only');
+        }
+        const eTagName = ((node as Element).tagName).toLowerCase();
+        let cTagName: string;
+        if ((dflags & ComponentDescriptorFlags.IsVModel) !== 0) {
+          cTagName = (cref.descriptor._tag as VModel)._tag.toLowerCase();
+          if (cTagName !== eTagName) {
+            throw new Error(`Failed to mount VNode: invalid tagName, component expects tagName "${cTagName}", but` +
+                            ` found "${eTagName}"`);
+          }
+        } else if ((dflags & ComponentDescriptorFlags.Canvas2D) !== 0) {
+          if (eTagName !== 'canvas') {
+            throw new Error(`Failed to mount VNode: invalid tagName, component expects tagName "canvas", but` +
+                            ` found "${eTagName}"`);
+          }
+        } else {
+          cTagName = (cref.descriptor._tag as string).toLowerCase();
+          if (cTagName !== eTagName) {
+            throw new Error(`Failed to mount VNode: invalid tagName, component expects tagName "${cTagName}", but` +
+                            ` found "${eTagName}"`);
+          }
+          if (this._className !== null) {
+            const eClassName = (node as Element).getAttribute('class');
+            if (this._className !== eClassName) {
+              throw new Error(`Failed to mount VNode: invalid className, component expects className` +
+                              ` "${this._className}", but found "${eClassName}"`);
+            }
+          }
+        }
+      }
       cref.setData(this._props);
       cref.setChildren(this._children as VNode[]|string);
       cref.update();
     } else {
-      if (children !== null && typeof children !== 'string' && (children as VNode[]).length > 0) {
-        let child = node.firstChild;
+      if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+        if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root)) !== 0) {
+          if (node.nodeType !== 1) {
+            throw new Error('Failed to mount VNode: invalid node type, VNode expects Element node');
+          }
 
-        // Adjacent text nodes should be separated by Comment node "<!---->", so we can properly mount them
-        let commentNode: Node;
-        while (child.nodeType === 8) {
-          commentNode = child;
-          child = child.nextSibling;
-          node.removeChild(commentNode);
-        }
-        for (i = 0; i < (children as VNode[]).length; i++) {
-          if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-            if (!child) {
-              throw new Error('Failed to mount VNode: cannot find matching node');
+          if (this._className !== null) {
+            const eClassName = (node as Element).getAttribute('class');
+            if (this._className !== eClassName) {
+              throw new Error(`Failed to mount VNode: invalid className, VNode expects className` +
+                              ` "${this._className}", but found "${eClassName}"`);
             }
           }
-          (children as VNode[])[i].mount(child, owner);
-          child = child.nextSibling;
-          while (child !== null && child.nodeType === 8) {
+          if (this._style !== null) {
+            const eStyle = (node as Element).getAttribute('style');
+            if (this._style !== eStyle) {
+              throw new Error(`Failed to mount VNode: invalid style, VNode expects style` +
+                              ` "${this._style}", but found "${eStyle}"`);
+            }
+          }
+        } else {
+          if (node.nodeType !== 3) {
+            throw new Error('Failed to mount VNode: invalid node type, VNode expects Text node');
+          }
+          const text = node.nodeValue;
+          if (this._props !== text) {
+            throw new Error(`Failed to mount VNode: invalid text, VNode expects text "${this._props}", but found` +
+                            ` "${text}"`);
+          }
+        }
+      }
+
+      if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root)) !== 0) {
+        // Assign properties on mount, because they don't exist in html markup
+        if (this._props !== null) {
+          const keys = Object.keys(this._props);
+          for (i = 0; i < keys.length; i++) {
+            const key = keys[i];
+            node[key] = this._props[key];
+          }
+        }
+
+        if (children !== null && typeof children !== 'string' && (children as VNode[]).length > 0) {
+          let child = node.firstChild;
+
+          // Adjacent text nodes should be separated by Comment node "<!---->", so we can properly mount them
+          let commentNode: Node;
+          while (child.nodeType === 8) {
             commentNode = child;
             child = child.nextSibling;
             node.removeChild(commentNode);
+          }
+          for (i = 0; i < (children as VNode[]).length; i++) {
+            if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+              if (!child) {
+                throw new Error('Failed to mount VNode: cannot find matching node');
+              }
+            }
+            (children as VNode[])[i].mount(child, owner);
+            child = child.nextSibling;
+            while (child !== null && child.nodeType === 8) {
+              commentNode = child;
+              child = child.nextSibling;
+              node.removeChild(commentNode);
+            }
           }
         }
       }

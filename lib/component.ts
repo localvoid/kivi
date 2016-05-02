@@ -4,7 +4,7 @@ import {VNode, VNodeFlags, VNodeRenderFlags} from './vnode';
 import {InvalidatorSubscription, Invalidator} from './invalidator';
 import {scheduler} from './scheduler';
 
-const enum ComponentDescriptorFlags {
+export const enum ComponentDescriptorFlags {
   /**
    * 16-23 bits: shared flags between kivi objects
    */
