@@ -133,9 +133,9 @@ export class VNode {
         if ((this.flags & VNodeFlags.VModelUpdateHandler) !== 0) {
           throw new Error('Failed to set props on VNode: VNode is using VModel with custom update handler');
         }
-        let model = this.tag as VModel<any>;
+        const model = this.tag as VModel<any>;
         if (model._props !== null) {
-          let keys = Object.keys(props);
+          const keys = Object.keys(props);
           for (let i = 0; i < keys.length; i++) {
             if (model._attrs.hasOwnProperty(keys[i])) {
               throw new Error(`Failed to set props on VNode: VNode is using VModel that uses the same` +
@@ -162,9 +162,9 @@ export class VNode {
         if ((this.flags & VNodeFlags.VModelUpdateHandler) !== 0) {
           throw new Error('Failed to set props on VNode: VNode is using VModel with custom update handler');
         }
-        let model = this.tag as VModel<any>;
+        const model = this.tag as VModel<any>;
         if (model._props !== null) {
-          let keys = Object.keys(props);
+          const keys = Object.keys(props);
           for (let i = 0; i < keys.length; i++) {
             if (model._attrs.hasOwnProperty(keys[i])) {
               throw new Error(`Failed to set props on VNode: VNode is using VModel that uses the same` +
@@ -192,9 +192,9 @@ export class VNode {
         if ((this.flags & VNodeFlags.VModelUpdateHandler) !== 0) {
           throw new Error('Failed to set attrs on VNode: VNode is using VModel with custom update handler');
         }
-        let model = this.tag as VModel<any>;
+        const model = this.tag as VModel<any>;
         if (model._attrs !== null) {
-          let keys = Object.keys(attrs);
+          const keys = Object.keys(attrs);
           for (let i = 0; i < keys.length; i++) {
             if (model._attrs.hasOwnProperty(keys[i])) {
               throw new Error(`Failed to set attrs on VNode: VNode is using VModel that uses the same` +
@@ -221,9 +221,9 @@ export class VNode {
         if ((this.flags & VNodeFlags.VModelUpdateHandler) !== 0) {
           throw new Error('Failed to set attrs on VNode: VNode is using VModel with custom update handler');
         }
-        let model = this.tag as VModel<any>;
+        const model = this.tag as VModel<any>;
         if (model._attrs !== null) {
-          let keys = Object.keys(attrs);
+          const keys = Object.keys(attrs);
           for (let i = 0; i < keys.length; i++) {
             if (model._attrs.hasOwnProperty(keys[i])) {
               throw new Error(`Failed to set attrs on VNode: VNode is using VModel that uses the same` +
@@ -470,7 +470,7 @@ export class VNode {
         this.ref = (this.tag as VModel<any>).createElement();
       }
     } else {
-      let c = (this.tag as ComponentDescriptor<any, any>)
+      const c = (this.tag as ComponentDescriptor<any, any>)
         .createComponent(this._props, this._children as string|VNode[], owner);
       this.ref = c.element;
       this.cref = c;
@@ -517,7 +517,7 @@ export class VNode {
     let il: number;
     let key: any;
     let keys: any[];
-    let flags = this.flags;
+    const flags = this.flags;
 
     let ref: Element;
 
@@ -573,7 +573,7 @@ export class VNode {
         }
       }
 
-      let children = this._children;
+      const children = this._children;
       if (children !== null) {
         if ((this.flags & VNodeFlags.InputElement) === 0) {
           if (typeof children === 'string') {
@@ -592,7 +592,7 @@ export class VNode {
         }
       }
     } else if ((flags & VNodeFlags.Component) !== 0) {
-      let c = this.cref as Component<any, any>;
+      const c = this.cref as Component<any, any>;
       ref = this.ref as Element;
 
       if (this._className !== null) {
@@ -632,8 +632,8 @@ export class VNode {
       this._debugProperties.flags |= VNodeDebugFlags.Mounted;
     }
 
-    let flags = this.flags;
-    let children = this._children;
+    const flags = this.flags;
+    const children = this._children;
     let i: number;
 
     this.ref = node;
@@ -691,8 +691,8 @@ export class VNode {
            VNodeDebugFlags.Attached | VNodeDebugFlags.Detached);
     }
 
-    let ref = this.ref as Element;
-    let flags = this.flags;
+    const ref = this.ref as Element;
+    const flags = this.flags;
     let component: Component<any, any>;
     let className: string;
 
@@ -814,7 +814,7 @@ export class VNode {
       this._debugProperties.flags &= ~VNodeDebugFlags.Detached;
     }
     if ((this.flags & VNodeFlags.Component) === 0) {
-      let children = this._children;
+      const children = this._children;
       if (children !== null && typeof children !== 'string') {
         for (let i = 0; i < (children as VNode[]).length; i++) {
           (children as VNode[])[i].attach();
@@ -856,7 +856,7 @@ export class VNode {
       this._debugProperties.flags &= ~VNodeDebugFlags.Attached;
     }
     if ((this.flags & VNodeFlags.Component) === 0) {
-      let children = this._children;
+      const children = this._children;
       if (children !== null && typeof children !== 'string') {
         for (let i = 0; i < (children as VNode[]).length; i++) {
           (children as VNode[])[i].detach();
@@ -884,7 +884,7 @@ export class VNode {
       if ((this.flags & VNodeFlags.Component) !== 0) {
         (this.cref as Component<any, any>).dispose();
       } else if (this._children !== null) {
-        let children = this._children;
+        const children = this._children;
         if (typeof children !== 'string') {
           for (let i = 0; i < (children as VNode[]).length; i++) {
             (children as VNode[])[i].dispose();
@@ -1277,7 +1277,7 @@ export class VNode {
       // move all nodes that doesn't belong to this subsequence, or insert if they have "inserted" mark.
       let aLength = aEnd - aStart + 1;
       let bLength = bEnd - bStart + 1;
-      let sources = new Array<number>(bLength);
+      const sources = new Array<number>(bLength);
 
       // Mark all nodes as inserted
       for (i = 0; i < bLength; i++) {
@@ -1351,7 +1351,7 @@ export class VNode {
       }
 
       if (moved) {
-        let seq = _lis(sources);
+        const seq = _lis(sources);
         // All modifications are performed from the right to left, so we can use insertBefore method and use
         // reference to the html element from the next VNode. All Nodes from the right side should always be
         // in the correct state.
@@ -1462,8 +1462,8 @@ export class VNode {
  * http://en.wikipedia.org/wiki/Longest_increasing_subsequence
  */
 function _lis(a: number[]) : number[] {
-  let p = a.slice(0);
-  let result: number[] = [];
+  const p = a.slice(0);
+  const result: number[] = [];
   result.push(0);
   let u: number;
   let v: number;
