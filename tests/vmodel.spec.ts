@@ -42,7 +42,7 @@ describe('VModel', () => {
     const m = new VModel('a')
       .svg()
       .attrs({
-        '$xlink:href': 'value'
+        'xlink:href': 'value'
       });
     const e = m.createElement();
     expect(e.getAttributeNS(XlinkNamespace, 'href')).toBe('value');

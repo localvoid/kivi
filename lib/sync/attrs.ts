@@ -1,44 +1,19 @@
 import {XmlNamespace, XlinkNamespace} from '../namespace';
 
 /**
- * Get attribute namespace
- */
-function _getAttrNamespace(key: string) : string {
-  if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-    if (key.substring(1, 4) === 'xml') {
-      return XmlNamespace;
-    } else if (key.substring(1, 6) === 'xlink') {
-      return XlinkNamespace;
-    } else {
-      throw new Error('Invalid attribute namespace: ' + key);
-    }
-  }
-  return (key[2] === 'm') ? XmlNamespace : XlinkNamespace;
-}
-
-/**
  * Set attribute
- *
- * If attribute name starts with '$', treat it as a special attribute.
  */
 export function setAttr(node: Element, key: string, value: string) : void {
-  if (key[0] !== '$') {
+  if (key[0] !== 'x') {
     node.setAttribute(key, value);
   } else {
-    node.setAttributeNS(_getAttrNamespace(key), key.substring(1), value);
-  }
-}
-
-/**
- * Remove attribute
- *
- * If attribute name starts with '$', treat it as a special attribute.
- */
-export function removeAttr(node: Element, key: string) : void {
-  if (key[0] !== '$') {
-    node.removeAttribute(key);
-  } else {
-    node.removeAttributeNS(_getAttrNamespace(key), key.substring(1));
+    if (key[1] === 'm' && key[2] === 'l') {
+      node.setAttributeNS(XmlNamespace, key, value);
+    } else if (key[1] === 'l' && key[2] === 'i') {
+      node.setAttributeNS(XlinkNamespace, key, value);
+    } else {
+      node.setAttribute(key, value);
+    }
   }
 }
 
@@ -88,7 +63,7 @@ export function syncDynamicShapeAttrs(a: any, b: any, node: Element) : void {
       // b is empty, remove all attributes from a
       keys = Object.keys(a);
       for (i = 0; i < keys.length; i++) {
-        removeAttr(node, keys[i]);
+        node.removeAttribute(keys[i]);
       }
     } else {
       // Remove and update attributes
@@ -101,7 +76,7 @@ export function syncDynamicShapeAttrs(a: any, b: any, node: Element) : void {
             setAttr(node, key, bValue);
           }
         } else {
-          removeAttr(node, key);
+          node.removeAttribute(key);
         }
       }
 
