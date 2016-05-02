@@ -1323,4 +1323,20 @@ describe('VNode', () => {
       expect(component.cref.state.checkDisposed).toBe(-1);
     });
   });
+
+  describe('comment placeholder', () => {
+    it('should create placeholder', () => {
+      const e = createVElement('div');
+      e.createCommentPlaceholder();
+      expect(e.ref.nodeType).toBe(8);
+    });
+
+    it('should create element from placeholder', () => {
+      const e = createVElement('div');
+      e.createCommentPlaceholder();
+      expect(e.ref.nodeType).toBe(8);
+      e.create(null);
+      expect((e.ref as Element).tagName).toBe('DIV');
+    });
+  });
 });
