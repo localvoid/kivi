@@ -792,9 +792,9 @@ export class VNode {
       }
 
       component = other.cref = this.cref as Component<any, any>;
-      component.setData(other._props);
-      component.setChildren(other._children as VNode[]|string);
       if ((renderFlags & VNodeRenderFlags.ShallowUpdate) === 0) {
+        component.setData(other._props);
+        component.setChildren(other._children as VNode[]|string);
         component.update();
       }
     }
