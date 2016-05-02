@@ -1,6 +1,5 @@
-import {VNode, VNodeRenderFlags, createVElement, createVText} from '../lib/kivi';
 import {LifecycleComponent} from './lifecycle';
-import {VNodeRenderFlags, createVSvgElement} from '../lib/vnode';
+import {VNode, VNodeRenderFlags, VNodeRenderFlags, createVElement, createVText, createVSvgElement} from '../lib/vnode';
 import {Component} from '../lib/component';
 import {XlinkNamespace} from '../lib/namespace';
 
@@ -1240,6 +1239,88 @@ describe('VNode', () => {
       expect(componentB.cref.state.checkUpdate).toBe(2);
       expect(componentB.cref.state.checkDetached).toBe(-1);
       expect(componentB.cref.state.checkDisposed).toBe(-1);
+    });
+  });
+
+  describe('mounting', () => {
+    it('<div>abc</div>', () => {
+      const e = document.createElement('div');
+      e.textContent = 'abc';
+
+      const v = createVElement('div').children('abc');
+      v.mount(e, null);
+      expect(v.ref).toBe(e);
+    });
+
+    it('<div>"abc"</div>', () => {
+      const e = document.createElement('div');
+      e.textContent = 'abc';
+
+      const t = createVText('abc');
+      const v = createVElement('div').children([t]);
+      v.mount(e, null);
+      expect(v.ref).toBe(e);
+      expect(t.ref).toBe(e.firstChild);
+    });
+
+    it('<div>"abc""def"</div>', () => {
+      const e = document.createElement('div');
+      e.appendChild(document.createTextNode('abc'));
+      e.appendChild(document.createTextNode('def'));
+
+      const t1 = createVText('abc');
+      const t2 = createVText('abc');
+      const v = createVElement('div').children([t1, t2]);
+      v.mount(e, null);
+      expect(v.ref).toBe(e);
+      expect(t1.ref).toBe(e.firstChild);
+      expect(t2.ref).toBe(e.lastChild);
+    });
+
+    it('<div>"abc"<span>123</span>"def"</div>', () => {
+      const e = document.createElement('div');
+      e.appendChild(document.createTextNode('abc'));
+      const e2 = document.createElement('span');
+      e2.textContent = '123';
+      e.appendChild(e2);
+      e.appendChild(document.createTextNode('def'));
+
+      const t1 = createVText('abc');
+      const t2 = createVText('abc');
+      const t3 = createVText('123');
+      const s = createVElement('span').children([t3]);
+      const v = createVElement('div').children([t1, s, t2]);
+      v.mount(e, null);
+      expect(v.ref).toBe(e);
+      expect(t1.ref).toBe(e.firstChild);
+      expect(t2.ref).toBe(e.lastChild);
+      expect(s.ref).toBe(e2);
+      expect(t3.ref).toBe(e2.firstChild);
+    });
+
+    it('<div>"abc"<LifeCycleComponent />"def"</div>', () => {
+      const component = LifecycleComponent.createVNode();
+
+      const e = document.createElement('div');
+      e.appendChild(document.createTextNode('abc'));
+      const e2 = document.createElement('div');
+      e.appendChild(e2);
+      e.appendChild(document.createTextNode('def'));
+
+      const t1 = createVText('abc');
+      const t2 = createVText('abc');
+      const v = createVElement('div').children([t1, component, t2]);
+      v.mount(e, null);
+      expect(v.ref).toBe(e);
+      expect(t1.ref).toBe(e.firstChild);
+      expect(t2.ref).toBe(e.lastChild);
+      expect(component.ref).toBe(e2);
+
+      expect(component.cref.state.checkInit).toBe(0);
+      expect(component.cref.state.checkAttached).toBe(1);
+      expect(component.cref.state.checkUpdate).toBe(2);
+      expect(component.cref.state.checkDetached).toBe(-1);
+      expect(component.cref.state.checkDisposed).toBe(-1);
     });
   });
 });

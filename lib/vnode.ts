@@ -662,7 +662,7 @@ export class VNode {
           }
           (children as VNode[])[i].mount(child, owner);
           child = child.nextSibling;
-          while (child.nodeType === 8) {
+          while (child !== null && child.nodeType === 8) {
             commentNode = child;
             child = child.nextSibling;
             node.removeChild(commentNode);
