@@ -1393,7 +1393,7 @@ export class VNode {
     if (((this.flags & VNodeFlags.ManagedContainer) !== 0) &&
         (this.cref as ContainerManager<any>).descriptor._insertChild !== null) {
       (this.cref as ContainerManager<any>).descriptor._insertChild(
-        (this.cref as ContainerManager<any>), this, node, nextRef, owner);
+        this.cref as ContainerManager<any>, this.ref as Element, node, nextRef, owner);
     } else {
       insertVNodeBefore(this, node, nextRef, owner);
     }
@@ -1403,7 +1403,7 @@ export class VNode {
     if (((this.flags & VNodeFlags.ManagedContainer) !== 0) &&
         (this.cref as ContainerManager<any>).descriptor._replaceChild !== null) {
       (this.cref as ContainerManager<any>).descriptor._replaceChild(
-        (this.cref as ContainerManager<any>), this, newNode, refNode, owner);
+        this.cref as ContainerManager<any>, this.ref as Element, newNode, refNode, owner);
     } else {
       replaceVNode(this, newNode, refNode, owner);
     }
@@ -1413,7 +1413,7 @@ export class VNode {
     if (((this.flags & VNodeFlags.ManagedContainer) !== 0) &&
         (this.cref as ContainerManager<any>).descriptor._moveChild !== null) {
       (this.cref as ContainerManager<any>).descriptor._moveChild(
-        (this.cref as ContainerManager<any>), this, node, nextRef, owner);
+        this.cref as ContainerManager<any>, this.ref as Element, node, nextRef, owner);
     } else {
       moveVNode(this, node, nextRef, owner);
     }
@@ -1423,7 +1423,7 @@ export class VNode {
     if (((this.flags & VNodeFlags.ManagedContainer) !== 0) &&
         (this.cref as ContainerManager<any>).descriptor._removeChild !== null) {
       (this.cref as ContainerManager<any>).descriptor._removeChild(
-        (this.cref as ContainerManager<any>), this, node, owner);
+        this.cref as ContainerManager<any>, this.ref as Element, node, owner);
     } else {
       removeVNode(this, node, owner);
     }

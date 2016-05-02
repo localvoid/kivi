@@ -5,13 +5,13 @@ import {Component} from '../lib/component';
 describe('ContainerManager', () => {
   it('should invoke insertChild', () => {
     let testManager: ContainerManager = null;
-    let testContainer: VNode = null;
+    let testContainer: Element = null;
     let testNode: VNode = null;
     let testNextRef: Node = null;
     let testOwner: Component = null;
 
     const CM = new ContainerManagerDescriptor()
-      .insertChild((manager: ContainerManager, container: VNode, node: VNode, nextRef: Node, owner: Component) => {
+      .insertChild((manager: ContainerManager, container: Element, node: VNode, nextRef: Node, owner: Component) => {
         testManager = manager;
         testContainer = container;
         testNode = node;
@@ -30,7 +30,7 @@ describe('ContainerManager', () => {
     a.sync(b, null, 0);
 
     expect(testManager).toBe(manager);
-    expect(testContainer).toBe(a);
+    expect(testContainer).toBe(b.ref);
     expect(testNode).toBe(insertedChild);
     expect(testNextRef).toBeNull();
     expect(testOwner).toBeNull()
@@ -38,12 +38,12 @@ describe('ContainerManager', () => {
 
   it('should invoke removeChild', () => {
     let testManager: ContainerManager = null;
-    let testContainer: VNode = null;
+    let testContainer: Element = null;
     let testNode: VNode = null;
     let testOwner: Component = null;
 
     const CM = new ContainerManagerDescriptor()
-      .removeChild((manager: ContainerManager, container: VNode, node: VNode, owner: Component) => {
+      .removeChild((manager: ContainerManager, container: Element, node: VNode, owner: Component) => {
         testManager = manager;
         testContainer = container;
         testNode = node;
@@ -61,20 +61,20 @@ describe('ContainerManager', () => {
     a.sync(b, null, 0);
 
     expect(testManager).toBe(manager);
-    expect(testContainer).toBe(a);
+    expect(testContainer).toBe(b.ref);
     expect(testNode).toBe(removedChild);
     expect(testOwner).toBeNull()
   });
 
   it('should invoke moveChild', () => {
     let testManager: ContainerManager = null;
-    let testContainer: VNode = null;
+    let testContainer: Element = null;
     let testNode: VNode = null;
     let testNextRef: Node = null;
     let testOwner: Component = null;
 
     const CM = new ContainerManagerDescriptor()
-      .moveChild((manager: ContainerManager, container: VNode, node: VNode, nextRef: Node, owner: Component) => {
+      .moveChild((manager: ContainerManager, container: Element, node: VNode, nextRef: Node, owner: Component) => {
         testManager = manager;
         testContainer = container;
         testNode = node;
@@ -96,7 +96,7 @@ describe('ContainerManager', () => {
     a.sync(b, null, 0);
 
     expect(testManager).toBe(manager);
-    expect(testContainer).toBe(a);
+    expect(testContainer).toBe(b.ref);
     expect(testNode).toBe(movedChildB);
     expect(testNextRef).toBeNull();
     expect(testOwner).toBeNull()
@@ -104,13 +104,13 @@ describe('ContainerManager', () => {
 
   it('should invoke replaceChild', () => {
     let testManager: ContainerManager = null;
-    let testContainer: VNode = null;
+    let testContainer: Element = null;
     let testNewNode: VNode = null;
     let testRefNode: VNode = null;
     let testOwner: Component = null;
 
     const CM = new ContainerManagerDescriptor()
-      .replaceChild((manager: ContainerManager, container: VNode, newNode: VNode, refNode: VNode, owner: Component) => {
+      .replaceChild((manager: ContainerManager, container: Element, newNode: VNode, refNode: VNode, owner: Component) => {
         testManager = manager;
         testContainer = container;
         testNewNode = newNode;
@@ -130,7 +130,7 @@ describe('ContainerManager', () => {
     a.sync(b, null, 0);
 
     expect(testManager).toBe(manager);
-    expect(testContainer).toBe(a);
+    expect(testContainer).toBe(b.ref);
     expect(testNewNode).toBe(replacedChild);
     expect(testRefNode).toBe(tmpChild);
     expect(testOwner).toBeNull()

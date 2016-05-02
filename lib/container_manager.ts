@@ -6,25 +6,25 @@ export const enum ContainerManagerDescriptorDebugFlags {
 }
 
 export type InsertChildHandler<S> = (manager: ContainerManager<S>,
-                                     container: VNode,
+                                     container: Element,
                                      node: VNode,
                                      nextRef: Node,
                                      owner: Component<any, any>) => void;
 
 export type ReplaceChildHandler<S> = (manager: ContainerManager<S>,
-                                      container: VNode,
+                                      container: Element,
                                       newNode: VNode,
                                       refNode: VNode,
                                       owner: Component<any, any>) => void;
 
 export type MoveChildHandler<S> = (manager: ContainerManager<S>,
-                                   container: VNode,
+                                   container: Element,
                                    node: VNode,
                                    nextRef: Node,
                                    owner: Component<any, any>) => void;
 
 export type RemoveChildHandler<S> = (manager: ContainerManager<S>,
-                                     container: VNode,
+                                     container: Element,
                                      now: VNode,
                                      owner: Component<any, any>) => void;
 /**
