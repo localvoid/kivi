@@ -23,14 +23,12 @@ export type MoveChildHandler<S> = (manager: ContainerManager<S>,
                                    container: Element,
                                    node: VNode,
                                    nextRef: Node,
-                                   owner: Component<any, any>,
-                                   renderFlags: number) => void;
+                                   owner: Component<any, any>) => void;
 
 export type RemoveChildHandler<S> = (manager: ContainerManager<S>,
                                      container: Element,
                                      now: VNode,
-                                     owner: Component<any, any>,
-                                     renderFlags: number) => void;
+                                     owner: Component<any, any>) => void;
 /**
  * Container Manager Descriptor
  *

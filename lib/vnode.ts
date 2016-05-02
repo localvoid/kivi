@@ -1392,7 +1392,7 @@ export class VNode {
     if (((this.flags & VNodeFlags.ManagedContainer) !== 0) &&
         (this.cref as ContainerManager<any>).descriptor._insertChild !== null) {
       (this.cref as ContainerManager<any>).descriptor._insertChild(
-        this.cref as ContainerManager<any>, this.ref as Element, node, nextRef, owner);
+        this.cref as ContainerManager<any>, this.ref as Element, node, nextRef, owner, renderFlags);
     } else {
       insertVNodeBefore(this, node, nextRef, owner, renderFlags);
     }
@@ -1402,7 +1402,7 @@ export class VNode {
     if (((this.flags & VNodeFlags.ManagedContainer) !== 0) &&
         (this.cref as ContainerManager<any>).descriptor._replaceChild !== null) {
       (this.cref as ContainerManager<any>).descriptor._replaceChild(
-        this.cref as ContainerManager<any>, this.ref as Element, newNode, refNode, owner);
+        this.cref as ContainerManager<any>, this.ref as Element, newNode, refNode, owner, renderFlags);
     } else {
       replaceVNode(this, newNode, refNode, owner, renderFlags);
     }
