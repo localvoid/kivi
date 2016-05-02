@@ -1,6 +1,7 @@
 import {VNode, VNodeRenderFlags, createVElement, createVText} from '../lib/kivi';
 import {LifecycleComponent} from './lifecycle';
 import {VNodeRenderFlags} from '../lib/vnode';
+import {Component} from '../lib/component';
 
 function injectVNode(parent: DocumentFragment, node: VNode, nextRef: Element) : void {
   node.create(null);
@@ -750,6 +751,30 @@ describe('VNode', () => {
       expect(component.cref.state.checkDisposed).toBe(-1);
     });
 
+    it('should update component on sync', () => {
+      const componentA = LifecycleComponent.createVNode(0);
+      const componentB = LifecycleComponent.createVNode(1);
+      const a = createVElement('div').children([componentA]);
+      const b = createVElement('div').children([componentB]);
+      a.create(null);
+      a.attached();
+      a.render(null, 0);
+      expect((componentA.cref as Component).data).toBe(0);
+      expect(componentA.cref.state.checkInit).toBe(0);
+      expect(componentA.cref.state.checkAttached).toBe(1);
+      expect(componentA.cref.state.checkUpdate).toBe(2);
+      expect(componentA.cref.state.checkDetached).toBe(-1);
+      expect(componentA.cref.state.checkDisposed).toBe(-1);
+
+      a.sync(b, null, 0);
+      expect((componentB.cref as Component).data).toBe(1);
+      expect(componentB.cref.state.checkInit).toBe(0);
+      expect(componentB.cref.state.checkAttached).toBe(1);
+      expect(componentB.cref.state.checkUpdate).toBe(3);
+      expect(componentB.cref.state.checkDetached).toBe(-1);
+      expect(componentB.cref.state.checkDisposed).toBe(-1);
+    });
+
     it('shouldn\'t update component when shallow updating is used', () => {
       const componentA = LifecycleComponent.createVNode();
       const componentB = LifecycleComponent.createVNode();
@@ -765,6 +790,30 @@ describe('VNode', () => {
       expect(componentA.cref.state.checkDisposed).toBe(-1);
 
       a.sync(b, null, VNodeRenderFlags.ShallowUpdate);
+      expect(componentB.cref.state.checkInit).toBe(0);
+      expect(componentB.cref.state.checkAttached).toBe(1);
+      expect(componentB.cref.state.checkUpdate).toBe(2);
+      expect(componentB.cref.state.checkDetached).toBe(-1);
+      expect(componentB.cref.state.checkDisposed).toBe(-1);
+    });
+
+    it('shouldn\'t update component when shallow updating is used', () => {
+      const componentA = LifecycleComponent.createVNode(0);
+      const componentB = LifecycleComponent.createVNode(1);
+      const a = createVElement('div').children([componentA]);
+      const b = createVElement('div').children([componentB]);
+      a.create(null);
+      a.attached();
+      a.render(null, 0);
+      expect((componentA.cref as Component).data).toBe(0);
+      expect(componentA.cref.state.checkInit).toBe(0);
+      expect(componentA.cref.state.checkAttached).toBe(1);
+      expect(componentA.cref.state.checkUpdate).toBe(2);
+      expect(componentA.cref.state.checkDetached).toBe(-1);
+      expect(componentA.cref.state.checkDisposed).toBe(-1);
+
+      a.sync(b, null, VNodeRenderFlags.ShallowUpdate);
+      expect((componentB.cref as Component).data).toBe(0);
       expect(componentB.cref.state.checkInit).toBe(0);
       expect(componentB.cref.state.checkAttached).toBe(1);
       expect(componentB.cref.state.checkUpdate).toBe(2);
