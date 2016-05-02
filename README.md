@@ -91,6 +91,7 @@ responsible for disposing keep alived nodes.
 recycling, so when component with enabled recycling is created, it will try to
 find unused component of the same type in the recycled pool and update it with
 a new data.
+- Shallow updating to prevent subcomponent updates.
 - `Component.mtime` is a timestamp when component performed the last update, it
 uses internal monotonically increasing clock from `scheduler.clock`. With
 `mtime` is is quite easy to implement fast change detection without immutable
