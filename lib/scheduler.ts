@@ -49,7 +49,7 @@ class MacrotaskScheduler {
   constructor(callback: ()=>void) {
     this._message = '__kivi' + Math.random().toString();
 
-    let message = this._message;
+    const message = this._message;
     window.addEventListener('message', function(e) {
       if (e.source === window && e.data === message) {
         callback();
@@ -63,20 +63,20 @@ class MacrotaskScheduler {
 }
 
 export class Frame {
-  flags: number;
-  componentTasks: Component<any, any>[][];
-  writeTasks: SchedulerCallback[];
-  readTasks: SchedulerCallback[];
-  afterTasks: SchedulerCallback[];
-  focus: Element|VNode;
+  _flags: number;
+  _componentTasks: Component<any, any>[][];
+  _writeTasks: SchedulerCallback[];
+  _readTasks: SchedulerCallback[];
+  _afterTasks: SchedulerCallback[];
+  _focus: Element|VNode;
 
   constructor() {
-    this.flags = 0;
-    this.componentTasks = [];
-    this.writeTasks = null;
-    this.readTasks = null;
-    this.afterTasks = null;
-    this.focus = null;
+    this._flags = 0;
+    this._componentTasks = [];
+    this._writeTasks = null;
+    this._readTasks = null;
+    this._afterTasks = null;
+    this._focus = null;
   }
 
   /**
@@ -84,22 +84,22 @@ export class Frame {
    */
   updateComponent(component: Component<any, any>) : void {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-      if ((this.flags & FrameTaskFlags.RWLock) !== 0) {
+      if ((this._flags & FrameTaskFlags.RWLock) !== 0) {
         throw new Error('Failed to add update component task to the current frame, current frame is locked for read' +
                         ' and write tasks');
       }
     }
 
-    let priority = component.depth;
+    const priority = component.depth;
 
-    this.flags |= FrameTaskFlags.Component;
-    while (priority >= this.componentTasks.length) {
-      this.componentTasks.push(null);
+    this._flags |= FrameTaskFlags.Component;
+    while (priority >= this._componentTasks.length) {
+      this._componentTasks.push(null);
     }
 
-    let group = this.componentTasks[priority];
+    let group = this._componentTasks[priority];
     if (group === null) {
-      group = this.componentTasks[priority] = [];
+      group = this._componentTasks[priority] = [];
     }
 
     group.push(component);
@@ -110,55 +110,55 @@ export class Frame {
    */
   write(callback: SchedulerCallback) : void {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-      if ((this.flags & FrameTaskFlags.RWLock) !== 0) {
+      if ((this._flags & FrameTaskFlags.RWLock) !== 0) {
         throw new Error('Failed to add update component task to the current frame, current frame is locked for read' +
                         ' and write tasks');
       }
     }
 
-    this.flags |= FrameTaskFlags.Write;
-    if (this.writeTasks === null) {
-      this.writeTasks = [];
+    this._flags |= FrameTaskFlags.Write;
+    if (this._writeTasks === null) {
+      this._writeTasks = [];
     }
-    this.writeTasks.push(callback);
+    this._writeTasks.push(callback);
   }
 
   read(callback: SchedulerCallback) : void {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-      if ((this.flags & FrameTaskFlags.RWLock) !== 0) {
+      if ((this._flags & FrameTaskFlags.RWLock) !== 0) {
         throw new Error('Failed to add update component task to the current frame, current frame is locked for read' +
                         ' and write tasks');
       }
     }
 
-    this.flags |= FrameTaskFlags.Read;
-    if (this.readTasks === null) {
-      this.readTasks = [];
+    this._flags |= FrameTaskFlags.Read;
+    if (this._readTasks === null) {
+      this._readTasks = [];
     }
-    this.readTasks.push(callback);
+    this._readTasks.push(callback);
   }
 
   after(callback: SchedulerCallback) : void {
-    this.flags |= FrameTaskFlags.After;
-    if (this.afterTasks === null) {
-      this.afterTasks = [];
+    this._flags |= FrameTaskFlags.After;
+    if (this._afterTasks === null) {
+      this._afterTasks = [];
     }
-    this.afterTasks.push(callback);
+    this._afterTasks.push(callback);
   }
 
-  setFocus(node: Element|VNode) : void {
-    this.focus = node;
+  focus(node: Element|VNode) : void {
+    this._focus = node;
   }
 
-  rwLock() : void {
+  _rwLock() : void {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-      this.flags |= FrameTaskFlags.RWLock;
+      this._flags |= FrameTaskFlags.RWLock;
     }
   }
 
-  rwUnlock() : void {
+  _rwUnlock() : void {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-      this.flags &= ~FrameTaskFlags.RWLock;
+      this._flags &= ~FrameTaskFlags.RWLock;
     }
   }
 }
@@ -174,7 +174,7 @@ export class Frame {
  * from one animation frame to another, or starts executing macrotasks or microtasks.
  */
 export class Scheduler {
-  private flags: number;
+  _flags: number;
   /**
    * Monotonically increasing internal clock.
    */
@@ -196,7 +196,7 @@ export class Scheduler {
   private _macrotaskScheduler: MacrotaskScheduler;
 
   constructor() {
-    this.flags = 0;
+    this._flags = 0;
     this.clock = 1;
     this.time = 0;
     this._microtasks = [];
@@ -207,12 +207,12 @@ export class Scheduler {
     this._microtaskScheduler = new MicrotaskScheduler(this._handleMicrotaskScheduler);
     this._macrotaskScheduler = new MacrotaskScheduler(this._handleMacrotaskScheduler);
 
-    this._currentFrame.rwLock();
+    this._currentFrame._rwLock();
   }
 
   requestAnimationFrame() : void {
-    if ((this.flags & SchedulerFlags.FrametaskPending) === 0) {
-      this.flags |= SchedulerFlags.FrametaskPending;
+    if ((this._flags & SchedulerFlags.FrametaskPending) === 0) {
+      this._flags |= SchedulerFlags.FrametaskPending;
       requestAnimationFrame(this._handleAnimationFrame);
     }
   }
@@ -232,31 +232,31 @@ export class Scheduler {
   }
 
   scheduleMicrotask(callback: SchedulerCallback) : void {
-    if ((this.flags & SchedulerFlags.MicrotaskPending) === 0) {
-      this.flags |= SchedulerFlags.MicrotaskPending;
+    if ((this._flags & SchedulerFlags.MicrotaskPending) === 0) {
+      this._flags |= SchedulerFlags.MicrotaskPending;
       this._microtaskScheduler.requestNextTick();
     }
     this._microtasks.push(callback);
   }
 
   scheduleMacrotask(callback: SchedulerCallback) : void {
-    if ((this.flags & SchedulerFlags.MacrotaskPending) === 0) {
-      this.flags |= SchedulerFlags.MacrotaskPending;
+    if ((this._flags & SchedulerFlags.MacrotaskPending) === 0) {
+      this._flags |= SchedulerFlags.MacrotaskPending;
       this._macrotaskScheduler.requestNextTick();
     }
     this._macrotasks.push(callback);
   }
 
   start(callback: SchedulerCallback) : void {
-    this.flags |= SchedulerFlags.Running;
+    this._flags |= SchedulerFlags.Running;
     this.time = Date.now();
     callback();
     this.clock++;
-    this.flags &= ~SchedulerFlags.Running;
+    this._flags &= ~SchedulerFlags.Running;
   }
 
   private _handleMicrotaskScheduler = () => {
-    this.flags |= SchedulerFlags.Running;
+    this._flags |= SchedulerFlags.Running;
     this.time = Date.now();
 
     while (this._microtasks.length > 0) {
@@ -268,12 +268,12 @@ export class Scheduler {
     }
 
     this.clock++;
-    this.flags &= ~(SchedulerFlags.MicrotaskPending | SchedulerFlags.Running);
+    this._flags &= ~(SchedulerFlags.MicrotaskPending | SchedulerFlags.Running);
   };
 
   private _handleMacrotaskScheduler = () => {
-    this.flags &= ~SchedulerFlags.MacrotaskPending;
-    this.flags |= SchedulerFlags.Running;
+    this._flags &= ~SchedulerFlags.MacrotaskPending;
+    this._flags |= SchedulerFlags.Running;
     this.time = Date.now();
 
     let tasks = this._macrotasks;
@@ -283,7 +283,7 @@ export class Scheduler {
     }
 
     this.clock++;
-    this.flags &= ~SchedulerFlags.Running;
+    this._flags &= ~SchedulerFlags.Running;
   };
 
   private _handleAnimationFrame = (t: number) => {
@@ -292,16 +292,16 @@ export class Scheduler {
     let i: number;
     let j: number;
 
-    this.flags &= ~SchedulerFlags.FrametaskPending;
-    this.flags |= SchedulerFlags.Running;
+    this._flags &= ~SchedulerFlags.FrametaskPending;
+    this._flags |= SchedulerFlags.Running;
     this.time = Date.now();
 
     let frame = this._nextFrame;
     this._nextFrame = this._currentFrame;
     this._currentFrame = frame;
 
-    this._currentFrame.rwUnlock();
-    this._nextFrame.rwUnlock();
+    this._currentFrame._rwUnlock();
+    this._nextFrame._rwUnlock();
 
     // Mark all update components as dirty. But don't update until all write tasks
     // are finished. It is possible that we won't need to update Component if it
@@ -311,10 +311,10 @@ export class Scheduler {
     }
 
     do {
-      while ((frame.flags & (FrameTaskFlags.Component | FrameTaskFlags.Write)) !== 0) {
-        if ((frame.flags & FrameTaskFlags.Component) !== 0) {
-          frame.flags &= ~FrameTaskFlags.Component;
-          let groups = frame.componentTasks;
+      while ((frame._flags & (FrameTaskFlags.Component | FrameTaskFlags.Write)) !== 0) {
+        if ((frame._flags & FrameTaskFlags.Component) !== 0) {
+          frame._flags &= ~FrameTaskFlags.Component;
+          let groups = frame._componentTasks;
 
           for (i = 0; i < groups.length; i++) {
             let group = groups[i];
@@ -327,10 +327,10 @@ export class Scheduler {
           }
         }
 
-        if ((frame.flags & FrameTaskFlags.Write) !== 0) {
-          frame.flags &= ~FrameTaskFlags.Write;
-          tasks = frame.writeTasks;
-          frame.writeTasks = null;
+        if ((frame._flags & FrameTaskFlags.Write) !== 0) {
+          frame._flags &= ~FrameTaskFlags.Write;
+          tasks = frame._writeTasks;
+          frame._writeTasks = null;
           for (i = 0; i < tasks.length; i++) {
             tasks[i]();
           }
@@ -356,34 +356,34 @@ export class Scheduler {
         }
       }
 
-      while ((frame.flags & FrameTaskFlags.Read) !== 0) {
-        frame.flags &= ~FrameTaskFlags.Read;
-        tasks = frame.readTasks;
-        frame.readTasks = null;
+      while ((frame._flags & FrameTaskFlags.Read) !== 0) {
+        frame._flags &= ~FrameTaskFlags.Read;
+        tasks = frame._readTasks;
+        frame._readTasks = null;
 
         for (i = 0; i < tasks.length; i++) {
           tasks[i]();
         }
       }
-    } while ((frame.flags & (FrameTaskFlags.Component | FrameTaskFlags.Write)) !== 0);
+    } while ((frame._flags & (FrameTaskFlags.Component | FrameTaskFlags.Write)) !== 0);
 
-    this._currentFrame.rwLock();
-    while ((frame.flags & FrameTaskFlags.After) !== 0) {
-      frame.flags &= ~FrameTaskFlags.After;
+    this._currentFrame._rwLock();
+    while ((frame._flags & FrameTaskFlags.After) !== 0) {
+      frame._flags &= ~FrameTaskFlags.After;
 
-      tasks = frame.afterTasks;
+      tasks = frame._afterTasks;
       for (i = 0; i < tasks.length; i++) {
         tasks[i]();
       }
     }
 
-    if (frame.focus !== null) {
-      if (frame.focus.constructor === VNode) {
-        ((frame.focus as VNode).ref as HTMLElement).focus();
+    if (frame._focus !== null) {
+      if (frame._focus.constructor === VNode) {
+        ((frame._focus as VNode).ref as HTMLElement).focus();
       } else {
-        (frame.focus as HTMLElement).focus();
+        (frame._focus as HTMLElement).focus();
       }
-      frame.focus = null;
+      frame._focus = null;
     }
 
     if (updateComponents.length > 0) {
@@ -391,7 +391,7 @@ export class Scheduler {
     }
 
     this.clock++;
-    this.flags &= ~SchedulerFlags.Running;
+    this._flags &= ~SchedulerFlags.Running;
   }
 }
 

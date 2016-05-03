@@ -14,8 +14,8 @@ export class ComponentDescriptor<D, S> {
   /**
    * Flags marked on Component when it is created
    */
-  markFlags: number;
-  flags: number;
+  _markFlags: number;
+  _flags: number;
   /**
    * Tag name of the root element or reference to a model
    */
@@ -59,12 +59,18 @@ export class ComponentDescriptor<D, S> {
    */
   _disposed: (component: Component<D, S>) => void;
 
+  /**
+   * Pool of recycled components
+   */
   _recycled: Component<D, S>[];
+  /**
+   * Maximum number of recycled components (recycled pool size)
+   */
   _maxRecycled: number;
 
   constructor() {
-    this.markFlags = ComponentFlags.Dirty;
-    this.flags = 0;
+    this._markFlags = ComponentFlags.Dirty;
+    this._flags = 0;
     this._tag = 'div';
     this._setData = null;
     this._setChildren = null;
@@ -92,8 +98,8 @@ export class ComponentDescriptor<D, S> {
    * Use SVG Namespace to create root element
    */
   svg() : ComponentDescriptor<D, S> {
-    this.markFlags |= ComponentFlags.Svg;
-    this.flags |= ComponentDescriptorFlags.Svg;
+    this._markFlags |= ComponentFlags.Svg;
+    this._flags |= ComponentDescriptorFlags.Svg;
     return this;
   }
 
@@ -101,8 +107,8 @@ export class ComponentDescriptor<D, S> {
    * Set VModel for the root element
    */
   vModel(model: VModel<any>) : ComponentDescriptor<D, S> {
-    this.markFlags |= model.markFlags;
-    this.flags |= model.markFlags;
+    this._markFlags |= model._markFlags;
+    this._flags |= model._markFlags;
     this._tag = model;
     return this;
   }
@@ -111,9 +117,14 @@ export class ComponentDescriptor<D, S> {
    * Component is a Canvas object
    */
   canvas() : ComponentDescriptor<D, S> {
-    this.markFlags |= ComponentFlags.Canvas2D;
-    this.flags |= ComponentDescriptorFlags.Canvas2D;
+    this._markFlags |= ComponentFlags.Canvas2D;
+    this._flags |= ComponentDescriptorFlags.Canvas2D;
     this._tag = 'canvas';
+    return this;
+  }
+
+  disableCheckDataIdentity() : ComponentDescriptor<D, S> {
+    this._markFlags |= ComponentFlags.DisabledCheckDataIdentity;
     return this;
   }
 
@@ -192,8 +203,8 @@ export class ComponentDescriptor<D, S> {
    */
   enableRecycling(maxRecycled: number) : ComponentDescriptor<D, S> {
     if ('<@KIVI_COMPONENT_RECYCLING@>' === 'COMPONENT_RECYCLING_ENABLED') {
-      this.markFlags |= ComponentFlags.EnabledRecycling;
-      this.flags |= ComponentDescriptorFlags.EnabledRecycling;
+      this._markFlags |= ComponentFlags.EnabledRecycling;
+      this._flags |= ComponentDescriptorFlags.EnabledRecycling;
       this._recycled = [];
       this._maxRecycled = maxRecycled;
     }
@@ -215,17 +226,17 @@ export class ComponentDescriptor<D, S> {
     let component: Component<D, S>;
 
     if ('<@KIVI_COMPONENT_RECYCLING@>' !== 'COMPONENT_RECYCLING_ENABLED' ||
-        ((this.flags & ComponentDescriptorFlags.EnabledRecycling) === 0) ||
+        ((this._flags & ComponentDescriptorFlags.EnabledRecycling) === 0) ||
         (this._recycled.length === 0)) {
 
-      if ((this.flags & ComponentDescriptorFlags.IsVModel) === 0) {
-        element = ((this.flags & ComponentDescriptorFlags.Svg) === 0) ?
+      if ((this._flags & ComponentDescriptorFlags.VModel) === 0) {
+        element = ((this._flags & ComponentDescriptorFlags.Svg) === 0) ?
             document.createElement(this._tag as string) :
             document.createElementNS(SvgNamespace, this._tag as string);
       } else {
         element = (this._tag as VModel<any>).createElement();
       }
-      component = new Component<D, S>(this.markFlags, this, parent, data, children, element);
+      component = new Component<D, S>(this._markFlags, this, parent, data, children, element);
       if (this._init !== null) {
         this._init(component);
       }
@@ -241,7 +252,7 @@ export class ComponentDescriptor<D, S> {
    * Mount Component on top of existing html element
    */
   mountComponent(data: D, children: string|VNode[], parent: Component<any, any>, element: Element) : Component<D, S> {
-    let component = new Component(this.markFlags | ComponentFlags.Mounting, this, parent, data, children, element);
+    let component = new Component(this._markFlags | ComponentFlags.Mounting, this, parent, data, children, element);
     if (this._init !== null) {
       this._init(component);
     }
@@ -298,6 +309,18 @@ export class Component<D, S> {
   }
 
   /**
+   * Get canvas 2d rendering context
+   */
+  get2DContext() : CanvasRenderingContext2D {
+    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+      if ((this.flags & ComponentFlags.Canvas2D) === 0) {
+        throw new Error('Failed to get 2d context: component isn\'t a canvas');
+      }
+    }
+    return this.root as CanvasRenderingContext2D;
+  }
+
+  /**
    * Mark component as dirty
    */
   markDirty() : void {
@@ -316,9 +339,9 @@ export class Component<D, S> {
    * Set new data
    */
   setData(newData: D) : void {
-    let setter = this.descriptor._setData;
+    const setter = this.descriptor._setData;
     if (setter === null) {
-      if (this.data !== newData) {
+      if ((this.flags & ComponentFlags.DisabledCheckDataIdentity) !== 0 || this.data !== newData) {
         this.data = newData;
         this.flags |= ComponentFlags.Dirty;
       }
@@ -328,23 +351,16 @@ export class Component<D, S> {
   }
 
   /**
-   * Get canvas 2d rendering context
-   */
-  get2DContext() : CanvasRenderingContext2D {
-    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-      if ((this.flags & ComponentFlags.Canvas2D) === 0) {
-        throw new Error('Failed to get 2d context: component isn\'t a canvas');
-      }
-    }
-    return this.root as CanvasRenderingContext2D;
-  }
-
-  /**
    * Set new children
    */
   setChildren(newChildren: VNode[]|string) : void {
-    let setter = this.descriptor._setChildren;
-    if (setter !== null) {
+    const setter = this.descriptor._setChildren;
+    if (setter === null) {
+      if (this.children !== newChildren) {
+        this.children = newChildren;
+        this.flags |= ComponentFlags.Dirty;
+      }
+    } else {
       setter(this, newChildren);
     }
   }
@@ -368,11 +384,11 @@ export class Component<D, S> {
    */
   sync(newRoot: VNode, renderFlags: RenderFlags = 0) : void {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-      if ((newRoot.flags & VNodeFlags.Root) === 0) {
+      if ((newRoot._flags & VNodeFlags.Root) === 0) {
         throw new Error('Failed to sync: sync methods accepts only VNodes representing root node');
       }
-      if ((this.flags & ComponentFlags.IsVModel) !== (newRoot.flags & VNodeFlags.IsVModel)) {
-        if ((this.flags & ComponentFlags.IsVModel) === 0) {
+      if ((this.flags & ComponentFlags.VModel) !== (newRoot._flags & VNodeFlags.VModel)) {
+        if ((this.flags & ComponentFlags.VModel) === 0) {
           throw new Error('Failed to sync: vdom root should have the same type as root registered in component ' +
                           'descriptor, component descriptor is using vmodel root');
         } else {

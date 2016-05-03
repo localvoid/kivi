@@ -15,13 +15,22 @@ import {ContainerManager} from './container_manager';
  * @final
  */
 export class VNode {
-  flags: number;
-  tag: string|VModel<any>|ComponentDescriptor<any, any>;
+  _flags: number;
+  /**
+   * Tag name of the element, or reference to VModel or ComponentDescriptor
+   */
+  _tag: string|VModel<any>|ComponentDescriptor<any, any>;
   /**
    * Key that should be unique among its siblings
    */
   _key: any;
+  /**
+   * Properties
+   */
   _props: any;
+  /**
+   * Attributes
+   */
   _attrs: {[key: string]: any};
   /**
    * Style in css string format
@@ -38,7 +47,7 @@ export class VNode {
    */
   _children: VNode[]|string|boolean;
   /**
-   * Reference to Html Node. It will be available after VNode is created or synced.
+   * Reference to HTML Node. It will be available after VNode is created or synced.
    * Each time VNode is synced, reference to the Html Node is transferred from old
    * VNode to the new one.
    */
@@ -57,8 +66,8 @@ export class VNode {
   _debugProperties: {flags: number};
 
   constructor(flags: number, tag: string|VModel<any>|ComponentDescriptor<any, any>, props: any) {
-    this.flags = flags;
-    this.tag = tag;
+    this._flags = flags;
+    this._tag = tag;
     this._key = null;
     this._props = props;
     this._attrs = null;
@@ -85,18 +94,21 @@ export class VNode {
 
   /**
    * Set props
+   *
+   * When virtual node is mounted on top of existing HTML, all properties will
+   * be assigned during mounting phase.
    */
   props(props: {[key: string]: any}) : VNode {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-      if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
+      if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error('Failed to set props on VNode: props method should be called on element or component' +
                         ' root nodes only');
       }
-      if ((this.flags & VNodeFlags.IsVModel) !== 0) {
-        if ((this.flags & VNodeFlags.VModelUpdateHandler) !== 0) {
+      if ((this._flags & VNodeFlags.VModel) !== 0) {
+        if ((this._flags & VNodeFlags.VModelUpdateHandler) !== 0) {
           throw new Error('Failed to set props on VNode: VNode is using VModel with custom update handler');
         }
-        const model = this.tag as VModel<any>;
+        const model = this._tag as VModel<any>;
         if (model._props !== null) {
           const keys = Object.keys(props);
           for (let i = 0; i < keys.length; i++) {
@@ -114,18 +126,21 @@ export class VNode {
 
   /**
    * Set props with dynamic shape
+   *
+   * When virtual node is mounted on top of existing HTML, all properties will
+   * be assigned during mounting phase.
    */
   dynamicShapeProps(props: {[key: string]: any}) : VNode {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-      if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
+      if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error('Failed to set props on VNode: props method should be called on element or component' +
                         ' root nodes only');
       }
-      if ((this.flags & VNodeFlags.IsVModel) !== 0) {
-        if ((this.flags & VNodeFlags.VModelUpdateHandler) !== 0) {
+      if ((this._flags & VNodeFlags.VModel) !== 0) {
+        if ((this._flags & VNodeFlags.VModelUpdateHandler) !== 0) {
           throw new Error('Failed to set props on VNode: VNode is using VModel with custom update handler');
         }
-        const model = this.tag as VModel<any>;
+        const model = this._tag as VModel<any>;
         if (model._props !== null) {
           const keys = Object.keys(props);
           for (let i = 0; i < keys.length; i++) {
@@ -137,7 +152,7 @@ export class VNode {
         }
       }
     }
-    this.flags |= VNodeFlags.DynamicShapeProps;
+    this._flags |= VNodeFlags.DynamicShapeProps;
     this._props = props;
     return this;
   }
@@ -147,15 +162,15 @@ export class VNode {
    */
   attrs(attrs: {[key: string]: any}) : VNode {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-      if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
+      if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error('Failed to set attrs on VNode: attrs method should be called on element or component' +
                         ' root nodes only');
       }
-      if ((this.flags & VNodeFlags.IsVModel) !== 0) {
-        if ((this.flags & VNodeFlags.VModelUpdateHandler) !== 0) {
+      if ((this._flags & VNodeFlags.VModel) !== 0) {
+        if ((this._flags & VNodeFlags.VModelUpdateHandler) !== 0) {
           throw new Error('Failed to set attrs on VNode: VNode is using VModel with custom update handler');
         }
-        const model = this.tag as VModel<any>;
+        const model = this._tag as VModel<any>;
         if (model._attrs !== null) {
           const keys = Object.keys(attrs);
           for (let i = 0; i < keys.length; i++) {
@@ -176,15 +191,15 @@ export class VNode {
    */
   dynamicShapeAttrs(attrs: {[key: string]: any}) : VNode {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-      if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
+      if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error('Failed to set attrs on VNode: attrs method should be called on element or component' +
                         ' root nodes only');
       }
-      if ((this.flags & VNodeFlags.IsVModel) !== 0) {
-        if ((this.flags & VNodeFlags.VModelUpdateHandler) !== 0) {
+      if ((this._flags & VNodeFlags.VModel) !== 0) {
+        if ((this._flags & VNodeFlags.VModelUpdateHandler) !== 0) {
           throw new Error('Failed to set attrs on VNode: VNode is using VModel with custom update handler');
         }
-        const model = this.tag as VModel<any>;
+        const model = this._tag as VModel<any>;
         if (model._attrs !== null) {
           const keys = Object.keys(attrs);
           for (let i = 0; i < keys.length; i++) {
@@ -196,7 +211,7 @@ export class VNode {
         }
       }
     }
-    this.flags |= VNodeFlags.DynamicShapeAttrs;
+    this._flags |= VNodeFlags.DynamicShapeAttrs;
     this._attrs = attrs;
     return this;
   }
@@ -206,15 +221,15 @@ export class VNode {
    */
   style(style: string) : VNode {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-      if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
+      if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error('Failed to set style on VNode: style method should be called on element or component' +
                         ' root nodes only');
       }
-      if ((this.flags & VNodeFlags.IsVModel) !== 0) {
-        if ((this.flags & VNodeFlags.VModelUpdateHandler) !== 0) {
+      if ((this._flags & VNodeFlags.VModel) !== 0) {
+        if ((this._flags & VNodeFlags.VModelUpdateHandler) !== 0) {
           throw new Error('Failed to set style on VNode: VNode is using VModel with custom update handler');
         }
-        if (((this.tag as VModel<any>)._style) !== null) {
+        if (((this._tag as VModel<any>)._style) !== null) {
           throw new Error('Failed to set style on VNode: VNode is using VModel with assigned style');
         }
       }
@@ -228,15 +243,15 @@ export class VNode {
    */
   className(className: string) : VNode {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-      if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
+      if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error('Failed to set classes on VNode: classes method should be called on element or component' +
                         ' root nodes only');
       }
-      if ((this.flags & VNodeFlags.IsVModel) !== 0) {
-        if ((this.flags & VNodeFlags.VModelUpdateHandler) !== 0) {
+      if ((this._flags & VNodeFlags.VModel) !== 0) {
+        if ((this._flags & VNodeFlags.VModelUpdateHandler) !== 0) {
           throw new Error('Failed to set style on VNode: vnode is using vmodel with custom update handler');
         }
-        if (((this.tag as VModel<any>)._className) !== null) {
+        if (((this._tag as VModel<any>)._className) !== null) {
           throw new Error('Failed to set style on VNode: vnode is using vmodel with assigned className');
         }
       }
@@ -250,14 +265,14 @@ export class VNode {
    */
   children(children: VNode[]|string) : VNode {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-      if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root | VNodeFlags.Component)) === 0) {
+      if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root | VNodeFlags.Component)) === 0) {
         throw new Error('Failed to set children on VNode: children method should be called on element, component' +
                         ' or component root nodes only');
       }
-      if ((this.flags & VNodeFlags.InputElement) !== 0) {
+      if ((this._flags & VNodeFlags.InputElement) !== 0) {
         throw new Error('Failed to set children on VNode: input elements can\'t have children');
       }
-      if ((this.flags & VNodeFlags.ManagedContainer) !== 0) {
+      if ((this._flags & VNodeFlags.ManagedContainer) !== 0) {
         if (typeof children === 'string') {
           throw new Error('Failed to set children on VNode: VNode is using ContainerManager that doesn\'t accept' +
                           ' children with string type');
@@ -281,11 +296,11 @@ export class VNode {
    */
   trackByKeyChildren(children: VNode[]) : VNode {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-      if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root | VNodeFlags.Component)) === 0) {
+      if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root | VNodeFlags.Component)) === 0) {
         throw new Error('Failed to set children on VNode: children method should be called on element, component' +
                         ' or component root nodes only');
       }
-      if ((this.flags & VNodeFlags.InputElement) !== 0) {
+      if ((this._flags & VNodeFlags.InputElement) !== 0) {
         throw new Error('Failed to set children on VNode: input elements can\'t have children');
       }
       if (children !== null) {
@@ -297,7 +312,7 @@ export class VNode {
         }
       }
     }
-    this.flags |= VNodeFlags.TrackByKeyChildren;
+    this._flags |= VNodeFlags.TrackByKeyChildren;
     this._children = children;
     return this;
   }
@@ -311,7 +326,7 @@ export class VNode {
         throw new Error('Failed to set value on VNode: VNode is already have either children or checked property');
       }
     }
-    this.flags |= VNodeFlags.TextInputElement;
+    this._flags |= VNodeFlags.TextInputElement;
     this._children = value;
     return this;
   }
@@ -325,7 +340,7 @@ export class VNode {
         throw new Error('Failed to set checked on VNode: VNode is already have either children or value property');
       }
     }
-    this.flags |= VNodeFlags.CheckedInputElement;
+    this._flags |= VNodeFlags.CheckedInputElement;
     this._children = value;
     return this;
   }
@@ -336,7 +351,7 @@ export class VNode {
    * Keep alive nodes should be manually disposed by Component
    */
   keepAlive() : VNode {
-    this.flags |= VNodeFlags.KeepAlive;
+    this._flags |= VNodeFlags.KeepAlive;
     return this;
   }
 
@@ -348,11 +363,11 @@ export class VNode {
    */
   managedContainer(manager: ContainerManager<any>) : VNode {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-      if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
+      if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error('Failed to set managedContainer mode on VNode: managedContainer method should be called' +
                         ' on element or component root nodes only');
       }
-      if ((this.flags & VNodeFlags.InputElement) !== 0) {
+      if ((this._flags & VNodeFlags.InputElement) !== 0) {
         throw new Error('Failed to set managedContainer mode on VNode: managed container doesn\t work on input' +
                         ' elements');
       }
@@ -361,7 +376,7 @@ export class VNode {
                         ' before children assignment');
       }
     }
-    this.flags |= VNodeFlags.ManagedContainer;
+    this._flags |= VNodeFlags.ManagedContainer;
     this.cref = manager;
     return this;
   }
@@ -371,11 +386,11 @@ export class VNode {
    */
   disableChildrenShapeError() : VNode {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-      if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
+      if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error('Failed to disable children shape error on VNode: disableChildrenShapeError method should' +
                         ' be called on element or component root nodes only');
       }
-      this._debugProperties.flags |= VNodeDebugFlags.DisableChildrenShapeError;
+      this._debugProperties.flags |= VNodeDebugFlags.DisabledChildrenShapeError;
     }
     return this;
   }
@@ -390,7 +405,7 @@ export class VNode {
    */
   disableFreeze() : VNode {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-      this._debugProperties.flags |= VNodeDebugFlags.DisableFreeze;
+      this._debugProperties.flags |= VNodeDebugFlags.DisabledFreeze;
     }
     return this;
   }
@@ -399,8 +414,8 @@ export class VNode {
    * Check if two nodes can be synced
    */
   private _canSync(other: VNode) : boolean {
-    return (this.flags === other.flags &&
-            this.tag === other.tag &&
+    return (this._flags === other._flags &&
+            this._tag === other._tag &&
             this._key === other._key);
   }
 
@@ -411,29 +426,29 @@ export class VNode {
    * is responsible for setting up internal representation of the Node.
    */
   create(owner: Component<any, any>) : void {
-    let flags = this.flags;
+    let flags = this._flags;
 
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if (this.ref !== null && ((flags & VNodeFlags.CommentPlaceholder) === 0)) {
         throw new Error('Failed to create VNode: VNode already has a reference to the DOM node');
       }
     }
-    this.flags &= ~VNodeFlags.CommentPlaceholder;
+    this._flags &= ~VNodeFlags.CommentPlaceholder;
 
     if ((flags & VNodeFlags.Text) !== 0) {
       this.ref = document.createTextNode(this._props);
     } else if ((flags & VNodeFlags.Element) !== 0) {
-      if ((flags & VNodeFlags.IsVModel) === 0) {
+      if ((flags & VNodeFlags.VModel) === 0) {
         if ((flags & VNodeFlags.Svg) === 0) {
-          this.ref = document.createElement(this.tag as string);
+          this.ref = document.createElement(this._tag as string);
         } else {
-          this.ref = document.createElementNS(SvgNamespace, this.tag as string);
+          this.ref = document.createElementNS(SvgNamespace, this._tag as string);
         }
       } else {
-        this.ref = (this.tag as VModel<any>).createElement();
+        this.ref = (this._tag as VModel<any>).createElement();
       }
     } else {
-      const c = (this.tag as ComponentDescriptor<any, any>)
+      const c = (this._tag as ComponentDescriptor<any, any>)
         .createComponent(this._props, this._children as string|VNode[], owner);
       this.ref = c.element;
       this.cref = c;
@@ -451,7 +466,7 @@ export class VNode {
         throw new Error('Failed to create a VNode Comment Placeholder: VNode already has a reference to the DOM node');
       }
     }
-    this.flags |= VNodeFlags.CommentPlaceholder;
+    this._flags |= VNodeFlags.CommentPlaceholder;
     this.ref = document.createComment('');
   }
 
@@ -465,7 +480,7 @@ export class VNode {
       if (this.ref === null) {
         throw new Error('Failed to render VNode: VNode should be created before render');
       }
-      if ((this.flags & VNodeFlags.CommentPlaceholder) !== 0) {
+      if ((this._flags & VNodeFlags.CommentPlaceholder) !== 0) {
         throw new Error('Failed to render VNode: VNode comment placeholder cannot be rendered');
       }
       if ((this._debugProperties.flags & VNodeDebugFlags.Rendered) !== 0) {
@@ -480,7 +495,7 @@ export class VNode {
     let il: number;
     let key: any;
     let keys: any[];
-    const flags = this.flags;
+    const flags = this._flags;
 
     let ref: Element;
 
@@ -528,7 +543,7 @@ export class VNode {
         }
       } else {
         if ((flags & VNodeFlags.Root) === 0) {
-          (this.tag as VModel<any>).update(ref, void 0, this._props);
+          (this._tag as VModel<any>).update(ref, void 0, this._props);
         } else {
           (owner.descriptor._tag as VModel<any>).update(ref, void 0, this._props);
         }
@@ -536,7 +551,7 @@ export class VNode {
 
       const children = this._children;
       if (children !== null) {
-        if ((this.flags & VNodeFlags.InputElement) === 0) {
+        if ((this._flags & VNodeFlags.InputElement) === 0) {
           if (typeof children === 'string') {
             ref.textContent = children;
           } else {
@@ -545,7 +560,7 @@ export class VNode {
             }
           }
         } else {
-          if ((this.flags & VNodeFlags.TextInputElement) !== 0) {
+          if ((this._flags & VNodeFlags.TextInputElement) !== 0) {
             (this.ref as HTMLInputElement).value = this._children as string;
           } else { // ((this.flags & VNodeFlags.CheckedInputElement) !== 0)
             (this.ref as HTMLInputElement).checked = this._children as boolean;
@@ -579,7 +594,7 @@ export class VNode {
       if (this.ref !== null) {
         throw new Error('Failed to mount VNode: VNode cannot be mounted if it already has a reference to DOM Node');
       }
-      if ((this.flags & VNodeFlags.CommentPlaceholder) !== 0) {
+      if ((this._flags & VNodeFlags.CommentPlaceholder) !== 0) {
         throw new Error('Failed to mount VNode: VNode comment placeholder cannot be mounted');
       }
       if ((this._debugProperties.flags & VNodeDebugFlags.Rendered) !== 0) {
@@ -591,23 +606,23 @@ export class VNode {
       this._debugProperties.flags |= VNodeDebugFlags.Mounted;
     }
 
-    const flags = this.flags;
+    const flags = this._flags;
     const children = this._children;
     let i: number;
 
     this.ref = node;
 
     if ((flags & VNodeFlags.Component) !== 0) {
-      const cref = this.cref = (this.tag as ComponentDescriptor<any, any>)
+      const cref = this.cref = (this._tag as ComponentDescriptor<any, any>)
         .mountComponent(this._props, this._children as string|VNode[], owner, node as Element);
       if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-        const dflags = cref.descriptor.flags;
+        const dflags = cref.descriptor._flags;
         if (node.nodeType !== 1) {
           throw new Error('Failed to mount VNode: invalid node type, components can be mounted on element nodes only');
         }
         const eTagName = ((node as Element).tagName).toLowerCase();
         let cTagName: string;
-        if ((dflags & ComponentDescriptorFlags.IsVModel) !== 0) {
+        if ((dflags & ComponentDescriptorFlags.VModel) !== 0) {
           cTagName = (cref.descriptor._tag as VModel)._tag.toLowerCase();
           if (cTagName !== eTagName) {
             throw new Error(`Failed to mount VNode: invalid tagName, component expects tagName "${cTagName}", but` +
@@ -638,7 +653,7 @@ export class VNode {
       cref.update();
     } else {
       if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-        if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root)) !== 0) {
+        if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) !== 0) {
           if (node.nodeType !== 1) {
             throw new Error('Failed to mount VNode: invalid node type, VNode expects Element node');
           }
@@ -669,7 +684,7 @@ export class VNode {
         }
       }
 
-      if ((this.flags & (VNodeFlags.Element | VNodeFlags.Root)) !== 0) {
+      if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) !== 0) {
         // Assign properties on mount, because they don't exist in html markup
         if (this._props !== null) {
           const keys = Object.keys(this._props);
@@ -727,16 +742,16 @@ export class VNode {
     }
 
     const ref = this.ref as Element;
-    const flags = this.flags;
+    const flags = this._flags;
     let component: Component<any, any>;
     let className: string;
 
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-      if (this.flags !== other.flags) {
-        throw new Error(`Failed to sync VNode: flags does not match (old: ${this.flags}, new: ${other.flags})`);
+      if (this._flags !== other._flags) {
+        throw new Error(`Failed to sync VNode: flags does not match (old: ${this._flags}, new: ${other._flags})`);
       }
-      if (this.tag !== other.tag) {
-        throw new Error(`Failed to sync VNode: tags does not match (old: ${this.tag}, new: ${other.tag})`);
+      if (this._tag !== other._tag) {
+        throw new Error(`Failed to sync VNode: tags does not match (old: ${this._tag}, new: ${other._tag})`);
       }
       if (this._key !== other._key) {
         throw new Error(`Failed to sync VNode: keys does not match (old: ${this._key}, new: ${other._key})`);
@@ -755,14 +770,14 @@ export class VNode {
     } else if ((flags & (VNodeFlags.Element | VNodeFlags.Root)) !== 0) {
       if ((flags & VNodeFlags.VModelUpdateHandler) === 0) {
         if (this._props !== other._props) {
-          if ((this.flags & VNodeFlags.DynamicShapeProps) === 0) {
+          if ((this._flags & VNodeFlags.DynamicShapeProps) === 0) {
             syncStaticShapeProps(this._props, other._props, ref);
           } else {
             syncDynamicShapeProps(this._props, other._props, ref);
           }
         }
         if (this._attrs !== other._attrs) {
-          if ((this.flags & VNodeFlags.DynamicShapeAttrs) === 0) {
+          if ((this._flags & VNodeFlags.DynamicShapeAttrs) === 0) {
             syncStaticShapeAttrs(this._attrs, other._attrs, ref);
           } else {
             syncDynamicShapeAttrs(this._attrs, other._attrs, ref);
@@ -788,13 +803,13 @@ export class VNode {
 
       } else if (this._props !== other._props) {
         if ((flags & VNodeFlags.Root) === 0) {
-          (this.tag as VModel<any>).update(ref, this._props, other._props);
+          (this._tag as VModel<any>).update(ref, this._props, other._props);
         } else {
           (owner.descriptor._tag as VModel<any>).update(ref, this._props, other._props);
         }
       }
 
-      if ((this.flags & VNodeFlags.InputElement) === 0) {
+      if ((this._flags & VNodeFlags.InputElement) === 0) {
         if (this._children !== other._children) {
           this.syncChildren(
             this._children as VNode[]|string,
@@ -845,7 +860,7 @@ export class VNode {
       this._debugProperties.flags |= VNodeDebugFlags.Attached;
       this._debugProperties.flags &= ~VNodeDebugFlags.Detached;
     }
-    if ((this.flags & VNodeFlags.Component) === 0) {
+    if ((this._flags & VNodeFlags.Component) === 0) {
       const children = this._children;
       if (children !== null && typeof children !== 'string') {
         for (let i = 0; i < (children as VNode[]).length; i++) {
@@ -871,7 +886,7 @@ export class VNode {
       this._debugProperties.flags |= VNodeDebugFlags.Attached;
       this._debugProperties.flags &= ~VNodeDebugFlags.Detached;
     }
-    if ((this.flags & VNodeFlags.Component) !== 0) {
+    if ((this._flags & VNodeFlags.Component) !== 0) {
       (this.cref as Component<any, any>).attach();
     }
   }
@@ -887,7 +902,7 @@ export class VNode {
       this._debugProperties.flags |= VNodeDebugFlags.Detached;
       this._debugProperties.flags &= ~VNodeDebugFlags.Attached;
     }
-    if ((this.flags & VNodeFlags.Component) === 0) {
+    if ((this._flags & VNodeFlags.Component) === 0) {
       const children = this._children;
       if (children !== null && typeof children !== 'string') {
         for (let i = 0; i < (children as VNode[]).length; i++) {
@@ -912,8 +927,8 @@ export class VNode {
       }
       this._debugProperties.flags |= VNodeDebugFlags.Disposed;
     }
-    if ((this.flags & VNodeFlags.KeepAlive) === 0) {
-      if ((this.flags & VNodeFlags.Component) !== 0) {
+    if ((this._flags & VNodeFlags.KeepAlive) === 0) {
+      if ((this._flags & VNodeFlags.Component) !== 0) {
         (this.cref as Component<any, any>).dispose();
       } else if (this._children !== null) {
         const children = this._children;
@@ -981,9 +996,9 @@ export class VNode {
           } else if (a.length === 1) {
             // Fast path when a have 1 child
             aNode = a[0];
-            if ((this.flags & VNodeFlags.TrackByKeyChildren) === 0) {
+            if ((this._flags & VNodeFlags.TrackByKeyChildren) === 0) {
               if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-                if ((this._debugProperties.flags & VNodeDebugFlags.DisableChildrenShapeError) === 0) {
+                if ((this._debugProperties.flags & VNodeDebugFlags.DisabledChildrenShapeError) === 0) {
                   printError(
                       'VNode sync children: children shape is changing, you should enable tracking by key with ' +
                       'VNode method trackByKeyChildren(children).\n' +
@@ -1027,9 +1042,9 @@ export class VNode {
           } else if (b.length === 1) {
             // Fast path when b have 1 child
             bNode = b[0];
-            if ((this.flags & VNodeFlags.TrackByKeyChildren) === 0) {
+            if ((this._flags & VNodeFlags.TrackByKeyChildren) === 0) {
               if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-                if ((this._debugProperties.flags & VNodeDebugFlags.DisableChildrenShapeError) === 0) {
+                if ((this._debugProperties.flags & VNodeDebugFlags.DisabledChildrenShapeError) === 0) {
                   printError(
                       'VNode sync children: children shape is changing, you should enable tracking by key with ' +
                       'VNode method trackByKeyChildren(children).\n' +
@@ -1073,7 +1088,7 @@ export class VNode {
             }
           } else {
             // a and b have more than 1 child
-            if ((this.flags & VNodeFlags.TrackByKeyChildren) === 0) {
+            if ((this._flags & VNodeFlags.TrackByKeyChildren) === 0) {
               this._syncChildren(a, b, owner, renderFlags);
             } else {
               this._syncChildrenTrackingByKeys(a, b, owner, renderFlags);
@@ -1138,7 +1153,7 @@ export class VNode {
 
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((aStart <= aEnd || bStart <= bEnd) &&
-          ((this._debugProperties.flags & VNodeDebugFlags.DisableChildrenShapeError) === 0)) {
+          ((this._debugProperties.flags & VNodeDebugFlags.DisabledChildrenShapeError) === 0)) {
         printError(
             'VNode sync children: children shape is changing, you should enable tracking by key with ' +
             'VNode method trackByKeyChildren(children).\n' +
@@ -1422,54 +1437,54 @@ export class VNode {
   }
 
   private _insertChild(node: VNode, nextRef: Node, owner: Component<any, any>, renderFlags: number) : void {
-    if (((this.flags & VNodeFlags.ManagedContainer) !== 0) &&
+    if (((this._flags & VNodeFlags.ManagedContainer) !== 0) &&
         (this.cref as ContainerManager<any>).descriptor._insertChild !== null) {
       (this.cref as ContainerManager<any>).descriptor._insertChild(
         this.cref as ContainerManager<any>, this.ref as Element, node, nextRef, owner, renderFlags);
     } else {
-      insertVNodeBefore(this, node, nextRef, owner, renderFlags);
+      insertVNodeBefore(this.ref as Element, node, nextRef, owner, renderFlags);
     }
   }
 
   private _replaceChild(newNode: VNode, refNode: VNode, owner: Component<any, any>, renderFlags: number) : void {
-    if (((this.flags & VNodeFlags.ManagedContainer) !== 0) &&
+    if (((this._flags & VNodeFlags.ManagedContainer) !== 0) &&
         (this.cref as ContainerManager<any>).descriptor._replaceChild !== null) {
       (this.cref as ContainerManager<any>).descriptor._replaceChild(
         this.cref as ContainerManager<any>, this.ref as Element, newNode, refNode, owner, renderFlags);
     } else {
-      replaceVNode(this, newNode, refNode, owner, renderFlags);
+      replaceVNode(this.ref as Element, newNode, refNode, owner, renderFlags);
     }
   }
 
   private _moveChild(node: VNode, nextRef: Node, owner: Component<any, any>) : void {
-    if (((this.flags & VNodeFlags.ManagedContainer) !== 0) &&
+    if (((this._flags & VNodeFlags.ManagedContainer) !== 0) &&
         (this.cref as ContainerManager<any>).descriptor._moveChild !== null) {
       (this.cref as ContainerManager<any>).descriptor._moveChild(
         this.cref as ContainerManager<any>, this.ref as Element, node, nextRef, owner);
     } else {
-      moveVNode(this, node, nextRef, owner);
+      moveVNode(this.ref as Element, node, nextRef, owner);
     }
   }
 
   private _removeChild(node: VNode, owner: Component<any, any>) : void {
-    if (((this.flags & VNodeFlags.ManagedContainer) !== 0) &&
+    if (((this._flags & VNodeFlags.ManagedContainer) !== 0) &&
         (this.cref as ContainerManager<any>).descriptor._removeChild !== null) {
       (this.cref as ContainerManager<any>).descriptor._removeChild(
         this.cref as ContainerManager<any>, this.ref as Element, node, owner);
     } else {
-      removeVNode(this, node, owner);
+      removeVNode(this.ref as Element, node, owner);
     }
   }
 
   private _freeze() : void {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-      if ((this._debugProperties.flags & VNodeDebugFlags.DisableFreeze) === 0) {
+      if ((this._debugProperties.flags & VNodeDebugFlags.DisabledFreeze) === 0) {
         Object.freeze(this);
         if (this._attrs !== null && !Object.isFrozen(this._attrs)) {
           Object.freeze(this._attrs);
         }
         // Don't freeze props in Components.
-        if (((this.flags & VNodeFlags.Component) === 0) &&
+        if (((this._flags & VNodeFlags.Component) === 0) &&
             this._props !== null &&
             !Object.isFrozen(this._props)) {
           Object.freeze(this._props);
@@ -1548,19 +1563,19 @@ function _lis(a: number[]) : number[] {
  *
  * Can be used as a generic method to insert nodes in ContainerManager
  */
-export function insertVNodeBefore(container: VNode, node: VNode, nextRef: Node, owner: Component<any, any>, renderFlags: number) : void {
+export function insertVNodeBefore(container: Element, node: VNode, nextRef: Node, owner: Component<any, any>, renderFlags: number) : void {
   if (node.ref === null) {
     node.create(owner);
-    container.ref.insertBefore(node.ref, nextRef);
+    container.insertBefore(node.ref, nextRef);
     node.attached();
     node.render(owner, renderFlags);
   } else {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-      if ((node.flags & VNodeFlags.KeepAlive) === 0) {
+      if ((node._flags & VNodeFlags.KeepAlive) === 0) {
         throw new Error('Failed to replace node: VNode instance already has been used to create DOM node');
       }
     }
-    container.ref.insertBefore(node.ref, nextRef);
+    container.insertBefore(node.ref, nextRef);
     node.attach();
   }
 }
@@ -1570,19 +1585,19 @@ export function insertVNodeBefore(container: VNode, node: VNode, nextRef: Node, 
  *
  * Can be used as a generic method to replace nodes in ContainerManager
  */
-export function replaceVNode(container: VNode, newNode: VNode, refNode: VNode, owner: Component<any, any>, renderFlags: number) : void {
+export function replaceVNode(container: Element, newNode: VNode, refNode: VNode, owner: Component<any, any>, renderFlags: number) : void {
   if (newNode.ref === null) {
     newNode.create(owner);
-    container.ref.replaceChild(newNode.ref, refNode.ref);
+    container.replaceChild(newNode.ref, refNode.ref);
     newNode.attached();
     newNode.render(owner, renderFlags);
   } else {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
-      if ((newNode.flags & VNodeFlags.KeepAlive) === 0) {
+      if ((newNode._flags & VNodeFlags.KeepAlive) === 0) {
         throw new Error('Failed to replace node: VNode instance already has been used to create DOM node');
       }
     }
-    container.ref.replaceChild(newNode.ref, refNode.ref);
+    container.replaceChild(newNode.ref, refNode.ref);
     newNode.attach();
   }
   refNode.dispose();
@@ -1593,8 +1608,8 @@ export function replaceVNode(container: VNode, newNode: VNode, refNode: VNode, o
  *
  * Can be used as a generic method to move nodes in ContainerManager
  */
-export function moveVNode(container: VNode, node: VNode, nextRef: Node, owner: Component<any, any>) : void {
-  container.ref.insertBefore(node.ref, nextRef);
+export function moveVNode(container: Element, node: VNode, nextRef: Node, owner: Component<any, any>) : void {
+  container.insertBefore(node.ref, nextRef);
 }
 
 /**
@@ -1602,8 +1617,8 @@ export function moveVNode(container: VNode, node: VNode, nextRef: Node, owner: C
  *
  * Can be used as a generic method to remove nodes in ContainerManager
  */
-export function removeVNode(container: VNode, node: VNode, owner: Component<any, any>) {
-  container.ref.removeChild(node.ref);
+export function removeVNode(container: Element, node: VNode, owner: Component<any, any>) {
+  container.removeChild(node.ref);
   node.dispose();
 }
 

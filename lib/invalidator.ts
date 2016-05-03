@@ -8,7 +8,7 @@ import {InvalidatorSubscriptionFlags} from './misc';
  * @final
  */
 export class InvalidatorSubscription {
-  private _flags: number;
+  _flags: number;
   invalidator: Invalidator;
   private _component: Component<any, any>;
   private _callback: Function;

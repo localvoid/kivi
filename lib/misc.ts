@@ -20,7 +20,7 @@ export const enum InvalidatorSubscriptionFlags {
 const enum SharedFlags {
   Svg                 = 1 << 15,
   Canvas2D            = 1 << 16,
-  IsVModel            = 1 << 17,
+  VModel              = 1 << 17,
   VModelUpdateHandler = 1 << 18,
   EnabledRecycling    = 1 << 19,
 }
@@ -29,27 +29,29 @@ const enum SharedFlags {
  * VModel flags
  */
 export const enum VModelFlags {
-  EnabledCloning       = 1,
-  Svg                  = SharedFlags.Svg,
+  EnabledCloning = 1,
+
+  Svg = SharedFlags.Svg,
 }
 
 export const enum VNodeFlags {
-  Text                  = 1,
-  Element               = 1 << 1,
-  Component             = 1 << 2,
-  Root                  = 1 << 3,
-  TrackByKeyChildren    = 1 << 4,
-  ManagedContainer      = 1 << 5,
-  CommentPlaceholder    = 1 << 6,
-  DynamicShapeAttrs     = 1 << 7,
-  DynamicShapeProps     = 1 << 8,
-  TextInputElement      = 1 << 9,
-  CheckedInputElement   = 1 << 10,
-  InputElement          = TextInputElement | CheckedInputElement,
-  KeepAlive             = 1 << 11,
-  Svg                   = SharedFlags.Svg,
-  IsVModel              = SharedFlags.IsVModel,
-  VModelUpdateHandler   = SharedFlags.VModelUpdateHandler,
+  Text                = 1,
+  Element             = 1 << 1,
+  Component           = 1 << 2,
+  Root                = 1 << 3,
+  TrackByKeyChildren  = 1 << 4,
+  ManagedContainer    = 1 << 5,
+  CommentPlaceholder  = 1 << 6,
+  DynamicShapeAttrs   = 1 << 7,
+  DynamicShapeProps   = 1 << 8,
+  TextInputElement    = 1 << 9,
+  CheckedInputElement = 1 << 10,
+  InputElement        = TextInputElement | CheckedInputElement,
+  KeepAlive           = 1 << 11,
+
+  Svg                 = SharedFlags.Svg,
+  VModel              = SharedFlags.VModel,
+  VModelUpdateHandler = SharedFlags.VModelUpdateHandler,
 }
 
 export const enum RenderFlags {
@@ -61,35 +63,38 @@ export const enum RenderFlags {
 }
 
 export const enum VNodeDebugFlags {
-  Rendered                  = 1,
-  Mounted                   = 1 << 1,
-  Attached                  = 1 << 2,
-  Detached                  = 1 << 3,
-  Disposed                  = 1 << 4,
-  DisableChildrenShapeError = 1 << 5,
-  DisableFreeze             = 1 << 6,
+  Rendered                   = 1,
+  Mounted                    = 1 << 1,
+  Attached                   = 1 << 2,
+  Detached                   = 1 << 3,
+  Disposed                   = 1 << 4,
+  DisabledChildrenShapeError = 1 << 5,
+  DisabledFreeze             = 1 << 6,
 }
 
 export const enum ComponentDescriptorFlags {
   Svg              = SharedFlags.Svg,
   Canvas2D         = SharedFlags.Canvas2D,
-  IsVModel         = SharedFlags.IsVModel,
+  VModel           = SharedFlags.VModel,
   EnabledRecycling = SharedFlags.EnabledRecycling,
 }
 
 export const enum ComponentFlags {
-  Disposed         = 1,
-  Attached         = 1 << 1,
-  Mounting         = 1 << 2,
-  Dirty            = 1 << 3,
-  UpdateEachFrame  = 1 << 4,
-  InUpdateQueue    = 1 << 5,
-  Recycled         = 1 << 6,
-  ShouldUpdate     = Attached | Dirty,
+  Disposed                  = 1,
+  Attached                  = 1 << 1,
+  Mounting                  = 1 << 2,
+  Dirty                     = 1 << 3,
+  UpdateEachFrame           = 1 << 4,
+  InUpdateQueue             = 1 << 5,
+  Recycled                  = 1 << 6,
+  DisabledCheckDataIdentity = 1 << 7,
+
   Svg              = SharedFlags.Svg,
   Canvas2D         = SharedFlags.Canvas2D,
-  IsVModel         = SharedFlags.IsVModel,
+  VModel           = SharedFlags.VModel,
   EnabledRecycling = SharedFlags.EnabledRecycling,
+
+  ShouldUpdate = Attached | Dirty,
 }
 
 export const enum ContainerManagerDescriptorDebugFlags {

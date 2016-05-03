@@ -19,7 +19,7 @@ export class VModel<D> {
   /**
    * Flags marked on VNode/ComponentDescriptor when it is created
    */
-  markFlags: number;
+  _markFlags: number;
   _flags: number;
   _tag: string;
   _props: any;
@@ -30,7 +30,7 @@ export class VModel<D> {
   private _ref: Element;
 
   constructor(tag: string) {
-    this.markFlags = VNodeFlags.IsVModel;
+    this._markFlags = VNodeFlags.VModel;
     this._flags = 0;
     this._tag = tag;
     this._props = null;
@@ -45,7 +45,7 @@ export class VModel<D> {
    * Use svg namespace for the dom element
    */
   svg() : VModel<D> {
-    this.markFlags |= VNodeFlags.Svg;
+    this._markFlags |= VNodeFlags.Svg;
     this._flags |= VModelFlags.Svg;
     return this;
   }
@@ -94,7 +94,7 @@ export class VModel<D> {
    * Set update handler
    */
   updateHandler(handler: VModelUpdateHandler<D>) : VModel<D> {
-    this.markFlags |= VNodeFlags.VModelUpdateHandler;
+    this._markFlags |= VNodeFlags.VModelUpdateHandler;
     this._updateHandler = handler;
     return this;
   }
@@ -103,14 +103,14 @@ export class VModel<D> {
    * Create a Virtual DOM Node from this model
    */
   createVNode(data: D = null) : VNode {
-    return new VNode(VNodeFlags.Element | this.markFlags, this, data);
+    return new VNode(VNodeFlags.Element | this._markFlags, this, data);
   }
 
   /**
    * Create a Virtual DOM Node for Component root from this model
    */
   createVRoot(data: D = null) : VNode {
-    return new VNode(VNodeFlags.Root | this.markFlags, this, data);
+    return new VNode(VNodeFlags.Root | this._markFlags, this, data);
   }
 
   /**
