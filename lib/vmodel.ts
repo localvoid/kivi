@@ -1,5 +1,4 @@
-import {SvgNamespace} from "./namespace";
-import {VNodeFlags, VModelFlags, setAttr} from "./misc";
+import {SvgNamespace, VNodeFlags, VModelFlags, setAttr} from "./misc";
 import {VNode} from "./vnode";
 
 /**

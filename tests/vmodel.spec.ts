@@ -1,5 +1,5 @@
 import {VModel} from "../lib/vmodel";
-import {XlinkNamespace} from "../lib/namespace";
+import {XlinkNamespace} from "../lib/misc";
 
 describe("VModel", () => {
   it("should create div element", () => {

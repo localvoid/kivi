@@ -1,10 +1,9 @@
 import {printError} from "./debug";
 import {
-  VNodeFlags, VNodeDebugFlags, RenderFlags, ContainerManagerDescriptorDebugFlags,
+  SvgNamespace, VNodeFlags, VNodeDebugFlags, RenderFlags, ContainerManagerDescriptorDebugFlags,
   syncStaticShapeProps, syncDynamicShapeProps, syncStaticShapeAttrs, syncDynamicShapeAttrs, setAttr,
   ComponentDescriptorFlags,
 } from "./misc";
-import {SvgNamespace} from "./namespace";
 import {Component, ComponentDescriptor} from "./component";
 import {VModel} from "./vmodel";
 import {ContainerManager} from "./container_manager";

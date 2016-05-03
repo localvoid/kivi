@@ -1,8 +1,7 @@
 import {LifecycleComponent} from "./lifecycle";
-import {RenderFlags} from "../lib/misc";
+import {XlinkNamespace, RenderFlags} from "../lib/misc";
 import {VNode, createVElement, createVText, createVSvgElement} from "../lib/vnode";
 import {Component} from "../lib/component";
-import {XlinkNamespace} from "../lib/namespace";
 
 function injectVNode(parent: DocumentFragment, node: VNode, nextRef: Element): void {
   node.create(null);

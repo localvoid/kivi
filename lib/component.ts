@@ -1,5 +1,4 @@
-import {SvgNamespace} from "./namespace";
-import {ComponentDescriptorFlags, ComponentFlags, VNodeFlags, RenderFlags} from "./misc";
+import {SvgNamespace, ComponentDescriptorFlags, ComponentFlags, VNodeFlags, RenderFlags} from "./misc";
 import {VModel} from "./vmodel";
 import {VNode} from "./vnode";
 import {InvalidatorSubscription, Invalidator} from "./invalidator";
