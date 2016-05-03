@@ -383,7 +383,7 @@ export class Component<D, S> {
     if ((this.flags & ComponentFlags.ShouldUpdate) === ComponentFlags.ShouldUpdate) {
       this.descriptor._update(this);
       this.mtime = scheduler.clock;
-      this.flags &= ~ComponentFlags.Dirty;
+      this.flags &= ~(ComponentFlags.Dirty | ComponentFlags.Mounting);
     }
   }
 
