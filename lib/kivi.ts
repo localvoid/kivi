@@ -4,6 +4,7 @@ export * from './vmodel';
 export * from './vnode';
 export * from './container_manager';
 export * from './component';
+export {flattenVNodes} from './misc';
 
 if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
   console.info('KIVI_DEBUG: enabled');

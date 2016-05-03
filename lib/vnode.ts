@@ -3,8 +3,7 @@ import {SvgNamespace} from './namespace';
 import {Component, ComponentDescriptor, ComponentDescriptorFlags} from './component';
 import {VModel} from './vmodel';
 import {ContainerManager, ContainerManagerDescriptorDebugFlags} from './container_manager';
-import {syncStaticShapeProps, syncDynamicShapeProps} from './sync/props';
-import {syncStaticShapeAttrs, syncDynamicShapeAttrs, setAttr} from './sync/attrs';
+import {syncStaticShapeProps, syncDynamicShapeProps, syncStaticShapeAttrs, syncDynamicShapeAttrs, setAttr} from './misc';
 
 export const enum VNodeFlags {
   Text                  = 1,

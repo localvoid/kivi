@@ -1,5 +1,5 @@
 import {SvgNamespace} from './namespace';
-import {setAttr} from './sync/attrs';
+import {setAttr} from './misc';
 import {VNodeFlags, VNode} from './vnode';
 
 /**
