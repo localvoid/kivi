@@ -10,18 +10,9 @@ var rollupBabel = require('rollup-plugin-babel');
 var uglify = require('gulp-uglify');
 var rename = require('gulp-rename');
 
-gulp.task('clean', del.bind(null, ['dist']));
+gulp.task('clean', del.bind(null, ['dist', 'build']));
 
-gulp.task('dist:cjs', function() {
-  return gulp.src(['lib/**/*.ts', 'typings/browser.d.ts'])
-    .pipe(ts(Object.assign(tsConfig.compilerOptions, {
-      target: 'es5',
-      module: 'commonjs',
-    })))
-    .pipe(gulp.dest('dist/cjs'));
-});
-
-gulp.task('dist:es6', function() {
+gulp.task('build:es6', function() {
   var result = gulp.src(['lib/**/*.ts'])
     .pipe(ts(Object.assign(tsConfig.compilerOptions, {
       target: 'es6',
@@ -31,13 +22,51 @@ gulp.task('dist:es6', function() {
 
   return merge([
     result.dts.pipe(gulp.dest('dist/typings')),
-    result.js.pipe(gulp.dest('dist/es6'))
+    result.js.pipe(gulp.dest('build/es6'))
   ]);
 });
 
-gulp.task('dist:umd', ['dist:es6'], function() {
+gulp.task('dist:es6:prod', ['build:es6'], function() {
   return rollup.rollup({
-    entry: 'dist/es6/kivi.js',
+    entry: 'build/es6/kivi.js',
+    plugins: [
+      rollupReplace({
+        delimiters: ['<@', '@>'],
+        values: {
+          KIVI_DEBUG: 'DEBUG_DISABLED'
+        }
+      }),
+    ]
+  }).then(function(bundle) {
+    return bundle.write({
+      format: 'es6',
+      dest: 'dist/es6/kivi.js',
+    });
+  });
+});
+
+gulp.task('dist:es6:debug', ['build:es6'], function() {
+  return rollup.rollup({
+    entry: 'build/es6/kivi.js',
+    plugins: [
+      rollupReplace({
+        delimiters: ['<@', '@>'],
+        values: {
+          KIVI_DEBUG: 'DEBUG_ENABLED'
+        }
+      }),
+    ]
+  }).then(function(bundle) {
+    return bundle.write({
+      format: 'es6',
+      dest: 'dist/es6/kivi.debug.js',
+    });
+  });
+});
+
+gulp.task('dist:umd:prod', ['build:es6'], function() {
+  return rollup.rollup({
+    entry: 'build/es6/kivi.js',
     plugins: [
       rollupReplace({
         delimiters: ['<@', '@>'],
@@ -58,14 +87,39 @@ gulp.task('dist:umd', ['dist:es6'], function() {
   });
 });
 
-gulp.task('dist:umd.min', ['dist:umd'], function() {
+gulp.task('dist:umd:prod.min', ['dist:umd:prod'], function() {
   return gulp.src('dist/umd/kivi.js')
     .pipe(uglify())
     .pipe(rename('kivi.min.js'))
     .pipe(gulp.dest('dist/umd'));
 });
 
-gulp.task('dist', ['dist:cjs', 'dist:es6', 'dist:umd.min']);
+gulp.task('dist:umd:debug', ['build:es6'], function() {
+  return rollup.rollup({
+    entry: 'build/es6/kivi.js',
+    plugins: [
+      rollupReplace({
+        delimiters: ['<@', '@>'],
+        values: {
+          KIVI_DEBUG: 'DEBUG_ENABLED'
+        }
+      }),
+      rollupBabel({
+        presets: ['es2015-rollup']
+      }),
+    ]
+  }).then(function(bundle) {
+    return bundle.write({
+      format: 'umd',
+      moduleName: 'kivi',
+      dest: 'dist/umd/kivi.debug.js',
+    });
+  });
+});
+
+gulp.task('dist:es6', ['dist:es6:prod', 'dist:es6:debug']);
+gulp.task('dist:umd', ['dist:umd:prod.min', 'dist:umd:debug']);
+gulp.task('dist', ['dist:es6', 'dist:umd']);
 
 gulp.task('build:tests', function() {
   return rollup.rollup({

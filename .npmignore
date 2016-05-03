@@ -4,6 +4,7 @@ karma.conf.js
 tsconfig.json
 typings.json
 
+lib
 build
 tests
 examples

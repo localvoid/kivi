@@ -101,17 +101,18 @@ export const enum ContainerManagerDescriptorDebugFlags {
   AcceptKeyedChildrenOnly = 1
 }
 
-export type VNodeRecursiveList = Array<VNode|VNodeRecursiveList[]>;
+export type VNodeRecursiveListValue = VNode|VNodeRecursiveList;
+export interface VNodeRecursiveList extends Array<VNodeRecursiveListValue> {}
 
 export function flattenVNodes(nodes: VNodeRecursiveList) : VNode[] {
   let copy = nodes.slice(0);
-  let flatten = [];
+  const flatten = [] as VNode[];
   while (copy.length > 0) {
     const item = copy.shift();
     if (item.constructor === VNode) {
-      flatten.push(item)
+      flatten.push(item as any);
     } else {
-      copy = item.concat(copy)
+      copy = (item as any).concat(copy);
     }
   }
   return flatten

@@ -623,7 +623,7 @@ export class VNode {
         const eTagName = ((node as Element).tagName).toLowerCase();
         let cTagName: string;
         if ((dflags & ComponentDescriptorFlags.VModel) !== 0) {
-          cTagName = (cref.descriptor._tag as VModel)._tag.toLowerCase();
+          cTagName = (cref.descriptor._tag as VModel<any>)._tag.toLowerCase();
           if (cTagName !== eTagName) {
             throw new Error(`Failed to mount VNode: invalid tagName, component expects tagName "${cTagName}", but` +
                             ` found "${eTagName}"`);
@@ -690,7 +690,7 @@ export class VNode {
           const keys = Object.keys(this._props);
           for (i = 0; i < keys.length; i++) {
             const key = keys[i];
-            node[key] = this._props[key];
+            (node as any)[key] = this._props[key];
           }
         }
 
