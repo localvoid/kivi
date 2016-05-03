@@ -40,17 +40,17 @@ export class ContainerManagerDescriptor<S> {
   _debugFlags: number;
 
   constructor() {
-    this._insertChild = null;
-    this._replaceChild = null;
-    this._moveChild = null;
-    this._removeChild = null;
+    this._insertChild = undefined;
+    this._replaceChild = undefined;
+    this._moveChild = undefined;
+    this._removeChild = undefined;
 
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       this._debugFlags = 0;
     }
   }
 
-  create(state: S): ContainerManager<S> {
+  create(state?: S): ContainerManager<S> {
     return new ContainerManager<S>(this, state);
   }
 
@@ -90,7 +90,7 @@ export class ContainerManager<S> {
   descriptor: ContainerManagerDescriptor<S>;
   state: S;
 
-  constructor(descriptor: ContainerManagerDescriptor<S>, state: S) {
+  constructor(descriptor: ContainerManagerDescriptor<S>, state?: S) {
     this.descriptor = descriptor;
     this.state = state;
   }

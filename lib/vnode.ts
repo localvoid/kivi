@@ -67,14 +67,14 @@ export class VNode {
   constructor(flags: number, tag: string|VModel<any>|ComponentDescriptor<any, any>, props: any) {
     this._flags = flags;
     this._tag = tag;
-    this._key = null;
+    this._key = undefined;
     this._props = props;
-    this._attrs = null;
-    this._style = null;
-    this._className = null;
-    this._children = null;
-    this.ref = null;
-    this.cref = null;
+    this._attrs = undefined;
+    this._style = undefined;
+    this._className = undefined;
+    this._children = undefined;
+    this.ref = undefined;
+    this.cref = undefined;
 
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       this._debugProperties = {
@@ -108,7 +108,7 @@ export class VNode {
           throw new Error("Failed to set props on VNode: VNode is using VModel with custom update handler.");
         }
         const model = this._tag as VModel<any>;
-        if (model._props !== null) {
+        if (model._props !== undefined) {
           const keys = Object.keys(props);
           for (let i = 0; i < keys.length; i++) {
             if (model._attrs.hasOwnProperty(keys[i])) {
@@ -129,7 +129,7 @@ export class VNode {
    * When virtual node is mounted on top of existing HTML, all properties will
    * be assigned during mounting phase.
    */
-  dynamicShapeProps(props: {[key: string]: any}): VNode {
+  dynamicShapeProps(props?: {[key: string]: any}): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error("Failed to set props on VNode: props method should be called on element or component" +
@@ -140,7 +140,7 @@ export class VNode {
           throw new Error("Failed to set props on VNode: VNode is using VModel with custom update handler.");
         }
         const model = this._tag as VModel<any>;
-        if (model._props !== null) {
+        if (model._props !== undefined) {
           const keys = Object.keys(props);
           for (let i = 0; i < keys.length; i++) {
             if (model._attrs.hasOwnProperty(keys[i])) {
@@ -170,7 +170,7 @@ export class VNode {
           throw new Error("Failed to set attrs on VNode: VNode is using VModel with custom update handler.");
         }
         const model = this._tag as VModel<any>;
-        if (model._attrs !== null) {
+        if (model._attrs !== undefined) {
           const keys = Object.keys(attrs);
           for (let i = 0; i < keys.length; i++) {
             if (model._attrs.hasOwnProperty(keys[i])) {
@@ -188,7 +188,7 @@ export class VNode {
   /**
    * Set attributes with dynamic shape.
    */
-  dynamicShapeAttrs(attrs: {[key: string]: any}): VNode {
+  dynamicShapeAttrs(attrs?: {[key: string]: any}): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error("Failed to set attrs on VNode: attrs method should be called on element or component" +
@@ -199,7 +199,7 @@ export class VNode {
           throw new Error("Failed to set attrs on VNode: VNode is using VModel with custom update handler.");
         }
         const model = this._tag as VModel<any>;
-        if (model._attrs !== null) {
+        if (model._attrs !== undefined) {
           const keys = Object.keys(attrs);
           for (let i = 0; i < keys.length; i++) {
             if (model._attrs.hasOwnProperty(keys[i])) {
@@ -228,7 +228,7 @@ export class VNode {
         if ((this._flags & VNodeFlags.VModelUpdateHandler) !== 0) {
           throw new Error("Failed to set style on VNode: VNode is using VModel with custom update handler.");
         }
-        if (((this._tag as VModel<any>)._style) !== null) {
+        if (((this._tag as VModel<any>)._style) !== undefined) {
           throw new Error("Failed to set style on VNode: VNode is using VModel with assigned style.");
         }
       }
@@ -250,7 +250,7 @@ export class VNode {
         if ((this._flags & VNodeFlags.VModelUpdateHandler) !== 0) {
           throw new Error("Failed to set style on VNode: vnode is using vmodel with custom update handler.");
         }
-        if (((this._tag as VModel<any>)._className) !== null) {
+        if (((this._tag as VModel<any>)._className) !== undefined) {
           throw new Error("Failed to set style on VNode: vnode is using vmodel with assigned className.");
         }
       }
@@ -293,7 +293,7 @@ export class VNode {
    * When tracking by key is enabled, all children should have unique key
    * property.
    */
-  trackByKeyChildren(children: VNode[]): VNode {
+  trackByKeyChildren(children?: VNode[]): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root | VNodeFlags.Component)) === 0) {
         throw new Error("Failed to set children on VNode: children method should be called on element, component" +
@@ -302,9 +302,9 @@ export class VNode {
       if ((this._flags & VNodeFlags.InputElement) !== 0) {
         throw new Error("Failed to set children on VNode: input elements can't have children.");
       }
-      if (children !== null) {
+      if (children !== undefined) {
         for (let i = 0; i < children.length; i++) {
-          if (children[i]._key === null) {
+          if (children[i]._key === undefined) {
             throw new Error("Failed to set children on VNode: trackByKeyChildren method expects all children to" +
                             " have a key.");
           }
@@ -321,7 +321,7 @@ export class VNode {
    */
   value(value: string): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      if (this._children !== null) {
+      if (this._children !== undefined) {
         throw new Error("Failed to set value on VNode: VNode is already have either children or checked property.");
       }
     }
@@ -335,7 +335,7 @@ export class VNode {
    */
   checked(value: boolean): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      if (this._children !== null) {
+      if (this._children !== undefined) {
         throw new Error("Failed to set checked on VNode: VNode is already have either children or value property.");
       }
     }
@@ -370,7 +370,7 @@ export class VNode {
         throw new Error("Failed to set managedContainer mode on VNode: managed container doesn't work on input" +
                         " elements.");
       }
-      if (this._children !== null) {
+      if (this._children !== undefined) {
         throw new Error("Failed to set managedContainer mode on VNode: managedContainer method should be called" +
                         " before children assignment.");
       }
@@ -428,7 +428,7 @@ export class VNode {
     let flags = this._flags;
 
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      if (this.ref !== null && ((flags & VNodeFlags.CommentPlaceholder) === 0)) {
+      if (this.ref !== undefined && ((flags & VNodeFlags.CommentPlaceholder) === 0)) {
         throw new Error("Failed to create VNode: VNode already has a reference to the DOM node.");
       }
     }
@@ -448,7 +448,7 @@ export class VNode {
       }
     } else {
       const c = (this._tag as ComponentDescriptor<any, any>)
-        .createComponent(this._props, this._children as string|VNode[], owner);
+        .createComponent(owner, this._props, this._children as string|VNode[]);
       this.ref = c.element;
       this.cref = c;
     }
@@ -461,7 +461,7 @@ export class VNode {
    */
   createCommentPlaceholder(): void {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      if (this.ref !== null) {
+      if (this.ref !== undefined) {
         throw new Error("Failed to create a VNode Comment Placeholder: VNode already has a reference to the DOM node.");
       }
     }
@@ -476,7 +476,7 @@ export class VNode {
     let i: number;
 
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      if (this.ref === null) {
+      if (this.ref === undefined) {
         throw new Error("Failed to render VNode: VNode should be created before render.");
       }
       if ((this._flags & VNodeFlags.CommentPlaceholder) !== 0) {
@@ -502,7 +502,7 @@ export class VNode {
       ref = this.ref as Element;
       if ((flags & VNodeFlags.VModelUpdateHandler) === 0) {
         let props = this._props;
-        if (props !== null) {
+        if (props !== undefined) {
           keys = Object.keys(props);
           for (i = 0, il = keys.length; i < il; i++) {
             key = keys[i];
@@ -510,7 +510,7 @@ export class VNode {
           }
         }
 
-        if (this._attrs !== null) {
+        if (this._attrs !== undefined) {
           keys = Object.keys(this._attrs);
           for (i = 0, il = keys.length; i < il; i++) {
             key = keys[i];
@@ -518,7 +518,7 @@ export class VNode {
           }
         }
 
-        if (this._style !== null) {
+        if (this._style !== undefined) {
           if ((flags & VNodeFlags.Svg) === 0) {
             (ref as HTMLElement).style.cssText = this._style;
           } else {
@@ -526,7 +526,7 @@ export class VNode {
           }
         }
 
-        if (this._className !== null) {
+        if (this._className !== undefined) {
           if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
             let className = ref.getAttribute("class");
             if ((flags & VNodeFlags.Root) !== 0 && className) {
@@ -542,20 +542,20 @@ export class VNode {
         }
       } else {
         if ((flags & VNodeFlags.Root) === 0) {
-          (this._tag as VModel<any>).update(ref, void 0, this._props);
+          (this._tag as VModel<any>).update(ref, undefined, this._props);
         } else {
-          (owner.descriptor._tag as VModel<any>).update(ref, void 0, this._props);
+          (owner.descriptor._tag as VModel<any>).update(ref, undefined, this._props);
         }
       }
 
       const children = this._children;
-      if (children !== null) {
+      if (children !== undefined) {
         if ((this._flags & VNodeFlags.InputElement) === 0) {
           if (typeof children === "string") {
             ref.textContent = children;
           } else {
             for (i = 0, il = (children as VNode[]).length; i < il; i++) {
-              this._insertChild((children as VNode[])[i], null, owner, renderFlags);
+              this._insertChild((children as VNode[])[i], undefined, owner, renderFlags);
             }
           }
         } else {
@@ -569,7 +569,7 @@ export class VNode {
     } else if ((flags & VNodeFlags.Component) !== 0) {
       ref = this.ref as Element;
 
-      if (this._className !== null) {
+      if (this._className !== undefined) {
         if ((flags & VNodeFlags.Svg) === 0) {
           (ref as HTMLElement).className = this._className;
         } else {
@@ -590,7 +590,7 @@ export class VNode {
    */
   mount(node: Node, owner: Component<any, any>): void {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      if (this.ref !== null) {
+      if (this.ref !== undefined) {
         throw new Error("Failed to mount VNode: VNode cannot be mounted if it already has a reference to DOM Node.");
       }
       if ((this._flags & VNodeFlags.CommentPlaceholder) !== 0) {
@@ -613,7 +613,7 @@ export class VNode {
 
     if ((flags & VNodeFlags.Component) !== 0) {
       const cref = this.cref = (this._tag as ComponentDescriptor<any, any>)
-        .mountComponent(this._props, this._children as string|VNode[], owner, node as Element);
+        .mountComponent(node as Element, owner, this._props, this._children as string|VNode[]);
       if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
         const dflags = cref.descriptor._flags;
         if (node.nodeType !== 1) {
@@ -622,7 +622,7 @@ export class VNode {
         const eTagName = ((node as Element).tagName).toLowerCase();
         let cTagName: string;
         if ((dflags & ComponentDescriptorFlags.VModel) !== 0) {
-          cTagName = (cref.descriptor._tag as VModel<any>)._tag.toLowerCase();
+          cTagName = (cref.descriptor._tag as VModel<any>)._tagName.toLowerCase();
           if (cTagName !== eTagName) {
             throw new Error(`Failed to mount VNode: invalid tagName, component expects tagName "${cTagName}", but` +
                             ` found "${eTagName}".`);
@@ -638,7 +638,7 @@ export class VNode {
             throw new Error(`Failed to mount VNode: invalid tagName, component expects tagName "${cTagName}", but` +
                             ` found "${eTagName}".`);
           }
-          if (this._className !== null) {
+          if (this._className !== undefined) {
             const eClassName = (node as Element).getAttribute("class");
             if (this._className !== eClassName) {
               throw new Error(`Failed to mount VNode: invalid className, component expects className` +
@@ -657,14 +657,14 @@ export class VNode {
             throw new Error("Failed to mount VNode: invalid node type, VNode expects Element node.");
           }
 
-          if (this._className !== null) {
+          if (this._className !== undefined) {
             const eClassName = (node as Element).getAttribute("class");
             if (this._className !== eClassName) {
               throw new Error(`Failed to mount VNode: invalid className, VNode expects className` +
                               ` "${this._className}", but found "${eClassName}".`);
             }
           }
-          if (this._style !== null) {
+          if (this._style !== undefined) {
             const eStyle = (node as Element).getAttribute("style");
             if (this._style !== eStyle) {
               throw new Error(`Failed to mount VNode: invalid style, VNode expects style` +
@@ -685,7 +685,7 @@ export class VNode {
 
       if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) !== 0) {
         // Assign properties on mount, because they don"t exist in html markup.
-        if (this._props !== null) {
+        if (this._props !== undefined) {
           const keys = Object.keys(this._props);
           for (i = 0; i < keys.length; i++) {
             const key = keys[i];
@@ -693,7 +693,7 @@ export class VNode {
           }
         }
 
-        if (children !== null && typeof children !== "string" && (children as VNode[]).length > 0) {
+        if (children !== undefined && typeof children !== "string" && (children as VNode[]).length > 0) {
           let child = node.firstChild;
 
           // Adjacent text nodes should be separated by Comment node "<!---->", so we can properly mount them.
@@ -755,7 +755,7 @@ export class VNode {
       if (this._key !== other._key) {
         throw new Error(`Failed to sync VNode: keys does not match (old: ${this._key}, new: ${other._key}).`);
       }
-      if (other.ref !== null && this.ref !== other.ref) {
+      if (other.ref !== undefined && this.ref !== other.ref) {
         throw new Error("Failed to sync VNode: reusing VNodes isn't allowed unless it has the same ref.");
       }
     }
@@ -770,20 +770,20 @@ export class VNode {
       if ((flags & VNodeFlags.VModelUpdateHandler) === 0) {
         if (this._props !== other._props) {
           if ((this._flags & VNodeFlags.DynamicShapeProps) === 0) {
-            syncStaticShapeProps(this._props, other._props, ref);
+            syncStaticShapeProps(ref, this._props, other._props);
           } else {
-            syncDynamicShapeProps(this._props, other._props, ref);
+            syncDynamicShapeProps(ref, this._props, other._props);
           }
         }
         if (this._attrs !== other._attrs) {
           if ((this._flags & VNodeFlags.DynamicShapeAttrs) === 0) {
-            syncStaticShapeAttrs(this._attrs, other._attrs, ref);
+            syncStaticShapeAttrs(ref, this._attrs, other._attrs);
           } else {
-            syncDynamicShapeAttrs(this._attrs, other._attrs, ref);
+            syncDynamicShapeAttrs(ref, this._attrs, other._attrs);
           }
         }
         if (this._style !== other._style) {
-          const style = other._style === null ? "" : other._style;
+          const style = (other._style === undefined) ? "" : other._style;
           if ((flags & VNodeFlags.Svg) === 0) {
             (ref as HTMLElement).style.cssText = style;
           } else {
@@ -792,7 +792,7 @@ export class VNode {
         }
 
         if (this._className !== other._className) {
-          className = (other._className === null) ? "" : other._className;
+          className = (other._className === undefined) ? "" : other._className;
           if ((flags & VNodeFlags.Svg) === 0) {
             (ref as HTMLElement).className = className;
           } else {
@@ -829,7 +829,7 @@ export class VNode {
       }
     } else /* if ((flags & VNodeFlags.Component) !== 0) */ {
       if (this._className !== other._className) {
-        className = (other._className === null) ? "" : other._className;
+        className = (other._className === undefined) ? "" : other._className;
         if ((flags & VNodeFlags.Svg) === 0) {
           (ref as HTMLElement).className = className;
         } else {
@@ -861,7 +861,7 @@ export class VNode {
     }
     if ((this._flags & VNodeFlags.Component) === 0) {
       const children = this._children;
-      if (children !== null && typeof children !== "string") {
+      if (children !== undefined && typeof children !== "string") {
         for (let i = 0; i < (children as VNode[]).length; i++) {
           (children as VNode[])[i].attach();
         }
@@ -903,7 +903,7 @@ export class VNode {
     }
     if ((this._flags & VNodeFlags.Component) === 0) {
       const children = this._children;
-      if (children !== null && typeof children !== "string") {
+      if (children !== undefined && typeof children !== "string") {
         for (let i = 0; i < (children as VNode[]).length; i++) {
           (children as VNode[])[i].detach();
         }
@@ -929,7 +929,7 @@ export class VNode {
     if ((this._flags & VNodeFlags.KeepAlive) === 0) {
       if ((this._flags & VNodeFlags.Component) !== 0) {
         (this.cref as Component<any, any>).dispose();
-      } else if (this._children !== null) {
+      } else if (this._children !== undefined) {
         const children = this._children;
         if (typeof children !== "string") {
           for (let i = 0; i < (children as VNode[]).length; i++) {
@@ -952,7 +952,7 @@ export class VNode {
     let synced = false;
 
     if (typeof a === "string") {
-      if (b === null) {
+      if (b === undefined) {
         this.ref.removeChild(this.ref.firstChild);
       } else if (typeof b === "string") {
         let c = this.ref.firstChild;
@@ -964,19 +964,19 @@ export class VNode {
       } else {
         this.ref.removeChild(this.ref.firstChild);
         while (i < b.length) {
-          this._insertChild(b[i++], null, owner, renderFlags);
+          this._insertChild(b[i++], undefined, owner, renderFlags);
         }
       }
     } else if (typeof b === "string") {
-      if (a !== null) {
+      if (a !== undefined) {
         while (i < a.length) {
           this._removeChild(a[i++], owner);
         }
       }
       this.ref.textContent = b;
     } else {
-      if (a !== null && a.length !== 0) {
-        if (b === null || b.length === 0) {
+      if (a !== undefined && a.length !== 0) {
+        if (b === undefined || b.length === 0) {
           // b is empty, remove all children from a.
           while (i < a.length) {
             this._removeChild(a[i++], owner);
@@ -1033,7 +1033,7 @@ export class VNode {
             }
             if (synced) {
               while (i < b.length) {
-                this._insertChild(b[i++], null, owner, renderFlags);
+                this._insertChild(b[i++], undefined, owner, renderFlags);
               }
             } else {
               this._removeChild(aNode, owner);
@@ -1083,7 +1083,7 @@ export class VNode {
                 this._removeChild(a[i++], owner);
               }
             } else {
-              this._insertChild(bNode, null, owner, renderFlags);
+              this._insertChild(bNode, undefined, owner, renderFlags);
             }
           } else {
             // a and b have more than 1 child.
@@ -1094,10 +1094,10 @@ export class VNode {
             }
           }
         }
-      } else if (b !== null && b.length > 0) {
+      } else if (b !== undefined && b.length > 0) {
         // a is empty, insert all children from b.
         for (i = 0; i < b.length; i++) {
-          this._insertChild(b[i], null, owner, renderFlags);
+          this._insertChild(b[i], undefined, owner, renderFlags);
         }
       }
     }
@@ -1181,7 +1181,7 @@ export class VNode {
     } else if (bStart <= bEnd) {
       // All nodes from b are synced, insert the rest.
       nextPos = bEnd + 1;
-      next = nextPos < b.length ? b[nextPos].ref : null;
+      next = nextPos < b.length ? b[nextPos].ref : undefined;
       do {
         this._insertChild(b[bStart++], next, owner, renderFlags);
       } while (bStart <= bEnd);
@@ -1265,7 +1265,7 @@ export class VNode {
         }
         aStartNode.sync(bEndNode, owner, renderFlags);
         nextPos = bEnd + 1;
-        next = nextPos < b.length ? b[nextPos].ref : null;
+        next = nextPos < b.length ? b[nextPos].ref : undefined;
         this._moveChild(bEndNode, next, owner);
         aStart++;
         bEnd--;
@@ -1304,7 +1304,7 @@ export class VNode {
     if (aStart > aEnd) {
       // All nodes from a are synced, insert the rest from b.
       nextPos = bEnd + 1;
-      next = nextPos < b.length ? b[nextPos].ref : null;
+      next = nextPos < b.length ? b[nextPos].ref : undefined;
       while (bStart <= bEnd) {
         this._insertChild(b[bStart++], next, owner, renderFlags);
       }
@@ -1375,7 +1375,7 @@ export class VNode {
           aNode = a[i];
           j = keyIndex.get(aNode._key);
 
-          if (j !== void 0) {
+          if (j !== undefined) {
             bNode = b[j];
             sources[j - bStart] = i;
             if (lastTarget > j) {
@@ -1407,14 +1407,14 @@ export class VNode {
             pos = i + bStart;
             node = b[pos];
             nextPos = pos + 1;
-            next = nextPos < b.length ? b[nextPos].ref : null;
+            next = nextPos < b.length ? b[nextPos].ref : undefined;
             this._insertChild(node, next, owner, renderFlags);
           } else {
             if (j < 0 || i !== seq[j]) {
               pos = i + bStart;
               node = b[pos];
               nextPos = pos + 1;
-              next = nextPos < b.length ? b[nextPos].ref : null;
+              next = nextPos < b.length ? b[nextPos].ref : undefined;
               this._moveChild(node, next, owner);
             } else {
               j--;
@@ -1427,7 +1427,7 @@ export class VNode {
             pos = i + bStart;
             node = b[pos];
             nextPos = pos + 1;
-            next = nextPos < b.length ? b[nextPos].ref : null;
+            next = nextPos < b.length ? b[nextPos].ref : undefined;
             this._insertChild(node, next, owner, renderFlags);
           }
         }
@@ -1437,7 +1437,7 @@ export class VNode {
 
   private _insertChild(node: VNode, nextRef: Node, owner: Component<any, any>, renderFlags: number): void {
     if (((this._flags & VNodeFlags.ManagedContainer) !== 0) &&
-        (this.cref as ContainerManager<any>).descriptor._insertChild !== null) {
+        (this.cref as ContainerManager<any>).descriptor._insertChild !== undefined) {
       (this.cref as ContainerManager<any>).descriptor._insertChild(
         this.cref as ContainerManager<any>, this.ref as Element, node, nextRef, owner, renderFlags);
     } else {
@@ -1447,7 +1447,7 @@ export class VNode {
 
   private _replaceChild(newNode: VNode, refNode: VNode, owner: Component<any, any>, renderFlags: number): void {
     if (((this._flags & VNodeFlags.ManagedContainer) !== 0) &&
-        (this.cref as ContainerManager<any>).descriptor._replaceChild !== null) {
+        (this.cref as ContainerManager<any>).descriptor._replaceChild !== undefined) {
       (this.cref as ContainerManager<any>).descriptor._replaceChild(
         this.cref as ContainerManager<any>, this.ref as Element, newNode, refNode, owner, renderFlags);
     } else {
@@ -1457,7 +1457,7 @@ export class VNode {
 
   private _moveChild(node: VNode, nextRef: Node, owner: Component<any, any>): void {
     if (((this._flags & VNodeFlags.ManagedContainer) !== 0) &&
-        (this.cref as ContainerManager<any>).descriptor._moveChild !== null) {
+        (this.cref as ContainerManager<any>).descriptor._moveChild !== undefined) {
       (this.cref as ContainerManager<any>).descriptor._moveChild(
         this.cref as ContainerManager<any>, this.ref as Element, node, nextRef, owner);
     } else {
@@ -1467,7 +1467,7 @@ export class VNode {
 
   private _removeChild(node: VNode, owner: Component<any, any>): void {
     if (((this._flags & VNodeFlags.ManagedContainer) !== 0) &&
-        (this.cref as ContainerManager<any>).descriptor._removeChild !== null) {
+        (this.cref as ContainerManager<any>).descriptor._removeChild !== undefined) {
       (this.cref as ContainerManager<any>).descriptor._removeChild(
         this.cref as ContainerManager<any>, this.ref as Element, node, owner);
     } else {
@@ -1479,16 +1479,16 @@ export class VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((this._debugProperties.flags & VNodeDebugFlags.DisabledFreeze) === 0) {
         Object.freeze(this);
-        if (this._attrs !== null && !Object.isFrozen(this._attrs)) {
+        if (this._attrs !== undefined && !Object.isFrozen(this._attrs)) {
           Object.freeze(this._attrs);
         }
         // Don"t freeze props in Components.
         if (((this._flags & VNodeFlags.Component) === 0) &&
-            this._props !== null &&
+            this._props !== undefined &&
             !Object.isFrozen(this._props)) {
           Object.freeze(this._props);
         }
-        if (this._children !== null &&
+        if (this._children !== undefined &&
             Array.isArray((this._children)) &&
             !Object.isFrozen(this._children)) {
           Object.freeze(this._children);
@@ -1564,7 +1564,7 @@ function _lis(a: number[]): number[] {
  */
 export function insertVNodeBefore(container: Element, node: VNode, nextRef: Node, owner: Component<any, any>,
     renderFlags: number): void {
-  if (node.ref === null) {
+  if (node.ref === undefined) {
     node.create(owner);
     container.insertBefore(node.ref, nextRef);
     node.attached();
@@ -1587,7 +1587,7 @@ export function insertVNodeBefore(container: Element, node: VNode, nextRef: Node
  */
 export function replaceVNode(container: Element, newNode: VNode, refNode: VNode, owner: Component<any, any>,
     renderFlags: number): void {
-  if (newNode.ref === null) {
+  if (newNode.ref === undefined) {
     newNode.create(owner);
     container.replaceChild(newNode.ref, refNode.ref);
     newNode.attached();
@@ -1627,26 +1627,26 @@ export function removeVNode(container: Element, node: VNode, owner: Component<an
  * Create a VNode representing a [Text] node.
  */
 export function createVText(content: string): VNode {
-  return new VNode(VNodeFlags.Text, null, content);
+  return new VNode(VNodeFlags.Text, undefined, content);
 }
 
 /**
  * Create a VNode representing an [Element] node.
  */
-export function createVElement(tag: string): VNode {
-  return new VNode(VNodeFlags.Element, tag, null);
+export function createVElement(tagName: string): VNode {
+  return new VNode(VNodeFlags.Element, tagName, undefined);
 }
 
 /**
  * Create a VNode representing a [SVGElement] node.
  */
-export function createVSvgElement(tag: string): VNode {
-  return new VNode(VNodeFlags.Element | VNodeFlags.Svg, tag, null);
+export function createVSvgElement(tagName: string): VNode {
+  return new VNode(VNodeFlags.Element | VNodeFlags.Svg, tagName, undefined);
 }
 
 /**
  * Create a VNode representing a Component root node.
  */
 export function createVRoot(): VNode {
-  return new VNode(VNodeFlags.Root, null, null);
+  return new VNode(VNodeFlags.Root, undefined, undefined);
 }

@@ -73,10 +73,10 @@ export class Frame {
   constructor() {
     this._flags = 0;
     this._componentTasks = [];
-    this._writeTasks = null;
-    this._readTasks = null;
-    this._afterTasks = null;
-    this._focus = null;
+    this._writeTasks = undefined;
+    this._readTasks = undefined;
+    this._afterTasks = undefined;
+    this._focus = undefined;
   }
 
   /**
@@ -94,11 +94,11 @@ export class Frame {
 
     this._flags |= FrameTaskFlags.Component;
     while (priority >= this._componentTasks.length) {
-      this._componentTasks.push(null);
+      this._componentTasks.push(undefined);
     }
 
     let group = this._componentTasks[priority];
-    if (group === null) {
+    if (group === undefined) {
       group = this._componentTasks[priority] = [];
     }
 
@@ -117,7 +117,7 @@ export class Frame {
     }
 
     this._flags |= FrameTaskFlags.Write;
-    if (this._writeTasks === null) {
+    if (this._writeTasks === undefined) {
       this._writeTasks = [];
     }
     this._writeTasks.push(callback);
@@ -132,7 +132,7 @@ export class Frame {
     }
 
     this._flags |= FrameTaskFlags.Read;
-    if (this._readTasks === null) {
+    if (this._readTasks === undefined) {
       this._readTasks = [];
     }
     this._readTasks.push(callback);
@@ -140,7 +140,7 @@ export class Frame {
 
   after(callback: SchedulerCallback): void {
     this._flags |= FrameTaskFlags.After;
-    if (this._afterTasks === null) {
+    if (this._afterTasks === undefined) {
       this._afterTasks = [];
     }
     this._afterTasks.push(callback);
@@ -318,8 +318,8 @@ export class Scheduler {
 
           for (i = 0; i < groups.length; i++) {
             let group = groups[i];
-            if (group !== null) {
-              groups[i] = null;
+            if (group !== undefined) {
+              groups[i] = undefined;
               for (j = 0; j < group.length; j++) {
                 group[j].update();
               }
@@ -330,7 +330,7 @@ export class Scheduler {
         if ((frame._flags & FrameTaskFlags.Write) !== 0) {
           frame._flags &= ~FrameTaskFlags.Write;
           tasks = frame._writeTasks;
-          frame._writeTasks = null;
+          frame._writeTasks = undefined;
           for (i = 0; i < tasks.length; i++) {
             tasks[i]();
           }
@@ -359,7 +359,7 @@ export class Scheduler {
       while ((frame._flags & FrameTaskFlags.Read) !== 0) {
         frame._flags &= ~FrameTaskFlags.Read;
         tasks = frame._readTasks;
-        frame._readTasks = null;
+        frame._readTasks = undefined;
 
         for (i = 0; i < tasks.length; i++) {
           tasks[i]();
@@ -377,13 +377,13 @@ export class Scheduler {
       }
     }
 
-    if (frame._focus !== null) {
+    if (frame._focus !== undefined) {
       if (frame._focus.constructor === VNode) {
         ((frame._focus as VNode).ref as HTMLElement).focus();
       } else {
         (frame._focus as HTMLElement).focus();
       }
-      frame._focus = null;
+      frame._focus = undefined;
     }
 
     if (updateComponents.length > 0) {

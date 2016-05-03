@@ -43,7 +43,7 @@ const Main = new ComponentDescriptor('Main')
   });
 
 // Instantiate and inject component into document body.
-injectComponent(Main, 'kivi', document.body);
+injectComponent(Main, document.body, 'kivi');
 ```
 
 Build with any tool you like, kivi npm package provides standard commonjs
@@ -121,7 +121,7 @@ It also provides:
 
 ### Virtual DOM
 
-##### `createVElement(tag: string): VNode`
+##### `createVElement(tagName: string): VNode`
 
 Creates a virtual node for a html element.
 
@@ -154,7 +154,7 @@ Set children.
 Set key to make virtual node easily distinguishable among its siblings when
 performing children reconciliation algorithm.
 
-##### `VNode.trackByKeyChildren(children: VNode[]): VNode`
+##### `VNode.trackByKeyChildren(children?: VNode[]): VNode`
 
 Set children that should be tracked by its key.
 
@@ -164,7 +164,7 @@ Set children that should be tracked by its key.
 
 Creates a new component descriptor.
 
-##### `ComponentDescriptor.tagName(tag: string): void`
+##### `ComponentDescriptor.tagName(tagName: string): void`
 
 Set tag name of the root element.
 
@@ -182,12 +182,12 @@ component is needs to update internal state or representation.
 
 Creates a new virtual node representing component.
 
-##### `Component.sync(newRoot: VNode): void`
+##### `Component.sync(newRoot?: VNode, renderFlags: number): void`
 
 Sync DOM subtree using Virtual DOM API. `newRoot` node should be created by
 `createVRoot() : VNode` function.
 
-##### `injectComponent<D, S>(descriptor: ComponentDescriptor<D, S>, data: D, container: Element, sync?: boolean): Component<D, S>`
+##### `injectComponent<D, S>(descriptor: ComponentDescriptor<D, S>, container: Element, data?: D, sync?: boolean): Component<D, S>`
 
 Instantiates new component from descriptor and injects into container element.
 

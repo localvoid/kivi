@@ -20,7 +20,7 @@ export class VModel<D> {
    */
   _markFlags: number;
   _flags: number;
-  _tag: string;
+  _tagName: string;
   _props: any;
   _attrs: any;
   _style: string;
@@ -28,16 +28,16 @@ export class VModel<D> {
   private _updateHandler: VModelUpdateHandler<D>;
   private _ref: Element;
 
-  constructor(tag: string) {
+  constructor(tagName: string) {
     this._markFlags = VNodeFlags.VModel;
     this._flags = 0;
-    this._tag = tag;
-    this._props = null;
-    this._attrs = null;
-    this._style = null;
-    this._className = null;
-    this._updateHandler = null;
-    this._ref = null;
+    this._tagName = tagName;
+    this._props = undefined;
+    this._attrs = undefined;
+    this._style = undefined;
+    this._className = undefined;
+    this._updateHandler = undefined;
+    this._ref = undefined;
   }
 
   /**
@@ -101,14 +101,14 @@ export class VModel<D> {
   /**
    * Create a Virtual DOM Node from this model.
    */
-  createVNode(data: D = null): VNode {
+  createVNode(data?: D): VNode {
     return new VNode(VNodeFlags.Element | this._markFlags, this, data);
   }
 
   /**
    * Create a Virtual DOM Node for Component root from this model.
    */
-  createVRoot(data: D = null): VNode {
+  createVRoot(data?: D): VNode {
     return new VNode(VNodeFlags.Root | this._markFlags, this, data);
   }
 
@@ -121,14 +121,14 @@ export class VModel<D> {
     let keys: string[];
     let key: string;
 
-    if (this._ref === null) {
+    if (this._ref === undefined) {
       if ((this._flags & VModelFlags.Svg) === 0) {
-        ref = document.createElement(this._tag);
+        ref = document.createElement(this._tagName);
       } else {
-        ref = document.createElementNS(SvgNamespace, this._tag);
+        ref = document.createElementNS(SvgNamespace, this._tagName);
       }
 
-      if (this._props !== null) {
+      if (this._props !== undefined) {
         keys = Object.keys(this._props);
         for (i = 0; i < keys.length; i++) {
           key = keys[i];
@@ -136,7 +136,7 @@ export class VModel<D> {
         }
       }
 
-      if (this._attrs !== null) {
+      if (this._attrs !== undefined) {
         keys = Object.keys(this._attrs);
         for (i = 0; i < keys.length; i++) {
           key = keys[i];
@@ -144,7 +144,7 @@ export class VModel<D> {
         }
       }
 
-      if (this._style !== null) {
+      if (this._style !== undefined) {
         if ((this._flags & VModelFlags.Svg) === 0) {
           (ref as HTMLElement).style.cssText = this._style;
         } else {
@@ -152,7 +152,7 @@ export class VModel<D> {
         }
       }
 
-      if (this._className !== null) {
+      if (this._className !== undefined) {
         if ((this._flags & VModelFlags.Svg) === 0) {
           (ref as HTMLElement).className = this._className;
         } else {

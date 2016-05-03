@@ -160,9 +160,9 @@ export function setAttr(node: Element, key: string, value: string): void {
 /**
  * Sync attributes with static shape.
  */
-export function syncStaticShapeAttrs(a: {[key: string]: any}, b: {[key: string]: any}, node: Element): void {
+export function syncStaticShapeAttrs(node: Element, a: {[key: string]: any}, b: {[key: string]: any}): void {
   if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-    if (a === null || b === null) {
+    if (a === undefined || b === undefined) {
       throw new Error("Failed to update attrs with static shape: attrs object have dynamic shape.");
     }
   }
@@ -198,13 +198,13 @@ export function syncStaticShapeAttrs(a: {[key: string]: any}, b: {[key: string]:
 /**
  * Sync attributes with dynamic shape.
  */
-export function syncDynamicShapeAttrs(a: {[key: string]: any}, b: {[key: string]: any}, node: Element): void {
+export function syncDynamicShapeAttrs(node: Element, a: {[key: string]: any}, b: {[key: string]: any}): void {
   let i: number;
   let keys: string[];
   let key: string;
 
-  if (a !== null) {
-    if (b === null) {
+  if (a !== undefined) {
+    if (b === undefined) {
       // b is empty, remove all attributes from a.
       keys = Object.keys(a);
       for (i = 0; i < keys.length; i++) {
@@ -234,7 +234,7 @@ export function syncDynamicShapeAttrs(a: {[key: string]: any}, b: {[key: string]
         }
       }
     }
-  } else if (b !== null) {
+  } else if (b !== undefined) {
     // a is empty, insert all attributes from b.
     keys = Object.keys(b);
     for (i = 0; i < keys.length; i++) {
@@ -247,9 +247,9 @@ export function syncDynamicShapeAttrs(a: {[key: string]: any}, b: {[key: string]
 /**
  * Sync properties with static shape.
  */
-export function syncStaticShapeProps(a: {[key: string]: any}, b: {[key: string]: any}, node: Element): void {
+export function syncStaticShapeProps(node: Element, a: {[key: string]: any}, b: {[key: string]: any}): void {
   if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-    if (a === null || b === null) {
+    if (a === undefined || b === undefined) {
       throw new Error("Failed to update props with static shape: props object have dynamic shape.");
     }
   }
@@ -285,17 +285,17 @@ export function syncStaticShapeProps(a: {[key: string]: any}, b: {[key: string]:
 /**
  * Sync properties with dynamic shape.
  */
-export function syncDynamicShapeProps(a: {[key: string]: any}, b: {[key: string]: any}, node: Element): void {
+export function syncDynamicShapeProps(node: Element, a: {[key: string]: any}, b: {[key: string]: any}): void {
   let i: number;
   let keys: string[];
   let key: string;
 
-  if (a !== null) {
-    if (b === null) {
+  if (a !== undefined) {
+    if (b === undefined) {
       // b is empty, remove all attributes from a.
       keys = Object.keys(a);
       for (i = 0; i < keys.length; i++) {
-        (node as {[key: string]: any})[keys[i]] = void 0;
+        (node as {[key: string]: any})[keys[i]] = undefined;
       }
     } else {
       // Remove and update attributes.
@@ -308,7 +308,7 @@ export function syncDynamicShapeProps(a: {[key: string]: any}, b: {[key: string]
             (node as {[key: string]: any})[key] = bValue;
           }
         } else {
-          (node as {[key: string]: any})[key] = void 0;
+          (node as {[key: string]: any})[key] = undefined;
         }
       }
 
@@ -321,7 +321,7 @@ export function syncDynamicShapeProps(a: {[key: string]: any}, b: {[key: string]
         }
       }
     }
-  } else if (b !== null) {
+  } else if (b !== undefined) {
     // a is empty, insert all attributes from b.
     keys = Object.keys(b);
     for (i = 0; i < keys.length; i++) {

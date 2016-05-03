@@ -36,5 +36,5 @@ const Main = new kivi.ComponentDescriptor()
   });
 
 document.addEventListener('DOMContentLoaded', () => {
-  kivi.injectComponent(Main, {width: 600, height: 400}, document.body);
+  kivi.injectComponent(Main, document.body, {width: 600, height: 400});
 });

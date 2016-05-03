@@ -4,5 +4,5 @@ const Main = new kivi.ComponentDescriptor()
   });
 
 document.addEventListener('DOMContentLoaded', () => {
-  kivi.injectComponent(Main, 'world', document.body);
+  kivi.injectComponent(Main, document.body, 'world');
 });

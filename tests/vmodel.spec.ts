@@ -81,15 +81,16 @@ describe("VModel", () => {
   it("should update using custom update handler", () => {
     const m = new VModel<string>("div")
       .updateHandler((element: HTMLElement, oldData: string, newData: string) => {
-        if (oldData === void 0) {
+        if (oldData === undefined) {
           element.className = newData;
         } else {
-          expect(e.className).toBe("a");
+          expect(element.className).toBe("a");
           element.className = newData;
         }
       });
+
     const e = m.createElement();
-    m.update(e, void 0, "a");
+    m.update(e, undefined, "a");
     expect((e as HTMLElement).className).toBe("a");
     m.update(e, "a", "b");
     expect((e as HTMLElement).className).toBe("b");
