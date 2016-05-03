@@ -1,6 +1,6 @@
-import {VNode} from './vnode';
-import {Component} from './component';
-import {ContainerManagerDescriptorDebugFlags} from './misc';
+import {VNode} from "./vnode";
+import {Component} from "./component";
+import {ContainerManagerDescriptorDebugFlags} from "./misc";
 
 export type InsertChildHandler<S> = (manager: ContainerManager<S>,
                                      container: Element,
@@ -26,8 +26,9 @@ export type RemoveChildHandler<S> = (manager: ContainerManager<S>,
                                      container: Element,
                                      now: VNode,
                                      owner: Component<any, any>) => void;
+
 /**
- * Container Manager Descriptor
+ * Container Manager Descriptor.
  *
  * @final
  */
@@ -44,44 +45,44 @@ export class ContainerManagerDescriptor<S> {
     this._moveChild = null;
     this._removeChild = null;
 
-    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       this._debugFlags = 0;
     }
   }
 
-  create(state: S) : ContainerManager<S> {
+  create(state: S): ContainerManager<S> {
     return new ContainerManager<S>(this, state);
   }
 
-  insertChild(handler: InsertChildHandler<S>) : ContainerManagerDescriptor<S> {
+  insertChild(handler: InsertChildHandler<S>): ContainerManagerDescriptor<S> {
     this._insertChild = handler;
     return this;
   }
 
-  replaceChild(handler: ReplaceChildHandler<S>) : ContainerManagerDescriptor<S> {
+  replaceChild(handler: ReplaceChildHandler<S>): ContainerManagerDescriptor<S> {
     this._replaceChild = handler;
     return this;
   }
 
-  moveChild(handler: MoveChildHandler<S>) : ContainerManagerDescriptor<S> {
+  moveChild(handler: MoveChildHandler<S>): ContainerManagerDescriptor<S> {
     this._moveChild = handler;
     return this;
   }
 
-  removeChild(handler: RemoveChildHandler<S>) : ContainerManagerDescriptor<S> {
+  removeChild(handler: RemoveChildHandler<S>): ContainerManagerDescriptor<S> {
     this._removeChild = handler;
     return this;
   }
 
-  acceptKeyedChildrenOnly() : void {
-    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+  acceptKeyedChildrenOnly(): void {
+    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       this._debugFlags |= ContainerManagerDescriptorDebugFlags.AcceptKeyedChildrenOnly;
     }
   }
 }
 
 /**
- * Container Manager
+ * Container Manager.
  *
  * @final
  */

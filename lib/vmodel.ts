@@ -1,9 +1,9 @@
-import {SvgNamespace} from './namespace';
-import {VNodeFlags, VModelFlags, setAttr} from './misc';
-import {VNode} from './vnode';
+import {SvgNamespace} from "./namespace";
+import {VNodeFlags, VModelFlags, setAttr} from "./misc";
+import {VNode} from "./vnode";
 
 /**
- * Update handler used to override default diff/patch behavior
+ * Update handler used to override default diff/patch behavior.
  *
  * When oldProps is undefined, it means that element was created for the
  * first time.
@@ -11,13 +11,13 @@ import {VNode} from './vnode';
 export type VModelUpdateHandler<D> = (element: Element, oldProps: D, newProps: D) => void;
 
 /**
- * Model for DOM Elements
+ * Model for DOM Elements.
  *
  * @final
  */
 export class VModel<D> {
   /**
-   * Flags marked on VNode/ComponentDescriptor when it is created
+   * Flags marked on VNode/ComponentDescriptor when it is created.
    */
   _markFlags: number;
   _flags: number;
@@ -42,81 +42,81 @@ export class VModel<D> {
   }
 
   /**
-   * Use svg namespace for the dom element
+   * Use svg namespace for the dom element.
    */
-  svg() : VModel<D> {
+  svg(): VModel<D> {
     this._markFlags |= VNodeFlags.Svg;
     this._flags |= VModelFlags.Svg;
     return this;
   }
 
   /**
-   * Set properties
+   * Set properties.
    */
-  props(props: any) : VModel<D> {
+  props(props: any): VModel<D> {
     this._props = props;
     return this;
   }
 
   /**
-   * Set attributes
+   * Set attributes.
    */
-  attrs(attrs: any) : VModel<D> {
+  attrs(attrs: any): VModel<D> {
     this._attrs = attrs;
     return this;
   }
 
   /**
-   * Set style in css string format
+   * Set style in css string format.
    */
-  style(style: string) : VModel<D> {
+  style(style: string): VModel<D> {
     this._style = style;
     return this;
   }
 
   /**
-   * Set className
+   * Set className.
    */
-  className(classes: string) : VModel<D> {
+  className(classes: string): VModel<D> {
     this._className = classes;
     return this;
   }
 
   /**
-   * Enable use of Node.cloneNode(false) to clone DOM elements
+   * Enable use of Node.cloneNode(false) to clone DOM elements.
    */
-  enableCloning() : VModel<D> {
+  enableCloning(): VModel<D> {
     this._flags |= VModelFlags.EnabledCloning;
     return this;
   }
 
   /**
-   * Set update handler
+   * Set update handler.
    */
-  updateHandler(handler: VModelUpdateHandler<D>) : VModel<D> {
+  updateHandler(handler: VModelUpdateHandler<D>): VModel<D> {
     this._markFlags |= VNodeFlags.VModelUpdateHandler;
     this._updateHandler = handler;
     return this;
   }
 
   /**
-   * Create a Virtual DOM Node from this model
+   * Create a Virtual DOM Node from this model.
    */
-  createVNode(data: D = null) : VNode {
+  createVNode(data: D = null): VNode {
     return new VNode(VNodeFlags.Element | this._markFlags, this, data);
   }
 
   /**
-   * Create a Virtual DOM Node for Component root from this model
+   * Create a Virtual DOM Node for Component root from this model.
    */
-  createVRoot(data: D = null) : VNode {
+  createVRoot(data: D = null): VNode {
     return new VNode(VNodeFlags.Root | this._markFlags, this, data);
   }
 
   /**
-   * Create a DOM Element from this model
+   * Create a DOM Element from this model.
    */
-  createElement() : Element {
+  createElement(): Element {
     let ref: Element;
     let i: number;
     let keys: string[];
@@ -149,7 +149,7 @@ export class VModel<D> {
         if ((this._flags & VModelFlags.Svg) === 0) {
           (ref as HTMLElement).style.cssText = this._style;
         } else {
-          (ref as SVGElement).setAttribute('style', this._style);
+          (ref as SVGElement).setAttribute("style", this._style);
         }
       }
 
@@ -157,7 +157,7 @@ export class VModel<D> {
         if ((this._flags & VModelFlags.Svg) === 0) {
           (ref as HTMLElement).className = this._className;
         } else {
-          (ref as SVGElement).setAttribute('class', this._className);
+          (ref as SVGElement).setAttribute("class", this._className);
         }
       }
 
@@ -173,9 +173,9 @@ export class VModel<D> {
   }
 
   /**
-   * Update DOM Node with an update handler
+   * Update DOM Node with an update handler.
    */
-  update(element: Element, oldProps: D, newProps: D) : void {
+  update(element: Element, oldProps: D, newProps: D): void {
     this._updateHandler(element, oldProps, newProps);
   }
 }

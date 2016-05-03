@@ -15,7 +15,5 @@ const Main = new kivi.ComponentDescriptor()
   });
 
 document.addEventListener('DOMContentLoaded', () => {
-  kivi.scheduler.start(() => {
-    kivi.injectComponent(Main, null, document.body);
-  });
+  kivi.injectComponent(Main, null, document.body);
 });

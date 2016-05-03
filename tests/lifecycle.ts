@@ -1,4 +1,4 @@
-import {ComponentDescriptor} from '../lib/kivi';
+import {ComponentDescriptor} from "../lib/kivi";
 
 export class LifecycleState {
   lifecycleCounter = 0;

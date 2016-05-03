@@ -8,7 +8,7 @@ const Main = new kivi.ComponentDescriptor()
 
     c.element.width = c.data.width;
     c.element.height = c.data.height;
-    
+
     c.element.addEventListener('mousemove', (e) => {
       c.state.x = e.offsetX;
       c.state.y = e.offsetY;
@@ -36,7 +36,5 @@ const Main = new kivi.ComponentDescriptor()
   });
 
 document.addEventListener('DOMContentLoaded', () => {
-  kivi.scheduler.start(() => {
-    kivi.injectComponent(Main, {width: 600, height: 400}, document.body);
-  });
+  kivi.injectComponent(Main, {width: 600, height: 400}, document.body);
 });

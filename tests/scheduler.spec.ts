@@ -1,8 +1,8 @@
-import {Scheduler} from '../lib/kivi';
+import {Scheduler} from "../lib/scheduler";
 
-describe('Scheduler', () => {
-  describe('execution order', () => {
-    it('should execute microtasks before macrotasks', (done) => {
+describe("Scheduler", () => {
+  describe("execution order", () => {
+    it("should execute microtasks before macrotasks", (done) => {
       const s = new Scheduler();
       let i = 0;
       s.scheduleMacrotask(() => {
@@ -15,7 +15,7 @@ describe('Scheduler', () => {
       });
     });
 
-    it('should batch read/write/after frame tasks', (done) => {
+    it("should batch read/write/after frame tasks", (done) => {
       const s = new Scheduler();
       s.nextFrame().write(() => {
         let i = 0;
@@ -55,13 +55,13 @@ describe('Scheduler', () => {
     });
   });
 
-  describe('monotonically increasing clock', () => {
-    it('should have clock equal to 1 when created', () => {
+  describe("monotonically increasing clock", () => {
+    it("should have clock equal to 1 when created", () => {
       const s = new Scheduler();
       expect(s.clock).toBe(1);
     });
 
-    it('should advance clock by 1 after microtask execution', (done) => {
+    it("should advance clock by 1 after microtask execution", (done) => {
       const s = new Scheduler();
       s.scheduleMicrotask(() => {
         expect(s.clock).toBe(1);
@@ -72,7 +72,7 @@ describe('Scheduler', () => {
       });
     });
 
-    it('should advance clock by 1 after macrotask execution', (done) => {
+    it("should advance clock by 1 after macrotask execution", (done) => {
       const s = new Scheduler();
       s.scheduleMacrotask(() => {
         expect(s.clock).toBe(1);
@@ -83,7 +83,7 @@ describe('Scheduler', () => {
       });
     });
 
-    it('should advance clock by 1 after after next frame', (done) => {
+    it("should advance clock by 1 after after next frame", (done) => {
       const s = new Scheduler();
       s.nextFrame().after(() => {
         expect(s.clock).toBe(1);
@@ -94,7 +94,7 @@ describe('Scheduler', () => {
       });
     });
 
-    it('should have the same clock when switching between read and write batches', (done) => {
+    it("should have the same clock when switching between read and write batches", (done) => {
       const s = new Scheduler();
       s.nextFrame().write(() => {
         expect(s.clock).toBe(1);
@@ -106,7 +106,7 @@ describe('Scheduler', () => {
               expect(s.clock).toBe(2);
               done();
             }, 10);
-          })
+          });
         });
       });
     });

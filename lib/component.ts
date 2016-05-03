@@ -1,27 +1,27 @@
-import {SvgNamespace} from './namespace';
-import {ComponentDescriptorFlags, ComponentFlags, VNodeFlags, RenderFlags} from './misc'
-import {VModel} from './vmodel';
-import {VNode} from './vnode';
-import {InvalidatorSubscription, Invalidator} from './invalidator';
-import {scheduler} from './scheduler';
+import {SvgNamespace} from "./namespace";
+import {ComponentDescriptorFlags, ComponentFlags, VNodeFlags, RenderFlags} from "./misc";
+import {VModel} from "./vmodel";
+import {VNode} from "./vnode";
+import {InvalidatorSubscription, Invalidator} from "./invalidator";
+import {scheduler} from "./scheduler";
 
 /**
- * Component Descriptor
+ * Component Descriptor.
  *
  * @final
  */
 export class ComponentDescriptor<D, S> {
   /**
-   * Flags marked on Component when it is created
+   * Flags marked on Component when it is created.
    */
   _markFlags: number;
   _flags: number;
   /**
-   * Tag name of the root element or reference to a model
+   * Tag name of the root element or reference to a model.
    */
   _tag: string|VModel<any>;
   /**
-   * Data setter
+   * Data setter.
    *
    * If new data changes the representation of the Component, data setter should
    * set dirty flag for the Component.
@@ -35,43 +35,43 @@ export class ComponentDescriptor<D, S> {
    */
   _setChildren: (component: Component<D, S>, newChildren: VNode[]|string) => void;
   /**
-   * Lifecycle method init
+   * Lifecycle method init.
    */
   _init: (component: Component<D, S>) => void;
   /**
-   * Lifecycle method update
+   * Lifecycle method update.
    */
   _update: (component: Component<D, S>) => void;
   /**
-   * Lifecycle method invalidated
+   * Lifecycle method invalidated.
    */
   _invalidated: (component: Component<D, S>) => void;
   /**
-   * Lifecycle method attached
+   * Lifecycle method attached.
    */
   _attached: (component: Component<D, S>) => void;
   /**
-   * Lifecycle method detached
+   * Lifecycle method detached.
    */
   _detached: (component: Component<D, S>) => void;
   /**
-   * Lifecycle method disposed
+   * Lifecycle method disposed.
    */
   _disposed: (component: Component<D, S>) => void;
 
   /**
-   * Pool of recycled components
+   * Pool of recycled components.
    */
   _recycled: Component<D, S>[];
   /**
-   * Maximum number of recycled components (recycled pool size)
+   * Maximum number of recycled components (recycled pool size).
    */
   _maxRecycled: number;
 
   constructor() {
     this._markFlags = ComponentFlags.Dirty;
     this._flags = 0;
-    this._tag = 'div';
+    this._tag = "div";
     this._setData = null;
     this._setChildren = null;
     this._init = null;
@@ -80,33 +80,33 @@ export class ComponentDescriptor<D, S> {
     this._attached = null;
     this._detached = null;
     this._disposed = null;
-    if ('<@KIVI_COMPONENT_RECYCLING@>' === 'COMPONENT_RECYCLING_ENABLED') {
+    if ("<@KIVI_COMPONENT_RECYCLING@>" === "COMPONENT_RECYCLING_ENABLED") {
       this._recycled = null;
       this._maxRecycled = 0;
     }
   }
 
   /**
-   * Set tag name for the root element
+   * Set tag name for the root element.
    */
-  tagName(tag: string) : ComponentDescriptor<D, S> {
+  tagName(tag: string): ComponentDescriptor<D, S> {
     this._tag = tag;
     return this;
   }
 
   /**
-   * Use SVG Namespace to create root element
+   * Use SVG Namespace to create root element.
    */
-  svg() : ComponentDescriptor<D, S> {
+  svg(): ComponentDescriptor<D, S> {
     this._markFlags |= ComponentFlags.Svg;
     this._flags |= ComponentDescriptorFlags.Svg;
     return this;
   }
 
   /**
-   * Set VModel for the root element
+   * Set VModel for the root element.
    */
-  vModel(model: VModel<any>) : ComponentDescriptor<D, S> {
+  vModel(model: VModel<any>): ComponentDescriptor<D, S> {
     this._markFlags |= model._markFlags;
     this._flags |= model._markFlags;
     this._tag = model;
@@ -114,95 +114,98 @@ export class ComponentDescriptor<D, S> {
   }
 
   /**
-   * Component is a Canvas object
+   * Component is a Canvas object.
    */
-  canvas() : ComponentDescriptor<D, S> {
+  canvas(): ComponentDescriptor<D, S> {
     this._markFlags |= ComponentFlags.Canvas2D;
     this._flags |= ComponentDescriptorFlags.Canvas2D;
-    this._tag = 'canvas';
+    this._tag = "canvas";
     return this;
   }
 
-  disableCheckDataIdentity() : ComponentDescriptor<D, S> {
+  /**
+   * Disable data identity checking in default data setter.
+   */
+  disableCheckDataIdentity(): ComponentDescriptor<D, S> {
     this._markFlags |= ComponentFlags.DisabledCheckDataIdentity;
     return this;
   }
 
   /**
-   * Set data setter
+   * Set data setter.
    *
    * If new data changes the representation of the Component, data setter should
    * set dirty flag for the Component.
    */
-  setData(setter: (component: Component<D, S>, newData: D) => void) : ComponentDescriptor<D, S> {
+  setData(setter: (component: Component<D, S>, newData: D) => void): ComponentDescriptor<D, S> {
     this._setData = setter;
     return this;
   }
 
   /**
-   * Set children setter
+   * Set children setter.
    *
    * If new children list changes the representation of the Component, children
    * setter should set dirty flag for the Component.
    */
-  setChildren(setter: (component: Component<D, S>, newChildren: VNode[]|string) => void) : ComponentDescriptor<D, S> {
+  setChildren(setter: (component: Component<D, S>, newChildren: VNode[]|string) => void): ComponentDescriptor<D, S> {
     this._setChildren = setter;
     return this;
   }
 
   /**
-   * Set lifecycle method init
+   * Set lifecycle method init.
    */
-  init(init: (component: Component<D, S>) => void) : ComponentDescriptor<D, S> {
+  init(init: (component: Component<D, S>) => void): ComponentDescriptor<D, S> {
     this._init = init;
     return this;
   }
 
   /**
-   * Set lifecycle method update
+   * Set lifecycle method update.
    */
-  update(update: (component: Component<D, S>) => void) : ComponentDescriptor<D, S> {
+  update(update: (component: Component<D, S>) => void): ComponentDescriptor<D, S> {
     this._update = update;
     return this;
   }
 
   /**
-   * Set lifecycle method invalidated
+   * Set lifecycle method invalidated.
    */
-  invalidated(invalidated: (component: Component<D, S>) => void) : ComponentDescriptor<D, S> {
+  invalidated(invalidated: (component: Component<D, S>) => void): ComponentDescriptor<D, S> {
     this._invalidated = invalidated;
     return this;
   }
 
   /**
-   * Set lifecycle method attached
+   * Set lifecycle method attached.
    */
-  attached(attached: (component: Component<D, S>) => void) : ComponentDescriptor<D, S> {
+  attached(attached: (component: Component<D, S>) => void): ComponentDescriptor<D, S> {
     this._attached = attached;
     return this;
   }
 
   /**
-   * Set lifecycle method detached
+   * Set lifecycle method detached.
    */
-  detached(detached: (component: Component<D, S>) => void) : ComponentDescriptor<D, S> {
+  detached(detached: (component: Component<D, S>) => void): ComponentDescriptor<D, S> {
     this._detached = detached;
     return this;
   }
 
   /**
-   * Set lifecycle method disposed
+   * Set lifecycle method disposed.
    */
-  disposed(disposed: (component: Component<D, S>) => void) : ComponentDescriptor<D, S> {
+  disposed(disposed: (component: Component<D, S>) => void): ComponentDescriptor<D, S> {
     this._disposed = disposed;
     return this;
   }
 
   /**
-   * Enable Component recycling
+   * Enable Component recycling.
    */
-  enableRecycling(maxRecycled: number) : ComponentDescriptor<D, S> {
-    if ('<@KIVI_COMPONENT_RECYCLING@>' === 'COMPONENT_RECYCLING_ENABLED') {
+  enableRecycling(maxRecycled: number): ComponentDescriptor<D, S> {
+    if ("<@KIVI_COMPONENT_RECYCLING@>" === "COMPONENT_RECYCLING_ENABLED") {
       this._markFlags |= ComponentFlags.EnabledRecycling;
       this._flags |= ComponentDescriptorFlags.EnabledRecycling;
       this._recycled = [];
@@ -212,20 +215,20 @@ export class ComponentDescriptor<D, S> {
   }
 
   /**
-   * Create a Virtual DOM Node
+   * Create a Virtual DOM Node.
    */
-  createVNode(data: D = null) : VNode {
+  createVNode(data: D = null): VNode {
     return new VNode(VNodeFlags.Component, this, data);
   }
 
   /**
-   * Create a Component
+   * Create a Component.
    */
-  createComponent(data: D, children: string|VNode[], parent: Component<any, any>) : Component<D, S> {
+  createComponent(data: D, children: string|VNode[], parent: Component<any, any>): Component<D, S> {
     let element: Element;
     let component: Component<D, S>;
 
-    if ('<@KIVI_COMPONENT_RECYCLING@>' !== 'COMPONENT_RECYCLING_ENABLED' ||
+    if ("<@KIVI_COMPONENT_RECYCLING@>" !== "COMPONENT_RECYCLING_ENABLED" ||
         ((this._flags & ComponentDescriptorFlags.EnabledRecycling) === 0) ||
         (this._recycled.length === 0)) {
 
@@ -249,9 +252,9 @@ export class ComponentDescriptor<D, S> {
   }
 
   /**
-   * Mount Component on top of existing html element
+   * Mount Component on top of existing html element.
    */
-  mountComponent(data: D, children: string|VNode[], parent: Component<any, any>, element: Element) : Component<D, S> {
+  mountComponent(data: D, children: string|VNode[], parent: Component<any, any>, element: Element): Component<D, S> {
     let component = new Component(this._markFlags | ComponentFlags.Mounting, this, parent, data, children, element);
     if (this._init !== null) {
       this._init(component);
@@ -262,7 +265,7 @@ export class ComponentDescriptor<D, S> {
 }
 
 /**
- * Component
+ * Component.
  *
  * @final
  */
@@ -293,7 +296,8 @@ export class Component<D, S> {
   private _subscriptions: InvalidatorSubscription[]|InvalidatorSubscription;
   private _transientSubscriptions: InvalidatorSubscription[]|InvalidatorSubscription;
 
-  constructor(flags: number, descriptor: ComponentDescriptor<D, S>, parent: Component<any, any>, data: D, children: string|VNode[], element: Element) {
+  constructor(flags: number, descriptor: ComponentDescriptor<D, S>, parent: Component<any, any>, data: D,
+      children: string|VNode[], element: Element) {
     this.flags = flags;
     this.mtime = 0;
     this.descriptor = descriptor;
@@ -303,42 +307,42 @@ export class Component<D, S> {
     this.data = data;
     this.children = children;
     this.element = element;
-    this.root = ((flags & ComponentFlags.Canvas2D) === 0) ? null : (element as HTMLCanvasElement).getContext('2d');
+    this.root = ((flags & ComponentFlags.Canvas2D) === 0) ? null : (element as HTMLCanvasElement).getContext("2d");
     this._subscriptions = null;
     this._transientSubscriptions = null;
   }
 
   /**
-   * Get canvas 2d rendering context
+   * Get canvas 2d rendering context.
    */
-  get2DContext() : CanvasRenderingContext2D {
-    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+  get2DContext(): CanvasRenderingContext2D {
+    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((this.flags & ComponentFlags.Canvas2D) === 0) {
-        throw new Error('Failed to get 2d context: component isn\'t a canvas');
+        throw new Error("Failed to get 2d context: component isn't a canvas.");
       }
     }
     return this.root as CanvasRenderingContext2D;
   }
 
   /**
-   * Mark component as dirty
+   * Mark component as dirty.
    */
-  markDirty() : void {
+  markDirty(): void {
     this.flags |= ComponentFlags.Dirty;
   }
 
   /**
-   * Set parent Component
+   * Set parent Component.
    */
-  setParent(parent: Component<D, S>) : void {
+  setParent(parent: Component<D, S>): void {
     this.parent = parent;
     this.depth = parent === null ? 0 : parent.depth + 1;
   }
 
   /**
-   * Set new data
+   * Set new data.
    */
-  setData(newData: D) : void {
+  setData(newData: D): void {
     const setter = this.descriptor._setData;
     if (setter === null) {
       if ((this.flags & ComponentFlags.DisabledCheckDataIdentity) !== 0 || this.data !== newData) {
@@ -351,9 +355,9 @@ export class Component<D, S> {
   }
 
   /**
-   * Set new children
+   * Set new children.
    */
-  setChildren(newChildren: VNode[]|string) : void {
+  setChildren(newChildren: VNode[]|string): void {
     const setter = this.descriptor._setChildren;
     if (setter === null) {
       if (this.children !== newChildren) {
@@ -366,9 +370,9 @@ export class Component<D, S> {
   }
 
   /**
-   * Update Component
+   * Update Component.
    */
-  update() : void {
+  update(): void {
     if ((this.flags & ComponentFlags.ShouldUpdate) === ComponentFlags.ShouldUpdate) {
       this.descriptor._update(this);
       this.mtime = scheduler.clock;
@@ -377,23 +381,23 @@ export class Component<D, S> {
   }
 
   /**
-   * Sync internal representation using Virtual DOM api
+   * Sync internal representation using Virtual DOM api.
    *
    * If this method is called during mounting phase, then Virtual DOM will be
    * mounted on top of the existing document tree.
    */
-  sync(newRoot: VNode, renderFlags: RenderFlags = 0) : void {
-    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+  sync(newRoot: VNode, renderFlags: RenderFlags = 0): void {
+    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((newRoot._flags & VNodeFlags.Root) === 0) {
-        throw new Error('Failed to sync: sync methods accepts only VNodes representing root node');
+        throw new Error("Failed to sync: sync methods accepts only VNodes representing root node.");
       }
       if ((this.flags & ComponentFlags.VModel) !== (newRoot._flags & VNodeFlags.VModel)) {
         if ((this.flags & ComponentFlags.VModel) === 0) {
-          throw new Error('Failed to sync: vdom root should have the same type as root registered in component ' +
-                          'descriptor, component descriptor is using vmodel root');
+          throw new Error("Failed to sync: vdom root should have the same type as root registered in component " +
+                          "descriptor, component descriptor is using vmodel root.");
         } else {
-          throw new Error('Failed to sync: vdom root should have the same type as root registered in component ' +
-                          'descriptor, component descriptor is using simple tag');
+          throw new Error("Failed to sync: vdom root should have the same type as root registered in component " +
+                          "descriptor, component descriptor is using simple tag.");
         }
       }
     }
@@ -413,12 +417,12 @@ export class Component<D, S> {
   }
 
   /**
-   * Invalidate Component
+   * Invalidate Component.
    *
    * It automatically cancels all transient subscriptions and schedules a
    * Component update on the next frame.
    */
-  invalidate() : void {
+  invalidate(): void {
     if ((this.flags & (ComponentFlags.Dirty | ComponentFlags.Disposed)) === 0) {
       this.flags |= ComponentFlags.Dirty;
       this.cancelTransientSubscriptions();
@@ -432,9 +436,9 @@ export class Component<D, S> {
   }
 
   /**
-   * Start updating Component on each frame
+   * Start updating Component on each frame.
    */
-  startUpdateEachFrame() : void {
+  startUpdateEachFrame(): void {
     this.flags |= ComponentFlags.UpdateEachFrame;
     if ((this.flags & ComponentFlags.InUpdateQueue) === 0) {
       this.flags |= ComponentFlags.InUpdateQueue;
@@ -443,9 +447,9 @@ export class Component<D, S> {
   }
 
   /**
-   * Stop updating Component on each frame
+   * Stop updating Component on each frame.
    */
-  stopUpdateEachFrame() : void {
+  stopUpdateEachFrame(): void {
     this.flags &= ~ComponentFlags.UpdateEachFrame;
   }
 
@@ -453,21 +457,21 @@ export class Component<D, S> {
    * Attach method should be invoked when Component is attached to the
    * document.
    */
-  attach() : void {
+  attach(): void {
     this.attached();
     if (this.root !== null && ((this.flags & ComponentFlags.Canvas2D) === 0)) {
       (this.root as VNode).attach();
     }
   }
 
-  attached() : void {
-    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+  attached(): void {
+    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((this.flags & ComponentFlags.Attached) !== 0) {
-        throw new Error('Failed to attach Component: component is already attached.');
+        throw new Error("Failed to attach Component: component is already attached.");
       }
     }
     this.flags |= ComponentFlags.Attached;
-    if ('<@KIVI_COMPONENT_RECYCLING@>' === 'COMPONENT_RECYCLING_ENABLED') {
+    if ("<@KIVI_COMPONENT_RECYCLING@>" === "COMPONENT_RECYCLING_ENABLED") {
       this.flags &= ~ComponentFlags.Recycled;
     }
 
@@ -481,17 +485,17 @@ export class Component<D, S> {
    * Detach method should be invoked when Component is detached from the
    * document.
    */
-  detach() : void {
+  detach(): void {
     if (this.root !== null && ((this.flags & ComponentFlags.Canvas2D) === 0)) {
       (this.root as VNode).detach();
     }
     this.detached();
   }
 
-  detached() : void {
-    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+  detached(): void {
+    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((this.flags & ComponentFlags.Attached) === 0) {
-        throw new Error('Failed to detach Component: component is already detached.');
+        throw new Error("Failed to detach Component: component is already detached.");
       }
     }
     this.flags &= ~(ComponentFlags.Attached | ComponentFlags.UpdateEachFrame);
@@ -504,14 +508,14 @@ export class Component<D, S> {
     }
   }
 
-  dispose() : void {
-    if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+  dispose(): void {
+    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((this.flags & ComponentFlags.Disposed) !== 0) {
-        throw new Error('Failed to dispose Component: component is already disposed');
+        throw new Error("Failed to dispose Component: component is already disposed.");
       }
     }
 
-    if ('<@KIVI_COMPONENT_RECYCLING@>' !== 'COMPONENT_RECYCLING_ENABLED' ||
+    if ("<@KIVI_COMPONENT_RECYCLING@>" !== "COMPONENT_RECYCLING_ENABLED" ||
         ((this.flags & ComponentFlags.EnabledRecycling) === 0) ||
         (this.descriptor._recycled.length >= this.descriptor._maxRecycled)) {
       this.flags |= ComponentFlags.Disposed;
@@ -533,11 +537,11 @@ export class Component<D, S> {
   }
 
   /**
-   * Subscribe to invalidator object
+   * Subscribe to invalidator object.
    */
-  subscribe(invalidator: Invalidator) : void {
-    let s = invalidator.subscribeComponent(this);
-    let subscriptions = this._subscriptions;
+  subscribe(invalidator: Invalidator): void {
+    const s = invalidator.subscribeComponent(this);
+    const subscriptions = this._subscriptions;
     if (subscriptions === null) {
       this._subscriptions = s;
     } else if (subscriptions.constructor === InvalidatorSubscription) {
@@ -548,14 +552,14 @@ export class Component<D, S> {
   }
 
   /**
-   * Transiently subscribe to invalidator object
+   * Transiently subscribe to invalidator object.
    *
    * Each time component is invalidated, all transient subscriptions will be
    * canceled.
    */
-  transientSubscribe(invalidator: Invalidator) : void {
-    let s = invalidator.transientSubscribeComponent(this);
-    let subscriptions = this._transientSubscriptions;
+  transientSubscribe(invalidator: Invalidator): void {
+    const s = invalidator.transientSubscribeComponent(this);
+    const subscriptions = this._transientSubscriptions;
     if (subscriptions === null) {
       this._transientSubscriptions = s;
     } else if (subscriptions.constructor === InvalidatorSubscription) {
@@ -565,54 +569,54 @@ export class Component<D, S> {
     }
   }
 
-  removeSubscription(subscription: InvalidatorSubscription) : void {
-    let subscriptions = this._subscriptions;
+  removeSubscription(subscription: InvalidatorSubscription): void {
+    const subscriptions = this._subscriptions;
     if (subscriptions.constructor === InvalidatorSubscription ||
         (subscriptions as InvalidatorSubscription[]).length === 1) {
-      if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+      if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
         if (subscriptions.constructor === InvalidatorSubscription) {
           if (subscriptions !== subscription) {
-            throw new Error('Failed to remove subscription from Component: cannot find appropriate subscription');
+            throw new Error("Failed to remove subscription from Component: cannot find appropriate subscription.");
           }
         } else {
           if ((subscriptions as InvalidatorSubscription[])[0] !== subscription) {
-            throw new Error('Failed to remove subscription from Component: cannot find appropriate subscription');
+            throw new Error("Failed to remove subscription from Component: cannot find appropriate subscription.");
           }
         }
       }
       this._subscriptions = null;
     } else {
-      let i = (subscriptions as InvalidatorSubscription[]).indexOf(subscription);
-      if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+      const i = (subscriptions as InvalidatorSubscription[]).indexOf(subscription);
+      if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
         if (i === -1) {
-          throw new Error('Failed to remove subscription from Component: cannot find appropriate subscription');
+          throw new Error("Failed to remove subscription from Component: cannot find appropriate subscription.");
         }
       }
       (subscriptions as InvalidatorSubscription[])[i] = (subscriptions as InvalidatorSubscription[]).pop();
     }
   }
 
-  removeTransientSubscription(subscription: InvalidatorSubscription) : void {
-    let subscriptions = this._transientSubscriptions;
+  removeTransientSubscription(subscription: InvalidatorSubscription): void {
+    const subscriptions = this._transientSubscriptions;
     if (subscriptions.constructor === InvalidatorSubscription ||
         (subscriptions as InvalidatorSubscription[]).length === 1) {
-      if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+      if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
         if (subscriptions.constructor === InvalidatorSubscription) {
           if (subscriptions !== subscription) {
-            throw new Error('Failed to remove subscription from Component: cannot find appropriate subscription');
+            throw new Error("Failed to remove subscription from Component: cannot find appropriate subscription.");
           }
         } else {
           if ((subscriptions as InvalidatorSubscription[])[0] !== subscription) {
-            throw new Error('Failed to remove subscription from Component: cannot find appropriate subscription');
+            throw new Error("Failed to remove subscription from Component: cannot find appropriate subscription.");
           }
         }
       }
       this._transientSubscriptions = null;
     } else {
-      let i = (subscriptions as InvalidatorSubscription[]).indexOf(subscription);
-      if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
+      const i = (subscriptions as InvalidatorSubscription[]).indexOf(subscription);
+      if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
         if (i === -1) {
-          throw new Error('Failed to remove subscription from Component: cannot find appropriate subscription');
+          throw new Error("Failed to remove subscription from Component: cannot find appropriate subscription.");
         }
       }
       (subscriptions as InvalidatorSubscription[])[i] = (subscriptions as InvalidatorSubscription[]).pop();
@@ -620,17 +624,18 @@ export class Component<D, S> {
   }
 
   /**
-   * Cancel all subscriptions
+   * Cancel all subscriptions.
    */
-  cancelSubscriptions() : void {
-    let subscriptions = this._subscriptions;
+  cancelSubscriptions(): void {
+    const subscriptions = this._subscriptions;
     if (subscriptions !== null) {
       if (subscriptions.constructor === InvalidatorSubscription) {
-        (subscriptions as InvalidatorSubscription).invalidator.removeSubscription(subscriptions as InvalidatorSubscription);
+        (subscriptions as InvalidatorSubscription).invalidator
+          ._removeSubscription(subscriptions as InvalidatorSubscription);
       } else {
         for (let i = 0; i < (subscriptions as InvalidatorSubscription[]).length; i++) {
           let s = (subscriptions as InvalidatorSubscription[])[i];
-          s.invalidator.removeSubscription(s);
+          s.invalidator._removeSubscription(s);
         }
       }
     }
@@ -638,17 +643,18 @@ export class Component<D, S> {
   }
 
   /**
-   * Cancel all transient subscriptions
+   * Cancel all transient subscriptions.
    */
-  cancelTransientSubscriptions() {
-    let subscriptions = this._transientSubscriptions;
+  cancelTransientSubscriptions(): void {
+    const subscriptions = this._transientSubscriptions;
     if (subscriptions !== null) {
       if (subscriptions.constructor === InvalidatorSubscription) {
-        (subscriptions as InvalidatorSubscription).invalidator.removeSubscription(subscriptions as InvalidatorSubscription);
+        (subscriptions as InvalidatorSubscription).invalidator
+          ._removeSubscription(subscriptions as InvalidatorSubscription);
       } else {
         for (let i = 0; i < (subscriptions as InvalidatorSubscription[]).length; i++) {
           let s = (subscriptions as InvalidatorSubscription[])[i];
-          s.invalidator.removeSubscription(s);
+          s.invalidator._removeSubscription(s);
         }
       }
     }
@@ -657,10 +663,10 @@ export class Component<D, S> {
 }
 
 /**
- * Inject component into DOM
+ * Inject component into DOM.
  */
-export function injectComponent<D, S>(descriptor: ComponentDescriptor<D, S>, data: D, container: Element, sync?: boolean)
-    : Component<D, S> {
+export function injectComponent<D, S>(descriptor: ComponentDescriptor<D, S>, data: D, container: Element,
+    sync?: boolean): Component<D, S> {
   const c = descriptor.createComponent(data, null, null);
   if (sync) {
     container.appendChild(c.element);
@@ -677,11 +683,19 @@ export function injectComponent<D, S>(descriptor: ComponentDescriptor<D, S>, dat
 }
 
 /**
- * Mount component on top of existing DOM
+ * Mount component on top of existing DOM.
  */
-export function mountComponent<D, S>(descriptor: ComponentDescriptor<D, S>, data: D, element: Element)
-    : Component<D, S> {
+export function mountComponent<D, S>(descriptor: ComponentDescriptor<D, S>, data: D, element: Element,
+    sync?: boolean): Component<D, S> {
   const c = descriptor.mountComponent(data, null, null, element);
-  c.update();
+  if (sync) {
+    c.attached();
+    c.update();
+  } else {
+    scheduler.nextFrame().write(function() {
+      c.attached();
+      c.update();
+    });
+  }
   return c;
 }

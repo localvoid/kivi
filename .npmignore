@@ -3,6 +3,7 @@ gulpfile.js
 karma.conf.js
 tsconfig.json
 typings.json
+tslint.json
 
 lib
 build
