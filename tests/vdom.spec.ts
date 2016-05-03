@@ -1,5 +1,6 @@
 import {LifecycleComponent} from './lifecycle';
-import {VNode, VNodeRenderFlags, VNodeRenderFlags, createVElement, createVText, createVSvgElement} from '../lib/vnode';
+import {VNodeRenderFlags} from '../lib/misc';
+import {VNode, createVElement, createVText, createVSvgElement} from '../lib/vnode';
 import {Component} from '../lib/component';
 import {XlinkNamespace} from '../lib/namespace';
 

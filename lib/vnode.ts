@@ -1,49 +1,12 @@
 import {printError} from './debug';
+import {
+  VNodeFlags, VNodeDebugFlags, VNodeRenderFlags, ComponentDescriptorFlags, ContainerManagerDescriptorDebugFlags,
+  syncStaticShapeProps, syncDynamicShapeProps, syncStaticShapeAttrs, syncDynamicShapeAttrs, setAttr
+} from './misc';
 import {SvgNamespace} from './namespace';
-import {Component, ComponentDescriptor, ComponentDescriptorFlags} from './component';
+import {Component, ComponentDescriptor} from './component';
 import {VModel} from './vmodel';
-import {ContainerManager, ContainerManagerDescriptorDebugFlags} from './container_manager';
-import {syncStaticShapeProps, syncDynamicShapeProps, syncStaticShapeAttrs, syncDynamicShapeAttrs, setAttr} from './misc';
-
-export const enum VNodeFlags {
-  Text                  = 1,
-  Element               = 1 << 1,
-  Component             = 1 << 2,
-  Root                  = 1 << 3,
-  TrackByKeyChildren    = 1 << 4,
-  ManagedContainer      = 1 << 5,
-  CommentPlaceholder    = 1 << 6,
-  DynamicShapeAttrs     = 1 << 7,
-  DynamicShapeProps     = 1 << 8,
-  TextInputElement      = 1 << 9,
-  CheckedInputElement   = 1 << 10,
-  InputElement          = TextInputElement | CheckedInputElement,
-  KeepAlive             = 1 << 11,
-  /**
-   * 16-23 bits: shared flags between kivi objects
-   */
-  Svg                   = 1 << 15,
-  IsVModel              = 1 << 19,
-  VModelUpdateHandler   = 1 << 20,
-}
-
-export const enum VNodeRenderFlags {
-  // prevents from rendering subcomponents
-  ShallowRender = 1,
-  // prevents from updating subcomponents
-  ShallowUpdate = 1 << 1,
-  Shallow       = ShallowRender | ShallowUpdate,
-}
-
-const enum VNodeDebugFlags {
-  Rendered                  = 1,
-  Mounted                   = 1 << 1,
-  Attached                  = 1 << 2,
-  Detached                  = 1 << 3,
-  Disposed                  = 1 << 4,
-  DisableChildrenShapeError = 1 << 5,
-  DisableFreeze             = 1 << 6,
-}
+import {ContainerManager} from './container_manager';
 
 /**
  * Virtual DOM Node

@@ -1,4 +1,5 @@
-import {Component, ComponentFlags} from './component';
+import {Component} from './component';
+import {ComponentFlags} from './misc';
 import {VNode} from './vnode';
 
 export type SchedulerCallback = () => void;

@@ -1,9 +1,6 @@
 import {VNode} from './vnode';
 import {Component} from './component';
-
-export const enum ContainerManagerDescriptorDebugFlags {
-  AcceptKeyedChildrenOnly = 1
-}
+import {ContainerManagerDescriptorDebugFlags} from './misc';
 
 export type InsertChildHandler<S> = (manager: ContainerManager<S>,
                                      container: Element,

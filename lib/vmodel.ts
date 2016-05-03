@@ -1,19 +1,6 @@
 import {SvgNamespace} from './namespace';
-import {setAttr} from './misc';
-import {VNodeFlags, VNode} from './vnode';
-
-/**
- * VModel flags
- */
-const enum VModelFlags {
-  EnabledCloning       = 1,
-  /**
-   * 16-23 bits: shared flags between kivi objects
-   */
-  Svg                  = 1 << 15,
-  IsVModel             = 1 << 19,
-  VModelUpdateHandler  = 1 << 20,
-}
+import {VNodeFlags, VModelFlags, setAttr} from './misc';
+import {VNode} from './vnode';
 
 /**
  * Update handler used to override default diff/patch behavior

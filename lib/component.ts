@@ -1,36 +1,9 @@
 import {SvgNamespace} from './namespace';
+import {ComponentDescriptorFlags, ComponentFlags, VNodeFlags, VNodeRenderFlags} from './misc'
 import {VModel} from './vmodel';
-import {VNode, VNodeFlags, VNodeRenderFlags} from './vnode';
+import {VNode} from './vnode';
 import {InvalidatorSubscription, Invalidator} from './invalidator';
 import {scheduler} from './scheduler';
-
-export const enum ComponentDescriptorFlags {
-  /**
-   * 16-23 bits: shared flags between kivi objects
-   */
-  Svg              = 1 << 15,
-  Canvas2D         = 1 << 16,
-  EnabledRecycling = 1 << 17,
-  IsVModel         = 1 << 19,
-}
-
-export const enum ComponentFlags {
-  Disposed        = 1,
-  Attached        = 1 << 1,
-  Mounting        = 1 << 2,
-  Dirty           = 1 << 3,
-  UpdateEachFrame = 1 << 4,
-  InUpdateQueue   = 1 << 5,
-  Recycled        = 1 << 6,
-  ShouldUpdate    = Attached | Dirty,
-  /**
-   * 16-23 bits: shared flags between kivi objects
-   */
-  Svg              = 1 << 15,
-  Canvas2D         = 1 << 16,
-  EnabledRecycling = 1 << 17,
-  IsVModel         = 1 << 19,
-}
 
 /**
  * Component Descriptor

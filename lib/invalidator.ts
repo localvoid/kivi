@@ -1,10 +1,6 @@
 import {Component} from './component';
 import {scheduler} from './scheduler';
-
-const enum InvalidatorSubscriptionFlags {
-  Component = 1,
-  Transient = 1 << 1
-}
+import {InvalidatorSubscriptionFlags} from './misc';
 
 /**
  * Invalidator Subscription

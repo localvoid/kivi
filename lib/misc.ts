@@ -1,6 +1,96 @@
 import {VNode} from './vnode';
 import {XmlNamespace, XlinkNamespace} from './namespace';
 
+export const enum InvalidatorSubscriptionFlags {
+  Component = 1,
+  Transient = 1 << 1
+}
+
+/**
+ * VModel flags
+ */
+export const enum VModelFlags {
+  EnabledCloning       = 1,
+  /**
+   * 16-23 bits: shared flags between kivi objects
+   */
+  Svg                  = 1 << 15,
+  IsVModel             = 1 << 19,
+  VModelUpdateHandler  = 1 << 20,
+}
+
+export const enum VNodeFlags {
+  Text                  = 1,
+  Element               = 1 << 1,
+  Component             = 1 << 2,
+  Root                  = 1 << 3,
+  TrackByKeyChildren    = 1 << 4,
+  ManagedContainer      = 1 << 5,
+  CommentPlaceholder    = 1 << 6,
+  DynamicShapeAttrs     = 1 << 7,
+  DynamicShapeProps     = 1 << 8,
+  TextInputElement      = 1 << 9,
+  CheckedInputElement   = 1 << 10,
+  InputElement          = TextInputElement | CheckedInputElement,
+  KeepAlive             = 1 << 11,
+  /**
+   * 16-23 bits: shared flags between kivi objects
+   */
+  Svg                   = 1 << 15,
+  IsVModel              = 1 << 19,
+  VModelUpdateHandler   = 1 << 20,
+}
+
+export const enum VNodeRenderFlags {
+  // prevents from rendering subcomponents
+  ShallowRender = 1,
+  // prevents from updating subcomponents
+  ShallowUpdate = 1 << 1,
+  Shallow       = ShallowRender | ShallowUpdate,
+}
+
+export const enum VNodeDebugFlags {
+  Rendered                  = 1,
+  Mounted                   = 1 << 1,
+  Attached                  = 1 << 2,
+  Detached                  = 1 << 3,
+  Disposed                  = 1 << 4,
+  DisableChildrenShapeError = 1 << 5,
+  DisableFreeze             = 1 << 6,
+}
+
+export const enum ComponentDescriptorFlags {
+  /**
+   * 16-23 bits: shared flags between kivi objects
+   */
+  Svg              = 1 << 15,
+  Canvas2D         = 1 << 16,
+  EnabledRecycling = 1 << 17,
+  IsVModel         = 1 << 19,
+}
+
+export const enum ComponentFlags {
+  Disposed        = 1,
+  Attached        = 1 << 1,
+  Mounting        = 1 << 2,
+  Dirty           = 1 << 3,
+  UpdateEachFrame = 1 << 4,
+  InUpdateQueue   = 1 << 5,
+  Recycled        = 1 << 6,
+  ShouldUpdate    = Attached | Dirty,
+  /**
+   * 16-23 bits: shared flags between kivi objects
+   */
+  Svg              = 1 << 15,
+  Canvas2D         = 1 << 16,
+  EnabledRecycling = 1 << 17,
+  IsVModel         = 1 << 19,
+}
+
+export const enum ContainerManagerDescriptorDebugFlags {
+  AcceptKeyedChildrenOnly = 1
+}
+
 type VNodeList = Array<VNode|VNodeList[]>;
 
 export function flattenVNodes(nodes: VNodeList) : VNode[] {
