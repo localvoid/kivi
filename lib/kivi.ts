@@ -4,7 +4,10 @@ export * from './vmodel';
 export * from './vnode';
 export * from './container_manager';
 export * from './component';
-export {flattenVNodes} from './misc';
+export {
+  VNodeFlags, VModelFlags, ComponentDescriptorFlags, ComponentFlags, InvalidatorSubscriptionFlags,
+  RenderFlags, flattenVNodes
+} from './misc';
 
 if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
   console.info('KIVI_DEBUG: enabled');

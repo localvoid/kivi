@@ -3,7 +3,26 @@ import {XmlNamespace, XlinkNamespace} from './namespace';
 
 export const enum InvalidatorSubscriptionFlags {
   Component = 1,
-  Transient = 1 << 1
+  Transient = 1 << 1,
+}
+
+/**
+ * Flags shared between VModel, VNode, ComponentDescriptor and Component
+ * objects.
+ *
+ * They can be easily copied with a binary or operator from object with one
+ * type to another with different type. For example, when creating VNode
+ * from VModel, we are marking flags like IsVModel directly on a VModel
+ * object.
+ *
+ * 16-24 bits are reserved for shared flags.
+ */
+const enum SharedFlags {
+  Svg                 = 1 << 15,
+  Canvas2D            = 1 << 16,
+  IsVModel            = 1 << 17,
+  VModelUpdateHandler = 1 << 18,
+  EnabledRecycling    = 1 << 19,
 }
 
 /**
@@ -11,12 +30,7 @@ export const enum InvalidatorSubscriptionFlags {
  */
 export const enum VModelFlags {
   EnabledCloning       = 1,
-  /**
-   * 16-23 bits: shared flags between kivi objects
-   */
-  Svg                  = 1 << 15,
-  IsVModel             = 1 << 19,
-  VModelUpdateHandler  = 1 << 20,
+  Svg                  = SharedFlags.Svg,
 }
 
 export const enum VNodeFlags {
@@ -33,15 +47,12 @@ export const enum VNodeFlags {
   CheckedInputElement   = 1 << 10,
   InputElement          = TextInputElement | CheckedInputElement,
   KeepAlive             = 1 << 11,
-  /**
-   * 16-23 bits: shared flags between kivi objects
-   */
-  Svg                   = 1 << 15,
-  IsVModel              = 1 << 19,
-  VModelUpdateHandler   = 1 << 20,
+  Svg                   = SharedFlags.Svg,
+  IsVModel              = SharedFlags.IsVModel,
+  VModelUpdateHandler   = SharedFlags.VModelUpdateHandler,
 }
 
-export const enum VNodeRenderFlags {
+export const enum RenderFlags {
   // prevents from rendering subcomponents
   ShallowRender = 1,
   // prevents from updating subcomponents
@@ -60,40 +71,34 @@ export const enum VNodeDebugFlags {
 }
 
 export const enum ComponentDescriptorFlags {
-  /**
-   * 16-23 bits: shared flags between kivi objects
-   */
-  Svg              = 1 << 15,
-  Canvas2D         = 1 << 16,
-  EnabledRecycling = 1 << 17,
-  IsVModel         = 1 << 19,
+  Svg              = SharedFlags.Svg,
+  Canvas2D         = SharedFlags.Canvas2D,
+  IsVModel         = SharedFlags.IsVModel,
+  EnabledRecycling = SharedFlags.EnabledRecycling,
 }
 
 export const enum ComponentFlags {
-  Disposed        = 1,
-  Attached        = 1 << 1,
-  Mounting        = 1 << 2,
-  Dirty           = 1 << 3,
-  UpdateEachFrame = 1 << 4,
-  InUpdateQueue   = 1 << 5,
-  Recycled        = 1 << 6,
-  ShouldUpdate    = Attached | Dirty,
-  /**
-   * 16-23 bits: shared flags between kivi objects
-   */
-  Svg              = 1 << 15,
-  Canvas2D         = 1 << 16,
-  EnabledRecycling = 1 << 17,
-  IsVModel         = 1 << 19,
+  Disposed         = 1,
+  Attached         = 1 << 1,
+  Mounting         = 1 << 2,
+  Dirty            = 1 << 3,
+  UpdateEachFrame  = 1 << 4,
+  InUpdateQueue    = 1 << 5,
+  Recycled         = 1 << 6,
+  ShouldUpdate     = Attached | Dirty,
+  Svg              = SharedFlags.Svg,
+  Canvas2D         = SharedFlags.Canvas2D,
+  IsVModel         = SharedFlags.IsVModel,
+  EnabledRecycling = SharedFlags.EnabledRecycling,
 }
 
 export const enum ContainerManagerDescriptorDebugFlags {
   AcceptKeyedChildrenOnly = 1
 }
 
-type VNodeList = Array<VNode|VNodeList[]>;
+export type VNodeRecursiveList = Array<VNode|VNodeRecursiveList[]>;
 
-export function flattenVNodes(nodes: VNodeList) : VNode[] {
+export function flattenVNodes(nodes: VNodeRecursiveList) : VNode[] {
   let copy = nodes.slice(0);
   let flatten = [];
   while (copy.length > 0) {

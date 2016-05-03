@@ -1,5 +1,5 @@
 import {SvgNamespace} from './namespace';
-import {ComponentDescriptorFlags, ComponentFlags, VNodeFlags, VNodeRenderFlags} from './misc'
+import {ComponentDescriptorFlags, ComponentFlags, VNodeFlags, RenderFlags} from './misc'
 import {VModel} from './vmodel';
 import {VNode} from './vnode';
 import {InvalidatorSubscription, Invalidator} from './invalidator';
@@ -366,7 +366,7 @@ export class Component<D, S> {
    * If this method is called during mounting phase, then Virtual DOM will be
    * mounted on top of the existing document tree.
    */
-  sync(newRoot: VNode, renderFlags: VNodeRenderFlags = 0) : void {
+  sync(newRoot: VNode, renderFlags: RenderFlags = 0) : void {
     if ('<@KIVI_DEBUG@>' !== 'DEBUG_DISABLED') {
       if ((newRoot.flags & VNodeFlags.Root) === 0) {
         throw new Error('Failed to sync: sync methods accepts only VNodes representing root node');

@@ -1,7 +1,8 @@
 import {printError} from './debug';
 import {
-  VNodeFlags, VNodeDebugFlags, VNodeRenderFlags, ComponentDescriptorFlags, ContainerManagerDescriptorDebugFlags,
-  syncStaticShapeProps, syncDynamicShapeProps, syncStaticShapeAttrs, syncDynamicShapeAttrs, setAttr
+  VNodeFlags, VNodeDebugFlags, RenderFlags, ContainerManagerDescriptorDebugFlags,
+  syncStaticShapeProps, syncDynamicShapeProps, syncStaticShapeAttrs, syncDynamicShapeAttrs, setAttr,
+  ComponentDescriptorFlags
 } from './misc';
 import {SvgNamespace} from './namespace';
 import {Component, ComponentDescriptor} from './component';
@@ -504,7 +505,6 @@ export class VNode {
         }
 
         if (this._style !== null) {
-          // perf optimization for webkit/blink, probably will need to revisit this in the future
           if ((flags & VNodeFlags.Svg) === 0) {
             (ref as HTMLElement).style.cssText = this._style;
           } else {
@@ -520,7 +520,6 @@ export class VNode {
                          ` "${className}" with "${this._className}"`);
             }
           }
-          // perf optimization for webkit/blink, probably will need to revisit this in the future
           if ((flags & VNodeFlags.Svg) === 0) {
             (ref as HTMLElement).className = this._className;
           } else {
@@ -557,7 +556,6 @@ export class VNode {
       ref = this.ref as Element;
 
       if (this._className !== null) {
-        // perf optimization for webkit/blink, probably will need to revisit this in the future
         if ((flags & VNodeFlags.Svg) === 0) {
           (ref as HTMLElement).className = this._className;
         } else {
@@ -565,7 +563,7 @@ export class VNode {
         }
       }
 
-      if ((renderFlags & VNodeRenderFlags.ShallowRender) === 0) {
+      if ((renderFlags & RenderFlags.ShallowRender) === 0) {
         (this.cref as Component<any, any>).update();
       }
     }
@@ -771,8 +769,7 @@ export class VNode {
           }
         }
         if (this._style !== other._style) {
-          let style = other._style === null ? '' : other._style;
-          // perf optimization for webkit/blink, probably will need to revisit this in the future
+          const style = other._style === null ? '' : other._style;
           if ((flags & VNodeFlags.Svg) === 0) {
             (ref as HTMLElement).style.cssText = style;
           } else {
@@ -782,7 +779,6 @@ export class VNode {
 
         if (this._className !== other._className) {
           className = (other._className === null) ? '' : other._className;
-          // perf optimization for webkit/blink, probably will need to revisit this in the future
           if ((flags & VNodeFlags.Svg) === 0) {
             (ref as HTMLElement).className = className;
           } else {
@@ -820,7 +816,6 @@ export class VNode {
     } else /* if ((flags & VNodeFlags.Component) !== 0) */ {
       if (this._className !== other._className) {
         className = (other._className === null) ? '' : other._className;
-        // perf optimization for webkit/blink, probably will need to revisit this in the future
         if ((flags & VNodeFlags.Svg) === 0) {
           (ref as HTMLElement).className = className;
         } else {
@@ -829,7 +824,7 @@ export class VNode {
       }
 
       component = other.cref = this.cref as Component<any, any>;
-      if ((renderFlags & VNodeRenderFlags.ShallowUpdate) === 0) {
+      if ((renderFlags & RenderFlags.ShallowUpdate) === 0) {
         component.setData(other._props);
         component.setChildren(other._children as VNode[]|string);
         component.update();

@@ -30,7 +30,7 @@ export class VModel<D> {
   private _ref: Element;
 
   constructor(tag: string) {
-    this.markFlags = VModelFlags.IsVModel;
+    this.markFlags = VNodeFlags.IsVModel;
     this._flags = 0;
     this._tag = tag;
     this._props = null;
@@ -45,7 +45,7 @@ export class VModel<D> {
    * Use svg namespace for the dom element
    */
   svg() : VModel<D> {
-    this.markFlags |= VModelFlags.Svg;
+    this.markFlags |= VNodeFlags.Svg;
     this._flags |= VModelFlags.Svg;
     return this;
   }
@@ -94,7 +94,7 @@ export class VModel<D> {
    * Set update handler
    */
   updateHandler(handler: VModelUpdateHandler<D>) : VModel<D> {
-    this.markFlags |= VModelFlags.VModelUpdateHandler;
+    this.markFlags |= VNodeFlags.VModelUpdateHandler;
     this._updateHandler = handler;
     return this;
   }

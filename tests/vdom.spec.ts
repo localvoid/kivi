@@ -1,5 +1,5 @@
 import {LifecycleComponent} from './lifecycle';
-import {VNodeRenderFlags} from '../lib/misc';
+import {RenderFlags} from '../lib/misc';
 import {VNode, createVElement, createVText, createVSvgElement} from '../lib/vnode';
 import {Component} from '../lib/component';
 import {XlinkNamespace} from '../lib/namespace';
@@ -1164,7 +1164,7 @@ describe('VNode', () => {
       const a = createVElement('div').children([component]);
       a.create(null);
       a.attached();
-      a.render(null, VNodeRenderFlags.ShallowRender);
+      a.render(null, RenderFlags.ShallowRender);
       expect(component.cref.state.checkInit).toBe(0);
       expect(component.cref.state.checkAttached).toBe(1);
       expect(component.cref.state.checkUpdate).toBe(-1);
@@ -1210,7 +1210,7 @@ describe('VNode', () => {
       expect(componentA.cref.state.checkDetached).toBe(-1);
       expect(componentA.cref.state.checkDisposed).toBe(-1);
 
-      a.sync(b, null, VNodeRenderFlags.ShallowUpdate);
+      a.sync(b, null, RenderFlags.ShallowUpdate);
       expect(componentB.cref.state.checkInit).toBe(0);
       expect(componentB.cref.state.checkAttached).toBe(1);
       expect(componentB.cref.state.checkUpdate).toBe(2);
@@ -1233,7 +1233,7 @@ describe('VNode', () => {
       expect(componentA.cref.state.checkDetached).toBe(-1);
       expect(componentA.cref.state.checkDisposed).toBe(-1);
 
-      a.sync(b, null, VNodeRenderFlags.ShallowUpdate);
+      a.sync(b, null, RenderFlags.ShallowUpdate);
       expect((componentB.cref as Component).data).toBe(0);
       expect(componentB.cref.state.checkInit).toBe(0);
       expect(componentB.cref.state.checkAttached).toBe(1);
