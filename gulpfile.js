@@ -16,7 +16,9 @@ gulp.task("clean", del.bind(null, ["dist", "build"]));
 gulp.task("build:es6", function() {
   var result = gulp.src(["lib/**/*.ts"])
     .pipe(tslint())
-    .pipe(tslint.report("verbose"))
+    .pipe(tslint.report("verbose", {
+      emitError: false
+    }))
     .pipe(ts(Object.assign(tsConfig.compilerOptions, {
       target: "es6",
       module: undefined,
