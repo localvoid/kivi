@@ -667,7 +667,7 @@ export class Component<D, S> {
  */
 export function injectComponent<D, S>(descriptor: ComponentDescriptor<D, S>, container: Element, data?: D,
     sync?: boolean): Component<D, S> {
-  const c = descriptor.createComponent();
+  const c = descriptor.createComponent(undefined, data);
   if (sync) {
     container.appendChild(c.element);
     c.attached();
@@ -687,7 +687,7 @@ export function injectComponent<D, S>(descriptor: ComponentDescriptor<D, S>, con
  */
 export function mountComponent<D, S>(descriptor: ComponentDescriptor<D, S>, element: Element, data?: D,
     sync?: boolean): Component<D, S> {
-  const c = descriptor.mountComponent(element);
+  const c = descriptor.mountComponent(element, undefined, data);
   if (sync) {
     c.attached();
     c.update();
