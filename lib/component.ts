@@ -61,7 +61,7 @@ export class ComponentDescriptor<D, S> {
   /**
    * Pool of recycled components.
    */
-  _recycled: Component<D, S>[];
+  _recycledPool: Component<D, S>[];
   /**
    * Maximum number of recycled components (recycled pool size).
    */
@@ -80,7 +80,7 @@ export class ComponentDescriptor<D, S> {
     this._detached = undefined;
     this._disposed = undefined;
     if ("<@KIVI_COMPONENT_RECYCLING@>" === "COMPONENT_RECYCLING_ENABLED") {
-      this._recycled = undefined;
+      this._recycledPool = undefined;
       this._maxRecycled = 0;
     }
   }
@@ -207,7 +207,7 @@ export class ComponentDescriptor<D, S> {
     if ("<@KIVI_COMPONENT_RECYCLING@>" === "COMPONENT_RECYCLING_ENABLED") {
       this._markFlags |= ComponentFlags.EnabledRecycling;
       this._flags |= ComponentDescriptorFlags.EnabledRecycling;
-      this._recycled = [];
+      this._recycledPool = [];
       this._maxRecycled = maxRecycled;
     }
     return this;
@@ -229,7 +229,7 @@ export class ComponentDescriptor<D, S> {
 
     if ("<@KIVI_COMPONENT_RECYCLING@>" !== "COMPONENT_RECYCLING_ENABLED" ||
         ((this._flags & ComponentDescriptorFlags.EnabledRecycling) === 0) ||
-        (this._recycled.length === 0)) {
+        (this._recycledPool.length === 0)) {
 
       if ((this._flags & ComponentDescriptorFlags.VModel) === 0) {
         element = ((this._flags & ComponentDescriptorFlags.Svg) === 0) ?
@@ -243,7 +243,7 @@ export class ComponentDescriptor<D, S> {
         this._init(component);
       }
     } else {
-      component = this._recycled.pop();
+      component = this._recycledPool.pop();
       component.setParent(parent);
     }
 
@@ -516,7 +516,7 @@ export class Component<D, S> {
 
     if ("<@KIVI_COMPONENT_RECYCLING@>" !== "COMPONENT_RECYCLING_ENABLED" ||
         ((this.flags & ComponentFlags.EnabledRecycling) === 0) ||
-        (this.descriptor._recycled.length >= this.descriptor._maxRecycled)) {
+        (this.descriptor._recycledPool.length >= this.descriptor._maxRecycled)) {
       this.flags |= ComponentFlags.Disposed;
 
       if (this.root !== undefined && ((this.flags & ComponentFlags.Canvas2D) === 0)) {
@@ -532,7 +532,7 @@ export class Component<D, S> {
       }
     } else {
       this.detach();
-      this.descriptor._recycled.push(this);
+      this.descriptor._recycledPool.push(this);
     }
   }
 
