@@ -1,8 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "module": "commonjs",
-    "outDir": "build/cjs",
+    "target": "es6",
+    "outDir": "build/es6",
     "noImplicitAny": true,
     "removeComments": false,
     "moduleResolution": "node"

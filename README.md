@@ -4,50 +4,21 @@ for DOM manipulations, Components, Scheduler tightly integrated with
 Components, and several tools for advanced use cases. It doesn't have a router,
 or anything that is related to application state, kivi is just a view library.
 
-It was heavily inspired by the [React](https://facebook.github.io/react/)
-library, but has completely different API, implementation and architecture.
-
-## Getting started
-
-Install `kivi` library.
-
-```sh
-npm install --save kivi
-```
-
-Create a javascript file:
+## Example
 
 ```js
-import { createVRoot, createVElement, ComponentDescriptor, injectComponent } from 'kivi';
+import {createVRoot, createVElement, ComponentDescriptor, injectComponent} from 'kivi';
 
-// Component Descriptor is an object that stores the behavior of
-// the Component.
-const Box = new ComponentDescriptor()
-  // Tag name of the root element for this Component. Default tag is 'div'.
-  .tagName('span')
-  // Function that responsible for updating internal state and the view
-  // of the Component.
-  // First parameter is an instance of the Component.
+const HelloWorld = new ComponentDescriptor()
   .update((c) => {
-    // sync method is used to update internal representation with
-    // Virtual DOM API.
-    c.sync(createVRoot().children(c.data));
+    c.sync(createVRoot().children(`Hello ${c.data}`));
   });
 
-const Main = new ComponentDescriptor('Main')
-  .update((c) => {
-    c.sync(createVRoot().children([
-      createVElement('span').children('Hello '),
-      Box.createVNode(c.data)
-    ]));
-  });
-
-// Instantiate and inject component into document body.
-injectComponent(Main, document.body, 'kivi');
+injectComponent(Main, document.body, 'World');
 ```
 
 Build with any tool you like, kivi npm package provides standard commonjs
-modules, typescript typings, and es6 modules at `jsnext:main` path for bundlers
+modules, TypeScript typings, and es6 modules at `jsnext:main` path for bundlers
 like [Rollup](http://rollupjs.org/), and can be transpiled by
 [Babel](https://babeljs.io), [Buble](https://gitlab.com/Rich-Harris/buble),
 or [Google Closure Compiler](https://github.com/google/closure-compiler).
