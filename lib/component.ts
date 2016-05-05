@@ -394,7 +394,7 @@ export class Component<D, S> {
           (scheduler.frameTimeRemaining() > 0)) {
         this.descriptor._update(this);
         this.mtime = scheduler.clock;
-        this.flags &= ~(ComponentFlags.Dirty | ComponentFlags.Mounting);
+        this.flags &= ~(ComponentFlags.Dirty | ComponentFlags.Mounting | ComponentFlags.InUpdateQueue);
       } else {
         scheduler.nextFrame().updateComponent(this);
       }
@@ -461,8 +461,8 @@ export class Component<D, S> {
    */
   startUpdateEachFrame(): void {
     this.flags |= ComponentFlags.UpdateEachFrame;
-    if ((this.flags & ComponentFlags.InUpdateQueue) === 0) {
-      this.flags |= ComponentFlags.InUpdateQueue;
+    if ((this.flags & ComponentFlags.InUpdateEachFrameQueue) === 0) {
+      this.flags |= ComponentFlags.InUpdateEachFrameQueue;
       scheduler.startUpdateComponentEachFrame(this);
     }
   }

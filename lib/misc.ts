@@ -96,10 +96,11 @@ export const enum ComponentFlags {
   Mounting                  = 1 << 2,
   Dirty                     = 1 << 3,
   UpdateEachFrame           = 1 << 4,
-  InUpdateQueue             = 1 << 5,
+  InUpdateEachFrameQueue    = 1 << 5,
   Recycled                  = 1 << 6,
   DisabledCheckDataIdentity = 1 << 7,
-  HighPriorityUpdate        = 1 << 8,
+  InUpdateQueue             = 1 << 8,
+  HighPriorityUpdate        = 1 << 9,
 
   Svg              = SharedFlags.Svg,
   Canvas2D         = SharedFlags.Canvas2D,

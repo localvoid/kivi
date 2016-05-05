@@ -83,18 +83,21 @@ export class Frame {
       }
     }
 
-    const priority = component.depth;
+    if ((component.flags & ComponentFlags.InUpdateQueue) === 0) {
+      component.flags |= ComponentFlags.InUpdateQueue;
+      const priority = component.depth;
 
-    this._flags |= FrameTaskFlags.Component;
-    while (priority >= this._componentTasks.length) {
-      this._componentTasks.push(undefined);
-    }
+      this._flags |= FrameTaskFlags.Component;
+      while (priority >= this._componentTasks.length) {
+        this._componentTasks.push(undefined);
+      }
 
-    const group = this._componentTasks[priority];
-    if (group === undefined) {
-      this._componentTasks[priority] = [component];
-    } else {
-      group.push(component);
+      const group = this._componentTasks[priority];
+      if (group === undefined) {
+        this._componentTasks[priority] = [component];
+      } else {
+        group.push(component);
+      }
     }
   }
 
@@ -322,7 +325,7 @@ export class Scheduler {
   };
 
   private _handleAnimationFrame = (t: number) => {
-    let updateComponents = this._updateComponents;
+    const updateComponents = this._updateComponents;
     let tasks: SchedulerCallback[];
     let i: number;
     let j: number;
@@ -359,7 +362,6 @@ export class Scheduler {
             if (componentGroup !== undefined) {
               componentGroups[i] = undefined;
               for (j = 0; j < componentGroup.length; j++) {
-
                 componentGroup[j].update();
               }
             }
@@ -384,7 +386,7 @@ export class Scheduler {
       while (i < j) {
         const component = updateComponents[i++];
         if ((component.flags & ComponentFlags.UpdateEachFrame) === 0) {
-          component.flags &= ~ComponentFlags.InUpdateQueue;
+          component.flags &= ~ComponentFlags.InUpdateEachFrameQueue;
           if (i === j) {
             updateComponents.pop();
           } else {
