@@ -9,6 +9,14 @@ export const enum InvalidatorSubscriptionFlags {
   Transient = 1 << 1,
 }
 
+export const enum SchedulerFlags {
+  Running           = 1,
+  MicrotaskPending  = 1 << 1,
+  MacrotaskPending  = 1 << 2,
+  FrametaskPending  = 1 << 3,
+  EnabledThrottling = 1 << 4,
+}
+
 /**
  * Flags shared between VModel, VNode, ComponentDescriptor and Component
  * objects.
@@ -91,6 +99,7 @@ export const enum ComponentFlags {
   InUpdateQueue             = 1 << 5,
   Recycled                  = 1 << 6,
   DisabledCheckDataIdentity = 1 << 7,
+  HighPriorityUpdate        = 1 << 8,
 
   Svg              = SharedFlags.Svg,
   Canvas2D         = SharedFlags.Canvas2D,

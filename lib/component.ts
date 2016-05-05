@@ -1,4 +1,4 @@
-import {SvgNamespace, ComponentDescriptorFlags, ComponentFlags, VNodeFlags, RenderFlags} from "./misc";
+import {SvgNamespace, ComponentDescriptorFlags, ComponentFlags, SchedulerFlags, VNodeFlags, RenderFlags} from "./misc";
 import {VModel} from "./vmodel";
 import {VNode} from "./vnode";
 import {InvalidatorSubscription, Invalidator} from "./invalidator";
@@ -254,7 +254,7 @@ export class ComponentDescriptor<D, S> {
    * Mount Component on top of existing html element.
    */
   mountComponent(element: Element, parent?: Component<any, any>, data?: D, children?: string|VNode[]): Component<D, S> {
-    let component = new Component(this._markFlags | ComponentFlags.Mounting, this, element, parent, data, children);
+    const component = new Component(this._markFlags | ComponentFlags.Mounting, this, element, parent, data, children);
     if (this._init !== undefined) {
       this._init(component);
     }
@@ -369,13 +369,35 @@ export class Component<D, S> {
   }
 
   /**
+   * Start interaction.
+   */
+  startInteraction(): void {
+    this.flags |= ComponentFlags.HighPriorityUpdate;
+    scheduler.enableThrottling();
+  }
+
+  /**
+   * Finish interaction.
+   */
+  finishInteraction(): void {
+    this.flags &= ~ComponentFlags.HighPriorityUpdate;
+    scheduler.disableThrottling();
+  }
+
+  /**
    * Update Component.
    */
   update(): void {
     if ((this.flags & ComponentFlags.ShouldUpdate) === ComponentFlags.ShouldUpdate) {
-      this.descriptor._update(this);
-      this.mtime = scheduler.clock;
-      this.flags &= ~(ComponentFlags.Dirty | ComponentFlags.Mounting);
+      if (((scheduler._flags & SchedulerFlags.EnabledThrottling) === 0) ||
+          ((this.flags & ComponentFlags.HighPriorityUpdate) !== 0) ||
+          (scheduler.frameTimeRemaining() > 0)) {
+        this.descriptor._update(this);
+        this.mtime = scheduler.clock;
+        this.flags &= ~(ComponentFlags.Dirty | ComponentFlags.Mounting);
+      } else {
+        scheduler.nextFrame().updateComponent(this);
+      }
     }
   }
 

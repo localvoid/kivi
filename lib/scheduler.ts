@@ -1,5 +1,5 @@
 import {Component} from "./component";
-import {ComponentFlags} from "./misc";
+import {SchedulerFlags, ComponentFlags} from "./misc";
 import {VNode} from "./vnode";
 
 export type SchedulerCallback = () => void;
@@ -10,13 +10,6 @@ const enum FrameTaskFlags {
   Read      = 1 << 2,
   After     = 1 << 3,
   RWLock    = 1 << 4,
-}
-
-const enum SchedulerFlags {
-  Running          = 1,
-  MicrotaskPending = 1 << 1,
-  MacrotaskPending = 1 << 2,
-  FrametaskPending = 1 << 3,
 }
 
 /**
@@ -195,6 +188,13 @@ export class Scheduler {
   private _microtaskScheduler: MicrotaskScheduler;
   private _macrotaskScheduler: MacrotaskScheduler;
 
+  private _throttleEnabledCounter: number;
+  /**
+   * Maximum amount of processing time in ms available for tasks in each frame.
+   */
+  private _throttledTimePerFrame: number;
+  private _throttledFrameDeadline: number;
+
   constructor() {
     this._flags = 0;
     this.clock = 1;
@@ -206,6 +206,9 @@ export class Scheduler {
     this._updateComponents = [];
     this._microtaskScheduler = new MicrotaskScheduler(this._handleMicrotaskScheduler);
     this._macrotaskScheduler = new MacrotaskScheduler(this._handleMacrotaskScheduler);
+    this._throttleEnabledCounter = 0;
+    this._throttledTimePerFrame = 0;
+    this._throttledFrameDeadline = 0;
 
     this._currentFrame._rwLock();
   }
@@ -224,6 +227,33 @@ export class Scheduler {
   nextFrame(): Frame {
     this.requestAnimationFrame();
     return this._nextFrame;
+  }
+
+  enableThrottling(timePerFrame = 4000): void {
+    this._throttleEnabledCounter++;
+    if ((this._flags & SchedulerFlags.EnabledThrottling) === 0) {
+      this._flags |= SchedulerFlags.EnabledThrottling;
+      this._throttledTimePerFrame = timePerFrame;
+    } else if (this._throttledTimePerFrame > timePerFrame) {
+      this._throttledTimePerFrame = timePerFrame;
+    }
+  }
+
+  disableThrottling(): void {
+    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+      if (this._throttleEnabledCounter < 0) {
+        throw new Error("Failed to disable scheduler throttling, it is already disabled.");
+      }
+    }
+
+    this._throttleEnabledCounter--;
+    if (this._throttleEnabledCounter === 0) {
+      this._flags &= SchedulerFlags.EnabledThrottling;
+    }
+  }
+
+  frameTimeRemaining(): number {
+    return this._throttledFrameDeadline - performance.now();
   }
 
   startUpdateComponentEachFrame(component: Component<any, any>): void {
@@ -295,8 +325,11 @@ export class Scheduler {
     this._flags &= ~SchedulerFlags.FrametaskPending;
     this._flags |= SchedulerFlags.Running;
     this.time = Date.now();
+    if ((this._flags & SchedulerFlags.EnabledThrottling) !== 0) {
+      this._throttledFrameDeadline = performance.now() + this._throttledTimePerFrame;
+    }
 
-    let frame = this._nextFrame;
+    const frame = this._nextFrame;
     this._nextFrame = this._currentFrame;
     this._currentFrame = frame;
 
@@ -314,14 +347,14 @@ export class Scheduler {
       while ((frame._flags & (FrameTaskFlags.Component | FrameTaskFlags.Write)) !== 0) {
         if ((frame._flags & FrameTaskFlags.Component) !== 0) {
           frame._flags &= ~FrameTaskFlags.Component;
-          let groups = frame._componentTasks;
+          const componentGroups = frame._componentTasks;
 
-          for (i = 0; i < groups.length; i++) {
-            let group = groups[i];
-            if (group !== undefined) {
-              groups[i] = undefined;
-              for (j = 0; j < group.length; j++) {
-                group[j].update();
+          for (i = 0; i < componentGroups.length; i++) {
+            const component = componentGroups[i];
+            if (component !== undefined) {
+              componentGroups[i] = undefined;
+              for (j = 0; j < component.length; j++) {
+                component[j].update();
               }
             }
           }
@@ -343,7 +376,7 @@ export class Scheduler {
       j = updateComponents.length;
 
       while (i < j) {
-        let component = updateComponents[i++];
+        const component = updateComponents[i++];
         if ((component.flags & ComponentFlags.UpdateEachFrame) === 0) {
           component.flags &= ~ComponentFlags.InUpdateQueue;
           if (i === j) {
