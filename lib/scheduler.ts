@@ -90,12 +90,12 @@ export class Frame {
       this._componentTasks.push(undefined);
     }
 
-    let group = this._componentTasks[priority];
+    const group = this._componentTasks[priority];
     if (group === undefined) {
-      group = this._componentTasks[priority] = [];
+      this._componentTasks[priority] = [component];
+    } else {
+      group.push(component);
     }
-
-    group.push(component);
   }
 
   /**
@@ -188,6 +188,7 @@ export class Scheduler {
   private _microtaskScheduler: MicrotaskScheduler;
   private _macrotaskScheduler: MacrotaskScheduler;
 
+  defaultThrottleTime: number;
   private _throttleEnabledCounter: number;
   /**
    * Maximum amount of processing time in ms available for tasks in each frame.
@@ -206,6 +207,7 @@ export class Scheduler {
     this._updateComponents = [];
     this._microtaskScheduler = new MicrotaskScheduler(this._handleMicrotaskScheduler);
     this._macrotaskScheduler = new MacrotaskScheduler(this._handleMacrotaskScheduler);
+    this.defaultThrottleTime = 5;
     this._throttleEnabledCounter = 0;
     this._throttledTimePerFrame = 0;
     this._throttledFrameDeadline = 0;
@@ -229,13 +231,16 @@ export class Scheduler {
     return this._nextFrame;
   }
 
-  enableThrottling(timePerFrame = 4000): void {
+  enableThrottling(msPerFrame?: number): void {
+    if (msPerFrame === undefined) {
+      msPerFrame = this.defaultThrottleTime;
+    }
     this._throttleEnabledCounter++;
     if ((this._flags & SchedulerFlags.EnabledThrottling) === 0) {
       this._flags |= SchedulerFlags.EnabledThrottling;
-      this._throttledTimePerFrame = timePerFrame;
-    } else if (this._throttledTimePerFrame > timePerFrame) {
-      this._throttledTimePerFrame = timePerFrame;
+      this._throttledTimePerFrame = msPerFrame;
+    } else if (this._throttledTimePerFrame > msPerFrame) {
+      this._throttledTimePerFrame = msPerFrame;
     }
   }
 
@@ -326,7 +331,7 @@ export class Scheduler {
     this._flags |= SchedulerFlags.Running;
     this.time = Date.now();
     if ((this._flags & SchedulerFlags.EnabledThrottling) !== 0) {
-      this._throttledFrameDeadline = performance.now() + this._throttledTimePerFrame;
+      this._throttledFrameDeadline = t + this._throttledTimePerFrame;
     }
 
     const frame = this._nextFrame;
@@ -350,11 +355,12 @@ export class Scheduler {
           const componentGroups = frame._componentTasks;
 
           for (i = 0; i < componentGroups.length; i++) {
-            const component = componentGroups[i];
-            if (component !== undefined) {
+            const componentGroup = componentGroups[i];
+            if (componentGroup !== undefined) {
               componentGroups[i] = undefined;
-              for (j = 0; j < component.length; j++) {
-                component[j].update();
+              for (j = 0; j < componentGroup.length; j++) {
+
+                componentGroup[j].update();
               }
             }
           }
@@ -405,6 +411,7 @@ export class Scheduler {
       frame._flags &= ~FrameTaskFlags.After;
 
       tasks = frame._afterTasks;
+      frame._afterTasks = undefined;
       for (i = 0; i < tasks.length; i++) {
         tasks[i]();
       }
