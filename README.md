@@ -9,7 +9,7 @@ is just a view library.
 ## Example
 
 ```js
-import {createVRoot, createVElement, ComponentDescriptor, injectComponent} from 'kivi';
+import {ComponentDescriptor, createVRoot, injectComponent} from 'kivi';
 
 const HelloWorld = new ComponentDescriptor()
   .update((c) => {
