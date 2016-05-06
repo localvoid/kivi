@@ -192,7 +192,6 @@ export class Scheduler {
   private _macrotaskScheduler: MacrotaskScheduler;
 
   defaultThrottleTime: number;
-  private _frameTimeRemaining: number;
   private _throttleEnabledCounter: number;
   /**
    * Maximum amount of processing time in ms available for tasks in each frame.
@@ -212,7 +211,6 @@ export class Scheduler {
     this._microtaskScheduler = new MicrotaskScheduler(this._handleMicrotaskScheduler);
     this._macrotaskScheduler = new MacrotaskScheduler(this._handleMacrotaskScheduler);
     this.defaultThrottleTime = 5;
-    this._frameTimeRemaining = 0;
     this._throttleEnabledCounter = 0;
     this._throttledTimePerFrame = 0;
     this._throttledFrameDeadline = 0;
@@ -263,10 +261,17 @@ export class Scheduler {
   }
 
   frameTimeRemaining(): number {
-    if (this._frameTimeRemaining > 0) {
-      this._frameTimeRemaining = this._throttledFrameDeadline - performance.now();
+    if ((this._flags & SchedulerFlags.ThrottledFrameExhausted) !== 0) {
+      return 0;
+    } else {
+      const remaining = this._throttledFrameDeadline - performance.now();
+      if (remaining <= 0) {
+        this._flags |= SchedulerFlags.ThrottledFrameExhausted;
+        return 0;
+      } else {
+        return remaining;
+      }
     }
-    return this._frameTimeRemaining;
   }
 
   startUpdateComponentEachFrame(component: Component<any, any>): void {
@@ -335,12 +340,11 @@ export class Scheduler {
     let i: number;
     let j: number;
 
-    this._flags &= ~SchedulerFlags.FrametaskPending;
+    this._flags &= ~(SchedulerFlags.FrametaskPending | SchedulerFlags.ThrottledFrameExhausted);
     this._flags |= SchedulerFlags.Running;
     this.time = Date.now();
     if ((this._flags & SchedulerFlags.EnabledThrottling) !== 0) {
       this._throttledFrameDeadline = t + this._throttledTimePerFrame;
-      this._frameTimeRemaining = this._throttledTimePerFrame;
     }
 
     const frame = this._nextFrame;

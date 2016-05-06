@@ -10,11 +10,12 @@ export const enum InvalidatorSubscriptionFlags {
 }
 
 export const enum SchedulerFlags {
-  Running           = 1,
-  MicrotaskPending  = 1 << 1,
-  MacrotaskPending  = 1 << 2,
-  FrametaskPending  = 1 << 3,
-  EnabledThrottling = 1 << 4,
+  Running                 = 1,
+  MicrotaskPending        = 1 << 1,
+  MacrotaskPending        = 1 << 2,
+  FrametaskPending        = 1 << 3,
+  EnabledThrottling       = 1 << 4,
+  ThrottledFrameExhausted = 1 << 5,
 }
 
 /**
