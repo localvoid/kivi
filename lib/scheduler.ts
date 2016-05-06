@@ -362,6 +362,16 @@ export class Scheduler {
     }
 
     do {
+      while ((frame._flags & FrameTaskFlags.Read) !== 0) {
+        frame._flags &= ~FrameTaskFlags.Read;
+        tasks = frame._readTasks;
+        frame._readTasks = undefined;
+
+        for (i = 0; i < tasks.length; i++) {
+          tasks[i]();
+        }
+      }
+
       while ((frame._flags & (FrameTaskFlags.Component | FrameTaskFlags.Write)) !== 0) {
         if ((frame._flags & FrameTaskFlags.Component) !== 0) {
           frame._flags &= ~FrameTaskFlags.Component;
@@ -406,17 +416,7 @@ export class Scheduler {
           component.update();
         }
       }
-
-      while ((frame._flags & FrameTaskFlags.Read) !== 0) {
-        frame._flags &= ~FrameTaskFlags.Read;
-        tasks = frame._readTasks;
-        frame._readTasks = undefined;
-
-        for (i = 0; i < tasks.length; i++) {
-          tasks[i]();
-        }
-      }
-    } while ((frame._flags & (FrameTaskFlags.Component | FrameTaskFlags.Write)) !== 0);
+    } while ((frame._flags & (FrameTaskFlags.Component | FrameTaskFlags.Write | FrameTaskFlags.Read)) !== 0);
 
     this._currentFrame._rwLock();
     while ((frame._flags & FrameTaskFlags.After) !== 0) {
