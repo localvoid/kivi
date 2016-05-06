@@ -118,6 +118,9 @@ export const enum ContainerManagerDescriptorDebugFlags {
 export type VNodeRecursiveListValue = VNode|VNodeRecursiveList;
 export interface VNodeRecursiveList extends Array<VNodeRecursiveListValue> {}
 
+/**
+ * Recursively flattens VNode arrays.
+ */
 export function flattenVNodes(nodes: VNodeRecursiveList): VNode[] {
   let copy = nodes.slice(0);
   const flatten = [] as VNode[];
@@ -133,7 +136,7 @@ export function flattenVNodes(nodes: VNodeRecursiveList): VNode[] {
 }
 
 /**
- * Set attribute.
+ * Set HTML attribute.
  */
 export function setAttr(node: Element, key: string, value: string): void {
   if (key[0] !== "x") {
@@ -169,7 +172,7 @@ export function setAttr(node: Element, key: string, value: string): void {
 }
 
 /**
- * Sync attributes with static shape.
+ * Sync HTML attributes with static shape.
  */
 export function syncStaticShapeAttrs(node: Element, a: {[key: string]: any}, b: {[key: string]: any}): void {
   if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {

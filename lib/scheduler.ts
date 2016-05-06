@@ -191,12 +191,21 @@ export class Scheduler {
   private _microtaskScheduler: MicrotaskScheduler;
   private _macrotaskScheduler: MacrotaskScheduler;
 
-  defaultThrottleTime: number;
+  /**
+   * Default duration in ms that will be available for tasks each frame.
+   */
+  defaultThrottleDuration: number;
+  /**
+   * Usage counter of dependencies that enabled throttling, when it goes to zero, throttling mode is disabled.
+   */
   private _throttleEnabledCounter: number;
   /**
-   * Maximum amount of processing time in ms available for tasks in each frame.
+   * Maximum amount of processing time in ms available to update component tasks each frame.
    */
   private _throttledTimePerFrame: number;
+  /**
+   * High Res timestamp of a point in time when low priority components should stop updating in a throttled mode.
+   */
   private _throttledFrameDeadline: number;
 
   constructor() {
@@ -210,7 +219,8 @@ export class Scheduler {
     this._updateComponents = [];
     this._microtaskScheduler = new MicrotaskScheduler(this._handleMicrotaskScheduler);
     this._macrotaskScheduler = new MacrotaskScheduler(this._handleMacrotaskScheduler);
-    this.defaultThrottleTime = 5;
+
+    this.defaultThrottleDuration = 5;
     this._throttleEnabledCounter = 0;
     this._throttledTimePerFrame = 0;
     this._throttledFrameDeadline = 0;
@@ -218,25 +228,40 @@ export class Scheduler {
     this._currentFrame._rwLock();
   }
 
-  requestAnimationFrame(): void {
+  _requestAnimationFrame(): void {
     if ((this._flags & SchedulerFlags.FrametaskPending) === 0) {
       this._flags |= SchedulerFlags.FrametaskPending;
       requestAnimationFrame(this._handleAnimationFrame);
     }
   }
 
+  /**
+   * Get task list for the current frame.
+   */
   currentFrame(): Frame {
     return this._currentFrame;
   }
 
+  /**
+   * Get task list for the next frame.
+   */
   nextFrame(): Frame {
-    this.requestAnimationFrame();
+    this._requestAnimationFrame();
     return this._nextFrame;
   }
 
+  /**
+   * **EXPERIMENTAL** Enable throttling mode.
+   *
+   * In throttling mode, all updates for low priority components will be throttled, all updates will be performed
+   * incrementally each frame.
+   *
+   * Each time throttling is enabled, it increases internal counter that tracks how many times it is enabled, and when
+   * counters goes to zero, throttling mode will be disabled.
+   */
   enableThrottling(msPerFrame?: number): void {
     if (msPerFrame === undefined) {
-      msPerFrame = this.defaultThrottleTime;
+      msPerFrame = this.defaultThrottleDuration;
     }
     this._throttleEnabledCounter++;
     if ((this._flags & SchedulerFlags.EnabledThrottling) === 0) {
@@ -247,6 +272,11 @@ export class Scheduler {
     }
   }
 
+  /**
+   * **EXPERIMENTAL** Disable throttling mode.
+   *
+   * Throttling mode will be disabled when number of dependencies that enabled throttling mode goes to zero.
+   */
   disableThrottling(): void {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if (this._throttleEnabledCounter < 0) {
@@ -260,6 +290,9 @@ export class Scheduler {
     }
   }
 
+  /**
+   * Get remaining time available for tasks in the current frame.
+   */
   frameTimeRemaining(): number {
     if ((this._flags & SchedulerFlags.ThrottledFrameExhausted) !== 0) {
       return 0;
@@ -275,10 +308,13 @@ export class Scheduler {
   }
 
   startUpdateComponentEachFrame(component: Component<any, any>): void {
-    this.requestAnimationFrame();
+    this._requestAnimationFrame();
     this._updateComponents.push(component);
   }
 
+  /**
+   * Add task to the microtask queue.
+   */
   scheduleMicrotask(callback: SchedulerCallback): void {
     if ((this._flags & SchedulerFlags.MicrotaskPending) === 0) {
       this._flags |= SchedulerFlags.MicrotaskPending;
@@ -287,6 +323,9 @@ export class Scheduler {
     this._microtasks.push(callback);
   }
 
+  /**
+   * Add task to the macrotask queue.
+   */
   scheduleMacrotask(callback: SchedulerCallback): void {
     if ((this._flags & SchedulerFlags.MacrotaskPending) === 0) {
       this._flags |= SchedulerFlags.MacrotaskPending;
@@ -295,6 +334,12 @@ export class Scheduler {
     this._macrotasks.push(callback);
   }
 
+  /**
+   * Perform an operation in scheduler context.
+   *
+   * Processing operations inside scheduler context will guarantee that internal monotonically increasing clock is
+   * increased after operation.
+   */
   start(callback: SchedulerCallback): void {
     this._flags |= SchedulerFlags.Running;
     this.time = Date.now();
@@ -439,7 +484,7 @@ export class Scheduler {
     }
 
     if (updateComponents.length > 0) {
-      this.requestAnimationFrame();
+      this._requestAnimationFrame();
     }
 
     this.clock++;
@@ -447,4 +492,7 @@ export class Scheduler {
   }
 }
 
+/**
+ * Global scheduler instance.
+ */
 export const scheduler = new Scheduler();

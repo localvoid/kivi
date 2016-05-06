@@ -369,7 +369,10 @@ export class Component<D, S> {
   }
 
   /**
-   * Start interaction.
+   * **EXPERIMENTAL** Start interaction.
+   *
+   * When interaction is started, component becomes a high priority target for a scheduler, and scheduler goes into
+   * throttled mode.
    */
   startInteraction(): void {
     this.flags |= ComponentFlags.HighPriorityUpdate;
@@ -377,11 +380,33 @@ export class Component<D, S> {
   }
 
   /**
-   * Finish interaction.
+   * **EXPERIMENTAL** Finish interaction.
+   *
+   * Removes high priority flag from component and disables scheduler throttling.
    */
   finishInteraction(): void {
     this.flags &= ~ComponentFlags.HighPriorityUpdate;
     scheduler.disableThrottling();
+  }
+
+  /**
+   * Adds component to a scheduler queue that will update component each animation frame.
+   *
+   * Component will be updated always, even when scheduler is in throttled mode.
+   */
+  startUpdateEachFrame(): void {
+    this.flags |= ComponentFlags.UpdateEachFrame;
+    if ((this.flags & ComponentFlags.InUpdateEachFrameQueue) === 0) {
+      this.flags |= ComponentFlags.InUpdateEachFrameQueue;
+      scheduler.startUpdateComponentEachFrame(this);
+    }
+  }
+
+  /**
+   * Remove component from a scheduler queue that updates component each animation frame.
+   */
+  stopUpdateEachFrame(): void {
+    this.flags &= ~ComponentFlags.UpdateEachFrame;
   }
 
   /**
@@ -402,7 +427,7 @@ export class Component<D, S> {
   }
 
   /**
-   * Sync internal representation using Virtual DOM api.
+   * Sync internal representation using Virtual DOM API.
    *
    * If this method is called during mounting phase, then Virtual DOM will be
    * mounted on top of the existing document tree.
@@ -454,24 +479,6 @@ export class Component<D, S> {
         invalidated(this);
       }
     }
-  }
-
-  /**
-   * Start updating Component on each frame.
-   */
-  startUpdateEachFrame(): void {
-    this.flags |= ComponentFlags.UpdateEachFrame;
-    if ((this.flags & ComponentFlags.InUpdateEachFrameQueue) === 0) {
-      this.flags |= ComponentFlags.InUpdateEachFrameQueue;
-      scheduler.startUpdateComponentEachFrame(this);
-    }
-  }
-
-  /**
-   * Stop updating Component on each frame.
-   */
-  stopUpdateEachFrame(): void {
-    this.flags &= ~ComponentFlags.UpdateEachFrame;
   }
 
   /**
