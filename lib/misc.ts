@@ -66,6 +66,9 @@ export const enum VNodeFlags {
   VModelUpdateHandler = SharedFlags.VModelUpdateHandler,
 }
 
+/**
+ * Rendering flags are used to control Virtual DOM syncing algorithm.
+ */
 export const enum RenderFlags {
   // Prevents from rendering subcomponents.
   ShallowRender = 1,

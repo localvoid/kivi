@@ -102,7 +102,7 @@ export class Frame {
   }
 
   /**
-   * Add new task to the write task queue.
+   * Add new task to the write DOM task queue.
    */
   write(callback: SchedulerCallback): void {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -119,6 +119,9 @@ export class Frame {
     this._writeTasks.push(callback);
   }
 
+  /**
+   * Add new task to the read DOM task queue.
+   */
   read(callback: SchedulerCallback): void {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((this._flags & FrameTaskFlags.RWLock) !== 0) {
@@ -134,6 +137,9 @@ export class Frame {
     this._readTasks.push(callback);
   }
 
+  /**
+   * Add new task to the task queue that will execute tasks when all DOM tasks are finished.
+   */
   after(callback: SchedulerCallback): void {
     this._flags |= FrameTaskFlags.After;
     if (this._afterTasks === undefined) {
@@ -142,6 +148,9 @@ export class Frame {
     this._afterTasks.push(callback);
   }
 
+  /**
+   * Set a focus on an element when all DOM tasks are finished.
+   */
   focus(node: Element|VNode): void {
     this._focus = node;
   }
@@ -307,6 +316,9 @@ export class Scheduler {
     }
   }
 
+  /**
+   * Add component to the list of components that should be updated each frame.
+   */
   startUpdateComponentEachFrame(component: Component<any, any>): void {
     this._requestAnimationFrame();
     this._updateComponents.push(component);
@@ -406,6 +418,8 @@ export class Scheduler {
       updateComponents[i].markDirty();
     }
 
+    // Perform read/write batching. Start with executing read DOM tasks, then update components, execute write DOM tasks
+    // and repeat until all read and write tasks are executed.
     do {
       while ((frame._flags & FrameTaskFlags.Read) !== 0) {
         frame._flags &= ~FrameTaskFlags.Read;
@@ -463,7 +477,10 @@ export class Scheduler {
       }
     } while ((frame._flags & (FrameTaskFlags.Component | FrameTaskFlags.Write | FrameTaskFlags.Read)) !== 0);
 
+    // Lock current from adding read and write tasks in debug mode.
     this._currentFrame._rwLock();
+
+    // Perform tasks that should be executed when all DOM ops are finished.
     while ((frame._flags & FrameTaskFlags.After) !== 0) {
       frame._flags &= ~FrameTaskFlags.After;
 
@@ -474,6 +491,7 @@ export class Scheduler {
       }
     }
 
+    // Set focus on an element.
     if (frame._focus !== undefined) {
       if (frame._focus.constructor === VNode) {
         ((frame._focus as VNode).ref as HTMLElement).focus();

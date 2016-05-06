@@ -39,12 +39,12 @@ export class InvalidatorSubscription {
     if ((this._flags & InvalidatorSubscriptionFlags.Transient) === 0) {
       this.invalidator._removeSubscription(this);
       if ((this._flags & InvalidatorSubscriptionFlags.Component) !== 0) {
-        this._component.removeSubscription(this);
+        this._component._removeSubscription(this);
       }
     } else {
       this.invalidator._removeTransientSubscription(this);
       if ((this._flags & InvalidatorSubscriptionFlags.Component) !== 0) {
-        this._component.removeTransientSubscription(this);
+        this._component._removeTransientSubscription(this);
       }
     }
   }

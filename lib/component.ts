@@ -279,16 +279,39 @@ export class Component<D, S> {
    * monotonically increasing clock.
    */
   mtime: number;
+  /**
+   * Component descriptor.
+   */
   descriptor: ComponentDescriptor<D, S>;
+  /**
+   * Reference to the root element.
+   */
   element: Element;
+  /**
+   * Parent component.
+   */
   parent: Component<any, any>;
+  /**
+   * Depth in the components tree.
+   *
+   * Depth property is used by scheduler to determine its priority when updating components.
+   */
   depth: number;
+  /**
+   * Component's state.
+   */
   state: S;
+  /**
+   * Component's data.
+   */
   data: D;
+  /**
+   * Component's parameter children.
+   */
   children: VNode[]|string;
   /**
-   * Root node, virtual dom root if Component represents a DOM subtree,
-   * or Canvas context if Component is a Canvas object.
+   * Root node can contain a virtual dom root if Component represents a DOM subtree, or Canvas context if Component is
+   * a Canvas object.
    */
   root: VNode|CanvasRenderingContext2D;
 
@@ -410,7 +433,7 @@ export class Component<D, S> {
   }
 
   /**
-   * Update Component.
+   * Update component.
    */
   update(): void {
     if ((this.flags & ComponentFlags.ShouldUpdate) === ComponentFlags.ShouldUpdate) {
@@ -463,10 +486,9 @@ export class Component<D, S> {
   }
 
   /**
-   * Invalidate Component.
+   * Invalidate component.
    *
-   * It automatically cancels all transient subscriptions and schedules a
-   * Component update on the next frame.
+   * It automatically cancels all transient subscriptions and schedules a component update on the next frame.
    */
   invalidate(): void {
     if ((this.flags & (ComponentFlags.Dirty | ComponentFlags.Disposed)) === 0) {
@@ -482,8 +504,7 @@ export class Component<D, S> {
   }
 
   /**
-   * Attach method should be invoked when Component is attached to the
-   * document.
+   * Attach method should be invoked when component is attached to the document.
    */
   attach(): void {
     this.attached();
@@ -510,8 +531,7 @@ export class Component<D, S> {
   }
 
   /**
-   * Detach method should be invoked when Component is detached from the
-   * document.
+   * Detach method should be invoked when component is detached from the document.
    */
   detach(): void {
     if (this.root !== undefined && ((this.flags & ComponentFlags.Canvas2D) === 0)) {
@@ -536,6 +556,9 @@ export class Component<D, S> {
     }
   }
 
+  /**
+   * Dispose method should be invoked when component is destroyed.
+   */
   dispose(): void {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((this.flags & ComponentFlags.Disposed) !== 0) {
@@ -583,8 +606,7 @@ export class Component<D, S> {
   /**
    * Transiently subscribe to invalidator object.
    *
-   * Each time component is invalidated, all transient subscriptions will be
-   * canceled.
+   * Each time component is invalidated, all transient subscriptions will be canceled.
    */
   transientSubscribe(invalidator: Invalidator): void {
     const s = invalidator.transientSubscribeComponent(this);
@@ -598,7 +620,7 @@ export class Component<D, S> {
     }
   }
 
-  removeSubscription(subscription: InvalidatorSubscription): void {
+  _removeSubscription(subscription: InvalidatorSubscription): void {
     const subscriptions = this._subscriptions;
     if (subscriptions.constructor === InvalidatorSubscription ||
         (subscriptions as InvalidatorSubscription[]).length === 1) {
@@ -625,7 +647,7 @@ export class Component<D, S> {
     }
   }
 
-  removeTransientSubscription(subscription: InvalidatorSubscription): void {
+  _removeTransientSubscription(subscription: InvalidatorSubscription): void {
     const subscriptions = this._transientSubscriptions;
     if (subscriptions.constructor === InvalidatorSubscription ||
         (subscriptions as InvalidatorSubscription[]).length === 1) {
