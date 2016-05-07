@@ -4,7 +4,7 @@ manipulations, Components, and Scheduler tightly integrated with Components. It
 doesn't have a router, or anything that is related to application state, kivi
 is just a view library.
 
-[Kivi guide](https://localvoid.gitbooks.io/kivi-guide/content/).
+[Kivi guide](http://localvoid.github.io/kivi/).
 
 ## Example
 

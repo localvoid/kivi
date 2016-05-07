@@ -1,5 +1,6 @@
 build
 dist
+gh-pages
 
 node_modules
 typings

@@ -8,6 +8,8 @@ var rollup = require("rollup");
 var rollupTypeScript = require("rollup-plugin-typescript");
 var rollupReplace = require("rollup-plugin-replace");
 var rollupBabel = require("rollup-plugin-babel");
+var gitbook = require("gitbook");
+var ghPages = require("gulp-gh-pages");
 
 gulp.task("clean", del.bind(null, ["dist", "build"]));
 
@@ -103,6 +105,23 @@ gulp.task("examples:ts", function() {
 gulp.task("examples:html", function() {
   return gulp.src(["examples/**/*.html"])
     .pipe(gulp.dest("build/examples"));
+});
+
+gulp.task("guide", function(done) {
+  var book = new gitbook.Book("docs/guide", {
+    config: {
+      output: "gh-pages"
+    }
+  })
+
+  return book.parse().then(function() {
+    return book.generate("website");
+  });
+});
+
+gulp.task("gh-pages", ["guide"], function() {
+  return gulp.src("gh-pages/**/*")
+    .pipe(ghPages());
 });
 
 gulp.task("examples", ["examples:html"]);

@@ -33,7 +33,9 @@
   "devDependencies": {
     "babel-preset-es2015-rollup": "^1.1.1",
     "del": "^2.2.0",
+    "gitbook": "^2.6.7",
     "gulp": "^3.9.1",
+    "gulp-gh-pages": "^0.5.4",
     "gulp-tslint": "^5.0.0",
     "jasmine-core": "^2.2.0",
     "karma": "^0.13.22",
