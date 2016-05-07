@@ -4,7 +4,7 @@ manipulations, Components, and Scheduler tightly integrated with Components. It
 doesn't have a router, or anything that is related to application state, kivi
 is just a view library.
 
-[Kivi Guide](https://localvoid.gitbooks.io/kivi-guide/content/).
+[Kivi guide](https://localvoid.gitbooks.io/kivi-guide/content/).
 
 ## Example
 
@@ -24,6 +24,7 @@ injectComponent(Main, document.body, 'World');
 - [Intro](https://github.com/localvoid/kivi/tree/master/examples/intro)
 - [Stateful Component](https://github.com/localvoid/kivi/tree/master/examples/stateful_component)
 - [Canvas](https://github.com/localvoid/kivi/tree/master/examples/canvas)
+- [TodoMVC](https://github.com/localvoid/kivi-todomvc/)
 
 ## Performance Benchmarks
 
