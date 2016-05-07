@@ -124,17 +124,19 @@ export type VNodeRecursiveListValue = VNode|VNodeRecursiveList;
 export interface VNodeRecursiveList extends Array<VNodeRecursiveListValue> {}
 
 /**
- * Recursively flattens VNode arrays.
+ * Recursively flattens VNode arrays and skips undefined nodes.
  */
 export function flattenVNodes(nodes: VNodeRecursiveList): VNode[] {
   let copy = nodes.slice(0);
   const flatten = [] as VNode[];
   while (copy.length > 0) {
     const item = copy.shift();
-    if (item.constructor === VNode) {
-      flatten.push(item as any);
-    } else {
-      copy = (item as any).concat(copy);
+    if (item !== undefined) {
+      if (item.constructor === VNode) {
+        flatten.push(item as any);
+      } else {
+        copy = (item as any).concat(copy);
+      }
     }
   }
   return flatten;
