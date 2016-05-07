@@ -201,6 +201,14 @@ export class ComponentDescriptor<D, S> {
   }
 
   /**
+   * Enable back reference from DOM element to component.
+   */
+  enableBackRef(): ComponentDescriptor<D, S> {
+    this._flags |= ComponentDescriptorFlags.EnabledBackRef;
+    return this;
+  }
+
+  /**
    * Enable Component recycling.
    */
   enableRecycling(maxRecycled: number): ComponentDescriptor<D, S> {
@@ -239,6 +247,10 @@ export class ComponentDescriptor<D, S> {
         element = (this._tag as VModel<any>).createElement();
       }
       component = new Component<D, S>(this._markFlags, this, element, parent, data, children);
+
+      if ((this._flags & ComponentDescriptorFlags.EnabledBackRef) !== 0) {
+        (element as any as {xtag: Component<D, S>}).xtag = component;
+      }
       if (this._init !== undefined) {
         this._init(component);
       }

@@ -88,6 +88,8 @@ export const enum VNodeDebugFlags {
 }
 
 export const enum ComponentDescriptorFlags {
+  EnabledBackRef = 1,
+
   Svg              = SharedFlags.Svg,
   Canvas2D         = SharedFlags.Canvas2D,
   VModel           = SharedFlags.VModel,
@@ -136,6 +138,13 @@ export function flattenVNodes(nodes: VNodeRecursiveList): VNode[] {
     }
   }
   return flatten;
+}
+
+/**
+ * Gets reference to component from a DOM node object.
+ */
+export function getBackRef<T>(node: Node): T {
+  return (node as any as {xtag: T}).xtag;
 }
 
 /**

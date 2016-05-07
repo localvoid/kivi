@@ -1650,3 +1650,17 @@ export function createVSvgElement(tagName: string): VNode {
 export function createVRoot(): VNode {
   return new VNode(VNodeFlags.Root, undefined, undefined);
 }
+
+/**
+ * Create a VNode representing a HTMLInputElement with text value.
+ */
+export function createVTextInput(): VNode {
+  return new VNode(VNodeFlags.Element | VNodeFlags.TextInputElement, "input", undefined);
+}
+
+/**
+ * Create a VNode representing a HTMLInputElement with checked value.
+ */
+export function createVCheckedInput(): VNode {
+  return new VNode(VNodeFlags.Element | VNodeFlags.CheckedInputElement, "input", undefined);
+}
