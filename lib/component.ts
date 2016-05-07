@@ -713,11 +713,11 @@ export class Component<D, S> {
     if (subscriptions !== undefined) {
       if (subscriptions.constructor === InvalidatorSubscription) {
         (subscriptions as InvalidatorSubscription).invalidator
-          ._removeSubscription(subscriptions as InvalidatorSubscription);
+          ._removeTransientSubscription(subscriptions as InvalidatorSubscription);
       } else {
         for (let i = 0; i < (subscriptions as InvalidatorSubscription[]).length; i++) {
           let s = (subscriptions as InvalidatorSubscription[])[i];
-          s.invalidator._removeSubscription(s);
+          s.invalidator._removeTransientSubscription(s);
         }
       }
     }

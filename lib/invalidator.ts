@@ -184,8 +184,8 @@ export class Invalidator {
   _removeSubscription(subscription: InvalidatorSubscription): void {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((this._subscription !== undefined && this._subscription !== subscription) ||
-          this._subscriptions === undefined ||
-          this._subscriptions.indexOf(subscription) === -1) {
+          (this._subscriptions !== undefined && this._subscriptions.indexOf(subscription) === -1) ||
+          (this._subscription === undefined && this._subscriptions === undefined)) {
         throw new Error("Failed to remove subscription from Invalidator: cannot find appropriate subscription.");
       }
     }
@@ -195,7 +195,7 @@ export class Invalidator {
     } else if (this._subscriptions.length === 1) {
       this._subscriptions = undefined;
     } else {
-      let i = this._subscriptions.indexOf(subscription);
+      const i = this._subscriptions.indexOf(subscription);
       this._subscriptions[i] = this._subscriptions.pop();
     }
   }
@@ -203,8 +203,8 @@ export class Invalidator {
   _removeTransientSubscription(subscription: InvalidatorSubscription): void {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((this._transientSubscription !== undefined && this._transientSubscription !== subscription) ||
-          this._transientSubscriptions === undefined ||
-          this._transientSubscriptions.indexOf(subscription) === -1) {
+          (this._transientSubscriptions !== undefined && this._transientSubscriptions.indexOf(subscription) === -1) ||
+          (this._transientSubscription === undefined && this._transientSubscriptions === undefined)) {
         throw new Error("Failed to remove subscription from Invalidator: cannot find appropriate subscription.");
       }
     }
@@ -214,7 +214,7 @@ export class Invalidator {
     } else if (this._transientSubscriptions.length === 1) {
       this._transientSubscriptions = undefined;
     } else {
-      let i = this._transientSubscriptions.indexOf(subscription);
+      const i = this._transientSubscriptions.indexOf(subscription);
       this._transientSubscriptions[i] = this._transientSubscriptions.pop();
     }
   }
