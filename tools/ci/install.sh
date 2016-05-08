@@ -5,7 +5,7 @@ set -ex -o pipefail
 echo 'travis_fold:start:INSTALL'
 
 echo 'travis_fold:start:install.npm-cli-tools'
-npm -g install gulp-cli typings
+npm -g install gulp-cli typings karma-cli
 echo 'travis_fold:end:install.npm-cli-tools'
 
 echo 'travis_fold:start:install.node_modules'

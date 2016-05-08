@@ -37,6 +37,7 @@
     "gulp": "^3.9.1",
     "gulp-gh-pages": "^0.5.4",
     "gulp-tslint": "^5.0.0",
+    "gulp-typescript": "^2.13.3",
     "jasmine-core": "^2.2.0",
     "karma": "^0.13.22",
     "karma-chrome-launcher": "^0.2.3",
