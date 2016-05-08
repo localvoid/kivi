@@ -9,3 +9,4 @@ typings
 .DS_Store
 .idea
 .vscode
+.npm-debug
