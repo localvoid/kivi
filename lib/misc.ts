@@ -60,6 +60,7 @@ export const enum VNodeFlags {
   CheckedInputElement = 1 << 10,
   InputElement        = TextInputElement | CheckedInputElement,
   KeepAlive           = 1 << 11,
+  BindOnce            = 1 << 12,
 
   Svg                 = SharedFlags.Svg,
   VModel              = SharedFlags.VModel,
