@@ -17,8 +17,6 @@ cache:
 install:
   - ./tools/ci/install.sh
 
-before_script:
-
 script:
   - ./tools/ci/test.sh
 
