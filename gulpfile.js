@@ -21,7 +21,6 @@ gulp.task("build:es6", function() {
     }))
     .pipe(ts(Object.assign(tsConfig.compilerOptions, {
       target: "es6",
-      module: undefined,
       declaration: true,
     })));
 

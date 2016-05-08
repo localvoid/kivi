@@ -216,6 +216,23 @@ export class VNode {
   }
 
   /**
+   * Set VModel data.
+   */
+  data(data: any): VNode {
+    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+      if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root | VNodeFlags.VModel)) === 0) {
+        throw new Error("Failed to set data on VNode: data method should be called on element or component" +
+                        " root nodes represented by VModel only.");
+      }
+      if ((this._flags & VNodeFlags.VModelUpdateHandler) === 0) {
+        throw new Error("Failed to set data on VNode: VNode should be using VModel with custom update handler.");
+      }
+    }
+    this._props = data;
+    return this;
+  }
+
+  /**
    * Set style in css string format.
    */
   style(style: string): VNode {

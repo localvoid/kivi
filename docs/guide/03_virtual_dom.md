@@ -80,14 +80,8 @@ Key should be unique among its siblings.
 When track by key is enabled, children reconciliation algorithm uses a key value to find virtual node in old children
 list that represented the same DOM node.
 
-### Using Virtual DOM from Components
+### Using Virtual DOM with components
 
-##### `createVRoot(): VNode`
+##### `ComponentDescriptor<D, S>.vRender((c: Component<D, S>, root: VNode) => VNode)`
 
-Creates a virtual root node that is used as a root element in component.
-
-##### `Component.sync(newRoot: VNode, renderFlags?: number)`
-
-Synchronize component's subtree with a new Virtual DOM tree.
-
-Render flags can be used in advanced use cases to perform shallow render, shallow update or both.
+Set default Virtual DOM render function.

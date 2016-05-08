@@ -114,20 +114,6 @@ Disposed callback will be invoked when component is disposed.
 
 ## Component
 
-Most of the time components will be created and destroyed automatically with Virtual DOM API, but it is possible to use
-them directly.
-
-When using components directly, all lifecycle methods should be invoked manually, so when component is created it can be
-attached to the document with a simple native DOM call `element.appendChild(component.element)`, immediately after
-attaching it is required to call `component.attach()` method and then it can be updated with `component.update()`
-method. When component is removed, depending on the use case it can be temporarily detached and then it is required to
-call `component.detach()`, otherwise if component isn't needed anymore it is required to call `component.dispose()` to
-destroy component.
-
-Kivi also provides a simple function
-`injectComponent(descriptor: ComponentDescriptor<D, S>, container: Element, data?: D): Component<D, S>` that hides all
-this details when injecting component to the document.
-
 ##### `Component<D>.setData(newData: D)`
 
 Sets a new data for a component.

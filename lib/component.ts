@@ -1,6 +1,6 @@
 import {SvgNamespace, ComponentDescriptorFlags, ComponentFlags, SchedulerFlags, VNodeFlags, RenderFlags} from "./misc";
 import {VModel} from "./vmodel";
-import {VNode} from "./vnode";
+import {VNode, createVRoot} from "./vnode";
 import {InvalidatorSubscription, Invalidator} from "./invalidator";
 import {scheduler} from "./scheduler";
 
@@ -42,6 +42,10 @@ export class ComponentDescriptor<D, S> {
    */
   _update: (component: Component<D, S>) => void;
   /**
+   * Default Virtual DOM render function.
+   */
+  _vRender: (component: Component<D, S>, root: VNode) => void;
+  /**
    * Lifecycle method invalidated.
    */
   _invalidated: (component: Component<D, S>) => void;
@@ -75,6 +79,7 @@ export class ComponentDescriptor<D, S> {
     this._setChildren = undefined;
     this._init = undefined;
     this._update = undefined;
+    this._vRender = undefined;
     this._invalidated = undefined;
     this._attached = undefined;
     this._detached = undefined;
@@ -165,6 +170,14 @@ export class ComponentDescriptor<D, S> {
    */
   update(update: (component: Component<D, S>) => void): ComponentDescriptor<D, S> {
     this._update = update;
+    return this;
+  }
+
+  /**
+   * Set default Virtual DOM render function.
+   */
+  vRender(vRender: (component: Component<D, S>, root: VNode) => void): ComponentDescriptor<D, S> {
+    this._vRender = vRender;
     return this;
   }
 
@@ -452,7 +465,16 @@ export class Component<D, S> {
       if (((scheduler._flags & SchedulerFlags.EnabledThrottling) === 0) ||
           ((this.flags & ComponentFlags.HighPriorityUpdate) !== 0) ||
           (scheduler.frameTimeRemaining() > 0)) {
-        this.descriptor._update(this);
+        const update = this.descriptor._update;
+        if (update === undefined) {
+          const newRoot = ((this.flags & ComponentFlags.VModel) === 0) ?
+            createVRoot() :
+            (this.descriptor._tag as VModel<any>).createVRoot();
+          this.descriptor._vRender(this, newRoot);
+          this._vSync(newRoot, 0);
+        } else {
+          this.descriptor._update(this);
+        }
         this.mtime = scheduler.clock;
         this.flags &= ~(ComponentFlags.Dirty | ComponentFlags.Mounting | ComponentFlags.InUpdateQueue);
       } else {
@@ -467,7 +489,14 @@ export class Component<D, S> {
    * If this method is called during mounting phase, then Virtual DOM will be
    * mounted on top of the existing document tree.
    */
-  sync(newRoot?: VNode, renderFlags: RenderFlags = 0): void {
+  vSync(newRoot?: VNode): void {
+    if (newRoot === undefined) {
+      newRoot = ((this.flags & ComponentFlags.VModel) === 0) ?
+        createVRoot() :
+        (this.descriptor._tag as VModel<any>).createVRoot();
+      this.descriptor._vRender(this, newRoot);
+    }
+
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((newRoot._flags & VNodeFlags.Root) === 0) {
         throw new Error("Failed to sync: sync methods accepts only VNodes representing root node.");
@@ -482,6 +511,43 @@ export class Component<D, S> {
         }
       }
     }
+
+    this._vSync(newRoot, 0);
+  }
+
+  /**
+   * Sync internal representation using Virtual DOM API with custom render options.
+   *
+   * If this method is called during mounting phase, then Virtual DOM will be
+   * mounted on top of the existing document tree.
+   */
+  advancedVSync(renderFlags: RenderFlags, newRoot?: VNode): void {
+    if (newRoot === undefined) {
+      newRoot = ((this.flags & ComponentFlags.VModel) === 0) ?
+        createVRoot() :
+        (this.descriptor._tag as VModel<any>).createVRoot();
+      this.descriptor._vRender(this, newRoot);
+    }
+
+    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+      if ((newRoot._flags & VNodeFlags.Root) === 0) {
+        throw new Error("Failed to sync: sync methods accepts only VNodes representing root node.");
+      }
+      if ((this.flags & ComponentFlags.VModel) !== (newRoot._flags & VNodeFlags.VModel)) {
+        if ((this.flags & ComponentFlags.VModel) === 0) {
+          throw new Error("Failed to sync: vdom root should have the same type as root registered in component " +
+                          "descriptor, component descriptor is using vmodel root.");
+        } else {
+          throw new Error("Failed to sync: vdom root should have the same type as root registered in component " +
+                          "descriptor, component descriptor is using simple tag.");
+        }
+      }
+    }
+
+    this._vSync(newRoot, renderFlags);
+  }
+
+  _vSync(newRoot: VNode, renderFlags: RenderFlags = 0): void {
     if (this.root === undefined) {
       newRoot.cref = this;
       if ((this.flags & ComponentFlags.Mounting) !== 0) {

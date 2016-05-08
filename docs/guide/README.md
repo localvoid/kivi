@@ -12,14 +12,14 @@ manipulations.
 Simple application with a component that prints "Hello World".
 
 ```js
-import {createVRoot, createVElement, ComponentDescriptor, injectComponent} from 'kivi';
+import {ComponentDescriptor, injectComponent} from "kivi";
 
 const HelloWorld = new ComponentDescriptor()
-  .update((c) => {
-    c.sync(createVRoot().children(`Hello ${c.data}`));
+  .vRender((c, root) => {
+    root.children(`Hello ${c.data}`);
   });
 
-injectComponent(Main, document.body, 'World');
+injectComponent(Main, document.body, "World");
 ```
 
 ## Performance
@@ -31,3 +31,4 @@ Benchmarks:
 
 - [uibench](https://localvoid.github.io/uibench/)
 - [dbmonster](https://localvoid.github.io/kivi-dbmonster/)
+- [dbmonster (incremental)](https://localvoid.github.io/kivi-dbmonster/?incremental=5)

@@ -9,20 +9,20 @@ manipulations, Components, and Scheduler tightly integrated with Components. It
 doesn't have a router, or anything that is related to application state, kivi
 is just a view library.
 
-[Kivi guide](http://localvoid.github.io/kivi/).
-
 ## Example
 
 ```js
-import {ComponentDescriptor, createVRoot, injectComponent} from 'kivi';
+import {ComponentDescriptor, injectComponent} from 'kivi';
 
 const HelloWorld = new ComponentDescriptor()
-  .update((c) => {
-    c.sync(createVRoot().children(`Hello ${c.data}`));
-  });
+  .vRender((c, root) => { root.children(`Hello ${c.data}`); });
 
 injectComponent(Main, document.body, 'World');
 ```
+
+## Documentation
+
+- [kivi guide](http://localvoid.github.io/kivi/)
 
 ## Demos
 
