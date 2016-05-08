@@ -73,7 +73,6 @@ module.exports = function(config) {
     config.browserNoActivityTimeout = 120000;
 
     config.sauceLabs.build = buildLabel;
-    config.sauceLabs.startConnect = false;
     config.sauceLabs.tunnelIdentifier = process.env.TRAVIS_JOB_NUMBER;
     config.sauceLabs.recordScreenshots = true;
 

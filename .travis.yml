@@ -12,15 +12,8 @@ addons:
       - g++
       - google-chrome-stable
 
-cache:
-  directories:
-     - ./node_modules
-
 install:
   - ./tools/ci/install.sh
 
 script:
   - ./tools/ci/test.sh
-
-after_script:
-  - ./tools/ci/clean.sh
