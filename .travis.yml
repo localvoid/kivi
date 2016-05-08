@@ -12,6 +12,11 @@ addons:
       - g++
       - google-chrome-stable
 
+cache:
+  directories:
+    - node_modules
+    - typings
+
 install:
   - ./tools/ci/install.sh
 
