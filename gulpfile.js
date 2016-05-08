@@ -65,7 +65,9 @@ gulp.task("build:tests", function() {
   return rollup.rollup({
     entry: "tests/index.spec.ts",
     plugins: [
-      rollupTypeScript(),
+      rollupTypeScript(Object.assign(tsConfig.compilerOptions, {
+        target: "es5",
+      })),
       rollupReplace({
         delimiters: ["<@", "@>"],
         values: {

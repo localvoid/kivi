@@ -4,7 +4,9 @@ karma.conf.js
 tsconfig.json
 typings.json
 tslint.json
+travis.yml
 
+tools
 lib
 docs
 build
