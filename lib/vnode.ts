@@ -1482,9 +1482,10 @@ export class VNode {
         if (this._attrs !== undefined && !Object.isFrozen(this._attrs)) {
           Object.freeze(this._attrs);
         }
-        // Don"t freeze props in Components.
+        // Don't freeze props in Components.
         if (((this._flags & VNodeFlags.Component) === 0) &&
-            this._props !== undefined &&
+            this._props !== null &&
+            typeof this._props === "object" &&
             !Object.isFrozen(this._props)) {
           Object.freeze(this._props);
         }
