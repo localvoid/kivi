@@ -1,3 +1,8 @@
+[![Travis](https://img.shields.io/travis/localvoid/kivi.svg?maxAge=2592000?style=flat-square)]()
+[![npm](https://img.shields.io/npm/v/kivi.svg?maxAge=2592000?style=flat-square)]()
+[![npm](https://img.shields.io/npm/dm/kivi.svg?maxAge=2592000?style=flat-square)]()
+[![npm](https://img.shields.io/npm/l/kivi.svg?maxAge=2592000?style=flat-square)]()
+
 [Kivi](http://github.com/localvoid/kivi) is a javascript (TypeScript) library
 for building web user interfaces. It provides Virtual DOM API for DOM
 manipulations, Components, and Scheduler tightly integrated with Components. It
