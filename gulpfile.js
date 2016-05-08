@@ -92,6 +92,22 @@ gulp.task("test", ["build:tests"], function(done) {
   }, done).start();
 });
 
+gulp.task("test:sauce", ["build:tests"], function(done) {
+  var KarmaServer = require("karma").Server;
+
+  new KarmaServer({
+    configFile: __dirname + "/karma.conf.js",
+    browsers: [
+      "Chrome",
+      "sl_chrome",
+      "sl_firefox",
+      "sl_safari_9",
+      "sl_ie_11",
+    ],
+    singleRun: true,
+  }, done).start();
+});
+
 gulp.task("examples:ts", function() {
   return gulp.src(["examples/**/*.ts"])
     .pipe(ts({
