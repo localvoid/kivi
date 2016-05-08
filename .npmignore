@@ -13,6 +13,7 @@ build
 gh-pages
 tests
 examples
+.publish
 
 typings
 
