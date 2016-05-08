@@ -20,7 +20,7 @@ source ./env.sh
 
 CONNECT_URL="https://saucelabs.com/downloads/sc-${SAUCE_CONNECT_VERSION}-linux.tar.gz"
 CONNECT_DIR="/tmp/sauce-connect-$RANDOM"
-CONNECT_DOWNLOAD="sc-latest-linux.tar.gz"
+CONNECT_DOWNLOAD="sc-${SAUCE_CONNECT_VERSION}-linux.tar.gz"
 
 CONNECT_LOG="/tmp/ci/sauce-connect"
 CONNECT_STDOUT="/tmp/ci/sauce-connect.stdout"

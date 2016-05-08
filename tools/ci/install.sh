@@ -26,16 +26,6 @@ echo 'travis_fold:start:install.typings'
 typings install
 echo 'travis_fold:end:install.typings'
 
-# Install Stable Google Chrome
-echo 'travis_fold:start:install.chrome'
-sudo apt-get update
-sudo apt-get install -y libappindicator1 fonts-liberation
-pushd /tmp/ci
-wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-sudo dpkg -i google-chrome*.deb
-popd
-echo 'travis_fold:end:install-chrome'
-
 # Setup Sauce Connect
 echo 'travis_fold:start:install.sauceConnect'
 ./setup_sauce.sh

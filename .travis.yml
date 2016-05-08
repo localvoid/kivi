@@ -1,5 +1,6 @@
 language: node_js
-sudo: true
+sudo: false
+dist: trusty
 node_js:
   - '5.4.1'
 
@@ -7,8 +8,10 @@ addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
+      - google-chrome
     packages:
       - g++-4.8
+      - google-chrome-stable
 
 cache:
   directories:
