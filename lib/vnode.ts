@@ -362,9 +362,14 @@ export class VNode {
   }
 
   /**
-   * Prevents node from syncing.
+   * Prevents component node from syncing.
    */
   bindOnce(): VNode {
+    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+      if ((this._flags & VNodeFlags.Component) === 0) {
+        throw new Error("Failed to set bindOnce on VNode: bindOnce method should be called on component nodes only.");
+      }
+    }
     this._flags |= VNodeFlags.BindOnce;
     return this;
   }
@@ -788,73 +793,35 @@ export class VNode {
 
     other.ref = ref;
 
-    if ((flags & VNodeFlags.BindOnce) === 0) {
-      if ((flags & VNodeFlags.Text) !== 0) {
+    if ((flags & VNodeFlags.Text) !== 0) {
+      if (this._props !== other._props) {
+        this.ref.nodeValue = other._props as string;
+      }
+    } else if ((flags & (VNodeFlags.Element | VNodeFlags.Root)) !== 0) {
+      if ((flags & VNodeFlags.VModelUpdateHandler) === 0) {
         if (this._props !== other._props) {
-          this.ref.nodeValue = other._props as string;
-        }
-      } else if ((flags & (VNodeFlags.Element | VNodeFlags.Root)) !== 0) {
-        if ((flags & VNodeFlags.VModelUpdateHandler) === 0) {
-          if (this._props !== other._props) {
-            if ((this._flags & VNodeFlags.DynamicShapeProps) === 0) {
-              syncStaticShapeProps(ref, this._props, other._props);
-            } else {
-              syncDynamicShapeProps(ref, this._props, other._props);
-            }
-          }
-          if (this._attrs !== other._attrs) {
-            if ((this._flags & VNodeFlags.DynamicShapeAttrs) === 0) {
-              syncStaticShapeAttrs(ref, this._attrs, other._attrs);
-            } else {
-              syncDynamicShapeAttrs(ref, this._attrs, other._attrs);
-            }
-          }
-          if (this._style !== other._style) {
-            const style = (other._style === undefined) ? "" : other._style;
-            if ((flags & VNodeFlags.Svg) === 0) {
-              (ref as HTMLElement).style.cssText = style;
-            } else {
-              ref.setAttribute("style", style);
-            }
-          }
-
-          if (this._className !== other._className) {
-            className = (other._className === undefined) ? "" : other._className;
-            if ((flags & VNodeFlags.Svg) === 0) {
-              (ref as HTMLElement).className = className;
-            } else {
-              ref.setAttribute("class", className);
-            }
-          }
-
-        } else if (this._props !== other._props) {
-          if ((flags & VNodeFlags.Root) === 0) {
-            (this._tag as VModel<any>).update(ref, this._props, other._props);
+          if ((this._flags & VNodeFlags.DynamicShapeProps) === 0) {
+            syncStaticShapeProps(ref, this._props, other._props);
           } else {
-            (owner.descriptor._tag as VModel<any>).update(ref, this._props, other._props);
+            syncDynamicShapeProps(ref, this._props, other._props);
+          }
+        }
+        if (this._attrs !== other._attrs) {
+          if ((this._flags & VNodeFlags.DynamicShapeAttrs) === 0) {
+            syncStaticShapeAttrs(ref, this._attrs, other._attrs);
+          } else {
+            syncDynamicShapeAttrs(ref, this._attrs, other._attrs);
+          }
+        }
+        if (this._style !== other._style) {
+          const style = (other._style === undefined) ? "" : other._style;
+          if ((flags & VNodeFlags.Svg) === 0) {
+            (ref as HTMLElement).style.cssText = style;
+          } else {
+            ref.setAttribute("style", style);
           }
         }
 
-        if ((this._flags & VNodeFlags.InputElement) === 0) {
-          if (this._children !== other._children) {
-            this.syncChildren(
-              this._children as VNode[] | string,
-              other._children as VNode[] | string,
-              owner,
-              renderFlags);
-          }
-        } else {
-          if ((flags & VNodeFlags.TextInputElement) !== 0) {
-            if ((ref as HTMLInputElement).value !== other._children) {
-              (ref as HTMLInputElement).value = other._children as string;
-            }
-          } else { // ((flags & VNodeFlags.CheckedInputElement) !== 0)
-            if ((ref as HTMLInputElement).checked !== other._children) {
-              (ref as HTMLInputElement).checked = other._children as boolean;
-            }
-          }
-        }
-      } else /* if ((flags & VNodeFlags.Component) !== 0) */ {
         if (this._className !== other._className) {
           className = (other._className === undefined) ? "" : other._className;
           if ((flags & VNodeFlags.Svg) === 0) {
@@ -864,7 +831,46 @@ export class VNode {
           }
         }
 
-        component = other.cref = this.cref as Component<any, any>;
+      } else if (this._props !== other._props) {
+        if ((flags & VNodeFlags.Root) === 0) {
+          (this._tag as VModel<any>).update(ref, this._props, other._props);
+        } else {
+          (owner.descriptor._tag as VModel<any>).update(ref, this._props, other._props);
+        }
+      }
+
+      if ((this._flags & VNodeFlags.InputElement) === 0) {
+        if (this._children !== other._children) {
+          this.syncChildren(
+            this._children as VNode[] | string,
+            other._children as VNode[] | string,
+            owner,
+            renderFlags);
+        }
+      } else {
+        if ((flags & VNodeFlags.TextInputElement) !== 0) {
+          if ((ref as HTMLInputElement).value !== other._children) {
+            (ref as HTMLInputElement).value = other._children as string;
+          }
+        } else { // ((flags & VNodeFlags.CheckedInputElement) !== 0)
+          if ((ref as HTMLInputElement).checked !== other._children) {
+            (ref as HTMLInputElement).checked = other._children as boolean;
+          }
+        }
+      }
+    } else { // if ((flags & VNodeFlags.Component) !== 0)
+      component = other.cref = this.cref as Component<any, any>;
+
+      if (this._className !== other._className) {
+        className = (other._className === undefined) ? "" : other._className;
+        if ((flags & VNodeFlags.Svg) === 0) {
+          (ref as HTMLElement).className = className;
+        } else {
+          ref.setAttribute("class", className);
+        }
+      }
+
+      if ((flags & VNodeFlags.BindOnce) === 0) {
         if ((renderFlags & RenderFlags.ShallowUpdate) === 0) {
           component.setData(other._props);
           component.setChildren(other._children as VNode[] | string);
