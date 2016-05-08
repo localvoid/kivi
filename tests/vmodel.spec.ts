@@ -52,7 +52,7 @@ describe("VModel", () => {
     const m = new VModel("div")
       .style("background: red");
     const e = m.createElement();
-    expect((e as HTMLElement).style.background).toBe("red");
+    expect((e as HTMLElement).style.background).toContain("red");
   });
 
   it("should assign svg style", () => {
