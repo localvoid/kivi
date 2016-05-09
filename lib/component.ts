@@ -75,17 +75,17 @@ export class ComponentDescriptor<D, S> {
     this._markFlags = ComponentFlags.Dirty;
     this._flags = 0;
     this._tag = "div";
-    this._setData = undefined;
-    this._setChildren = undefined;
-    this._init = undefined;
-    this._update = undefined;
-    this._vRender = undefined;
-    this._invalidated = undefined;
-    this._attached = undefined;
-    this._detached = undefined;
-    this._disposed = undefined;
+    this._setData = null;
+    this._setChildren = null;
+    this._init = null;
+    this._update = null;
+    this._vRender = null;
+    this._invalidated = null;
+    this._attached = null;
+    this._detached = null;
+    this._disposed = null;
     if ("<@KIVI_COMPONENT_RECYCLING@>" === "COMPONENT_RECYCLING_ENABLED") {
-      this._recycledPool = undefined;
+      this._recycledPool = null;
       this._maxRecycled = 0;
     }
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -245,13 +245,13 @@ export class ComponentDescriptor<D, S> {
    * Create a Virtual DOM Node.
    */
   createVNode(data?: D): VNode {
-    return new VNode(VNodeFlags.Component, this, data);
+    return new VNode(VNodeFlags.Component, this, data === undefined ? null : data);
   }
 
   /**
    * Create a Component.
    */
-  createComponent(parent?: Component<any, any>, data?: D, children?: string|VNode[]): Component<D, S> {
+  createComponent(parent: Component<any, any> = null, data?: D, children?: string|VNode[]): Component<D, S> {
     let element: Element;
     let component: Component<D, S>;
 
@@ -271,7 +271,7 @@ export class ComponentDescriptor<D, S> {
       if ((this._flags & ComponentDescriptorFlags.EnabledBackRef) !== 0) {
         (element as any as {xtag: Component<D, S>}).xtag = component;
       }
-      if (this._init !== undefined) {
+      if (this._init !== null) {
         this._init(component);
       }
     } else {
@@ -286,8 +286,9 @@ export class ComponentDescriptor<D, S> {
    * Mount Component on top of existing html element.
    */
   mountComponent(element: Element, parent?: Component<any, any>, data?: D, children?: string|VNode[]): Component<D, S> {
-    const component = new Component(this._markFlags | ComponentFlags.Mounting, this, element, parent, data, children);
-    if (this._init !== undefined) {
+    const component = new Component(this._markFlags | ComponentFlags.Mounting, this, element,
+      parent === undefined ? null : parent, data, children);
+    if (this._init !== null) {
       this._init(component);
     }
     component.attached();
@@ -357,13 +358,13 @@ export class Component<D, S> {
     this.descriptor = descriptor;
     this.element = element;
     this.parent = parent;
-    this.depth = parent === undefined ? 0 : parent.depth + 1;
-    this.state = undefined;
-    this.data = data;
-    this.children = children;
-    this.root = ((flags & ComponentFlags.Canvas2D) === 0) ? undefined : (element as HTMLCanvasElement).getContext("2d");
-    this._subscriptions = undefined;
-    this._transientSubscriptions = undefined;
+    this.depth = parent === null ? 0 : parent.depth + 1;
+    this.state = null;
+    this.data = data === undefined ? null : data;
+    this.children = children === undefined ? null : children;
+    this.root = ((flags & ComponentFlags.Canvas2D) === 0) ? null : (element as HTMLCanvasElement).getContext("2d");
+    this._subscriptions = null;
+    this._transientSubscriptions = null;
   }
 
   /**
@@ -390,15 +391,15 @@ export class Component<D, S> {
    */
   setParent(parent: Component<D, S>): void {
     this.parent = parent;
-    this.depth = parent === undefined ? 0 : parent.depth + 1;
+    this.depth = parent === null ? 0 : parent.depth + 1;
   }
 
   /**
    * Set new data.
    */
-  setData(newData?: D): void {
+  setData(newData: D = null): void {
     const setter = this.descriptor._setData;
-    if (setter === undefined) {
+    if (setter === null) {
       if ((this.flags & ComponentFlags.DisabledCheckDataIdentity) !== 0 || this.data !== newData) {
         this.data = newData;
         this.flags |= ComponentFlags.Dirty;
@@ -411,9 +412,9 @@ export class Component<D, S> {
   /**
    * Set new children.
    */
-  setChildren(newChildren?: VNode[]|string): void {
+  setChildren(newChildren: VNode[]|string = null): void {
     const setter = this.descriptor._setChildren;
-    if (setter === undefined) {
+    if (setter === null) {
       if (this.children !== newChildren) {
         this.children = newChildren;
         this.flags |= ComponentFlags.Dirty;
@@ -473,7 +474,7 @@ export class Component<D, S> {
           ((this.flags & ComponentFlags.HighPriorityUpdate) !== 0) ||
           (scheduler.frameTimeRemaining() > 0)) {
         const update = this.descriptor._update;
-        if (update === undefined) {
+        if (update === null) {
           const newRoot = ((this.flags & ComponentFlags.VModel) === 0) ?
             createVRoot() :
             (this.descriptor._tag as VModel<any>).createVRoot();
@@ -555,7 +556,7 @@ export class Component<D, S> {
   }
 
   _vSync(newRoot: VNode, renderFlags: RenderFlags = 0): void {
-    if (this.root === undefined) {
+    if (this.root === null) {
       newRoot.cref = this;
       if ((this.flags & ComponentFlags.Mounting) !== 0) {
         newRoot.mount(this.element, this);
@@ -582,7 +583,7 @@ export class Component<D, S> {
       scheduler.nextFrame().updateComponent(this);
 
       const invalidated = this.descriptor._invalidated;
-      if (invalidated !== undefined) {
+      if (invalidated !== null) {
         invalidated(this);
       }
     }
@@ -593,7 +594,7 @@ export class Component<D, S> {
    */
   attach(): void {
     this.attached();
-    if (this.root !== undefined && ((this.flags & ComponentFlags.Canvas2D) === 0)) {
+    if (this.root !== null && ((this.flags & ComponentFlags.Canvas2D) === 0)) {
       (this.root as VNode).attach();
     }
   }
@@ -610,7 +611,7 @@ export class Component<D, S> {
     }
 
     const attached = this.descriptor._attached;
-    if (attached !== undefined) {
+    if (attached !== null) {
       attached(this);
     }
   }
@@ -619,7 +620,7 @@ export class Component<D, S> {
    * Detach method should be invoked when component is detached from the document.
    */
   detach(): void {
-    if (this.root !== undefined && ((this.flags & ComponentFlags.Canvas2D) === 0)) {
+    if (this.root !== null && ((this.flags & ComponentFlags.Canvas2D) === 0)) {
       (this.root as VNode).detach();
     }
     this.detached();
@@ -636,7 +637,7 @@ export class Component<D, S> {
     this.cancelTransientSubscriptions();
 
     const detached = this.descriptor._detached;
-    if (detached !== undefined) {
+    if (detached !== null) {
       detached(this);
     }
   }
@@ -656,7 +657,7 @@ export class Component<D, S> {
         (this.descriptor._recycledPool.length >= this.descriptor._maxRecycled)) {
       this.flags |= ComponentFlags.Disposed;
 
-      if (this.root !== undefined && ((this.flags & ComponentFlags.Canvas2D) === 0)) {
+      if (this.root !== null && ((this.flags & ComponentFlags.Canvas2D) === 0)) {
         (this.root as VNode).dispose();
       }
 
@@ -664,7 +665,7 @@ export class Component<D, S> {
         this.detached();
       }
       const disposed = this.descriptor._disposed;
-      if (disposed !== undefined) {
+      if (disposed !== null) {
         disposed(this);
       }
     } else {
@@ -679,7 +680,7 @@ export class Component<D, S> {
   subscribe(invalidator: Invalidator): void {
     const s = invalidator.subscribeComponent(this);
     const subscriptions = this._subscriptions;
-    if (subscriptions === undefined) {
+    if (subscriptions === null) {
       this._subscriptions = s;
     } else if (subscriptions.constructor === InvalidatorSubscription) {
       this._subscriptions = [this._subscriptions as InvalidatorSubscription, s];
@@ -696,7 +697,7 @@ export class Component<D, S> {
   transientSubscribe(invalidator: Invalidator): void {
     const s = invalidator.transientSubscribeComponent(this);
     const subscriptions = this._transientSubscriptions;
-    if (subscriptions === undefined) {
+    if (subscriptions === null) {
       this._transientSubscriptions = s;
     } else if (subscriptions.constructor === InvalidatorSubscription) {
       this._transientSubscriptions = [this._transientSubscriptions as InvalidatorSubscription, s];
@@ -710,7 +711,7 @@ export class Component<D, S> {
    */
   cancelSubscriptions(): void {
     const subscriptions = this._subscriptions;
-    if (subscriptions !== undefined) {
+    if (subscriptions !== null) {
       if (subscriptions.constructor === InvalidatorSubscription) {
         (subscriptions as InvalidatorSubscription).invalidator
           ._removeSubscription(subscriptions as InvalidatorSubscription);
@@ -721,7 +722,7 @@ export class Component<D, S> {
         }
       }
     }
-    this._subscriptions = undefined;
+    this._subscriptions = null;
   }
 
   /**
@@ -729,7 +730,7 @@ export class Component<D, S> {
    */
   cancelTransientSubscriptions(): void {
     const subscriptions = this._transientSubscriptions;
-    if (subscriptions !== undefined) {
+    if (subscriptions !== null) {
       if (subscriptions.constructor === InvalidatorSubscription) {
         (subscriptions as InvalidatorSubscription).invalidator
           ._removeTransientSubscription(subscriptions as InvalidatorSubscription);
@@ -740,7 +741,7 @@ export class Component<D, S> {
         }
       }
     }
-    this._transientSubscriptions = undefined;
+    this._transientSubscriptions = null;
   }
 }
 
@@ -749,7 +750,7 @@ export class Component<D, S> {
  */
 export function injectComponent<D, S>(descriptor: ComponentDescriptor<D, S>, container: Element, data?: D,
     sync?: boolean): Component<D, S> {
-  const c = descriptor.createComponent(undefined, data);
+  const c = descriptor.createComponent(null, data);
   if (sync) {
     container.appendChild(c.element);
     c.attached();
@@ -769,7 +770,7 @@ export function injectComponent<D, S>(descriptor: ComponentDescriptor<D, S>, con
  */
 export function mountComponent<D, S>(descriptor: ComponentDescriptor<D, S>, element: Element, data?: D,
     sync?: boolean): Component<D, S> {
-  const c = descriptor.mountComponent(element, undefined, data);
+  const c = descriptor.mountComponent(element, null, data);
   if (sync) {
     c.attached();
     c.update();

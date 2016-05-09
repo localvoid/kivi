@@ -40,10 +40,10 @@ export class ContainerManagerDescriptor<S> {
   _debugFlags: number;
 
   constructor() {
-    this._insertChild = undefined;
-    this._replaceChild = undefined;
-    this._moveChild = undefined;
-    this._removeChild = undefined;
+    this._insertChild = null;
+    this._replaceChild = null;
+    this._moveChild = null;
+    this._removeChild = null;
 
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       this._debugFlags = 0;

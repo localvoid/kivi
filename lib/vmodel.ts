@@ -4,7 +4,7 @@ import {VNode} from "./vnode";
 /**
  * Update handler used to override default diff/patch behavior.
  *
- * When oldProps is undefined, it means that element was created for the first time.
+ * When oldProps is null, it means that element was created for the first time.
  */
 export type VModelUpdateHandler<D> = (element: Element, oldProps: D, newProps: D) => void;
 
@@ -36,12 +36,12 @@ export class VModel<D> {
     this._markFlags = VNodeFlags.VModel;
     this._flags = 0;
     this._tagName = tagName;
-    this._props = undefined;
-    this._attrs = undefined;
-    this._style = undefined;
-    this._className = undefined;
-    this._updateHandler = undefined;
-    this._ref = undefined;
+    this._props = null;
+    this._attrs = null;
+    this._style = null;
+    this._className = null;
+    this._updateHandler = null;
+    this._ref = null;
   }
 
   /**
@@ -108,14 +108,14 @@ export class VModel<D> {
    * Create a Virtual DOM Node from model.
    */
   createVNode(data?: D): VNode {
-    return new VNode(VNodeFlags.Element | this._markFlags, this, data);
+    return new VNode(VNodeFlags.Element | this._markFlags, this, data === undefined ? null : data);
   }
 
   /**
    * Create a Virtual DOM Node for Component root from model.
    */
   createVRoot(data?: D): VNode {
-    return new VNode(VNodeFlags.Root | this._markFlags, this, data);
+    return new VNode(VNodeFlags.Root | this._markFlags, this, data === undefined ? null : data);
   }
 
   /**
@@ -127,14 +127,14 @@ export class VModel<D> {
     let key: string;
     let ref = this._ref;
 
-    if (ref === undefined) {
+    if (ref === null) {
       if ((this._flags & VModelFlags.Svg) === 0) {
         ref = document.createElement(this._tagName);
       } else {
         ref = document.createElementNS(SvgNamespace, this._tagName);
       }
 
-      if (this._props !== undefined) {
+      if (this._props !== null) {
         keys = Object.keys(this._props);
         for (i = 0; i < keys.length; i++) {
           key = keys[i];
@@ -142,7 +142,7 @@ export class VModel<D> {
         }
       }
 
-      if (this._attrs !== undefined) {
+      if (this._attrs !== null) {
         keys = Object.keys(this._attrs);
         for (i = 0; i < keys.length; i++) {
           key = keys[i];
@@ -150,7 +150,7 @@ export class VModel<D> {
         }
       }
 
-      if (this._style !== undefined) {
+      if (this._style !== null) {
         if ((this._flags & VModelFlags.Svg) === 0) {
           (ref as HTMLElement).style.cssText = this._style;
         } else {
@@ -158,7 +158,7 @@ export class VModel<D> {
         }
       }
 
-      if (this._className !== undefined) {
+      if (this._className !== null) {
         if ((this._flags & VModelFlags.Svg) === 0) {
           (ref as HTMLElement).className = this._className;
         } else {

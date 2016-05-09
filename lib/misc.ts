@@ -125,14 +125,14 @@ export type VNodeRecursiveListValue = VNode|VNodeRecursiveList;
 export interface VNodeRecursiveList extends Array<VNodeRecursiveListValue> {}
 
 /**
- * Recursively flattens VNode arrays and skips undefined nodes.
+ * Recursively flattens VNode arrays and skips null nodes.
  */
 export function flattenVNodes(nodes: VNodeRecursiveList): VNode[] {
   let copy = nodes.slice(0);
   const flatten = [] as VNode[];
   while (copy.length > 0) {
     const item = copy.shift();
-    if (item !== undefined) {
+    if (item !== null) {
       if (item.constructor === VNode) {
         flatten.push(item as any);
       } else {
@@ -191,7 +191,7 @@ export function setAttr(node: Element, key: string, value: string): void {
  */
 export function syncStaticShapeAttrs(node: Element, a: {[key: string]: any}, b: {[key: string]: any}): void {
   if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-    if (a === undefined || b === undefined) {
+    if (a === null || b === null) {
       throw new Error("Failed to update attrs with static shape: attrs object have dynamic shape.");
     }
   }
@@ -232,8 +232,8 @@ export function syncDynamicShapeAttrs(node: Element, a: {[key: string]: any}, b:
   let keys: string[];
   let key: string;
 
-  if (a !== undefined) {
-    if (b === undefined) {
+  if (a !== null) {
+    if (b === null) {
       // b is empty, remove all attributes from a.
       keys = Object.keys(a);
       for (i = 0; i < keys.length; i++) {
@@ -263,7 +263,7 @@ export function syncDynamicShapeAttrs(node: Element, a: {[key: string]: any}, b:
         }
       }
     }
-  } else if (b !== undefined) {
+  } else if (b !== null) {
     // a is empty, insert all attributes from b.
     keys = Object.keys(b);
     for (i = 0; i < keys.length; i++) {
@@ -278,7 +278,7 @@ export function syncDynamicShapeAttrs(node: Element, a: {[key: string]: any}, b:
  */
 export function syncStaticShapeProps(node: Element, a: {[key: string]: any}, b: {[key: string]: any}): void {
   if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-    if (a === undefined || b === undefined) {
+    if (a === null || b === null) {
       throw new Error("Failed to update props with static shape: props object have dynamic shape.");
     }
   }
@@ -319,12 +319,12 @@ export function syncDynamicShapeProps(node: Element, a: {[key: string]: any}, b:
   let keys: string[];
   let key: string;
 
-  if (a !== undefined) {
-    if (b === undefined) {
+  if (a !== null) {
+    if (b === null) {
       // b is empty, remove all attributes from a.
       keys = Object.keys(a);
       for (i = 0; i < keys.length; i++) {
-        (node as {[key: string]: any})[keys[i]] = undefined;
+        (node as {[key: string]: any})[keys[i]] = null;
       }
     } else {
       // Remove and update attributes.
@@ -337,7 +337,7 @@ export function syncDynamicShapeProps(node: Element, a: {[key: string]: any}, b:
             (node as {[key: string]: any})[key] = bValue;
           }
         } else {
-          (node as {[key: string]: any})[key] = undefined;
+          (node as {[key: string]: any})[key] = null;
         }
       }
 
@@ -350,7 +350,7 @@ export function syncDynamicShapeProps(node: Element, a: {[key: string]: any}, b:
         }
       }
     }
-  } else if (b !== undefined) {
+  } else if (b !== null) {
     // a is empty, insert all attributes from b.
     keys = Object.keys(b);
     for (i = 0; i < keys.length; i++) {
