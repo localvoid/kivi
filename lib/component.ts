@@ -790,7 +790,7 @@ function _debugUpdateHandler(c: Component<any, any>): void {
   try {
     c.vSync();
   } catch (e) {
-    console.error(`Failed to sync component: ${e.toString()}. Component:`, c);
+    console.error(`Failed to vSync component: ${e.toString()}. Component:`, c);
   }
 }
 
@@ -798,7 +798,7 @@ function _debugUpdateHandler(c: Component<any, any>): void {
  * Function that wraps component descriptor update handler in DEBUG mode.
  */
 function _debugUpdateHandlerWrapper(fn: (c: Component<any, any>) => void): (c: Component<any, any>) => void {
-  return (c) => {
+  return function _debugUpdateHandlerWrapper(c) {
     try {
       fn(c);
     } catch (e) {
