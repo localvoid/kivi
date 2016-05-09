@@ -89,7 +89,7 @@ export class ComponentDescriptor<D, S> {
       this._maxRecycled = 0;
     }
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      this._update = _defaultUpdateHandler;
+      this._update = _debugUpdateHandler;
     }
   }
 
@@ -172,6 +172,10 @@ export class ComponentDescriptor<D, S> {
    * Set lifecycle method update.
    */
   update(update: (component: Component<D, S>) => void): ComponentDescriptor<D, S> {
+    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+      this._update = _debugUpdateHandlerWrapper(update);
+      return this;
+    }
     this._update = update;
     return this;
   }
@@ -779,10 +783,25 @@ export function mountComponent<D, S>(descriptor: ComponentDescriptor<D, S>, elem
 }
 
 /**
- * Function that is used as default component descriptor update handler in DEBUG, PROFILE and TESTING modes.
- *
- * Using this function instead of `null` handler will add information about components into stack traces.
+ * Function that is used as default component descriptor update handler in DEBUG mode.
  */
-function _defaultUpdateHandler(c: Component<any, any>): void {
-  c.vSync();
+function _debugUpdateHandler(c: Component<any, any>): void {
+  try {
+    c.vSync();
+  } catch (e) {
+    console.error(`Failed to sync component: ${e.toString()}. Component:`, c);
+  }
+}
+
+/**
+ * Function that wraps component descriptor update handler in DEBUG mode.
+ */
+function _debugUpdateHandlerWrapper(fn: (c: Component<any, any>) => void): (c: Component<any, any>) => void {
+  return (c) => {
+    try {
+      fn(c);
+    } catch (e) {
+      console.error(`Failed to update component: ${e.toString()}. Component:`, c);
+    }
+  };
 }
