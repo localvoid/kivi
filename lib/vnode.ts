@@ -11,56 +11,103 @@ import {ContainerManager} from "./container_manager";
 /**
  * Virtual DOM Node.
  *
+ * VNode object is the core object in kivi Virtual DOM, it can represent any node type.
+ *
+ * The easiest way to create VNode instances is to use factory functions:
+ *
+ *     // HTMLElement
+ *     const htmlElement = createVElement("div");
+ *     // SVGElement
+ *     const svgElement = createVSvgElement("a");
+ *     // Text node
+ *     const textNode = createVText("text content");
+ *     // Component's root node
+ *     const root = createVRoot();
+ *     // Text input
+ *     const textInput = createVTextInput();
+ *     // Checked input
+ *     const checkedInput = createVCheckedInput();
+ *
+ * VNode instances can't be reused to represent multiple DOM nodes.
+ *
  * @final
  */
 export class VNode {
-  _flags: number;
   /**
-   * Tag name of the element, or reference to VModel or ComponentDescriptor.
+   * Flags, see `VNodeFlags` for details.
+   */
+  _flags: VNodeFlags;
+  /**
+   * Tag name of the element, or reference to VModel if virtual node represents an element, or ComponentDescriptor
+   * if it represents a component.
    */
   _tag: string|VModel<any>|ComponentDescriptor<any, any>;
   /**
-   * Key that should be unique among its siblings.
+   * Children reconciliation algorithm is using key property to find the same node in the previous children array. Key
+   * should be unique among its siblings.
    */
   _key: any;
   /**
    * Properties.
+   *
+   * When virtual node represents an element, props property is used to set properties directly on DOM node:
+   *
+   *     e: HTMLElement;
+   *     e.propertyName = propertyValue;
+   *
+   * When virtual node is mounted on top of existing HTML, all properties will be assigned during mounting phase.
    */
   _props: any;
   /**
    * Attributes.
+   *
+   * All attributes are assigned to DOM nodes with `setAttribute` method:
+   *
+   *     e: HTMLElement;
+   *     e.setAttribute(key, value);
+   *
+   * If attribute is prefixed with "xlink:", or "xml:" namespace, it will assign attributes with `setAttributeNS`
+   * method and use appropriate namespaces.
    */
   _attrs: {[key: string]: any};
   /**
    * Style in css string format.
+   *
+   * Style is assigned to DOM nodes with `style.cssText` property, if virtual node represents an element from svg
+   * namespace, style will be assigned with `setAttribute("style", "cssText")` method.
    */
   _style: string;
   /**
    * Class name.
+   *
+   * Class name is assigned to DOM nodes with `className` property, if virtual node represents an element from svg
+   * namespace, class name will be assigned with `setAttribute("class", "className")` method.
    */
   _className: string;
   /**
-   * Children property can represent actual children, or value for input fields.
-   * When VNode is a Component, then instead of rendering children in place, they
-   * are transferred to the Component.
+   * Children property can contain flat array of children virtual nodes, or text if it contains a single text node
+   * child. If virtual node represents an input field, children property will contain input value.
+   *
+   * When virtual node represents a Component, then instead of rendering children in place, they are transferred to the
+   * component with `setChildren` method.
    */
   _children: VNode[]|string|boolean;
   /**
-   * Reference to HTML Node. It will be available after VNode is created or synced.
-   * Each time VNode is synced, reference to the Html Node is transferred from old
-   * VNode to the new one.
+   * Reference to HTML Node. It will be available after virtual node is created or synced. Each time VNode is synced,
+   * reference to the HTML Node is transferred from old virtual node to the new one.
    */
   ref: Node;
   /**
-   * Cref property can be a reference to the Component or Container Manager.
-   * If VNode is a Component, then cref will be available after VNode is created
-   * or synced. Each time VNode is synced, reference to the Component is transferred
-   * from old VNode to the new one.
+   * cref property can be a reference to a Component or Container Manager. If virtual node is a Component, then cref
+   * will be available after virtual node is created or synced. Each time virtual node is synced, reference to a
+   * Component is transferred from old virtual node to the new one.
    */
   cref: Component<any, any>|ContainerManager<any>;
 
   /**
    * Debug properties are used because VNode properties are frozen.
+   *
+   * See `VNodeDebugFlags` for details.
    */
   _debugProperties: {flags: number};
 
@@ -84,7 +131,12 @@ export class VNode {
   }
 
   /**
-   * Set key, key should be unique among its siblings.
+   * Set key.
+   *
+   * Children reconciliation algorithm is using key property to find the same node in the previous children array. Key
+   * should be unique among its siblings.
+   *
+   * This method is available in all virtual node types.
    */
   key(key: any): VNode {
     this._key = key;
@@ -92,10 +144,25 @@ export class VNode {
   }
 
   /**
-   * Set properties.
+   * Set properties with static shape.
    *
-   * When virtual node is mounted on top of existing HTML, all properties will
-   * be assigned during mounting phase.
+   * Each time virtual node representing the same DOM node is created, it should have properties with exactly the same
+   * shape. Values can be different, but all keys should be the same. For example:
+   *
+   *     const a = createVElement("div").props({"id": "Main", "title": "Title"});
+   *     const b = createVElement("div").props({"id": "Main", "title": "New Title"});
+   *
+   * Props property is used to set properties directly on DOM node:
+   *
+   *     e: HTMLElement;
+   *     e.propertyName = propertyValue;
+   *
+   * When virtual node is mounted on top of existing HTML, all properties will be assigned during mounting phase.
+   *
+   * If virtual node is using `VModel` instance with custom update handler, update data should be assigned with `data`
+   * method.
+   *
+   * This method is available on element and component's root virtual node types.
    */
   props(props: {[key: string]: any}): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -126,8 +193,23 @@ export class VNode {
   /**
    * Set properties with dynamic shape.
    *
-   * When virtual node is mounted on top of existing HTML, all properties will
-   * be assigned during mounting phase.
+   * Properties can have different set of keys, when reconciliation algorithm updates property values, it will assign
+   * `undefined` to all missing keys.
+   *
+   *     const a = createVElement("div").props({"id": "Main", "title": "Title"});
+   *     const b = createVElement("div").props({"id": "Main"});
+   *
+   * Props property is used to set properties directly on DOM node:
+   *
+   *     e: HTMLElement;
+   *     e.propertyName = propertyValue;
+   *
+   * When virtual node is mounted on top of existing HTML, all properties will be assigned during mounting phase.
+   *
+   * If virtual node is using `VModel` instance with custom update handler, update data should be assigned with `data`
+   * method.
+   *
+   * This method is available on element and component's root virtual node types.
    */
   dynamicShapeProps(props?: {[key: string]: any}): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -158,6 +240,25 @@ export class VNode {
 
   /**
    * Set attributes with static shape.
+   *
+   * Each time virtual node representing the same DOM node is created, it should have attributes with exactly the same
+   * shape. Values can be different, but all keys should be the same. For example:
+   *
+   *     const a = createVElement("div").attrs({"id": "Main", "title": "Title"});
+   *     const b = createVElement("div").attrs({"id": "Main", "title": "New Title"});
+   *
+   * All attributes are assigned to DOM nodes with `setAttribute` method:
+   *
+   *     e: HTMLElement;
+   *     e.setAttribute(key, value);
+   *
+   * If attribute is prefixed with "xlink:", or "xml:" namespace, it will assign attributes with `setAttributeNS`
+   * method and use appropriate namespaces.
+   *
+   * If virtual node is using `VModel` instance with custom update handler, update data should be assigned with `data`
+   * method.
+   *
+   * This method is available on element and component's root virtual node types.
    */
   attrs(attrs: {[key: string]: any}): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -187,6 +288,25 @@ export class VNode {
 
   /**
    * Set attributes with dynamic shape.
+   *
+   * Attributes can have different set of keys, when reconciliation algorithm updates attribute values, it will remove
+   * attributes with `removeAttribute` method for all missing keys.
+   *
+   *     const a = createVElement("div").props({"id": "Main", "title": "Title"});
+   *     const b = createVElement("div").props({"id": "Main"});
+   *
+   * All attributes are assigned to DOM nodes with `setAttribute` method:
+   *
+   *     e: HTMLElement;
+   *     e.setAttribute(key, value);
+   *
+   * If attribute is prefixed with "xlink:", or "xml:" namespace, it will assign attributes with `setAttributeNS`
+   * method and use appropriate namespaces.
+   *
+   * If virtual node is using `VModel` instance with custom update handler, update data should be assigned with `data`
+   * method.
+   *
+   * This method is available on element and component's root virtual node types.
    */
   dynamicShapeAttrs(attrs?: {[key: string]: any}): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -216,7 +336,9 @@ export class VNode {
   }
 
   /**
-   * Set VModel data.
+   * Set update data for VModel custom update handler.
+   *
+   * This method is available on element and component's root virtual node types.
    */
   data(data: any): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -234,6 +356,11 @@ export class VNode {
 
   /**
    * Set style in css string format.
+   *
+   * Style is assigned to DOM nodes with `style.cssText` property, if virtual node represents an element from svg
+   * namespace, style will be assigned with `setAttribute("style", "cssText")` method.
+   *
+   * This method is available on element and component's root virtual node types.
    */
   style(style: string): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -256,10 +383,15 @@ export class VNode {
 
   /**
    * Set className.
+   *
+   * Class name is assigned to DOM nodes with `className` property, if virtual node represents an element from svg
+   * namespace, class name will be assigned with `setAttribute("class", "className")` method.
+   *
+   * This method is available on element, component and component's root virtual node types.
    */
   className(className: string): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
+      if ((this._flags & (VNodeFlags.Element | VNodeFlags.Component | VNodeFlags.Root)) === 0) {
         throw new Error("Failed to set classes on VNode: classes method should be called on element or component" +
                         " root nodes only.");
       }
@@ -277,7 +409,13 @@ export class VNode {
   }
 
   /**
-   * Set children.
+   * Set children. Children parameter should be either a flat array of virtual nodes, or text if node contains a single
+   * text node.
+   *
+   * When virtual node represents a Component, then instead of rendering children in place, they are transferred to the
+   * component with `setChildren` method.
+   *
+   * This method is available on element, component and component's root virtual node types.
    */
   children(children: VNode[]|string): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -305,14 +443,14 @@ export class VNode {
   }
 
   /**
-   * Enable tracking by key in children reconciliation algorithm.
+   * Set children and enable track by key reconciliation algorithm. Children parameter should be a flat array of
+   * virtual nodes with assigned key properties.
    *
-   * When tracking by key is enabled, all children should have unique key
-   * property.
+   * This method is available on element and component's root virtual node types.
    */
   trackByKeyChildren(children: VNode[]): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root | VNodeFlags.Component)) === 0) {
+      if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error("Failed to set children on VNode: children method should be called on element, component" +
                         " or component root nodes only.");
       }
@@ -335,6 +473,8 @@ export class VNode {
 
   /**
    * Set text value for Input Elements.
+   *
+   * This method is available on text input element node type.
    */
   value(value: string): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -349,6 +489,8 @@ export class VNode {
 
   /**
    * Set checked value for Input Elements.
+   *
+   * This method is available on checked input element node type.
    */
   checked(value: boolean): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -363,6 +505,8 @@ export class VNode {
 
   /**
    * Prevents component node from syncing.
+   *
+   * This method is available on component node type.
    */
   bindOnce(): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -375,9 +519,10 @@ export class VNode {
   }
 
   /**
-   * Keep alive Node when removing from the document.
+   * Keep alive node when removing from the document. Keep alive nodes will be detached instead of disposed when they
+   * are removed from virtual dom tree.
    *
-   * Keep alive nodes should be manually disposed by Component.
+   * Keep alive nodes should be manually disposed by owning component.
    */
   keepAlive(): VNode {
     this._flags |= VNodeFlags.KeepAlive;
@@ -385,10 +530,9 @@ export class VNode {
   }
 
   /**
-   * Set container manager for this node.
+   * Set container manager.
    *
-   * Container Manager will be responsible for inserting, removing, replacing,
-   * moving children nodes.
+   * Container Manager will be responsible for inserting, removing, replacing and moving children nodes.
    */
   managedContainer(manager: ContainerManager<any>): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -427,10 +571,9 @@ export class VNode {
   /**
    * Disable freezing all properties in DEBUG mode.
    *
-   * One use case when it is quite useful, it is for ContentEditable editor.
-   * We can monitor small changes in DOM, and apply this changes to VNodes,
-   * so that when we rerender text block, we don"t touch anything that is
-   * already up to date (prevents spellchecker flickering).
+   * One use case when it is quite useful, it is for ContentEditable editor We can monitor small changes in DOM, and
+   * apply this changes to VNodes, so that when we rerender text block, we don"t touch anything that is already up to
+   * date (prevents spellchecker flickering).
    */
   disableFreeze(): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -451,8 +594,8 @@ export class VNode {
   /**
    * Create a DOM Node from the Virtual DOM Node.
    *
-   * This method doesn"t set any attributes, or create children, render method
-   * is responsible for setting up internal representation of the Node.
+   * This method doesn"t set any attributes, or create children, render method is responsible for setting up internal
+   * representation of the Node.
    */
   create(owner: Component<any, any>): void {
     let flags = this._flags;
