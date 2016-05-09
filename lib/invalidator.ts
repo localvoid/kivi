@@ -30,21 +30,76 @@ export class InvalidatorSubscription {
    * Cancel subscription.
    */
   cancel(): void {
+    let component: Component<any, any>;
+    let subscriptions: InvalidatorSubscription|InvalidatorSubscription[];
+    let i: number;
+
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if (this._isCanceled) {
         throw new Error("Failed to cancel InvalidatorSubscription: subscription cannot be canceled twice.");
       }
       this._isCanceled = true;
     }
+
     if ((this._flags & InvalidatorSubscriptionFlags.Transient) === 0) {
       this.invalidator._removeSubscription(this);
+
       if ((this._flags & InvalidatorSubscriptionFlags.Component) !== 0) {
-        this._component._removeSubscription(this);
+        component = this._component;
+        subscriptions = component._subscriptions;
+        if (subscriptions.constructor === InvalidatorSubscription ||
+          (subscriptions as InvalidatorSubscription[]).length === 1) {
+          if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+            if (subscriptions.constructor === InvalidatorSubscription) {
+              if (subscriptions !== this) {
+                throw new Error("Failed to remove subscription from Component: cannot find appropriate subscription.");
+              }
+            } else {
+              if ((subscriptions as InvalidatorSubscription[])[0] !== this) {
+                throw new Error("Failed to remove subscription from Component: cannot find appropriate subscription.");
+              }
+            }
+          }
+          component._subscriptions = undefined;
+        } else {
+          i = (subscriptions as InvalidatorSubscription[]).indexOf(this);
+          if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+            if (i === -1) {
+              throw new Error("Failed to remove subscription from Component: cannot find appropriate subscription.");
+            }
+          }
+          (subscriptions as InvalidatorSubscription[])[i] = (subscriptions as InvalidatorSubscription[]).pop();
+        }
       }
     } else {
       this.invalidator._removeTransientSubscription(this);
+
       if ((this._flags & InvalidatorSubscriptionFlags.Component) !== 0) {
-        this._component._removeTransientSubscription(this);
+        component = this._component;
+        subscriptions = component._transientSubscriptions;
+        if (subscriptions.constructor === InvalidatorSubscription ||
+          (subscriptions as InvalidatorSubscription[]).length === 1) {
+          if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+            if (subscriptions.constructor === InvalidatorSubscription) {
+              if (subscriptions !== this) {
+                throw new Error("Failed to remove subscription from Component: cannot find appropriate subscription.");
+              }
+            } else {
+              if ((subscriptions as InvalidatorSubscription[])[0] !== this) {
+                throw new Error("Failed to remove subscription from Component: cannot find appropriate subscription.");
+              }
+            }
+          }
+          component._transientSubscriptions = undefined;
+        } else {
+          i = (subscriptions as InvalidatorSubscription[]).indexOf(this);
+          if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+            if (i === -1) {
+              throw new Error("Failed to remove subscription from Component: cannot find appropriate subscription.");
+            }
+          }
+          (subscriptions as InvalidatorSubscription[])[i] = (subscriptions as InvalidatorSubscription[]).pop();
+        }
       }
     }
   }
@@ -144,17 +199,19 @@ export class Invalidator {
       if (this._subscription !== undefined) {
         this._subscription._invalidate();
       } else if (this._subscriptions !== undefined) {
-          for (i = 0; i < this._subscriptions.length; i++) {
-            this._subscriptions[i]._invalidate();
-          }
+        for (i = 0; i < this._subscriptions.length; i++) {
+          this._subscriptions[i]._invalidate();
+        }
       }
 
       if (this._transientSubscription !== undefined) {
         this._transientSubscription._invalidate();
+        this._transientSubscription = undefined;
       } else if (this._transientSubscriptions !== undefined) {
-          for (i = 0; i < this._transientSubscriptions.length; i++) {
-            this._transientSubscriptions[i]._invalidate();
-          }
+        for (i = 0; i < this._transientSubscriptions.length; i++) {
+          this._transientSubscriptions[i]._invalidate();
+        }
+        this._transientSubscriptions = undefined;
       }
     }
   }
@@ -201,21 +258,15 @@ export class Invalidator {
   }
 
   _removeTransientSubscription(subscription: InvalidatorSubscription): void {
-    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      if ((this._transientSubscription !== undefined && this._transientSubscription !== subscription) ||
-          (this._transientSubscriptions !== undefined && this._transientSubscriptions.indexOf(subscription) === -1) ||
-          (this._transientSubscription === undefined && this._transientSubscriptions === undefined)) {
-        throw new Error("Failed to remove subscription from Invalidator: cannot find appropriate subscription.");
-      }
-    }
-
     if (this._transientSubscription === subscription) {
       this._transientSubscription = undefined;
-    } else if (this._transientSubscriptions.length === 1) {
-      this._transientSubscriptions = undefined;
-    } else {
-      const i = this._transientSubscriptions.indexOf(subscription);
-      this._transientSubscriptions[i] = this._transientSubscriptions.pop();
+    } else if (this._transientSubscriptions !== undefined) {
+      if (this._transientSubscriptions.length === 1) {
+        this._transientSubscriptions = undefined;
+      } else {
+        const i = this._transientSubscriptions.indexOf(subscription);
+        this._transientSubscriptions[i] = this._transientSubscriptions.pop();
+      }
     }
   }
 }

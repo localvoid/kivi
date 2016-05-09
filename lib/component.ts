@@ -343,8 +343,8 @@ export class Component<D, S> {
    */
   root: VNode|CanvasRenderingContext2D;
 
-  private _subscriptions: InvalidatorSubscription[]|InvalidatorSubscription;
-  private _transientSubscriptions: InvalidatorSubscription[]|InvalidatorSubscription;
+  _subscriptions: InvalidatorSubscription[]|InvalidatorSubscription;
+  _transientSubscriptions: InvalidatorSubscription[]|InvalidatorSubscription;
 
   constructor(flags: number, descriptor: ComponentDescriptor<D, S>, element: Element, parent: Component<any, any>,
       data?: D, children?: string|VNode[]) {
@@ -605,7 +605,7 @@ export class Component<D, S> {
       this.flags &= ~ComponentFlags.Recycled;
     }
 
-    let attached = this.descriptor._attached;
+    const attached = this.descriptor._attached;
     if (attached !== undefined) {
       attached(this);
     }
@@ -631,7 +631,7 @@ export class Component<D, S> {
     this.cancelSubscriptions();
     this.cancelTransientSubscriptions();
 
-    let detached = this.descriptor._detached;
+    const detached = this.descriptor._detached;
     if (detached !== undefined) {
       detached(this);
     }
@@ -701,60 +701,6 @@ export class Component<D, S> {
     }
   }
 
-  _removeSubscription(subscription: InvalidatorSubscription): void {
-    const subscriptions = this._subscriptions;
-    if (subscriptions.constructor === InvalidatorSubscription ||
-        (subscriptions as InvalidatorSubscription[]).length === 1) {
-      if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-        if (subscriptions.constructor === InvalidatorSubscription) {
-          if (subscriptions !== subscription) {
-            throw new Error("Failed to remove subscription from Component: cannot find appropriate subscription.");
-          }
-        } else {
-          if ((subscriptions as InvalidatorSubscription[])[0] !== subscription) {
-            throw new Error("Failed to remove subscription from Component: cannot find appropriate subscription.");
-          }
-        }
-      }
-      this._subscriptions = undefined;
-    } else {
-      const i = (subscriptions as InvalidatorSubscription[]).indexOf(subscription);
-      if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-        if (i === -1) {
-          throw new Error("Failed to remove subscription from Component: cannot find appropriate subscription.");
-        }
-      }
-      (subscriptions as InvalidatorSubscription[])[i] = (subscriptions as InvalidatorSubscription[]).pop();
-    }
-  }
-
-  _removeTransientSubscription(subscription: InvalidatorSubscription): void {
-    const subscriptions = this._transientSubscriptions;
-    if (subscriptions.constructor === InvalidatorSubscription ||
-        (subscriptions as InvalidatorSubscription[]).length === 1) {
-      if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-        if (subscriptions.constructor === InvalidatorSubscription) {
-          if (subscriptions !== subscription) {
-            throw new Error("Failed to remove subscription from Component: cannot find appropriate subscription.");
-          }
-        } else {
-          if ((subscriptions as InvalidatorSubscription[])[0] !== subscription) {
-            throw new Error("Failed to remove subscription from Component: cannot find appropriate subscription.");
-          }
-        }
-      }
-      this._transientSubscriptions = undefined;
-    } else {
-      const i = (subscriptions as InvalidatorSubscription[]).indexOf(subscription);
-      if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-        if (i === -1) {
-          throw new Error("Failed to remove subscription from Component: cannot find appropriate subscription.");
-        }
-      }
-      (subscriptions as InvalidatorSubscription[])[i] = (subscriptions as InvalidatorSubscription[]).pop();
-    }
-  }
-
   /**
    * Cancel all subscriptions.
    */
@@ -766,7 +712,7 @@ export class Component<D, S> {
           ._removeSubscription(subscriptions as InvalidatorSubscription);
       } else {
         for (let i = 0; i < (subscriptions as InvalidatorSubscription[]).length; i++) {
-          let s = (subscriptions as InvalidatorSubscription[])[i];
+          const s = (subscriptions as InvalidatorSubscription[])[i];
           s.invalidator._removeSubscription(s);
         }
       }
@@ -785,7 +731,7 @@ export class Component<D, S> {
           ._removeTransientSubscription(subscriptions as InvalidatorSubscription);
       } else {
         for (let i = 0; i < (subscriptions as InvalidatorSubscription[]).length; i++) {
-          let s = (subscriptions as InvalidatorSubscription[])[i];
+          const s = (subscriptions as InvalidatorSubscription[])[i];
           s.invalidator._removeTransientSubscription(s);
         }
       }
