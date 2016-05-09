@@ -88,6 +88,9 @@ export class ComponentDescriptor<D, S> {
       this._recycledPool = undefined;
       this._maxRecycled = 0;
     }
+    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+      this._update = _defaultUpdateHandler;
+    }
   }
 
   /**
@@ -827,4 +830,13 @@ export function mountComponent<D, S>(descriptor: ComponentDescriptor<D, S>, elem
     });
   }
   return c;
+}
+
+/**
+ * Function that is used as default component descriptor update handler in DEBUG, PROFILE and TESTING modes.
+ *
+ * Using this function instead of `null` handler will add information about components into stack traces.
+ */
+function _defaultUpdateHandler(c: Component<any, any>): void {
+  c.vSync();
 }
