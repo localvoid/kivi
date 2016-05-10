@@ -391,7 +391,7 @@ export class Component<P, S, D> {
   setState(newState: S = null): boolean {
     this.state = newState;
     const isStateChanged = this.descriptor._isStateChanged;
-    if (isStateChanged !== null || isStateChanged(this.prevState, newState)) {
+    if (isStateChanged === null || isStateChanged(this.prevState, newState)) {
       this.flags |= ComponentFlags.DirtyState;
       scheduler.nextFrame().updateComponent(this);
       return true;
