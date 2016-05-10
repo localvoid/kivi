@@ -16,7 +16,7 @@ import {ComponentDescriptor, injectComponent} from "kivi";
 
 const HelloWorld = new ComponentDescriptor()
   .vRender((c, root) => {
-    root.children(`Hello ${c.data}`);
+    root.children(`Hello ${c.props}`);
   });
 
 injectComponent(Main, document.body, "World");

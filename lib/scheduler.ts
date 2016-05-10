@@ -57,7 +57,7 @@ class MacrotaskScheduler {
 
 export class Frame {
   _flags: number;
-  _componentTasks: Component<any, any>[][];
+  _componentTasks: Component<any, any, any>[][];
   _writeTasks: SchedulerCallback[];
   _readTasks: SchedulerCallback[];
   _afterTasks: SchedulerCallback[];
@@ -75,7 +75,7 @@ export class Frame {
   /**
    * Add Component to the components queue.
    */
-  updateComponent(component: Component<any, any>): void {
+  updateComponent(component: Component<any, any, any>): void {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((this._flags & FrameTaskFlags.RWLock) !== 0) {
         throw new Error("Failed to add update component task to the current frame, current frame is locked for read" +
@@ -195,7 +195,7 @@ export class Scheduler {
   /**
    * Components array that should be updated on each frame.
    */
-  private _updateComponents: Component<any, any>[];
+  private _updateComponents: Component<any, any, any>[];
 
   private _microtaskScheduler: MicrotaskScheduler;
   private _macrotaskScheduler: MacrotaskScheduler;
@@ -319,7 +319,7 @@ export class Scheduler {
   /**
    * Add component to the list of components that should be updated each frame.
    */
-  startUpdateComponentEachFrame(component: Component<any, any>): void {
+  startUpdateComponentEachFrame(component: Component<any, any, any>): void {
     this._requestAnimationFrame();
     this._updateComponents.push(component);
   }
@@ -411,11 +411,10 @@ export class Scheduler {
     this._currentFrame._rwUnlock();
     this._nextFrame._rwUnlock();
 
-    // Mark all update components as dirty. But don't update until all write tasks
-    // are finished. It is possible that we won't need to update Component if it
-    // is removed.
+    // Mark all update components as dirty. But don't update until all write tasks are finished. It is possible that we
+    // won't need to update component if it is removed.
     for (i = 0; i < updateComponents.length; i++) {
-      updateComponents[i].markDirty();
+      updateComponents[i].flags |= ComponentFlags.DirtyEnvironment;
     }
 
     // Perform read/write batching. Start with executing read DOM tasks, then update components, execute write DOM tasks

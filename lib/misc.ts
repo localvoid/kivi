@@ -98,7 +98,7 @@ export const enum VNodeFlags {
   InputElement        = TextInputElement | CheckedInputElement,
   /// Prevent from disposing this virtual node.
   KeepAlive           = 1 << 11,
-  /// Prevent from updating component's data on each update.
+  /// Prevent from updating component's props on each update.
   BindOnce            = 1 << 12,
 
   /// See `SharedFlags.Svg`.
@@ -168,23 +168,27 @@ export const enum ComponentFlags {
   Attached                  = 1 << 1,
   /// Component in in mounting state.
   Mounting                  = 1 << 2,
-  /// Component is dirty and should be updated.
-  Dirty                     = 1 << 3,
+  /// Component's props is changed and it should be updated.
+  DirtyProps                = 1 << 3,
+  /// Component's state is changed and it should be updated.
+  DirtyState                = 1 << 4,
+  /// Something is changed in component's environment and it should be updated.
+  DirtyEnvironment          = 1 << 5,
   /// Component should be updated on each frame with high priority.
-  UpdateEachFrame           = 1 << 4,
+  UpdateEachFrame           = 1 << 6,
   /**
    * Component is registered in update each frame queue, when this flag is off, it will be removed from queue on next
    * frame.
    */
-  InUpdateEachFrameQueue    = 1 << 5,
+  InUpdateEachFrameQueue    = 1 << 7,
   /// Component is in recycled pool.
-  Recycled                  = 1 << 6,
-  /// Prevents from checking data indentity in default data setter.
-  DisabledCheckDataIdentity = 1 << 7,
+  Recycled                  = 1 << 8,
+  /// Prevents from checking props indentity.
+  DisabledCheckPropsIdentity = 1 << 9,
   /// Component is registered in scheduler frame task queue for updates.
-  InUpdateQueue             = 1 << 8,
+  InUpdateQueue             = 1 << 10,
   /// Component has a high priority and should be updated even when time frame for incremental rendering is exhausted.
-  HighPriorityUpdate        = 1 << 9,
+  HighPriorityUpdate        = 1 << 11,
 
   /// See `SharedFlags.Svg`.
   Svg              = SharedFlags.Svg,
@@ -195,8 +199,8 @@ export const enum ComponentFlags {
   /// See `SharedFlags.EnabledRecycling`.
   EnabledRecycling = SharedFlags.EnabledRecycling,
 
-  /// Component should be updated when it is attached and dirty.
-  ShouldUpdate = Attached | Dirty,
+  /// Component is dirty and should be updated.
+  Dirty        = DirtyProps | DirtyState | DirtyEnvironment,
 }
 
 /**

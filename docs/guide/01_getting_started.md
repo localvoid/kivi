@@ -73,7 +73,7 @@ import {ComponentDescriptor, injectComponent} from "kivi";
 
 const Main = new ComponentDescriptor()
   .update((c) => {
-    c.element.textContent = `Hello ${c.data}`;
+    c.element.textContent = `Hello ${c.props}`;
   });
 
 injectComponent(Main, document.body, "World");

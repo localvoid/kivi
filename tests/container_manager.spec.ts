@@ -8,11 +8,11 @@ describe("ContainerManager", () => {
     let testContainer: Element = null;
     let testNode: VNode = null;
     let testNextRef: Node = null;
-    let testOwner: Component<any, any> = null;
+    let testOwner: Component<any, any, any> = null;
 
     const CM = new ContainerManagerDescriptor()
       .insertChild((manager: ContainerManager<any>, container: Element, node: VNode, nextRef: Node,
-          owner: Component<any, any>, renderFlags: number) => {
+          owner: Component<any, any, any>, renderFlags: number) => {
         testManager = manager;
         testContainer = container;
         testNode = node;
@@ -41,10 +41,11 @@ describe("ContainerManager", () => {
     let testManager: ContainerManager<any> = null;
     let testContainer: Element = null;
     let testNode: VNode = null;
-    let testOwner: Component<any, any> = null;
+    let testOwner: Component<any, any, any> = null;
 
     const CM = new ContainerManagerDescriptor()
-      .removeChild((manager: ContainerManager<any>, container: Element, node: VNode, owner: Component<any, any>) => {
+      .removeChild((manager: ContainerManager<any>, container: Element, node: VNode,
+          owner: Component<any, any, any>) => {
         testManager = manager;
         testContainer = container;
         testNode = node;
@@ -72,11 +73,11 @@ describe("ContainerManager", () => {
     let testContainer: Element = null;
     let testNode: VNode = null;
     let testNextRef: Node = null;
-    let testOwner: Component<any, any> = null;
+    let testOwner: Component<any, any, any> = null;
 
     const CM = new ContainerManagerDescriptor()
       .moveChild((manager: ContainerManager<any>, container: Element, node: VNode, nextRef: Node,
-          owner: Component<any, any>) => {
+          owner: Component<any, any, any>) => {
         testManager = manager;
         testContainer = container;
         testNode = node;
@@ -109,11 +110,11 @@ describe("ContainerManager", () => {
     let testContainer: Element = null;
     let testNewNode: VNode = null;
     let testRefNode: VNode = null;
-    let testOwner: Component<any, any> = null;
+    let testOwner: Component<any, any, any> = null;
 
     const CM = new ContainerManagerDescriptor()
       .replaceChild((manager: ContainerManager<any>, container: Element, newNode: VNode, refNode: VNode,
-          owner: Component<any, any>, renderFlags: number) => {
+          owner: Component<any, any, any>, renderFlags: number) => {
         testManager = manager;
         testContainer = container;
         testNewNode = newNode;

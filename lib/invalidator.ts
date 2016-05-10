@@ -10,12 +10,12 @@ import {InvalidatorSubscriptionFlags} from "./misc";
 export class InvalidatorSubscription {
   _flags: number;
   invalidator: Invalidator;
-  private _component: Component<any, any>;
+  private _component: Component<any, any, any>;
   private _callback: Function;
   // used for debugging
   private _isCanceled: boolean;
 
-  constructor(flags: number, invalidator: Invalidator, component: Component<any, any>, callback: Function) {
+  constructor(flags: number, invalidator: Invalidator, component: Component<any, any, any>, callback: Function) {
     this._flags = flags;
     this.invalidator = invalidator;
     this._component = component;
@@ -30,7 +30,7 @@ export class InvalidatorSubscription {
    * Cancel subscription.
    */
   cancel(): void {
-    let component: Component<any, any>;
+    let component: Component<any, any, any>;
     let subscriptions: InvalidatorSubscription|InvalidatorSubscription[];
     let i: number;
 
@@ -159,7 +159,7 @@ export class Invalidator {
   /**
    * Create a subscription that will invalidate component.
    */
-  subscribeComponent(component: Component<any, any>): InvalidatorSubscription {
+  subscribeComponent(component: Component<any, any, any>): InvalidatorSubscription {
     const s = new InvalidatorSubscription(InvalidatorSubscriptionFlags.Component, this, component, null);
     this._addSubscription(s);
     return s;
@@ -168,7 +168,7 @@ export class Invalidator {
   /**
    * Create a transient subscription that will invalidate component.
    */
-  transientSubscribeComponent(component: Component<any, any>): InvalidatorSubscription {
+  transientSubscribeComponent(component: Component<any, any, any>): InvalidatorSubscription {
     const s = new InvalidatorSubscription(
       InvalidatorSubscriptionFlags.Component | InvalidatorSubscriptionFlags.Transient,
       this, component, null);

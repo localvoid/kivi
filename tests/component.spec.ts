@@ -5,14 +5,14 @@ import {VModel} from "../lib/vmodel";
 describe("Component", () => {
   describe("create dom", () => {
     it("should create element with default tag: div", () => {
-      const d = new ComponentDescriptor<any, any>();
+      const d = new ComponentDescriptor<any, any, any>();
       const c = d.createComponent();
       expect(c.element.tagName).toBe("DIV");
       expect(c.element).isPrototypeOf(HTMLElement);
     });
 
     it("should create element with tag span", () => {
-      const d = new ComponentDescriptor<any, any>()
+      const d = new ComponentDescriptor<any, any, any>()
         .tagName("span");
       const c = d.createComponent();
       expect(c.element.tagName).toBe("SPAN");
@@ -20,7 +20,7 @@ describe("Component", () => {
     });
 
     it("should create svg element with tag a", () => {
-      const d = new ComponentDescriptor<any, any>()
+      const d = new ComponentDescriptor<any, any, any>()
         .tagName("a")
         .svg();
       const c = d.createComponent();
@@ -28,7 +28,7 @@ describe("Component", () => {
     });
 
     it("should create canvas element", () => {
-      const d = new ComponentDescriptor<any, any>()
+      const d = new ComponentDescriptor<any, any, any>()
         .canvas();
       const c = d.createComponent();
       expect(c.element.tagName).toBe("CANVAS");
@@ -38,7 +38,7 @@ describe("Component", () => {
 
     it("should create element from vmodel", () => {
       const m = new VModel("span");
-      const d = new ComponentDescriptor<any, any>()
+      const d = new ComponentDescriptor<any, any, any>()
         .vModel(m);
       const c = d.createComponent();
       expect(c.element.tagName).toBe("SPAN");
@@ -46,20 +46,20 @@ describe("Component", () => {
     });
 
     it("should have depth 0 if no parent", () => {
-      const d = new ComponentDescriptor<any, any>();
+      const d = new ComponentDescriptor<any, any, any>();
       const c = d.createComponent();
       expect(c.depth).toBe(0);
     });
 
     it("should have depth 1 if parent have depth 0", () => {
-      const d = new ComponentDescriptor<any, any>();
+      const d = new ComponentDescriptor<any, any, any>();
       const p = d.createComponent();
       const c = d.createComponent(p);
       expect(c.depth).toBe(1);
     });
 
     it("should have depth 2 if parent have depth 1", () => {
-      const d = new ComponentDescriptor<any, any>();
+      const d = new ComponentDescriptor<any, any, any>();
       const gp = d.createComponent();
       const p = d.createComponent(gp);
       const c = d.createComponent(p);
@@ -67,14 +67,14 @@ describe("Component", () => {
     });
 
     it("should have parent assigned to parent component", () => {
-      const d = new ComponentDescriptor<any, any>();
+      const d = new ComponentDescriptor<any, any, any>();
       const p = d.createComponent();
       const c = d.createComponent(p);
       expect(c.parent).toBe(p);
     });
 
     it("should have mtime 0 when created", () => {
-      const d = new ComponentDescriptor<any, any>();
+      const d = new ComponentDescriptor<any, any, any>();
       const c = d.createComponent();
       expect(c.mtime).toBe(0);
     });
@@ -85,7 +85,6 @@ describe("Component", () => {
       const c = LifecycleComponent.createComponent();
       expect(c.state.checkInit).toBe(0);
       expect(c.state.checkUpdate).toBe(-1);
-      expect(c.state.checkInvalidated).toBe(-1);
       expect(c.state.checkAttached).toBe(-1);
       expect(c.state.checkDetached).toBe(-1);
       expect(c.state.checkDisposed).toBe(-1);
@@ -96,7 +95,6 @@ describe("Component", () => {
       c.update();
       expect(c.state.checkInit).toBe(0);
       expect(c.state.checkUpdate).toBe(-1);
-      expect(c.state.checkInvalidated).toBe(-1);
       expect(c.state.checkAttached).toBe(-1);
       expect(c.state.checkDetached).toBe(-1);
       expect(c.state.checkDisposed).toBe(-1);
@@ -108,7 +106,6 @@ describe("Component", () => {
       c.update();
       expect(c.state.checkInit).toBe(0);
       expect(c.state.checkUpdate).toBe(2);
-      expect(c.state.checkInvalidated).toBe(-1);
       expect(c.state.checkAttached).toBe(1);
       expect(c.state.checkDetached).toBe(-1);
       expect(c.state.checkDisposed).toBe(-1);
@@ -120,7 +117,6 @@ describe("Component", () => {
       c.detach();
       expect(c.state.checkInit).toBe(0);
       expect(c.state.checkUpdate).toBe(-1);
-      expect(c.state.checkInvalidated).toBe(-1);
       expect(c.state.checkAttached).toBe(1);
       expect(c.state.checkDetached).toBe(2);
       expect(c.state.checkDisposed).toBe(-1);
@@ -132,23 +128,9 @@ describe("Component", () => {
       c.dispose();
       expect(c.state.checkInit).toBe(0);
       expect(c.state.checkUpdate).toBe(-1);
-      expect(c.state.checkInvalidated).toBe(-1);
       expect(c.state.checkAttached).toBe(1);
       expect(c.state.checkDetached).toBe(2);
       expect(c.state.checkDisposed).toBe(3);
-    });
-
-    it("should execute invalidated hook when component is invalidated", () => {
-      const c = LifecycleComponent.createComponent();
-      c.attach();
-      c.update();
-      c.invalidate();
-      expect(c.state.checkInit).toBe(0);
-      expect(c.state.checkUpdate).toBe(2);
-      expect(c.state.checkInvalidated).toBe(3);
-      expect(c.state.checkAttached).toBe(1);
-      expect(c.state.checkDetached).toBe(-1);
-      expect(c.state.checkDisposed).toBe(-1);
     });
   });
 });

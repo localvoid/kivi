@@ -41,7 +41,7 @@ export class VNode {
    * Tag name of the element, or reference to VModel if virtual node represents an element, or ComponentDescriptor
    * if it represents a component.
    */
-  _tag: string|VModel<any>|ComponentDescriptor<any, any>;
+  _tag: string|VModel<any>|ComponentDescriptor<any, any, any>;
   /**
    * Children reconciliation algorithm is using key property to find the same node in the previous children array. Key
    * should be unique among its siblings.
@@ -87,9 +87,6 @@ export class VNode {
   /**
    * Children property can contain flat array of children virtual nodes, or text if it contains a single text node
    * child. If virtual node represents an input field, children property will contain input value.
-   *
-   * When virtual node represents a Component, then instead of rendering children in place, they are transferred to the
-   * component with `setChildren` method.
    */
   _children: VNode[]|string|boolean;
   /**
@@ -102,7 +99,7 @@ export class VNode {
    * will be available after virtual node is created or synced. Each time virtual node is synced, reference to a
    * Component is transferred from old virtual node to the new one.
    */
-  cref: Component<any, any>|ContainerManager<any>;
+  cref: Component<any, any, any>|ContainerManager<any>;
 
   /**
    * Debug properties are used because VNode properties are frozen.
@@ -111,7 +108,7 @@ export class VNode {
    */
   _debugProperties: {flags: number};
 
-  constructor(flags: number, tag: string|VModel<any>|ComponentDescriptor<any, any>, props: any) {
+  constructor(flags: number, tag: string|VModel<any>|ComponentDescriptor<any, any, any>, props: any) {
     this._flags = flags;
     this._tag = tag;
     this._key = null;
@@ -412,16 +409,13 @@ export class VNode {
    * Set children. Children parameter should be either a flat array of virtual nodes, or text if node contains a single
    * text node.
    *
-   * When virtual node represents a Component, then instead of rendering children in place, they are transferred to the
-   * component with `setChildren` method.
-   *
-   * This method is available on element, component and component's root virtual node types.
+   * This method is available on element and component's root virtual node types.
    */
   children(children: VNode[]|string): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root | VNodeFlags.Component)) === 0) {
-        throw new Error("Failed to set children on VNode: children method should be called on element, component" +
-                        " or component root nodes only.");
+      if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
+        throw new Error("Failed to set children on VNode: children method should be called on element or component" +
+                        " root nodes only.");
       }
       if ((this._flags & VNodeFlags.InputElement) !== 0) {
         throw new Error("Failed to set children on VNode: input elements can't have children.");
@@ -451,8 +445,8 @@ export class VNode {
   trackByKeyChildren(children: VNode[]): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
-        throw new Error("Failed to set children on VNode: children method should be called on element, component" +
-                        " or component root nodes only.");
+        throw new Error("Failed to set children on VNode: children method should be called on element or component" +
+                        " root nodes only.");
       }
       if ((this._flags & VNodeFlags.InputElement) !== 0) {
         throw new Error("Failed to set children on VNode: input elements can't have children.");
@@ -597,7 +591,7 @@ export class VNode {
    * This method doesn"t set any attributes, or create children, render method is responsible for setting up internal
    * representation of the Node.
    */
-  create(owner: Component<any, any>): void {
+  create(owner: Component<any, any, any>): void {
     let flags = this._flags;
 
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -620,8 +614,7 @@ export class VNode {
         this.ref = (this._tag as VModel<any>).createElement();
       }
     } else {
-      const c = (this._tag as ComponentDescriptor<any, any>)
-        .createComponent(owner, this._props, this._children as string|VNode[]);
+      const c = (this._tag as ComponentDescriptor<any, any, any>).createComponent(owner, this._props);
       this.ref = c.element;
       this.cref = c;
     }
@@ -645,7 +638,7 @@ export class VNode {
   /**
    * Render internal representation of the Virtual DOM Node.
    */
-  render(owner: Component<any, any>, renderFlags: number): void {
+  render(owner: Component<any, any, any>, renderFlags: number): void {
     let i: number;
 
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -751,7 +744,7 @@ export class VNode {
       }
 
       if ((renderFlags & RenderFlags.ShallowRender) === 0) {
-        (this.cref as Component<any, any>).update();
+        (this.cref as Component<any, any, any>).update();
       }
     }
 
@@ -761,7 +754,7 @@ export class VNode {
   /**
    * Mount VNode on top of existing html document.
    */
-  mount(node: Node, owner: Component<any, any>): void {
+  mount(node: Node, owner: Component<any, any, any>): void {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if (this.ref !== null) {
         throw new Error("Failed to mount VNode: VNode cannot be mounted if it already has a reference to DOM Node.");
@@ -785,8 +778,8 @@ export class VNode {
     this.ref = node;
 
     if ((flags & VNodeFlags.Component) !== 0) {
-      const cref = this.cref = (this._tag as ComponentDescriptor<any, any>)
-        .mountComponent(node as Element, owner, this._props, this._children as string|VNode[]);
+      const cref = this.cref = (this._tag as ComponentDescriptor<any, any, any>)
+        .mountComponent(node as Element, owner, this._props);
       if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
         const dflags = cref.descriptor._flags;
         if (node.nodeType !== 1) {
@@ -820,8 +813,6 @@ export class VNode {
           }
         }
       }
-      cref.setData(this._props);
-      cref.setChildren(this._children as VNode[]|string);
       cref.update();
     } else {
       if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -903,7 +894,7 @@ export class VNode {
    * When this node is synced with other node, this node should be considered as
    * destroyed, and any access to it after sync is an null behavior.
    */
-  sync(other: VNode, owner: Component<any, any>, renderFlags: number): void {
+  sync(other: VNode, owner: Component<any, any, any>, renderFlags: number): void {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((this._debugProperties.flags & (VNodeDebugFlags.Rendered | VNodeDebugFlags.Mounted)) === 0) {
         throw new Error("Failed to sync VNode: VNode should be rendered or mounted before sync.");
@@ -916,7 +907,7 @@ export class VNode {
     const ref = this.ref as Element;
     const flags = this._flags;
 
-    let component: Component<any, any>;
+    let component: Component<any, any, any>;
     let className: string;
 
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -1002,7 +993,7 @@ export class VNode {
         }
       }
     } else { // if ((flags & VNodeFlags.Component) !== 0)
-      component = other.cref = this.cref as Component<any, any>;
+      component = other.cref = this.cref as Component<any, any, any>;
 
       if (this._className !== other._className) {
         className = (other._className === null) ? "" : other._className;
@@ -1013,10 +1004,8 @@ export class VNode {
         }
       }
 
-      if ((flags & VNodeFlags.BindOnce) === 0) {
-        if ((renderFlags & RenderFlags.ShallowUpdate) === 0) {
-          component.setData(other._props);
-          component.setChildren(other._children as VNode[] | string);
+      if (((flags & VNodeFlags.BindOnce) | (renderFlags & RenderFlags.ShallowUpdate)) === 0) {
+        if (component.setProps(other._props)) {
           component.update();
         }
       }
@@ -1044,7 +1033,7 @@ export class VNode {
         }
       }
     } else {
-      (this.cref as Component<any, any>).attach();
+      (this.cref as Component<any, any, any>).attach();
     }
   }
 
@@ -1063,7 +1052,7 @@ export class VNode {
       this._debugProperties.flags &= ~VNodeDebugFlags.Detached;
     }
     if ((this._flags & VNodeFlags.Component) !== 0) {
-      (this.cref as Component<any, any>).attach();
+      (this.cref as Component<any, any, any>).attach();
     }
   }
 
@@ -1086,7 +1075,7 @@ export class VNode {
         }
       }
     } else {
-      (this.cref as Component<any, any>).detach();
+      (this.cref as Component<any, any, any>).detach();
     }
   }
 
@@ -1105,7 +1094,7 @@ export class VNode {
     }
     if ((this._flags & VNodeFlags.KeepAlive) === 0) {
       if ((this._flags & VNodeFlags.Component) !== 0) {
-        (this.cref as Component<any, any>).dispose();
+        (this.cref as Component<any, any, any>).dispose();
       } else if (this._children !== null) {
         const children = this._children;
         if (typeof children !== "string") {
@@ -1122,7 +1111,7 @@ export class VNode {
   /**
    * Sync old children list with the new one.
    */
-  syncChildren(a: VNode[]|string, b: VNode[]|string, owner: Component<any, any>, renderFlags: number): void {
+  syncChildren(a: VNode[]|string, b: VNode[]|string, owner: Component<any, any, any>, renderFlags: number): void {
     let aNode: VNode;
     let bNode: VNode;
     let i = 0;
@@ -1287,7 +1276,7 @@ export class VNode {
    * and external dependencies should not rely on the knowledge about this
    * algorithm, because it can be changed in any time.
    */
-  private _syncChildren(a: VNode[], b: VNode[], owner: Component<any, any>, renderFlags: number): void {
+  private _syncChildren(a: VNode[], b: VNode[], owner: Component<any, any, any>, renderFlags: number): void {
     let aStart = 0;
     let bStart = 0;
     let aEnd = a.length - 1;
@@ -1368,7 +1357,8 @@ export class VNode {
   /**
    * Sync children tracking by keys.
    */
-  private _syncChildrenTrackingByKeys(a: VNode[], b: VNode[], owner: Component<any, any>, renderFlags: number): void {
+  private _syncChildrenTrackingByKeys(a: VNode[], b: VNode[], owner: Component<any, any, any>,
+      renderFlags: number): void {
     let aStart = 0;
     let bStart = 0;
     let aEnd = a.length - 1;
@@ -1612,7 +1602,7 @@ export class VNode {
     }
   }
 
-  private _insertChild(node: VNode, nextRef: Node, owner: Component<any, any>, renderFlags: number): void {
+  private _insertChild(node: VNode, nextRef: Node, owner: Component<any, any, any>, renderFlags: number): void {
     if (((this._flags & VNodeFlags.ManagedContainer) !== 0) &&
         (this.cref as ContainerManager<any>).descriptor._insertChild !== null) {
       (this.cref as ContainerManager<any>).descriptor._insertChild(
@@ -1622,7 +1612,7 @@ export class VNode {
     }
   }
 
-  private _replaceChild(newNode: VNode, refNode: VNode, owner: Component<any, any>, renderFlags: number): void {
+  private _replaceChild(newNode: VNode, refNode: VNode, owner: Component<any, any, any>, renderFlags: number): void {
     if (((this._flags & VNodeFlags.ManagedContainer) !== 0) &&
         (this.cref as ContainerManager<any>).descriptor._replaceChild !== null) {
       (this.cref as ContainerManager<any>).descriptor._replaceChild(
@@ -1632,7 +1622,7 @@ export class VNode {
     }
   }
 
-  private _moveChild(node: VNode, nextRef: Node, owner: Component<any, any>): void {
+  private _moveChild(node: VNode, nextRef: Node, owner: Component<any, any, any>): void {
     if (((this._flags & VNodeFlags.ManagedContainer) !== 0) &&
         (this.cref as ContainerManager<any>).descriptor._moveChild !== null) {
       (this.cref as ContainerManager<any>).descriptor._moveChild(
@@ -1642,7 +1632,7 @@ export class VNode {
     }
   }
 
-  private _removeChild(node: VNode, owner: Component<any, any>): void {
+  private _removeChild(node: VNode, owner: Component<any, any, any>): void {
     if (((this._flags & VNodeFlags.ManagedContainer) !== 0) &&
         (this.cref as ContainerManager<any>).descriptor._removeChild !== null) {
       (this.cref as ContainerManager<any>).descriptor._removeChild(
@@ -1740,7 +1730,7 @@ function _lis(a: number[]): number[] {
  *
  * Can be used as a generic method to insert nodes in ContainerManager.
  */
-export function insertVNodeBefore(container: Element, node: VNode, nextRef: Node, owner: Component<any, any>,
+export function insertVNodeBefore(container: Element, node: VNode, nextRef: Node, owner: Component<any, any, any>,
     renderFlags: number): void {
   if (node.ref === null) {
     node.create(owner);
@@ -1763,7 +1753,7 @@ export function insertVNodeBefore(container: Element, node: VNode, nextRef: Node
  *
  * Can be used as a generic method to replace nodes in ContainerManager.
  */
-export function replaceVNode(container: Element, newNode: VNode, refNode: VNode, owner: Component<any, any>,
+export function replaceVNode(container: Element, newNode: VNode, refNode: VNode, owner: Component<any, any, any>,
     renderFlags: number): void {
   if (newNode.ref === null) {
     newNode.create(owner);
@@ -1787,7 +1777,7 @@ export function replaceVNode(container: Element, newNode: VNode, refNode: VNode,
  *
  * Can be used as a generic method to move nodes in ContainerManager.
  */
-export function moveVNode(container: Element, node: VNode, nextRef: Node, owner: Component<any, any>): void {
+export function moveVNode(container: Element, node: VNode, nextRef: Node, owner: Component<any, any, any>): void {
   container.insertBefore(node.ref, nextRef);
 }
 
@@ -1796,7 +1786,7 @@ export function moveVNode(container: Element, node: VNode, nextRef: Node, owner:
  *
  * Can be used as a generic method to remove nodes in ContainerManager.
  */
-export function removeVNode(container: Element, node: VNode, owner: Component<any, any>): void {
+export function removeVNode(container: Element, node: VNode, owner: Component<any, any, any>): void {
   container.removeChild(node.ref);
   node.dispose();
 }

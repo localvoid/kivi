@@ -12,15 +12,21 @@ reimplementing similar algorithms.
 
 ### Creating Virtual DOM Nodes
 
-##### `createVElement(tagName: string): VNode`
+##### createVElement
+
+Function: `createVElement(tagName: string): VNode`
 
 Creates a virtual node representing a HTML Element.
 
-##### `createVSvgElement(tagName: string): VNode`
+##### createVSvgElement
+
+Function: `createVSvgElement(tagName: string): VNode`
 
 Creates a virtual node representing a SVG Element.
 
-##### `createVText(content: string): VNode`
+##### createVText
+
+Function: `createVText(content: string): VNode`
 
 Creates a virtual node representing a Text Node.
 
@@ -39,39 +45,53 @@ const e = createVElement("a")
   .children("Link to localhost");
 ```
 
-##### `attrs(attrs: {[key: string]: any})`
+##### attrs
+
+Method: `vnode.attrs(attrs: {[key: string]: any}): VNode`
 
 Set HTML attributes.
 
 Attrs object should always have the same shape when creating virtual node representing the same element. To specify
-dynamic shape attributes use `dynamiShapeAttrs(attrs: {[key: string]: any})` method.
+dynamic shape attributes use `dynamiShapeAttrs` method.
 
-##### `props(props: {[key: string]: any})`
+##### props
+
+Method: `vnode.props(props: {[key: string]: any}): VNode`
 
 Set properties.
 
 Props object should always have the same shape when creating virtual node representing the same element. To specify
-dynamic shape properties use `dynamiShapeProps(props: {[key: string]: any})` method.
+dynamic shape properties use `dynamiShapeProps` method.
 
 When virtual node is mounted on top of existing HTML, all properties will be assigned during mounting phase.
 
-##### `style(style: string)`
+##### style
+
+Method: `vnode.style(style: string): VNode`
 
 Set style in CSS string format.
 
-##### `className(className: string)`
+##### class name
+
+Method: `vnode.className(className: string): VNode`
 
 Set class name.
 
-##### `children(children: VNode[]|string)`
+##### children
+
+Method `vnode.children(children: VNode[]|string): VNode`
 
 Set children.
 
-##### `trackByKeyChildren(children: VNode[])`
+##### trackByKeyChildren
+
+Method: `vnode.trackByKeyChildren(children: VNode[]): VNode`
 
 Set children with enabled tracking by key, all children should have a key and it should be unique among its siblings.
 
-##### `key(key: any)`
+##### key
+
+Method: `vnode.key(key: any): VNode`
 
 Set key.
 
@@ -82,6 +102,8 @@ list that represented the same DOM node.
 
 ### Using Virtual DOM with components
 
-##### `ComponentDescriptor<D, S>.vRender((c: Component<D, S>, root: VNode) => VNode)`
+##### vRender
+
+Method: `componentDescriptor.vRender((c: Component<D, S>, root: VNode) => VNode)`
 
 Set default Virtual DOM render function.

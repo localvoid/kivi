@@ -1180,7 +1180,7 @@ describe("VNode", () => {
       a.create(null);
       a.attached();
       a.render(null, 0);
-      expect((componentA.cref as Component<number, any>).data).toBe(0);
+      expect((componentA.cref as Component<number, any, any>).props).toBe(0);
       expect(componentA.cref.state.checkInit).toBe(0);
       expect(componentA.cref.state.checkAttached).toBe(1);
       expect(componentA.cref.state.checkUpdate).toBe(2);
@@ -1188,7 +1188,7 @@ describe("VNode", () => {
       expect(componentA.cref.state.checkDisposed).toBe(-1);
 
       a.sync(b, null, 0);
-      expect((componentB.cref as Component<number, any>).data).toBe(1);
+      expect((componentB.cref as Component<number, any, any>).props).toBe(1);
       expect(componentB.cref.state.checkInit).toBe(0);
       expect(componentB.cref.state.checkAttached).toBe(1);
       expect(componentB.cref.state.checkUpdate).toBe(3);
@@ -1226,7 +1226,7 @@ describe("VNode", () => {
       a.create(null);
       a.attached();
       a.render(null, 0);
-      expect((componentA.cref as Component<number, any>).data).toBe(0);
+      expect((componentA.cref as Component<number, any, any>).props).toBe(0);
       expect(componentA.cref.state.checkInit).toBe(0);
       expect(componentA.cref.state.checkAttached).toBe(1);
       expect(componentA.cref.state.checkUpdate).toBe(2);
@@ -1234,7 +1234,7 @@ describe("VNode", () => {
       expect(componentA.cref.state.checkDisposed).toBe(-1);
 
       a.sync(b, null, RenderFlags.ShallowUpdate);
-      expect((componentB.cref as Component<number, any>).data).toBe(0);
+      expect((componentB.cref as Component<number, any, any>).props).toBe(0);
       expect(componentB.cref.state.checkInit).toBe(0);
       expect(componentB.cref.state.checkAttached).toBe(1);
       expect(componentB.cref.state.checkUpdate).toBe(2);

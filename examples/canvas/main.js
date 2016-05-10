@@ -6,12 +6,14 @@ const Main = new kivi.ComponentDescriptor()
       y: 0,
     };
 
-    c.element.width = c.data.width;
-    c.element.height = c.data.height;
+    c.element.width = c.props.width;
+    c.element.height = c.props.height;
 
     c.element.addEventListener("mousemove", (e) => {
-      c.state.x = e.offsetX;
-      c.state.y = e.offsetY;
+      c.setState({
+        x: e.offsetX,
+        y: e.offsetY
+      });
       c.invalidate();
     });
   })
@@ -19,7 +21,7 @@ const Main = new kivi.ComponentDescriptor()
     const ctx = c.get2DContext();
     ctx.globalCompositeOperation = "source-over";
     ctx.fillStyle = "rgba(0, 0, 0, 1)";
-    ctx.fillRect(0, 0, c.data.width, c.data.height);
+    ctx.fillRect(0, 0, c.props.width, c.props.height);
 
     ctx.globalCompositeOperation = "lighter";
     ctx.beginPath();

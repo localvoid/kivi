@@ -12,12 +12,12 @@ is just a view library.
 ## Example
 
 ```js
-import {ComponentDescriptor, injectComponent} from 'kivi';
+import {ComponentDescriptor, injectComponent} from "kivi";
 
 const HelloWorld = new ComponentDescriptor()
-  .vRender((c, root) => { root.children(`Hello ${c.data}`); });
+  .vRender((c, root) => { root.children(`Hello ${c.props}`); });
 
-injectComponent(Main, document.body, 'World');
+injectComponent(Main, document.body, "World");
 ```
 
 ## Documentation
