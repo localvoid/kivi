@@ -2,13 +2,6 @@ import {SvgNamespace, VNodeFlags, VModelFlags, setAttr} from "./misc";
 import {VNode} from "./vnode";
 
 /**
- * Update handler used to override default diff/patch behavior.
- *
- * When oldProps is null, it means that element was created for the first time.
- */
-export type VModelUpdateHandler<D> = (element: Element, oldProps: D, newProps: D) => void;
-
-/**
  * Model for DOM Elements.
  *
  * Models are used as an advanced optimization technique. When creating virtual nodes, or declaring root node for a
@@ -16,20 +9,82 @@ export type VModelUpdateHandler<D> = (element: Element, oldProps: D, newProps: D
  * properties for the HTML Element, so there is no need to declare them each time virtual node is created. It also
  * reduces diff overhead, because there is no need to diff static model properties.
  *
+ * Creating a virtual dom node from VModel:
+ *
+ *     const model = new VModel("div").attrs({"id": "model"});
+ *     // Element node
+ *     const node = mode.createVNode();
+ *     // Component's root node
+ *     const root = mode.createVRoot();
+ *
+ * Creating a DOM node from VModel:
+ *
+ *     const model = new VModel("div").attrs({"id": "model"});
+ *     const div = model.createElement();
+ *
  * @final
  */
 export class VModel<D> {
   /**
    * Flags that should be marked on VNode and ComponentDescriptor when they are associated with VModel.
+   *
+   * See `SharedFlags` for details.
    */
   _markFlags: number;
+  /**
+   * Flags, see `VModelFlags` for details.
+   */
   _flags: number;
+  /**
+   * Tag name of the element.
+   */
   _tagName: string;
-  _props: any;
-  _attrs: any;
+  /**
+   * Properties.
+   *
+   * All properties are assigned to DOM nodes directly:
+   *
+   *     e: HTMLElement;
+   *     e.propertyName = propertyValue;
+   *
+   * When virtual node is mounted on top of existing HTML, all properties from model will be assigned during mounting
+   * phase.
+   */
+  _props: {[key: string]: any};
+  /**
+   * Attributes.
+   *
+   * All attributes are assigned to DOM nodes with `setAttribute` method:
+   *
+   *     e: HTMLElement;
+   *     e.setAttribute(key, value);
+   *
+   * If attribute is prefixed with "xlink:", or "xml:" namespace, it will assign attributes with `setAttributeNS`
+   * method and use appropriate namespaces.
+   */
+  _attrs: {[key: string]: any};
+  /**
+   * Style in css string format.
+   *
+   * Style is assigned to DOM nodes with `style.cssText` property, if virtual node represents an element from svg
+   * namespace, style will be assigned with `setAttribute("style", "cssText")` method.
+   */
   _style: string;
+  /**
+   * Class name.
+   *
+   * Class name is assigned to DOM nodes with `className` property, if virtual node represents an element from svg
+   * namespace, class name will be assigned with `setAttribute("class", "className")` method.
+   */
   _className: string;
+
+  /**
+   * Update handler is used to override default reconciliation algorithm.
+   */
   private _updateHandler: VModelUpdateHandler<D>;
+  /**
+   * Reference to an element that will be cloned when DOM node cloning is enabled.
+   */
   private _ref: Element;
 
   constructor(tagName: string) {
@@ -55,22 +110,41 @@ export class VModel<D> {
 
   /**
    * Set properties.
+   *
+   * All properties are assigned to DOM nodes directly:
+   *
+   *     e: HTMLElement;
+   *     e.propertyName = propertyValue;
+   *
+   * When virtual node is mounted on top of existing HTML, all properties from model will be assigned during mounting
+   * phase.
    */
-  props(props: any): VModel<D> {
+  props(props: {[key: string]: any}): VModel<D> {
     this._props = props;
     return this;
   }
 
   /**
    * Set attributes.
+   *
+   * All attributes are assigned to DOM nodes with `setAttribute` method:
+   *
+   *     e: HTMLElement;
+   *     e.setAttribute(key, value);
+   *
+   * If attribute is prefixed with "xlink:", or "xml:" namespace, it will assign attributes with `setAttributeNS`
+   * method and use appropriate namespaces.
    */
-  attrs(attrs: any): VModel<D> {
+  attrs(attrs: {[key: string]: any}): VModel<D> {
     this._attrs = attrs;
     return this;
   }
 
   /**
    * Set style in css string format.
+   *
+   * Style is assigned to DOM nodes with `style.cssText` property, if virtual node represents an element from svg
+   * namespace, style will be assigned with `setAttribute("style", "cssText")` method.
    */
   style(style: string): VModel<D> {
     this._style = style;
@@ -79,6 +153,9 @@ export class VModel<D> {
 
   /**
    * Set className.
+   *
+   * Class name is assigned to DOM nodes with `className` property, if virtual node represents an element from svg
+   * namespace, class name will be assigned with `setAttribute("class", "className")` method.
    */
   className(classes: string): VModel<D> {
     this._className = classes;
@@ -97,6 +174,8 @@ export class VModel<D> {
 
   /**
    * Set update handler.
+   *
+   * Update handler is used to override default reconciliation algorithm.
    */
   updateHandler(handler: VModelUpdateHandler<D>): VModel<D> {
     this._markFlags |= VNodeFlags.VModelUpdateHandler;
@@ -105,21 +184,21 @@ export class VModel<D> {
   }
 
   /**
-   * Create a Virtual DOM Node from model.
+   * Create a Virtual DOM Node.
    */
   createVNode(data?: D): VNode {
     return new VNode(VNodeFlags.Element | this._markFlags, this, data === undefined ? null : data);
   }
 
   /**
-   * Create a Virtual DOM Node for Component root from model.
+   * Create a Virtual DOM Node for component's root.
    */
   createVRoot(data?: D): VNode {
     return new VNode(VNodeFlags.Root | this._markFlags, this, data === undefined ? null : data);
   }
 
   /**
-   * Create a DOM Element from model.
+   * Create a DOM Element.
    */
   createElement(): Element {
     let i: number;
@@ -184,3 +263,11 @@ export class VModel<D> {
     this._updateHandler(element, oldProps, newProps);
   }
 }
+
+/**
+ * VModel update handler is used to override default reconciliation algorithm.
+ *
+ * When `oldProps` is `null`, it means that element is created.
+ */
+export type VModelUpdateHandler<D> = (element: Element, oldProps: D, newProps: D) => void;
+
