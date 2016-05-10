@@ -11,7 +11,6 @@ Each component should declare its properties and behavior in `ComponentDescripto
 its props type, state type and auxiliary data type with parametric types `ComponentDescriptor<P, S, D>`.
 
 Component descriptor provides a `createComponent` and `createRootComponent` methods to create component instances.
-`createRootComponent` method is used when component doesn't have any parents.
 
 ### Example
 

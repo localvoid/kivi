@@ -7,6 +7,36 @@ import {scheduler} from "./scheduler";
 /**
  * Component Descriptor.
  *
+ * Each component should declare its properties and behavior in `ComponentDescriptor` object.
+ *
+ * Component descriptor has three parametric types: first parametric type `P` is a props type, second type `S` is a
+ * state type, and third `D` is auxiliary data type.
+ *
+ * Component descriptor provides a `createComponent` and `createRootComponent` methods to create component instances.
+ *
+ * Example:
+ *
+ *     class State {
+ *       xy: number;
+ *
+ *       constructor(props: number) {
+ *         this.xy = props * props;
+ *       }
+ *     }
+ *
+ *     const MyComponent = new ComponentDescriptor<number, State, any>()
+ *       .canvas()
+ *       .init((c) => {
+ *         c.state = new State(c.props);
+ *       })
+ *       .update((c) => {
+ *         const ctx = c.get2DContext();
+ *         ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+ *         ctx.fillRect(c.props, c.props, c.state.xy, c.state.xy);
+ *       });
+ *
+ *       const componentInstance = MyComponent.createRootComponent(10);
+ *
  * @final
  */
 export class ComponentDescriptor<P, S, D> {
@@ -360,7 +390,9 @@ export class Component<P, S, D> {
   }
 
   /**
-   * Set parent Component.
+   * Set parent component.
+   *
+   * When parent is changed component's depth will be reevaluated.
    */
   setParent(parent: Component<P, S, D>): void {
     this.parent = parent;
@@ -368,13 +400,17 @@ export class Component<P, S, D> {
   }
 
   /**
-   * Set new props.
+   * Set new props. Returns true if props are changed.
+   *
+   * If `isPropsChanged` function exists in component descriptor, this function will check if props are changed,
+   * otherwise props are checked by their identity, unless it is disabled by `disableCheckDataIdentity()` component
+   * descriptor method.
    */
   setProps(newProps: P = null): boolean {
     this.props = newProps;
 
-    const isDataChanged = this.descriptor._isPropsChanged;
-    if ((isDataChanged !== null && isDataChanged(this.prevProps, newProps)) ||
+    const isPropsChanged = this.descriptor._isPropsChanged;
+    if ((isPropsChanged !== null && isPropsChanged(this.prevProps, newProps)) ||
         (this.flags & ComponentFlags.DisabledCheckPropsIdentity) !== 0 ||
         (this.prevProps !== newProps)) {
       this.flags |= ComponentFlags.DirtyProps;
@@ -386,8 +422,10 @@ export class Component<P, S, D> {
   }
 
   /**
-   * Set new state.
-   */
+   * Set new state. Returns true if state is changed.
+   *
+   * If `isStateChanged` function exists in component descriptor, this function will check if state is changed.
+  */
   setState(newState: S = null): boolean {
     this.state = newState;
     const isStateChanged = this.descriptor._isStateChanged;
