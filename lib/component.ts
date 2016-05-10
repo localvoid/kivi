@@ -44,6 +44,9 @@ export class ComponentDescriptor<P, S, D> {
    * Flags marked on Component when it is created.
    */
   _markFlags: number;
+  /**
+   * Flags, see `ComponentDescriptorFlags` for details.
+   */
   _flags: number;
   /**
    * Tag name of the root element or reference to a model.
@@ -299,6 +302,8 @@ export class ComponentDescriptor<P, S, D> {
  */
 export class Component<P, S, D> {
   /**
+   * Flags, see `ComponentFlags` for details.
+   *
    * Lowest 24 bits are reserved for kivi flags, other bits can be used for
    * user flags.
    */

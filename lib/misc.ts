@@ -10,7 +10,7 @@ export const XmlNamespace = "http://www.w3.org/XML/1998/namespace";
 export const enum InvalidatorSubscriptionFlags {
   /// Subscribed to a component.
   Component = 1,
-  /// Transient subscription. Each time subscription is invalidated, it should be automatically canceled.
+  /// Transient subscription. Each time subscription is invalidated, it will be automatically canceled.
   Transient = 1 << 1,
 }
 
@@ -57,11 +57,9 @@ const enum SharedFlags {
  * VModel flags.
  */
 export const enum VModelFlags {
-  /**
-   * DOM Node cloning is enabled.
-   *
-   * Instead of creating DOM nodes, model will clone nodes from a base node with `Node.cloneNode(false)` method.
-   */
+  /// DOM Node cloning is enabled.
+  ///
+  /// Instead of creating DOM nodes, model will clone nodes from a base node with `Node.cloneNode(false)` method.
   EnabledCloning = 1,
 
   /// See `SharedFlags.Svg`.
@@ -148,13 +146,13 @@ export const enum ComponentDescriptorFlags {
   /// Create `element.xtag` back reference to component instance when component is instantiated.
   EnabledBackRef = 1,
 
-  // See `SharedFlags.Svg`.
+  /// See `SharedFlags.Svg`.
   Svg              = SharedFlags.Svg,
-  // See `SharedFlags.Canvas2D`.
+  /// See `SharedFlags.Canvas2D`.
   Canvas2D         = SharedFlags.Canvas2D,
-  // See `SharedFlags.VModel`.
+  /// See `SharedFlags.VModel`.
   VModel           = SharedFlags.VModel,
-  // See `SharedFlags.EnabledRecycling`.
+  /// See `SharedFlags.EnabledRecycling`.
   EnabledRecycling = SharedFlags.EnabledRecycling,
 }
 
@@ -176,10 +174,8 @@ export const enum ComponentFlags {
   DirtyEnvironment          = 1 << 5,
   /// Component should be updated on each frame with high priority.
   UpdateEachFrame           = 1 << 6,
-  /**
-   * Component is registered in update each frame queue, when this flag is off, it will be removed from queue on next
-   * frame.
-   */
+  /// Component is registered in update each frame queue, when this flag is off, it will be removed from queue on next
+  /// frame.
   InUpdateEachFrameQueue    = 1 << 7,
   /// Component is in recycled pool.
   Recycled                  = 1 << 8,
