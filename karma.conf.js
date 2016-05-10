@@ -63,7 +63,7 @@ module.exports = function(config) {
       },
     },
 
-    reporters: ['progress', 'saucelabs'],
+    reporters: ['progress'],
   });
 
   if (process.env.TRAVIS) {

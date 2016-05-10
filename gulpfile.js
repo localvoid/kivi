@@ -104,6 +104,7 @@ gulp.task("test:sauce", ["build:tests"], function(done) {
       "sl_safari_9",
       "sl_ie_11",
     ],
+    reporters: ["progress", "saucelabs"],
     singleRun: true,
   }, done).start();
 });
