@@ -20,10 +20,10 @@ injectComponent(Main, document.body, "World");
 
 ## Documentation
 
-* [Getting Started](01_getting_started.md)
+* [Getting Started](https://localvoid.github.io/kivi/01_getting_started.html)
 * Basics
-  * [Components](basics/01_components.md)
-  * [Virtual DOM](basics/02_virtual_dom.md)
+  * [Components](https://localvoid.github.io/kivi/basics/01_components.html)
+  * [Virtual DOM](https://localvoid.github.io/kivi/basics/02_virtual_dom.html)
 
 ## Examples
 
