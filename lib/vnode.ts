@@ -708,9 +708,9 @@ export class VNode {
         }
       } else {
         if ((flags & VNodeFlags.Root) === 0) {
-          (this._tag as VModel<any>).update(ref, null, this._props);
+          (this._tag as VModel<any>).update(ref, undefined, this._props);
         } else {
-          (owner.descriptor._tag as VModel<any>).update(ref, null, this._props);
+          (owner.descriptor._tag as VModel<any>).update(ref, undefined, this._props);
         }
       }
 
