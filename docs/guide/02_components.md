@@ -100,6 +100,12 @@ Method: `componentDescriptor.disposed((c: Component<P, S>) => void): ComponentDe
 
 Disposed callback will be invoked when component is disposed.
 
+#### newPropsReceived
+
+Method `componentDescriptor.newPropsReceived((c: Component<P, S>, newProps: P) => void): ComponentDescriptor<P, S>`
+
+New props received handler is invoked when component receives new props.
+
 ## Component instance API
 
 ##### invalidate
