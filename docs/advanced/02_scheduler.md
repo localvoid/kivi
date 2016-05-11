@@ -12,7 +12,7 @@ Frame tasks will be executed in batches, starting with updating components sorte
 and then switching between read and write tasks until there are no tasks left.
 
 There are two methods for accesing frame tasks: `scheduler.currentFrame()` to get task group for the current frame, and
-`scheduler.nextFrame` for the next frame.
+`scheduler.nextFrame()` for the next frame.
 
 Each frame task group provides different queues for components, DOM read and write tasks, and tasks that will be
 executed after all other tasks are finished:
@@ -56,7 +56,7 @@ class Data {
 }
 
 const MyComponent = new ComponentDescriptor<Data, any>()
-  .isPropsChanged((c, newProps) => {
+  .newPropsReceived((c, newProps) => {
     if (c.mtime < newProps.mtime) {
       c.markDirty();
     }
