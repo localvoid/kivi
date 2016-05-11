@@ -10,7 +10,7 @@ export class LifecycleState {
   checkDisposed = -1;
 }
 
-export const LifecycleComponent = new ComponentDescriptor<any, LifecycleState, any>()
+export const LifecycleComponent = new ComponentDescriptor<any, LifecycleState>()
   .init((c) => {
     c.state = new LifecycleState();
     c.state.checkInit = c.state.lifecycleCounter++;

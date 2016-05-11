@@ -6,9 +6,8 @@ const Main = new kivi.ComponentDescriptor()
 
     const startTime = Date.now();
     setInterval(() => {
-      c.setState({
-        elapsedSeconds: Date.now() - startTime
-      })
+      c.state.elapsedSeconds = Date.now() - startTime;
+      c.invalidate();
     }, 50);
   })
   .vRender((c, root) => {

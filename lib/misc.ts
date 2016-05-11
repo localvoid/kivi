@@ -161,30 +161,26 @@ export const enum ComponentDescriptorFlags {
  */
 export const enum ComponentFlags {
   /// Component is in disposed state.
-  Disposed                  = 1,
+  Disposed                   = 1,
   /// Component is in attached state.
-  Attached                  = 1 << 1,
+  Attached                   = 1 << 1,
   /// Component in in mounting state.
-  Mounting                  = 1 << 2,
-  /// Component's props is changed and it should be updated.
-  DirtyProps                = 1 << 3,
-  /// Component's state is changed and it should be updated.
-  DirtyState                = 1 << 4,
-  /// Something is changed in component's environment and it should be updated.
-  DirtyEnvironment          = 1 << 5,
+  Mounting                   = 1 << 2,
+  /// Component is dirty and should be updated.
+  Dirty                      = 1 << 3,
   /// Component should be updated on each frame with high priority.
-  UpdateEachFrame           = 1 << 6,
+  UpdateEachFrame            = 1 << 4,
   /// Component is registered in update each frame queue, when this flag is off, it will be removed from queue on next
   /// frame.
-  InUpdateEachFrameQueue    = 1 << 7,
+  InUpdateEachFrameQueue     = 1 << 5,
   /// Component is in recycled pool.
-  Recycled                  = 1 << 8,
+  Recycled                   = 1 << 6,
   /// Prevents from checking props indentity.
-  DisabledCheckPropsIdentity = 1 << 9,
+  DisabledCheckPropsIdentity = 1 << 7,
   /// Component is registered in scheduler frame task queue for updates.
-  InUpdateQueue             = 1 << 10,
+  InUpdateQueue              = 1 << 8,
   /// Component has a high priority and should be updated even when time frame for incremental rendering is exhausted.
-  HighPriorityUpdate        = 1 << 11,
+  HighPriorityUpdate         = 1 << 9,
 
   /// See `SharedFlags.Svg`.
   Svg              = SharedFlags.Svg,
@@ -194,9 +190,6 @@ export const enum ComponentFlags {
   VModel           = SharedFlags.VModel,
   /// See `SharedFlags.EnabledRecycling`.
   EnabledRecycling = SharedFlags.EnabledRecycling,
-
-  /// Component is dirty and should be updated.
-  Dirty        = DirtyProps | DirtyState | DirtyEnvironment,
 }
 
 /**

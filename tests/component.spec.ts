@@ -5,14 +5,14 @@ import {VModel} from "../lib/vmodel";
 describe("Component", () => {
   describe("create dom", () => {
     it("should create element with default tag: div", () => {
-      const d = new ComponentDescriptor<any, any, any>();
+      const d = new ComponentDescriptor<any, any>();
       const c = d.createComponent();
       expect(c.element.tagName).toBe("DIV");
       expect(c.element).isPrototypeOf(HTMLElement);
     });
 
     it("should create element with tag span", () => {
-      const d = new ComponentDescriptor<any, any, any>()
+      const d = new ComponentDescriptor<any, any>()
         .tagName("span");
       const c = d.createComponent();
       expect(c.element.tagName).toBe("SPAN");
@@ -20,7 +20,7 @@ describe("Component", () => {
     });
 
     it("should create svg element with tag a", () => {
-      const d = new ComponentDescriptor<any, any, any>()
+      const d = new ComponentDescriptor<any, any>()
         .tagName("a")
         .svg();
       const c = d.createComponent();
@@ -28,7 +28,7 @@ describe("Component", () => {
     });
 
     it("should create canvas element", () => {
-      const d = new ComponentDescriptor<any, any, any>()
+      const d = new ComponentDescriptor<any, any>()
         .canvas();
       const c = d.createComponent();
       expect(c.element.tagName).toBe("CANVAS");
@@ -38,7 +38,7 @@ describe("Component", () => {
 
     it("should create element from vmodel", () => {
       const m = new VModel("span");
-      const d = new ComponentDescriptor<any, any, any>()
+      const d = new ComponentDescriptor<any, any>()
         .vModel(m);
       const c = d.createComponent();
       expect(c.element.tagName).toBe("SPAN");
@@ -46,20 +46,20 @@ describe("Component", () => {
     });
 
     it("should have depth 0 if no parent", () => {
-      const d = new ComponentDescriptor<any, any, any>();
+      const d = new ComponentDescriptor<any, any>();
       const c = d.createComponent();
       expect(c.depth).toBe(0);
     });
 
     it("should have depth 1 if parent have depth 0", () => {
-      const d = new ComponentDescriptor<any, any, any>();
+      const d = new ComponentDescriptor<any, any>();
       const p = d.createComponent();
       const c = d.createComponent(p);
       expect(c.depth).toBe(1);
     });
 
     it("should have depth 2 if parent have depth 1", () => {
-      const d = new ComponentDescriptor<any, any, any>();
+      const d = new ComponentDescriptor<any, any>();
       const gp = d.createComponent();
       const p = d.createComponent(gp);
       const c = d.createComponent(p);
@@ -67,14 +67,14 @@ describe("Component", () => {
     });
 
     it("should have parent assigned to parent component", () => {
-      const d = new ComponentDescriptor<any, any, any>();
+      const d = new ComponentDescriptor<any, any>();
       const p = d.createComponent();
       const c = d.createComponent(p);
       expect(c.parent).toBe(p);
     });
 
     it("should have mtime 0 when created", () => {
-      const d = new ComponentDescriptor<any, any, any>();
+      const d = new ComponentDescriptor<any, any>();
       const c = d.createComponent();
       expect(c.mtime).toBe(0);
     });

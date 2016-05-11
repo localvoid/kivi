@@ -104,6 +104,6 @@ list that represented the same DOM node.
 
 ##### vRender
 
-Method: `componentDescriptor.vRender((c: Component<D, S>, root: VNode) => VNode)`
+Method: `componentDescriptor.vRender((c: Component<P, S>, root: VNode) => VNode)`
 
 Set default Virtual DOM render function.

@@ -9,8 +9,8 @@ import {scheduler} from "./scheduler";
  *
  * Each component should declare its properties and behavior in `ComponentDescriptor` object.
  *
- * Component descriptor has three parametric types: first parametric type `P` is a props type, second type `S` is a
- * state type, and third `D` is auxiliary data type.
+ * Component descriptor has two parametric types: first parametric type `P` is a props type and second type `S` is a
+ * state type.
  *
  * Component descriptor provides a `createComponent` and `createRootComponent` methods to create component instances.
  *
@@ -24,7 +24,7 @@ import {scheduler} from "./scheduler";
  *       }
  *     }
  *
- *     const MyComponent = new ComponentDescriptor<number, State, any>()
+ *     const MyComponent = new ComponentDescriptor<number, State>()
  *       .canvas()
  *       .init((c) => {
  *         c.state = new State(c.props);
@@ -39,7 +39,7 @@ import {scheduler} from "./scheduler";
  *
  * @final
  */
-export class ComponentDescriptor<P, S, D> {
+export class ComponentDescriptor<P, S> {
   /**
    * Flags marked on Component when it is created.
    */
@@ -55,40 +55,38 @@ export class ComponentDescriptor<P, S, D> {
   /**
    * Lifecycle method init.
    */
-  _init: (component: Component<P, S, D>) => void;
+  _init: (component: Component<P, S>) => void;
   /**
-   * Checks if props is changed.
+   * Overrides default behavior when new props received.
+   *
+   * If new props will change component's representation, component should be marked as dirty.
    */
-  _isPropsChanged: (prevProps: P, nextProps: P) => boolean;
-  /**
-   * Checks if state is changed.
-   */
-  _isStateChanged: (prevState: S, nextState: S) => boolean;
+  _newPropsReceived: (component: Component<P, S>, newProps: P) => void;
   /**
    * Lifecycle method update.
    */
-  _update: (component: Component<P, S, D>) => void;
+  _update: (component: Component<P, S>) => void;
   /**
    * Default Virtual DOM render function.
    */
-  _vRender: (component: Component<P, S, D>, root: VNode) => void;
+  _vRender: (component: Component<P, S>, root: VNode) => void;
   /**
    * Lifecycle method attached.
    */
-  _attached: (component: Component<P, S, D>) => void;
+  _attached: (component: Component<P, S>) => void;
   /**
    * Lifecycle method detached.
    */
-  _detached: (component: Component<P, S, D>) => void;
+  _detached: (component: Component<P, S>) => void;
   /**
    * Lifecycle method disposed.
    */
-  _disposed: (component: Component<P, S, D>) => void;
+  _disposed: (component: Component<P, S>) => void;
 
   /**
    * Pool of recycled components.
    */
-  _recycledPool: Component<P, S, D>[];
+  _recycledPool: Component<P, S>[];
   /**
    * Maximum number of recycled components (recycled pool size).
    */
@@ -99,8 +97,7 @@ export class ComponentDescriptor<P, S, D> {
     this._flags = 0;
     this._tag = "div";
     this._init = null;
-    this._isPropsChanged = null;
-    this._isStateChanged = null;
+    this._newPropsReceived = null;
     this._update = null;
     this._vRender = null;
     this._attached = null;
@@ -118,7 +115,7 @@ export class ComponentDescriptor<P, S, D> {
   /**
    * Set tag name for the root element.
    */
-  tagName(tagName: string): ComponentDescriptor<P, S, D> {
+  tagName(tagName: string): ComponentDescriptor<P, S> {
     this._tag = tagName;
     return this;
   }
@@ -126,7 +123,7 @@ export class ComponentDescriptor<P, S, D> {
   /**
    * Use SVG Namespace to create root element.
    */
-  svg(): ComponentDescriptor<P, S, D> {
+  svg(): ComponentDescriptor<P, S> {
     this._markFlags |= ComponentFlags.Svg;
     this._flags |= ComponentDescriptorFlags.Svg;
     return this;
@@ -135,7 +132,7 @@ export class ComponentDescriptor<P, S, D> {
   /**
    * Set VModel for the root element.
    */
-  vModel(model: VModel<any>): ComponentDescriptor<P, S, D> {
+  vModel(model: VModel<any>): ComponentDescriptor<P, S> {
     this._markFlags |= model._markFlags;
     this._flags |= model._markFlags;
     this._tag = model;
@@ -145,7 +142,7 @@ export class ComponentDescriptor<P, S, D> {
   /**
    * Component is a Canvas object.
    */
-  canvas(): ComponentDescriptor<P, S, D> {
+  canvas(): ComponentDescriptor<P, S> {
     this._markFlags |= ComponentFlags.Canvas2D;
     this._flags |= ComponentDescriptorFlags.Canvas2D;
     this._tag = "canvas";
@@ -155,7 +152,7 @@ export class ComponentDescriptor<P, S, D> {
   /**
    * Disable data identity checking in default data setter.
    */
-  disableCheckDataIdentity(): ComponentDescriptor<P, S, D> {
+  disableCheckDataIdentity(): ComponentDescriptor<P, S> {
     this._markFlags |= ComponentFlags.DisabledCheckPropsIdentity;
     return this;
   }
@@ -163,7 +160,7 @@ export class ComponentDescriptor<P, S, D> {
   /**
    * Set lifecycle method init.
    */
-  init(init: (component: Component<P, S, D>) => void): ComponentDescriptor<P, S, D> {
+  init(init: (component: Component<P, S>) => void): ComponentDescriptor<P, S> {
     this._init = init;
     return this;
   }
@@ -171,7 +168,7 @@ export class ComponentDescriptor<P, S, D> {
   /**
    * Set lifecycle method update.
    */
-  update(update: (component: Component<P, S, D>) => void): ComponentDescriptor<P, S, D> {
+  update(update: (component: Component<P, S>) => void): ComponentDescriptor<P, S> {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       this._update = _debugUpdateHandlerWrapper(update);
       return this;
@@ -183,7 +180,7 @@ export class ComponentDescriptor<P, S, D> {
   /**
    * Set default Virtual DOM render function.
    */
-  vRender(vRender: (component: Component<P, S, D>, root: VNode) => void): ComponentDescriptor<P, S, D> {
+  vRender(vRender: (component: Component<P, S>, root: VNode) => void): ComponentDescriptor<P, S> {
     this._vRender = vRender;
     return this;
   }
@@ -191,7 +188,7 @@ export class ComponentDescriptor<P, S, D> {
   /**
    * Set lifecycle method attached.
    */
-  attached(attached: (component: Component<P, S, D>) => void): ComponentDescriptor<P, S, D> {
+  attached(attached: (component: Component<P, S>) => void): ComponentDescriptor<P, S> {
     this._attached = attached;
     return this;
   }
@@ -199,7 +196,7 @@ export class ComponentDescriptor<P, S, D> {
   /**
    * Set lifecycle method detached.
    */
-  detached(detached: (component: Component<P, S, D>) => void): ComponentDescriptor<P, S, D> {
+  detached(detached: (component: Component<P, S>) => void): ComponentDescriptor<P, S> {
     this._detached = detached;
     return this;
   }
@@ -207,7 +204,7 @@ export class ComponentDescriptor<P, S, D> {
   /**
    * Set lifecycle method disposed.
    */
-  disposed(disposed: (component: Component<P, S, D>) => void): ComponentDescriptor<P, S, D> {
+  disposed(disposed: (component: Component<P, S>) => void): ComponentDescriptor<P, S> {
     this._disposed = disposed;
     return this;
   }
@@ -215,7 +212,7 @@ export class ComponentDescriptor<P, S, D> {
   /**
    * Enable back reference from DOM element to component.
    */
-  enableBackRef(): ComponentDescriptor<P, S, D> {
+  enableBackRef(): ComponentDescriptor<P, S> {
     this._flags |= ComponentDescriptorFlags.EnabledBackRef;
     return this;
   }
@@ -223,7 +220,7 @@ export class ComponentDescriptor<P, S, D> {
   /**
    * Enable Component recycling.
    */
-  enableRecycling(maxRecycled: number): ComponentDescriptor<P, S, D> {
+  enableRecycling(maxRecycled: number): ComponentDescriptor<P, S> {
     if ("<@KIVI_COMPONENT_RECYCLING@>" === "COMPONENT_RECYCLING_ENABLED") {
       this._markFlags |= ComponentFlags.EnabledRecycling;
       this._flags |= ComponentDescriptorFlags.EnabledRecycling;
@@ -243,16 +240,16 @@ export class ComponentDescriptor<P, S, D> {
   /**
    * Creates a component without parent.
    */
-  createRootComponent(props?: P): Component<P, S, D> {
+  createRootComponent(props?: P): Component<P, S> {
     return this.createComponent(null, props);
   }
 
   /**
    * Create a Component.
    */
-  createComponent(parent: Component<any, any, any> = null, props?: P): Component<P, S, D> {
+  createComponent(parent: Component<any, any> = null, props?: P): Component<P, S> {
     let element: Element;
-    let component: Component<P, S, D>;
+    let component: Component<P, S>;
 
     if ("<@KIVI_COMPONENT_RECYCLING@>" !== "COMPONENT_RECYCLING_ENABLED" ||
         ((this._flags & ComponentDescriptorFlags.EnabledRecycling) === 0) ||
@@ -265,10 +262,10 @@ export class ComponentDescriptor<P, S, D> {
       } else {
         element = (this._tag as VModel<any>).createElement();
       }
-      component = new Component<P, S, D>(this._markFlags, this, element, parent, props);
+      component = new Component<P, S>(this._markFlags, this, element, parent, props);
 
       if ((this._flags & ComponentDescriptorFlags.EnabledBackRef) !== 0) {
-        (element as any as {xtag: Component<P, S, D>}).xtag = component;
+        (element as any as {xtag: Component<P, S>}).xtag = component;
       }
       if (this._init !== null) {
         this._init(component);
@@ -284,8 +281,8 @@ export class ComponentDescriptor<P, S, D> {
   /**
    * Mount Component on top of existing html element.
    */
-  mountComponent(element: Element, parent?: Component<any, any, any>, data?: P): Component<P, S, D> {
-    const component = new Component<P, S, D>(this._markFlags | ComponentFlags.Mounting, this, element,
+  mountComponent(element: Element, parent?: Component<any, any>, data?: P): Component<P, S> {
+    const component = new Component<P, S>(this._markFlags | ComponentFlags.Mounting, this, element,
       parent === undefined ? null : parent, data);
     if (this._init !== null) {
       this._init(component);
@@ -300,7 +297,7 @@ export class ComponentDescriptor<P, S, D> {
  *
  * @final
  */
-export class Component<P, S, D> {
+export class Component<P, S> {
   /**
    * Flags, see `ComponentFlags` for details.
    *
@@ -316,7 +313,7 @@ export class Component<P, S, D> {
   /**
    * Component descriptor.
    */
-  descriptor: ComponentDescriptor<P, S, D>;
+  descriptor: ComponentDescriptor<P, S>;
   /**
    * Reference to the root element.
    */
@@ -324,7 +321,7 @@ export class Component<P, S, D> {
   /**
    * Parent component.
    */
-  parent: Component<any, any, any>;
+  parent: Component<any, any>;
   /**
    * Depth in the components tree.
    *
@@ -332,29 +329,13 @@ export class Component<P, S, D> {
    */
   depth: number;
   /**
-   * Auxiliary data.
-   */
-  data: D;
-  /**
-   * Component's data from previous update.
-   */
-  prevProps: P;
-  /**
-   * Component's data.
+   * Component's props.
    */
   props: P;
-  /**
-   * Component's state from previous update.
-   */
-  prevState: S;
   /**
    * Component's state.
    */
   state: S;
-  /**
-   * Component's parameter children.
-   */
-  children: VNode[]|string;
   /**
    * Root node can contain a virtual dom root if Component represents a DOM subtree, or Canvas context if Component is
    * a Canvas object.
@@ -364,18 +345,15 @@ export class Component<P, S, D> {
   _subscriptions: InvalidatorSubscription[]|InvalidatorSubscription;
   _transientSubscriptions: InvalidatorSubscription[]|InvalidatorSubscription;
 
-  constructor(flags: number, descriptor: ComponentDescriptor<P, S, D>, element: Element,
-      parent: Component<any, any, any>, props?: P) {
+  constructor(flags: number, descriptor: ComponentDescriptor<P, S>, element: Element, parent: Component<any, any>,
+      props?: P) {
     this.flags = flags;
     this.mtime = 0;
     this.descriptor = descriptor;
     this.element = element;
     this.parent = parent;
     this.depth = parent === null ? 0 : parent.depth + 1;
-    this.data = null;
-    this.prevProps = null;
     this.props = props === undefined ? null : props;
-    this.prevState = null;
     this.state = null;
     this.root = ((flags & ComponentFlags.Canvas2D) === 0) ? null : (element as HTMLCanvasElement).getContext("2d");
     this._subscriptions = null;
@@ -395,53 +373,21 @@ export class Component<P, S, D> {
   }
 
   /**
+   * Mark component as dirty and cancel all transient subscriptions.
+   */
+  markDirty(): void {
+    this.flags |= ComponentFlags.Dirty;
+    this._cancelTransientSubscriptions();
+  }
+
+  /**
    * Set parent component.
    *
    * When parent is changed component's depth will be reevaluated.
    */
-  setParent(parent: Component<P, S, D>): void {
+  setParent(parent: Component<P, S>): void {
     this.parent = parent;
     this.depth = parent === null ? 0 : parent.depth + 1;
-  }
-
-  /**
-   * Set new props. Returns true if props are changed.
-   *
-   * If `isPropsChanged` function exists in component descriptor, this function will check if props are changed,
-   * otherwise props are checked by their identity, unless it is disabled by `disableCheckDataIdentity()` component
-   * descriptor method.
-   */
-  setProps(newProps: P = null): boolean {
-    this.props = newProps;
-
-    const isPropsChanged = this.descriptor._isPropsChanged;
-    if ((isPropsChanged !== null && isPropsChanged(this.prevProps, newProps)) ||
-        (this.flags & ComponentFlags.DisabledCheckPropsIdentity) !== 0 ||
-        (this.prevProps !== newProps)) {
-      this.flags |= ComponentFlags.DirtyProps;
-      return true;
-    } else {
-      this.flags &= ~ComponentFlags.DirtyProps;
-      return false;
-    }
-  }
-
-  /**
-   * Set new state. Returns true if state is changed.
-   *
-   * If `isStateChanged` function exists in component descriptor, this function will check if state is changed.
-  */
-  setState(newState: S = null): boolean {
-    this.state = newState;
-    const isStateChanged = this.descriptor._isStateChanged;
-    if (isStateChanged === null || isStateChanged(this.prevState, newState)) {
-      this.flags |= ComponentFlags.DirtyState;
-      scheduler.nextFrame().updateComponent(this);
-      return true;
-    } else {
-      this.flags &= ~ComponentFlags.DirtyState;
-      return false;
-    }
   }
 
   /**
@@ -486,15 +432,32 @@ export class Component<P, S, D> {
   }
 
   /**
-   * Update component.
+   * Set new props and update component.
+   *
+   * Props are checked by their identity, unless it is disabled by `disableCheckDataIdentity()` component
+   * descriptor method.
    */
-  update(): void {
+  update(newProps?: P): void {
     const flags = this.flags;
-    if ((flags & ComponentFlags.Dirty) !== 0 && (flags & ComponentFlags.Attached) !== 0) {
+
+    if (newProps !== undefined) {
+      if ((flags & ComponentFlags.Dirty) === 0) {
+        const newPropsReceived = this.descriptor._newPropsReceived;
+        if (newPropsReceived !== null) {
+          newPropsReceived(this, newProps);
+        } else if ((flags & ComponentFlags.DisabledCheckPropsIdentity) !== 0 || (this.props !== newProps)) {
+          this.flags |= ComponentFlags.Dirty;
+          this._cancelTransientSubscriptions();
+        }
+      }
+      this.props = newProps;
+    }
+
+    if ((this.flags & (ComponentFlags.Dirty | ComponentFlags.Attached)) ===
+        (ComponentFlags.Dirty | ComponentFlags.Attached)) {
       if (((scheduler._flags & SchedulerFlags.EnabledThrottling) === 0) ||
           ((flags & ComponentFlags.HighPriorityUpdate) !== 0) ||
           (scheduler.frameTimeRemaining() > 0)) {
-        this._cancelTransientSubscriptions();
         const update = this.descriptor._update;
         if (update === null) {
           const newRoot = ((flags & ComponentFlags.VModel) === 0) ?
@@ -506,8 +469,6 @@ export class Component<P, S, D> {
           this.descriptor._update(this);
         }
         this.mtime = scheduler.clock;
-        this.prevProps = this.props;
-        this.prevState = this.state;
         this.flags &= ~(ComponentFlags.Dirty | ComponentFlags.Mounting | ComponentFlags.InUpdateQueue);
       } else {
         scheduler.nextFrame().updateComponent(this);
@@ -601,8 +562,8 @@ export class Component<P, S, D> {
    * It automatically cancels all transient subscriptions and schedules a component update on the next frame.
    */
   invalidate(): void {
-    if ((this.flags & (ComponentFlags.DirtyEnvironment | ComponentFlags.Disposed)) === 0) {
-      this.flags |= ComponentFlags.DirtyEnvironment;
+    if ((this.flags & (ComponentFlags.Dirty | ComponentFlags.Disposed)) === 0) {
+      this.flags |= ComponentFlags.Dirty;
       this._cancelTransientSubscriptions();
       scheduler.nextFrame().updateComponent(this);
     }
@@ -767,8 +728,8 @@ export class Component<P, S, D> {
 /**
  * Inject component into DOM.
  */
-export function injectComponent<P, S, D>(descriptor: ComponentDescriptor<P, S, D>, container: Element, props?: P,
-    sync?: boolean): Component<P, S, D> {
+export function injectComponent<P, S>(descriptor: ComponentDescriptor<P, S>, container: Element, props?: P,
+    sync?: boolean): Component<P, S> {
   const c = descriptor.createComponent(null, props);
   if (sync) {
     container.appendChild(c.element);
@@ -787,8 +748,8 @@ export function injectComponent<P, S, D>(descriptor: ComponentDescriptor<P, S, D
 /**
  * Mount component on top of existing DOM.
  */
-export function mountComponent<P, S, D>(descriptor: ComponentDescriptor<P, S, D>, element: Element, props?: P,
-    sync?: boolean): Component<P, S, D> {
+export function mountComponent<P, S>(descriptor: ComponentDescriptor<P, S>, element: Element, props?: P,
+    sync?: boolean): Component<P, S> {
   const c = descriptor.mountComponent(element, null, props);
   if (sync) {
     c.attached();
@@ -805,7 +766,7 @@ export function mountComponent<P, S, D>(descriptor: ComponentDescriptor<P, S, D>
 /**
  * Function that is used as default component descriptor update handler in DEBUG mode.
  */
-function _debugUpdateHandler(c: Component<any, any, any>): void {
+function _debugUpdateHandler(c: Component<any, any>): void {
   try {
     c.vSync();
   } catch (e) {
@@ -816,7 +777,7 @@ function _debugUpdateHandler(c: Component<any, any, any>): void {
 /**
  * Function that wraps component descriptor update handler in DEBUG mode.
  */
-function _debugUpdateHandlerWrapper(fn: (c: Component<any, any, any>) => void): (c: Component<any, any, any>) => void {
+function _debugUpdateHandlerWrapper(fn: (c: Component<any, any>) => void): (c: Component<any, any>) => void {
   return function _debugUpdateHandlerWrapper(c) {
     try {
       fn(c);

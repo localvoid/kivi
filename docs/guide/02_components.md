@@ -8,7 +8,7 @@ draw on a canvas.
 ## ComponentDescriptor
 
 Each component should declare its properties and behavior in `ComponentDescriptor` object. TypeScript users can specify
-its props type, state type and auxiliary data type with parametric types `ComponentDescriptor<P, S, D>`.
+its props type and state type with parametric types P and S `ComponentDescriptor<P, S>`.
 
 Component descriptor provides a `createComponent` and `createRootComponent` methods to create component instances.
 
@@ -33,7 +33,7 @@ class State {
   }
 }
 
-const MyComponent = new ComponentDescriptor<Props, State, any>()
+const MyComponent = new ComponentDescriptor<Props, State>()
   .canvas()
   .init((c) => {
     c.state = new State(c.props);
@@ -51,19 +51,19 @@ const componentInstance = MyComponent.createRootComponent(new Data(10, 20));
 
 ##### tagName
 
-Method: `componentDescriptor.tagName(tagName: string): ComponentDescriptor<P, D, S>`
+Method: `componentDescriptor.tagName(tagName: string): ComponentDescriptor<P, S>`
 
 Specifies a tagName of the root element.
 
 ##### svg
 
-Method: `componentDescriptor.svg(): ComponentDescriptor<P, D, S>`
+Method: `componentDescriptor.svg(): ComponentDescriptor<P, S>`
 
 Root element will be created in SVG namespace.
 
 ##### canvas
 
-Method: `componentDescriptor.canvas(): ComponentDescriptor<P, D, S>`
+Method: `componentDescriptor.canvas(): ComponentDescriptor<P, S>`
 
 Root element will be a canvas object, `Component.get2DContext(): CanvasRenderingContext2D` will return a canvas context.
 
@@ -71,42 +71,36 @@ Root element will be a canvas object, `Component.get2DContext(): CanvasRendering
 
 ##### init
 
-Method: `componentDescriptor.init((c: Component<P, D, S>) => void): ComponentDescriptor<P, D, S>`
+Method: `componentDescriptor.init((c: Component<P, S>) => void): ComponentDescriptor<P, S>`
 
 Init callback will be invoked when component is instantiated, `element`, `data` and `children` properties will be
 ready before init callback.
 
 ##### update
 
-Method: `componentDescriptor.update((c: Component<P, D, S>) => void): ComponentDescriptor<P, D, S>`
+Method: `componentDescriptor.update((c: Component<P, S>) => void): ComponentDescriptor<P, S>`
 
 Update callback will be invoked each time when component should update its representation.
 
 ##### attached
 
-Method: `componentDescriptor.attached((c: Component<P, D, S>) => void): ComponentDescriptor<P, D, S>`
+Method: `componentDescriptor.attached((c: Component<P, S>) => void): ComponentDescriptor<P, S>`
 
 Attached callback will be invoked when component is attached to the document.
 
 ##### detached
 
-Method: `componentDescriptor.detached((c: Component<P, D, S>) => void): ComponentDescriptor<P, D, S>`
+Method: `componentDescriptor.detached((c: Component<P, S>) => void): ComponentDescriptor<P, S>`
 
 Detached callback will be invoked when component is detached from the document.
 
 ##### disposed
 
-Method: `componentDescriptor.disposed((c: Component<P, D, S>) => void): ComponentDescriptor<P, D, S>`
+Method: `componentDescriptor.disposed((c: Component<P, S>) => void): ComponentDescriptor<P, S>`
 
 Disposed callback will be invoked when component is disposed.
 
 ## Component instance API
-
-##### setProps
-
-Method: `component.setProps(newProps: D): boolean`
-
-Sets a new props for a component. Returns true if props are changed.
 
 ##### invalidate
 
@@ -117,6 +111,6 @@ will invoke `update` method of the invalidated component.
 
 ##### update
 
-Method: `component.update()`
+Method: `component.update(newProps?: P)`
 
-Update component if component is dirty and attached to the document.
+Set new props and update component if component is dirty and attached to the document.
