@@ -6,3 +6,4 @@
   * [Virtual DOM](basics/02_virtual_dom.md)
 * Advanced
   * [VModel](advanced/01_vmodel.md)
+  * [Scheduler](advanced/02_scheduler.md)
