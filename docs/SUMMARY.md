@@ -7,3 +7,6 @@
 * Advanced
   * [VModel](advanced/01_vmodel.md)
   * [Scheduler](advanced/02_scheduler.md)
+  * [Component advanced techniques](advanced/03_components.md)
+  * [Virtual DOM advanced techniques](advanced/04_virtual_dom.md)
+  * [Container Manager](advanced/05_container_manager.md)
