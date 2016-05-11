@@ -125,19 +125,30 @@ gulp.task("examples:html", function() {
     .pipe(gulp.dest("build/examples"));
 });
 
-gulp.task("guide", function(done) {
-  var book = new gitbook.Book("docs/guide", {
+gulp.task("docs", function(done) {
+  var book = new gitbook.Book("docs", {
     config: {
-      output: "gh-pages"
-    }
-  })
+      output: "gh-pages",
+      title: "kivi",
+      plugins: ["edit-link", "github", "anker-enable"],
+      pluginsConfig: {
+        "edit-link": {
+          "base": "https://github.com/localvoid/kivi/tree/master/docs",
+          "label": "Edit This Page",
+        },
+        "github": {
+          "url": "https://github.com/localvoid/kivi/",
+        },
+      },
+    },
+  });
 
   return book.parse().then(function() {
     return book.generate("website");
   });
 });
 
-gulp.task("gh-pages", ["guide"], function() {
+gulp.task("gh-pages", ["docs"], function() {
   return gulp.src("gh-pages/**/*")
     .pipe(ghPages());
 });

@@ -1,4 +1,4 @@
-# kivi guide
+# kivi
 
 [Kivi](http://github.com/localvoid/kivi) is a javascript (TypeScript) library for building web user interfaces. It
 provides Virtual DOM API for DOM manipulations, Components, and Scheduler tightly integrated with Components. It doesn't
