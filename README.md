@@ -24,6 +24,9 @@ injectComponent(Main, document.body, "World");
 * Basics
   * [Components](https://localvoid.github.io/kivi/basics/01_components.html)
   * [Virtual DOM](https://localvoid.github.io/kivi/basics/02_virtual_dom.html)
+* Advanced
+  * [VModel](https://localvoid.github.io/kivi/advanced/01_vmodel.html)
+
 
 ## Examples
 
