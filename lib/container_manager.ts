@@ -50,7 +50,7 @@ export class ContainerManagerDescriptor<S> {
     }
   }
 
-  create(state?: S): ContainerManager<S> {
+  create(state: S = null): ContainerManager<S> {
     return new ContainerManager<S>(this, state);
   }
 
