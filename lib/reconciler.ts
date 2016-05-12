@@ -3,6 +3,7 @@ import {VNodeFlags, VNodeDebugFlags, RenderFlags, setAttr} from "./misc";
 import {VNode, vNodeInsertChild, vNodeRemoveChild, vNodeReplaceChild, vNodeMoveChild, vNodeFreeze} from "./vnode";
 import {VModel} from "./vmodel";
 import {Component} from "./component";
+import {scheduler, schedulerUpdateComponent} from "./scheduler";
 
 /**
  * Virtual DOM Reconciler.
@@ -142,7 +143,7 @@ function _syncVNodes(a: VNode, b: VNode, owner: Component<any, any>, renderFlags
     }
 
     if ((renderFlags & RenderFlags.ShallowUpdate) === 0) {
-      component.update((flags & VNodeFlags.BindOnce) === 0 ? b._props : undefined);
+      schedulerUpdateComponent(scheduler, component, (flags & VNodeFlags.BindOnce) === 0 ? b._props : undefined);
     }
   }
 

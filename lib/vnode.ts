@@ -6,6 +6,7 @@ import {
 import {Component, ComponentDescriptor} from "./component";
 import {VModel} from "./vmodel";
 import {ContainerManager} from "./container_manager";
+import {scheduler, schedulerUpdateComponent} from "./scheduler";
 
 /**
  * Virtual DOM Node.
@@ -720,7 +721,7 @@ export function vNodeRender(vnode: VNode, owner: Component<any, any>, renderFlag
     }
 
     if ((renderFlags & RenderFlags.ShallowRender) === 0) {
-      (vnode.cref as Component<any, any>).update();
+      schedulerUpdateComponent(scheduler, vnode.cref as Component<any, any>);
     }
   }
 
@@ -789,7 +790,7 @@ export function vNodeMount(vnode: VNode, node: Node, owner: Component<any, any>)
         }
       }
     }
-    cref.update();
+    schedulerUpdateComponent(scheduler, cref);
   } else {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((vnode._flags & (VNodeFlags.Element | VNodeFlags.Root)) !== 0) {

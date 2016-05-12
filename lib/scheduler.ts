@@ -1,6 +1,7 @@
 import {Component} from "./component";
 import {SchedulerFlags, ComponentFlags} from "./misc";
-import {VNode} from "./vnode";
+import {VNode, createVRoot} from "./vnode";
+import {VModel} from "./vmodel";
 
 export type SchedulerCallback = () => void;
 
@@ -506,6 +507,44 @@ export class Scheduler {
 
     this.clock++;
     this._flags &= ~SchedulerFlags.Running;
+  }
+}
+
+export function schedulerUpdateComponent(scheduler: Scheduler, component: Component<any, any>, newProps?: any): void {
+  const flags = component.flags;
+
+  if (newProps !== undefined) {
+    if ((flags & ComponentFlags.Dirty) === 0) {
+      const newPropsReceived = component.descriptor._newPropsReceived;
+      if (newPropsReceived !== null) {
+        newPropsReceived(component, newProps);
+      } else if ((flags & ComponentFlags.DisabledCheckPropsIdentity) !== 0 || (component.props !== newProps)) {
+        component.markDirty();
+      }
+    }
+    component.props = newProps;
+  }
+
+  if ((component.flags & (ComponentFlags.Dirty | ComponentFlags.Attached)) ===
+    (ComponentFlags.Dirty | ComponentFlags.Attached)) {
+    if (((scheduler._flags & SchedulerFlags.EnabledThrottling) === 0) ||
+      ((flags & ComponentFlags.HighPriorityUpdate) !== 0) ||
+      (scheduler.frameTimeRemaining() > 0)) {
+      const update = component.descriptor._update;
+      if (update === null) {
+        const newRoot = ((flags & ComponentFlags.VModel) === 0) ?
+          createVRoot() :
+          (component.descriptor._tag as VModel<any>).createVRoot();
+        component.descriptor._vRender(component, newRoot);
+        component._vSync(newRoot, 0);
+      } else {
+        component.descriptor._update(component);
+      }
+      component.mtime = scheduler.clock;
+      component.flags &= ~(ComponentFlags.Dirty | ComponentFlags.Mounting | ComponentFlags.InUpdateQueue);
+    } else {
+      scheduler.nextFrame().updateComponent(component);
+    }
   }
 }
 

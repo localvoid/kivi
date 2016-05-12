@@ -4,6 +4,7 @@ export * from "./vmodel";
 export * from "./vnode";
 export * from "./container_manager";
 export * from "./component";
+export {Reconciler, reconciler} from "./reconciler";
 export {
   VNodeFlags, VModelFlags, ComponentDescriptorFlags, ComponentFlags, InvalidatorSubscriptionFlags,
   RenderFlags, filterVNodes, getBackRef

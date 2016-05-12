@@ -1,8 +1,8 @@
-import {SvgNamespace, ComponentDescriptorFlags, ComponentFlags, SchedulerFlags, VNodeFlags, RenderFlags} from "./misc";
+import {SvgNamespace, ComponentDescriptorFlags, ComponentFlags, VNodeFlags, RenderFlags} from "./misc";
 import {VModel} from "./vmodel";
 import {VNode, vNodeMount, vNodeRender, vNodeAttach, vNodeDetach, vNodeDispose, createVRoot} from "./vnode";
 import {InvalidatorSubscription, Invalidator} from "./invalidator";
-import {scheduler} from "./scheduler";
+import {scheduler, schedulerUpdateComponent} from "./scheduler";
 import {reconciler} from "./reconciler";
 
 /**
@@ -538,7 +538,7 @@ export class Component<P, S> {
    */
   markDirty(): void {
     this.flags |= ComponentFlags.Dirty;
-    this._cancelTransientSubscriptions();
+    componentCancelTransientSubscriptions(this);
   }
 
   /**
@@ -608,42 +608,7 @@ export class Component<P, S> {
    * `disableCheckDataIdentity()`.
    */
   update(newProps?: P): void {
-    const flags = this.flags;
-
-    if (newProps !== undefined) {
-      if ((flags & ComponentFlags.Dirty) === 0) {
-        const newPropsReceived = this.descriptor._newPropsReceived;
-        if (newPropsReceived !== null) {
-          newPropsReceived(this, newProps);
-        } else if ((flags & ComponentFlags.DisabledCheckPropsIdentity) !== 0 || (this.props !== newProps)) {
-          this.flags |= ComponentFlags.Dirty;
-          this._cancelTransientSubscriptions();
-        }
-      }
-      this.props = newProps;
-    }
-
-    if ((this.flags & (ComponentFlags.Dirty | ComponentFlags.Attached)) ===
-        (ComponentFlags.Dirty | ComponentFlags.Attached)) {
-      if (((scheduler._flags & SchedulerFlags.EnabledThrottling) === 0) ||
-          ((flags & ComponentFlags.HighPriorityUpdate) !== 0) ||
-          (scheduler.frameTimeRemaining() > 0)) {
-        const update = this.descriptor._update;
-        if (update === null) {
-          const newRoot = ((flags & ComponentFlags.VModel) === 0) ?
-            createVRoot() :
-            (this.descriptor._tag as VModel<any>).createVRoot();
-          this.descriptor._vRender(this, newRoot);
-          this._vSync(newRoot, 0);
-        } else {
-          this.descriptor._update(this);
-        }
-        this.mtime = scheduler.clock;
-        this.flags &= ~(ComponentFlags.Dirty | ComponentFlags.Mounting | ComponentFlags.InUpdateQueue);
-      } else {
-        scheduler.nextFrame().updateComponent(this);
-      }
-    }
+    schedulerUpdateComponent(scheduler, this, newProps);
   }
 
   /**
@@ -734,7 +699,7 @@ export class Component<P, S> {
   invalidate(): void {
     if ((this.flags & (ComponentFlags.Dirty | ComponentFlags.Disposed)) === 0) {
       this.flags |= ComponentFlags.Dirty;
-      this._cancelTransientSubscriptions();
+      componentCancelTransientSubscriptions(this);
       scheduler.nextFrame().updateComponent(this);
     }
   }
@@ -783,8 +748,8 @@ export class Component<P, S> {
       }
     }
     this.flags &= ~(ComponentFlags.Attached | ComponentFlags.UpdateEachFrame);
-    this._cancelSubscriptions();
-    this._cancelTransientSubscriptions();
+    componentCancelSubscriptions(this);
+    componentCancelTransientSubscriptions(this);
 
     const detached = this.descriptor._detached;
     if (detached !== null) {
@@ -855,43 +820,43 @@ export class Component<P, S> {
       (subscriptions as InvalidatorSubscription[]).push(s);
     }
   }
+}
 
-  /**
-   * Cancel all subscriptions.
-   */
-  private _cancelSubscriptions(): void {
-    const subscriptions = this._subscriptions;
-    if (subscriptions !== null) {
-      if (subscriptions.constructor === InvalidatorSubscription) {
-        (subscriptions as InvalidatorSubscription).invalidator
-          ._removeSubscription(subscriptions as InvalidatorSubscription);
-      } else {
-        for (let i = 0; i < (subscriptions as InvalidatorSubscription[]).length; i++) {
-          const s = (subscriptions as InvalidatorSubscription[])[i];
-          s.invalidator._removeSubscription(s);
-        }
+/**
+ * Cancel subscriptions.
+ */
+export function componentCancelSubscriptions(component: Component<any, any>): void {
+  const subscriptions = component._subscriptions;
+  if (subscriptions !== null) {
+    if (subscriptions.constructor === InvalidatorSubscription) {
+      (subscriptions as InvalidatorSubscription).invalidator
+        ._removeSubscription(subscriptions as InvalidatorSubscription);
+    } else {
+      for (let i = 0; i < (subscriptions as InvalidatorSubscription[]).length; i++) {
+        const s = (subscriptions as InvalidatorSubscription[])[i];
+        s.invalidator._removeSubscription(s);
       }
-      this._subscriptions = null;
     }
+    component._subscriptions = null;
   }
+}
 
-  /**
-   * Cancel all transient subscriptions.
-   */
-  private _cancelTransientSubscriptions(): void {
-    const subscriptions = this._transientSubscriptions;
-    if (subscriptions !== null) {
-      if (subscriptions.constructor === InvalidatorSubscription) {
-        (subscriptions as InvalidatorSubscription).invalidator
-          ._removeTransientSubscription(subscriptions as InvalidatorSubscription);
-      } else {
-        for (let i = 0; i < (subscriptions as InvalidatorSubscription[]).length; i++) {
-          const s = (subscriptions as InvalidatorSubscription[])[i];
-          s.invalidator._removeTransientSubscription(s);
-        }
+/**
+ * Cancel transient subscriptions.
+ */
+export function componentCancelTransientSubscriptions(component: Component<any, any>): void {
+  const subscriptions = component._transientSubscriptions;
+  if (subscriptions !== null) {
+    if (subscriptions.constructor === InvalidatorSubscription) {
+      (subscriptions as InvalidatorSubscription).invalidator
+        ._removeTransientSubscription(subscriptions as InvalidatorSubscription);
+    } else {
+      for (let i = 0; i < (subscriptions as InvalidatorSubscription[]).length; i++) {
+        const s = (subscriptions as InvalidatorSubscription[])[i];
+        s.invalidator._removeTransientSubscription(s);
       }
-      this._transientSubscriptions = null;
     }
+    component._transientSubscriptions = null;
   }
 }
 
