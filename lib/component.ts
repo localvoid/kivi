@@ -567,8 +567,12 @@ export class Component<P, S> {
    * throttled mode.
    */
   startInteraction(): void {
-    this.flags |= ComponentFlags.HighPriorityUpdate;
-    scheduler.enableThrottling();
+    if ((this.flags & ComponentFlags.EnabledThrottling) === 0) {
+      this.flags |= ComponentFlags.HighPriorityUpdate | ComponentFlags.EnabledThrottling;
+      scheduler.enableThrottling();
+    } else {
+      this.flags |= ComponentFlags.HighPriorityUpdate;
+    }
   }
 
   /**
@@ -577,8 +581,12 @@ export class Component<P, S> {
    * Removes high priority flag from component and disables scheduler throttling.
    */
   finishInteraction(): void {
-    this.flags &= ~ComponentFlags.HighPriorityUpdate;
-    scheduler.disableThrottling();
+    if ((this.flags & ComponentFlags.EnabledThrottling) === 0) {
+      this.flags &= ~ComponentFlags.HighPriorityUpdate;
+    } else {
+      this.flags &= ~(ComponentFlags.HighPriorityUpdate | ComponentFlags.EnabledThrottling);
+      scheduler.disableThrottling();
+    }
   }
 
   /**
@@ -747,10 +755,12 @@ export class Component<P, S> {
         throw new Error("Failed to detach Component: component is already detached.");
       }
     }
-    this.flags &= ~(ComponentFlags.Attached | ComponentFlags.UpdateEachFrame);
+    if ((this.flags & ComponentFlags.EnabledThrottling) !== 0) {
+      scheduler.disableThrottling();
+    }
+    this.flags &= ~(ComponentFlags.Attached | ComponentFlags.UpdateEachFrame | ComponentFlags.EnabledThrottling);
     componentCancelSubscriptions(this);
     componentCancelTransientSubscriptions(this);
-
     const detached = this.descriptor._detached;
     if (detached !== null) {
       detached(this);
