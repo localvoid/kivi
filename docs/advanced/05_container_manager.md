@@ -38,10 +38,32 @@ type RemoveChildHandler<S> = (manager: ContainerManager<S>,
 To make things easier, kivi provides generic functions for DOM node lists manipulations that will invoke all lifecycle
 handlers in a proper way:
 
-- `insertVNodeBefore(container: Element, node: VNode, nextRef: Node, owner: Component<any, any>, renderFlags: number)`
-- `replaceVNode(container: Element, newNode: VNode, refNode: VNode, owner: Component<any, any> renderFlags: number)`
-- `moveVNode(container: Element, node: VNode, nextRef: Node, owner: Component<any, any>)`
-- `removeVNode(container: Element, node: VNode, owner: Component<any, any>)`
+```ts
+function insertVNodeBefore(
+  container: Element,
+  node: VNode,
+  nextRef: Node,
+  owner: Component<any, any>,
+  renderFlags: number): void;
+
+function replaceVNode(
+  container: Element,
+  newNode: VNode,
+  refNode: VNode,
+  owner: Component<any, any>,
+  renderFlags: number): void;
+
+function moveVNode(
+  container: Element,
+  node: VNode,
+  nextRef: Node,
+  owner: Component<any, any>): void;
+
+function removeVNode(
+  container: Element,
+  node: VNode,
+  owner: Component<any, any>): void;
+```
 
 To use container manager in a virtual dom, just assign container manager instance to a virtual dom element with
 `managedContainer(manager: ContainerManager<any>)` method.
@@ -50,20 +72,20 @@ To use container manager in a virtual dom, just assign container manager instanc
 
 ```ts
 const MyManager = new ContainerManagerDescriptor()
-  .insertChild((manager: ContainerManager<any>, container: Element, node: VNode, nextRef: Node,
-      owner: Component<any, any>, renderFlags: number) => {
+  .insertChild((manager: ContainerManager<any>, container: Element, node: VNode,
+      nextRef: Node, owner: Component<any, any>, renderFlags: number) => {
     console.log("Node inserted");
   })
   .removeChild((manager: ContainerManager<any>, container: Element, node: VNode,
       owner: Component<any, any>) => {
     console.log("Node removed");
   });
-  .moveChild((manager: ContainerManager<any>, container: Element, node: VNode, nextRef: Node,
-      owner: Component<any, any>) => {
+  .moveChild((manager: ContainerManager<any>, container: Element, node: VNode,
+      nextRef: Node, owner: Component<any, any>) => {
     console.log("Node moved");
   });
-  .replaceChild((manager: ContainerManager<any>, container: Element, newNode: VNode, refNode: VNode,
-      owner: Component<any, any>, renderFlags: number) => {
+  .replaceChild((manager: ContainerManager<any>, container: Element, newNode: VNode,
+      refNode: VNode, owner: Component<any, any>, renderFlags: number) => {
     console.log("Node replaced");
   });
 

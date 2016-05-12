@@ -35,7 +35,7 @@ const MyComponent = new ComponentDescriptor()
 `RenderFlags` also has a flag for shallow rendering `ShallowRender` that prevents from rendering subcomponents when they
 are created for the first time.
 
-## Incremental rendering
+## Incremental rendering **EXPERIMENTAL**
 
 Components provide two methods that can trigger incremental rendering: `startInteraction()` and `stopInteraction()`.
 

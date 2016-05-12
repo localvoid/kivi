@@ -17,17 +17,21 @@ There are two methods for accesing frame tasks: `scheduler.currentFrame()` to ge
 Each frame task group provides different queues for components, DOM read and write tasks, and tasks that will be
 executed after all other tasks are finished:
 
-- `scheduler.currentFrame().updateComponent(c: Component<any, any>)`
-- `scheduler.currentFrame().read(cb: () => void)`
-- `scheduler.currentFrame().write(cb: () => void)`
-- `scheduler.currentFrame().after(cb: () => void)`
+```
+scheduler.currentFrame().updateComponent(c: Component<any, any>);
+scheduler.currentFrame().read(cb: () => void);
+scheduler.currentFrame().write(cb: () => void);
+scheduler.currentFrame().after(cb: () => void);
+```
 
 ## Microtasks and Macrotasks
 
 Scheduler also provides interface for adding microtasks and macrotasks into browser event loop.
 
-- `scheduler.scheduleMicrotask(cb: () => void)`
-- `scheduler.scheduleMacrotask(cb: () => void)`
+```
+scheduler.scheduleMicrotask(cb: () => void)`
+scheduler.scheduleMacrotask(cb: () => void)`
+```
 
 ## Monotonically increasing clock
 
