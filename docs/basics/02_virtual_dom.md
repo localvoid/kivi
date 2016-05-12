@@ -4,37 +4,38 @@ Virtual DOM simplifies the way to manage DOM mutations, just describe how your c
 time and Virtual DOM reconciliation algorithm will make all necessary DOM operations to update component representation
 in a most efficient way.
 
-The basic Virtual DOM API that kivi provides is enough for most use cases. But when it isn't enough, kivi provides many
+The basic Virtual DOM API that kivi provides is enough for most use cases. But when it isn't enough, kivi has many
 advanced tools that can reduce Virtual DOM diffing overhead, and it will be quite hard to beat its performance without
 reimplementing similar algorithms.
 
-## Basic API
-
 ### Creating Virtual DOM Nodes
 
-##### createVElement
+Kivi has several simple functions to create virtual nodes:
 
-Function: `createVElement(tagName: string): VNode`
+```
+// Creates a virtual node representing a HTML Element.
+function createVElement(tagName: string): VNode;
 
-Creates a virtual node representing a HTML Element.
+// Creates a virtual node representing a SVG Element.
+function createVSvgElement(tagName: string): VNode;
 
-##### createVSvgElement
+// Creates a virtual node representing a Text Node.
+function createVText(content: string): VNode;
 
-Function: `createVSvgElement(tagName: string): VNode`
+// Creates a virtual node representing a Component's root element.
+function createVRoot(): VNode;
 
-Creates a virtual node representing a SVG Element.
+// Creates a virtual node representing an Input Element with text value.
+function createVTextInput(): VNode;
 
-##### createVText
-
-Function: `createVText(content: string): VNode`
-
-Creates a virtual node representing a Text Node.
+// Creates a virtual node representing an Input Element with checked value.
+function createVCheckedInput(): VNode;
+```
 
 ### Setting VNode properties
 
-VNode object provides different chained methods to set properties.
-
-For example:
+Virtual node instance has many different methods to set properties, all property methods support method chaining. For
+example:
 
 ```ts
 const e = createVElement("a")
@@ -45,65 +46,36 @@ const e = createVElement("a")
   .children("Link to localhost");
 ```
 
-##### attrs
+List of basic properties:
 
-Method: `vnode.attrs(attrs: {[key: string]: any}): VNode`
+```
+VNode.attrs(attrs: {[key: string]: any}): VNode;
+VNode.props(props: {[key: string]: any}): VNode;
+VNode.style(style: string): VNode;
+VNode.className(className: string): VNode;
+VNode.children(children: VNode[]|string): VNode;
+```
 
-Set HTML attributes.
+### Using keys to preserve identity
 
-Attrs object should always have the same shape when creating virtual node representing the same element. To specify
-dynamic shape attributes use `dynamiShapeAttrs` method.
+To prevent from losing internal state of DOM elements and components, we should track nodes by some property. Virtual
+DOM reconciliation algorithm is using `key` property to find virtual nodes representing the same DOM node from
+the previous render.
 
-##### props
+To enable tracking by keys, children property should be assigned with `VNode.trackByKeyChildren(children)` method. Each
+child should have a `key` property and it should be unique among its siblings. For example:
 
-Method: `vnode.props(props: {[key: string]: any}): VNode`
+```ts
+const container = createVElement("div")
+  .trackByKeyChildren([
+    createVElement("span").key(1).children("1"),
+    createVElement("span").key(2).children("2"),
+    createVElement("span").key(3).children("3"),
+  ]);
+```
 
-Set properties.
-
-Props object should always have the same shape when creating virtual node representing the same element. To specify
-dynamic shape properties use `dynamiShapeProps` method.
-
-When virtual node is mounted on top of existing HTML, all properties will be assigned during mounting phase.
-
-##### style
-
-Method: `vnode.style(style: string): VNode`
-
-Set style in CSS string format.
-
-##### class name
-
-Method: `vnode.className(className: string): VNode`
-
-Set class name.
-
-##### children
-
-Method `vnode.children(children: VNode[]|string): VNode`
-
-Set children.
-
-##### trackByKeyChildren
-
-Method: `vnode.trackByKeyChildren(children: VNode[]): VNode`
-
-Set children with enabled tracking by key, all children should have a key and it should be unique among its siblings.
-
-##### key
-
-Method: `vnode.key(key: any): VNode`
-
-Set key.
-
-Key should be unique among its siblings.
-
-When track by key is enabled, children reconciliation algorithm uses a key value to find virtual node in old children
-list that represented the same DOM node.
-
-### Using Virtual DOM with components
-
-##### vRender
-
-Method: `componentDescriptor.vRender((c: Component<P, S>, root: VNode) => VNode)`
-
-Set default Virtual DOM render function.
+To find minimum number of move operations, kivi reconciliation algorithm is using
+[Longest Increasing Subsequence](https://en.wikipedia.org/wiki/Longest_increasing_subsequence) algorithm. It is highly
+optimized and in most real world situations that involve simple moves of one or two nodes it won't perform LIS
+computation. See [uibench](https://localvoid.github.io/uibench/) benchmark to find out how kivi handles different use
+cases.

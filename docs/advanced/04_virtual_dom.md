@@ -1,4 +1,4 @@
-# Virtual DOM advanced techniques
+# Virtual DOM
 
 ## Bind Once
 
@@ -33,7 +33,7 @@ const MyComponent = new ComponentDescriptor<any, { node: VNode }>()
   });
 ```
 
-## Keep Alive **EXPERIMENTAL**
+## Keep Alive \*\*EXPERIMENTAL\*\*
 
 Keep alive prevents reconciliation algorithm from disposing components, so when they are removed from the document,
 instead of disposing them, they are detached.

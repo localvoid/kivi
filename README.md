@@ -27,8 +27,8 @@ injectComponent(Main, document.body, "World");
 * Advanced
   * [VModel](https://localvoid.github.io/kivi/advanced/01_vmodel.html)
   * [Scheduler](https://localvoid.github.io/kivi/advanced/02_scheduler.html)
-  * [Component advanced techniques](https://localvoid.github.io/kivi/advanced/03_components.html)
-  * [Virtual DOM advanced techniques](https://localvoid.github.io/kivi/advanced/04_virtual_dom.html)
+  * [Components](https://localvoid.github.io/kivi/advanced/03_components.html)
+  * [Virtual DOM](https://localvoid.github.io/kivi/advanced/04_virtual_dom.html)
   * [Container Manager](https://localvoid.github.io/kivi/advanced/05_container_manager.html)
 
 ## Examples

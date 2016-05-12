@@ -1,4 +1,23 @@
-# Component advanced techniques
+# Components
+
+## Component recycling
+
+When there are many instances of a component and they are quite frequently removed and inserted into the documented, it
+is a good practice to enable recycling, so instead of disposing component instances when they are removed from the
+document, they will be placed into recycled pool, and when component instance is created it will always check if
+recycled pool has any available instance and just reuse it.
+
+Component descriptor method `enableComponentRecycling(maxRecycled: number)` will enable recycling for component,
+`maxRecycled` parameter controls the size of recycled pool for this component type.
+
+```ts
+const Button = new ComponentDescriptor()
+  .enableComponentRecycling(100)
+  .vRender((c, root) => { root.className("button"); });
+```
+
+Note: kivi library should be compiled with enabled component recycling. To enable recycling, replace all string
+occurences `<@KIVI_COMPONENT_RECYCLING@>` with `COMPONENT_RECYCLING_ENABLED`.
 
 ## Animated components
 
@@ -35,9 +54,9 @@ const MyComponent = new ComponentDescriptor()
 `RenderFlags` also has a flag for shallow rendering `ShallowRender` that prevents from rendering subcomponents when they
 are created for the first time.
 
-## Incremental rendering **EXPERIMENTAL**
+## Incremental rendering \*\*EXPERIMENTAL\*\*
 
-Components provide two methods that can trigger incremental rendering: `startInteraction()` and `stopInteraction()`.
+Components provide two methods that can trigger incremental rendering: `startInteraction()` and `finishInteraction()`.
 
 `startInteraction()` will enable throttling mode in the scheduler, increment its dependency counter, and mark component
 as a high priority component. High priority components will be updated even if timeframe for a throttled frame is over.

@@ -5,14 +5,16 @@ be used as a basic building block for creating user interfaces. Component can be
 or a canvas object. To update its representation it is possible to use direct DOM manipulations, Virtual DOM API, or
 draw on a canvas.
 
+To create components, we need to declare its properties and behavior in `ComponentDescriptor` instance, it acts as a
+virtual table for component instances. Each component created from component descriptor will be automatically linked
+to its descriptor.
+
 ## ComponentDescriptor
 
-Each component should declare its properties and behavior in `ComponentDescriptor` object. TypeScript users can specify
-its props type and state type with parametric types P and S `ComponentDescriptor<P, S>`.
+For typescript developers, ComponentDescriptor has two parameteric types: `P` for props type and `S` for state type.
 
-Component descriptor provides a `createComponent` and `createRootComponent` methods to create component instances.
-
-### Example
+To create component instances, we can use one of the two methods: `createComponent`, or `createRootComponent`. The
+difference between them is that root component doesn't have any parent component. For example:
 
 ```ts
 class Props {
@@ -47,36 +49,56 @@ const MyComponent = new ComponentDescriptor<Props, State>()
 const componentInstance = MyComponent.createRootComponent(new Data(10, 20));
 ```
 
-### Basic API
+### Setting component properties
 
-##### tagName
-
-Method: `componentDescriptor.tagName(tagName: string): ComponentDescriptor<P, S>`
-
-Set tag name for the root element.
+Component descriptor instance has many different methods to set properties, all property methods support method
+chaining. For example:
 
 ```ts
-const MyComponent = new ComponentDescriptor<any, any>()
-  .tagName("table");
-```
-
-##### svg
-
-Method: `componentDescriptor.svg(): ComponentDescriptor<P, S>`
-
-Use SVG Namespace to create a root element.
-
-```ts
-const MySvgComponent = new ComponentDescriptor<any, any>()
+const MyComponent = new ComponentDescriptor<number, any>()
   .svg()
-  .tagName("circle");
+  .tagName("a")
+  .update((c) => { c.element.width = this.props; });
 ```
 
-##### canvas
+List of basic properties:
 
-Method: `componentDescriptor.canvas(): ComponentDescriptor<P, S>`
+```
+ComponentDescriptor<P, S>.tagName(tagName: string): ComponentDescriptor<P, S>;
+ComponentDescriptor<P, S>.svg(): ComponentDescriptor<P, S>;
+```
 
-Turn component into a canvas.
+## Using Virtual DOM
+
+To use virtual dom in components, we need to declare a function `vRender` in `ComponentDescriptor` that will render
+components representation with a virtual dom. For example:
+
+```ts
+const MyComponent = new ComponentDescriptor<{title: string, content: string}, any>()
+  .vRender((c, root) => {
+    root.children([
+      createVElement("h1").children(c.props.title),
+      createVElement("p").children(c.props.content),
+    ]);
+  });
+```
+
+First parameter of a render function is a component instance, and the second is a virtual node representing a root
+element.
+
+To create virtual nodes that represent components, use component descriptor method `createVNode(data?: D)`. For example:
+
+```ts
+const vnode = MyComponent.createVNode({
+  title: "Component Example",
+  content: "content",
+});
+```
+
+## Drawing on a canvas
+
+To use canvas as a surface for component representation, enable canvas mode with component descriptor method
+`descriptor.canvas()`. For example:
 
 ```ts
 const MyCanvasComponent = new ComponentDescriptor<any, any>()
@@ -88,15 +110,12 @@ const MyCanvasComponent = new ComponentDescriptor<any, any>()
   });
 ```
 
-### Lifecycle Handlers
+## Lifecycle methods
 
 ##### init
 
-Method: `componentDescriptor.init((c: Component<P, S>) => void): ComponentDescriptor<P, S>`
-
-Set lifecycle handler init.
-
-`element` and `props` properties will be initialized before init handler is invoked.
+Init handler will be invoked immediately after component is instantiated, `element` and `props` properties will be
+initialized before init handler is invoked.
 
 ```ts
 const MyComponent = new ComponentDescriptor<any, any>()
@@ -113,22 +132,18 @@ const MyComponent = new ComponentDescriptor<any, any>()
 
 ##### update
 
-Method: `componentDescriptor.update((c: Component<P, S>) => void): ComponentDescriptor<P, S>`
+Update handler will be invoked when component gets updated either by binding new props, or when it is registered in
+one of the scheduler component queues.
 
-Set lifecycle handler update.
-
-Update handler overrides default update behavior.
+Update handler completely overrides default update behavior, so to continue using virtual dom for updates, we can
+use `vSync` method.
 
 ```ts
 const MyComponent = new ComponentDescriptor<{a: number}, any>()
-  .update((c) => { c.sync(c.createVRoot().children("content")); });
+  .update((c) => { c.vSync(c.createVRoot().children("content")); });
 ```
 
 ##### attached
-
-Method: `componentDescriptor.attached((c: Component<P, S>) => void): ComponentDescriptor<P, S>`
-
-Set lifecycle handler attached.
 
 Attached handler will be invoked when component is attached to the document.
 
@@ -145,10 +160,6 @@ onChange.invalidate();
 ```
 
 ##### detached
-
-Method: `componentDescriptor.detached((c: Component<P, S>) => void): ComponentDescriptor<P, S>`
-
-Set lifecycle handler detached.
 
 Detached handler will be invoked when component is detached from the document.
 
@@ -170,10 +181,6 @@ const MyComponent = new ComponentDescriptor<any, {onResize: (e: Event) => void}>
 
 ##### disposed
 
-Method: `componentDescriptor.disposed((c: Component<P, S>) => void): ComponentDescriptor<P, S>`
-
-Set lifecycle handler disposed.
-
 Disposed handler will be invoked when component is disposed.
 
 ```ts
@@ -191,10 +198,6 @@ const MyComponent = new ComponentDescriptor<any, {onResize: (e: Event) => void}>
 
 ##### newPropsReceived
 
-Method: `componentDescriptor.newPropsReceived((c: Component<P, S>, newProps: P) => void): ComponentDescriptor<P, S>`
-
-Set newPropsReceived handler.
-
 New props received handler overrides default props received behavior and it should mark component as dirty if new
 received props will cause change in component's representation.
 
@@ -207,22 +210,3 @@ const MyComponent = new ComponentDescriptor<{a: number}, any>()
   })
   .vRender((c, root) => { root.children(c.props.toString()); });
 ```
-
-## Component
-
-### Basic API
-
-##### invalidate
-
-Method: `component.invalidate(): boolean`
-
-Invalidates a component and registers in the scheduler queue for update, when scheduler starts writing to the DOM, it
-will invoke `update` method of the invalidated component.
-
-##### update
-
-Method: `component.update(newProps?: P)`
-
-Set new props and update component.
-
-Props are checked by their identity, unless it is disabled by component descriptor method `disableCheckDataIdentity()`.
