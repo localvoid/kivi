@@ -1,8 +1,9 @@
 import {SvgNamespace, ComponentDescriptorFlags, ComponentFlags, SchedulerFlags, VNodeFlags, RenderFlags} from "./misc";
 import {VModel} from "./vmodel";
-import {VNode, createVRoot} from "./vnode";
+import {VNode, vNodeMount, vNodeRender, vNodeAttach, vNodeDetach, vNodeDispose, createVRoot} from "./vnode";
 import {InvalidatorSubscription, Invalidator} from "./invalidator";
 import {scheduler} from "./scheduler";
+import {reconciler} from "./reconciler";
 
 /**
  * Component Descriptor.
@@ -713,14 +714,14 @@ export class Component<P, S> {
     if (this.root === null) {
       newRoot.cref = this;
       if ((this.flags & ComponentFlags.Mounting) !== 0) {
-        newRoot.mount(this.element, this);
+        vNodeMount(newRoot, this.element, this);
         this.flags &= ~ComponentFlags.Mounting;
       } else {
         newRoot.ref = this.element;
-        newRoot.render(this, renderFlags);
+        vNodeRender(newRoot, this, renderFlags);
       }
     } else {
-      (this.root as VNode).sync(newRoot, this, renderFlags);
+      reconciler.sync(this.root as VNode, newRoot, this, renderFlags);
     }
     this.root = newRoot;
   }
@@ -744,7 +745,7 @@ export class Component<P, S> {
   attach(): void {
     this.attached();
     if (this.root !== null && ((this.flags & ComponentFlags.Canvas2D) === 0)) {
-      (this.root as VNode).attach();
+      vNodeAttach(this.root as VNode);
     }
   }
 
@@ -770,7 +771,7 @@ export class Component<P, S> {
    */
   detach(): void {
     if (this.root !== null && ((this.flags & ComponentFlags.Canvas2D) === 0)) {
-      (this.root as VNode).detach();
+      vNodeDetach(this.root as VNode);
     }
     this.detached();
   }
@@ -807,7 +808,7 @@ export class Component<P, S> {
       this.flags |= ComponentFlags.Disposed;
 
       if (this.root !== null && ((this.flags & ComponentFlags.Canvas2D) === 0)) {
-        (this.root as VNode).dispose();
+        vNodeDispose(this.root as VNode);
       }
 
       if ((this.flags & ComponentFlags.Attached) !== 0) {

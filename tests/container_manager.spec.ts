@@ -1,6 +1,7 @@
 import {ContainerManager, ContainerManagerDescriptor} from "../lib/container_manager";
-import {VNode, createVElement} from "../lib/vnode";
+import {VNode, vNodeInstantiate, vNodeAttached, vNodeRender, createVElement} from "../lib/vnode";
 import {Component} from "../lib/component";
+import {reconciler} from "../lib/reconciler";
 
 describe("ContainerManager", () => {
   it("should invoke insertChild", () => {
@@ -25,10 +26,10 @@ describe("ContainerManager", () => {
     const insertedChild = createVElement("span");
     const b = createVElement("div").managedContainer(manager).children([insertedChild]);
 
-    a.create(null);
-    a.attached();
-    a.render(null, 0);
-    a.sync(b, null, 0);
+    vNodeInstantiate(a, null);
+    vNodeAttached(a);
+    vNodeRender(a, null, 0);
+    reconciler.sync(a, b, null, 0);
 
     expect(testManager).toBe(manager);
     expect(testContainer).toBe(b.ref);
@@ -57,10 +58,10 @@ describe("ContainerManager", () => {
     const a = createVElement("div").managedContainer(manager).children([removedChild]);
     const b = createVElement("div").managedContainer(manager);
 
-    a.create(null);
-    a.attached();
-    a.render(null, 0);
-    a.sync(b, null, 0);
+    vNodeInstantiate(a, null);
+    vNodeAttached(a);
+    vNodeRender(a, null, 0);
+    reconciler.sync(a, b, null, 0);
 
     expect(testManager).toBe(manager);
     expect(testContainer).toBe(b.ref);
@@ -93,10 +94,10 @@ describe("ContainerManager", () => {
     const a = createVElement("div").managedContainer(manager).trackByKeyChildren([movedChildA, tmpChildA]);
     const b = createVElement("div").managedContainer(manager).trackByKeyChildren([tmpChildB, movedChildB]);
 
-    a.create(null);
-    a.attached();
-    a.render(null, 0);
-    a.sync(b, null, 0);
+    vNodeInstantiate(a, null);
+    vNodeAttached(a);
+    vNodeRender(a, null, 0);
+    reconciler.sync(a, b, null, 0);
 
     expect(testManager).toBe(manager);
     expect(testContainer).toBe(b.ref);
@@ -128,10 +129,10 @@ describe("ContainerManager", () => {
     const a = createVElement("div").managedContainer(manager).children([tmpChild]);
     const b = createVElement("div").managedContainer(manager).children([replacedChild]);
 
-    a.create(null);
-    a.attached();
-    a.render(null, 0);
-    a.sync(b, null, 0);
+    vNodeInstantiate(a, null);
+    vNodeAttached(a);
+    vNodeRender(a, null, 0);
+    reconciler.sync(a, b, null, 0);
 
     expect(testManager).toBe(manager);
     expect(testContainer).toBe(b.ref);

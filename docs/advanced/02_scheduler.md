@@ -68,7 +68,7 @@ const MyComponent = new ComponentDescriptor<Data, any>()
 ```
 
 Here we need to check if component's `mtime` property is older than `mtime` in a data object, and if it is older,
-we are marking component as dirty. When component finished update, it will automatically set its `mtime` to the current
+we are marking component as dirty. When component finishes update, it will automatically set its `mtime` to the current
 `scheduler.clock` value.
 
 ## Incremental rendering

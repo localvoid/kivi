@@ -112,7 +112,7 @@ const MyCanvasComponent = new ComponentDescriptor<any, any>()
 
 ## Lifecycle methods
 
-##### init
+### init
 
 Init handler will be invoked immediately after component is instantiated, `element` and `props` properties will be
 initialized before init handler is invoked.
@@ -130,7 +130,7 @@ const MyComponent = new ComponentDescriptor<any, any>()
   .vRender((c, root) => { root.children("click me"); });
 ```
 
-##### update
+### update
 
 Update handler will be invoked when component gets updated either by binding new props, or when it is registered in
 one of the scheduler component queues.
@@ -143,7 +143,7 @@ const MyComponent = new ComponentDescriptor<{a: number}, any>()
   .update((c) => { c.vSync(c.createVRoot().children("content")); });
 ```
 
-##### attached
+### attached
 
 Attached handler will be invoked when component is attached to the document.
 
@@ -159,7 +159,7 @@ const MyComponent = new ComponentDescriptor<any, any>()
 onChange.invalidate();
 ```
 
-##### detached
+### detached
 
 Detached handler will be invoked when component is detached from the document.
 
@@ -179,7 +179,7 @@ const MyComponent = new ComponentDescriptor<any, {onResize: (e: Event) => void}>
   .vRender((c, root) => { root.children("content"); });
 ```
 
-##### disposed
+### disposed
 
 Disposed handler will be invoked when component is disposed.
 
@@ -196,7 +196,7 @@ const MyComponent = new ComponentDescriptor<any, {onResize: (e: Event) => void}>
   .vRender((c, root) => { root.children("content"); });
 ```
 
-##### newPropsReceived
+### newPropsReceived
 
 New props received handler overrides default props received behavior and it should mark component as dirty if new
 received props will cause change in component's representation.

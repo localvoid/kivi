@@ -6,7 +6,7 @@ export * from "./container_manager";
 export * from "./component";
 export {
   VNodeFlags, VModelFlags, ComponentDescriptorFlags, ComponentFlags, InvalidatorSubscriptionFlags,
-  RenderFlags, flattenVNodes, getBackRef
+  RenderFlags, filterVNodes, getBackRef
 } from "./misc";
 
 if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
