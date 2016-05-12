@@ -1,3 +1,78 @@
 # Container Manager
 
-WIP
+Container Manager can override default virtual dom reconciliation functions for DOM node lists manipulations. This
+feature is quite useful for implementing complicated animated containers.
+
+It has a similar way for declaring properties and behavior to components model. `ContainerManagerDescriptor` instance
+contains virtual table of properties and methods, and can create `ContainerManager` instances linked to descriptor.
+
+Each container manager should override four functions for DOM node lists manipulations:
+
+```ts
+type InsertChildHandler<S> = (manager: ContainerManager<S>,
+                              container: Element,
+                              node: VNode,
+                              nextRef: Node,
+                              owner: Component<any, any>,
+                              renderFlags: number) => void;
+
+type ReplaceChildHandler<S> = (manager: ContainerManager<S>,
+                               container: Element,
+                               newNode: VNode,
+                               refNode: VNode,
+                               owner: Component<any, any>,
+                               renderFlags: number) => void;
+
+type MoveChildHandler<S> = (manager: ContainerManager<S>,
+                            container: Element,
+                            node: VNode,
+                            nextRef: Node,
+                            owner: Component<any, any>) => void;
+
+type RemoveChildHandler<S> = (manager: ContainerManager<S>,
+                              container: Element,
+                              now: VNode,
+                              owner: Component<any, any>) => void;
+```
+
+To make things easier, kivi provides generic functions for DOM node lists manipulations that will invoke all lifecycle
+handlers in a proper way:
+
+- `insertVNodeBefore(container: Element, node: VNode, nextRef: Node, owner: Component<any, any>, renderFlags: number)`
+- `replaceVNode(container: Element, newNode: VNode, refNode: VNode, owner: Component<any, any> renderFlags: number)`
+- `moveVNode(container: Element, node: VNode, nextRef: Node, owner: Component<any, any>)`
+- `removeVNode(container: Element, node: VNode, owner: Component<any, any>)`
+
+To use container manager in a virtual dom, just assign container manager instance to a virtual dom element with
+`managedContainer(manager: ContainerManager<any>)` method.
+
+## Example
+
+```ts
+const MyManager = new ContainerManagerDescriptor()
+  .insertChild((manager: ContainerManager<any>, container: Element, node: VNode, nextRef: Node,
+      owner: Component<any, any>, renderFlags: number) => {
+    console.log("Node inserted");
+  })
+  .removeChild((manager: ContainerManager<any>, container: Element, node: VNode,
+      owner: Component<any, any>) => {
+    console.log("Node removed");
+  });
+  .moveChild((manager: ContainerManager<any>, container: Element, node: VNode, nextRef: Node,
+      owner: Component<any, any>) => {
+    console.log("Node moved");
+  });
+  .replaceChild((manager: ContainerManager<any>, container: Element, newNode: VNode, refNode: VNode,
+      owner: Component<any, any>, renderFlags: number) => {
+    console.log("Node replaced");
+  });
+
+const manager = MyManager.create();
+
+const vnode = createVElement("div")
+  .managedContainer(manager)
+  .children([
+    createVElement("span"),
+    createVElement("span"),
+  ]);
+```
