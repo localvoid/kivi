@@ -518,8 +518,10 @@ export class VNode {
    *
    * Keep alive nodes should be manually disposed by owning component.
    */
-  keepAlive(): VNode {
+  keepAlive(component: Component<any, any>): VNode {
     this._flags |= VNodeFlags.KeepAlive;
+    this.ref = component.element;
+    this.cref = component;
     return this;
   }
 
@@ -605,7 +607,7 @@ export function vNodeInstantiate(vnode: VNode, owner: Component<any, any>): void
     } else {
       vnode.ref = (vnode._tag as VModel<any>).createElement();
     }
-  } else {
+  } else if ((flags & VNodeFlags.KeepAlive) === 0) {
     const c = (vnode._tag as ComponentDescriptor<any, any>).createComponent(owner, vnode._props);
     vnode.ref = c.element;
     vnode.cref = c;
@@ -1060,6 +1062,10 @@ export function insertVNodeBefore(container: Element, node: VNode, nextRef: Node
     }
     container.insertBefore(node.ref, nextRef);
     vNodeAttach(node);
+    if ((renderFlags & RenderFlags.ShallowUpdate) === 0) {
+      schedulerUpdateComponent(scheduler, node.cref as Component<any, any>,
+        (node._flags & VNodeFlags.BindOnce) === 0 ? node._props : null);
+    }
   }
 }
 
@@ -1083,6 +1089,10 @@ export function replaceVNode(container: Element, newNode: VNode, refNode: VNode,
     }
     container.replaceChild(newNode.ref, refNode.ref);
     vNodeAttach(newNode);
+    if ((renderFlags & RenderFlags.ShallowUpdate) === 0) {
+      schedulerUpdateComponent(scheduler, newNode.cref as Component<any, any>,
+        (newNode._flags & VNodeFlags.BindOnce) === 0 ? newNode._props : null);
+    }
   }
   vNodeDispose(refNode);
 }

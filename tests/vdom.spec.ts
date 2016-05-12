@@ -216,7 +216,7 @@ describe("VNode", () => {
       expect((f.firstChild as Element).childNodes.length).toBe(2);
     });
 
-    it("should create div with child \"abc\"", () => {
+    it("should create div with child 'abc'", () => {
       const f = document.createDocumentFragment();
       const a = createVElement("div").children("abc");
       injectVNode(f, a, undefined);
@@ -950,7 +950,7 @@ describe("VNode", () => {
       ];
 
       describe("syncChildren string children", () => {
-        it("null => \"abc\"", () => {
+        it("null => 'abc'", () => {
           const f = document.createDocumentFragment();
           const a = createVElement("div");
           const b = createVElement("div").children("abc");
@@ -960,7 +960,7 @@ describe("VNode", () => {
           expect((f.firstChild as Element).firstChild.nodeValue).toBe("abc");
         });
 
-        it("\"abc\" => null", () => {
+        it("'abc' => null", () => {
           const f = document.createDocumentFragment();
           const a = createVElement("div").children("abc");
           const b = createVElement("div");
@@ -969,7 +969,7 @@ describe("VNode", () => {
           expect((f.firstChild as Element).childNodes.length).toBe(0);
         });
 
-        it("\"abc\" => \"cde\"", () => {
+        it("'abc' => 'cde'", () => {
           const f = document.createDocumentFragment();
           const a = createVElement("div").children("abc");
           const b = createVElement("div").children("cde");
@@ -979,7 +979,7 @@ describe("VNode", () => {
           expect((f.firstChild as Element).firstChild.nodeValue).toBe("cde");
         });
 
-        it("[div] => \"cde\"", () => {
+        it("[div] => 'cde'", () => {
           const f = document.createDocumentFragment();
           const a = createVElement("div").children([createVElement("div")]);
           const b = createVElement("div").children("cde");
@@ -989,7 +989,7 @@ describe("VNode", () => {
           expect((f.firstChild as Element).firstChild.nodeValue).toBe("cde");
         });
 
-        it("[div, div] => \"cde\"", () => {
+        it("[div, div] => 'cde'", () => {
           const f = document.createDocumentFragment();
           const a = createVElement("div").children([createVElement("div"), createVElement("div")]);
           const b = createVElement("div").children("cde");
@@ -999,7 +999,7 @@ describe("VNode", () => {
           expect((f.firstChild as Element).firstChild.nodeValue).toBe("cde");
         });
 
-        it("\"cde\" => [div]", () => {
+        it("'cde' => [div]", () => {
           const f = document.createDocumentFragment();
           const a = createVElement("div").children("cde");
           const b = createVElement("div").children([createVElement("div")]);
@@ -1009,7 +1009,7 @@ describe("VNode", () => {
           expect((f.firstChild.firstChild as Element).tagName).toBe("DIV");
         });
 
-        it("\"cde\" => [div, span]", () => {
+        it("'cde' => [div, span]", () => {
           const f = document.createDocumentFragment();
           const a = createVElement("div").children("cde");
           const b = createVElement("div").children([createVElement("div"), createVElement("span")]);
@@ -1122,46 +1122,7 @@ describe("VNode", () => {
       expect(component.cref.state.checkDisposed).toBe(6);
     });
 
-    it("shouldn\"t dispose keep alive nodes", () => {
-      const component = LifecycleComponent.createVNode().keepAlive();
-      const node = createVElement("div").children([component]);
-      vNodeInstantiate(node, undefined);
-      vNodeAttached(node);
-      vNodeRender(node, undefined, 0);
-      vNodeDispose(node);
-      expect(component.cref.state.checkInit).toBe(0);
-      expect(component.cref.state.checkAttached).toBe(1);
-      expect(component.cref.state.checkUpdate).toBe(2);
-      expect(component.cref.state.checkDetached).toBe(3);
-      expect(component.cref.state.checkDisposed).toBe(-1);
-    });
-
-    it("should reattach the same keep alive node without updating (bind-once)", () => {
-      const component = LifecycleComponent.createVNode().keepAlive();
-      const a = createVElement("div").children([component]);
-      const b = createVElement("div");
-      const c = createVElement("div").children([component]);
-      vNodeInstantiate(a, undefined);
-      vNodeAttached(a);
-      vNodeRender(a, undefined, 0);
-      reconciler.sync(a, b, undefined, 0);
-      expect(component.cref.state.checkInit).toBe(0);
-      expect(component.cref.state.checkAttached).toBe(1);
-      expect(component.cref.state.checkUpdate).toBe(2);
-      expect(component.cref.state.checkDetached).toBe(3);
-      expect(component.cref.state.checkDisposed).toBe(-1);
-
-      reconciler.sync(b, c, undefined, 0);
-      expect(component.cref.state.checkInit).toBe(0);
-      expect(component.cref.state.checkAttached).toBe(4);
-      expect(component.cref.state.checkUpdate).toBe(2);
-      expect(component.cref.state.checkDetached).toBe(3);
-      expect(component.cref.state.checkDisposed).toBe(-1);
-
-      expect(c.ref.firstChild).toBe(component.ref);
-    });
-
-    it("shouldn\"t render component when shallow rendering is used", () => {
+    it("shouldn't render component when shallow rendering is used", () => {
       const component = LifecycleComponent.createVNode();
       const a = createVElement("div").children([component]);
       vNodeInstantiate(a, undefined);
@@ -1198,7 +1159,7 @@ describe("VNode", () => {
       expect(componentB.cref.state.checkDisposed).toBe(-1);
     });
 
-    it("shouldn\"t update component when shallow updating is used", () => {
+    it("shouldn't update component when shallow updating is used", () => {
       const componentA = LifecycleComponent.createVNode();
       const componentB = LifecycleComponent.createVNode();
       const a = createVElement("div").children([componentA]);
@@ -1220,7 +1181,7 @@ describe("VNode", () => {
       expect(componentB.cref.state.checkDisposed).toBe(-1);
     });
 
-    it("shouldn\"t update component when shallow updating is used", () => {
+    it("shouldn't update component when shallow updating is used", () => {
       const componentA = LifecycleComponent.createVNode(0);
       const componentB = LifecycleComponent.createVNode(1);
       const a = createVElement("div").children([componentA]);
@@ -1255,7 +1216,7 @@ describe("VNode", () => {
       expect(v.ref).toBe(e);
     });
 
-    it("<div>\"abc\"</div>", () => {
+    it("<div>'abc'</div>", () => {
       const e = document.createElement("div");
       e.textContent = "abc";
 
@@ -1266,7 +1227,7 @@ describe("VNode", () => {
       expect(t.ref).toBe(e.firstChild);
     });
 
-    it("<div>\"abc\"\"def\"</div>", () => {
+    it("<div>'abc''def'</div>", () => {
       const e = document.createElement("div");
       e.appendChild(document.createTextNode("abc"));
       e.appendChild(document.createTextNode("def"));
@@ -1280,7 +1241,7 @@ describe("VNode", () => {
       expect(t2.ref).toBe(e.lastChild);
     });
 
-    it("<div>\"abc\"<span>\"123\"</span>\"def\"</div>", () => {
+    it("<div>'abc'<span>'123'</span>'def'</div>", () => {
       const e = document.createElement("div");
       e.appendChild(document.createTextNode("abc"));
       const e2 = document.createElement("span");
@@ -1301,7 +1262,7 @@ describe("VNode", () => {
       expect(t3.ref).toBe(e2.firstChild);
     });
 
-    it("<div>\"abc\"<LifeCycleComponent />\"def\"</div>", () => {
+    it("<div>'abc'<LifeCycleComponent />'def'</div>", () => {
       const component = LifecycleComponent.createVNode();
 
       const e = document.createElement("div");

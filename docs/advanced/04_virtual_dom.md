@@ -33,7 +33,7 @@ const MyComponent = new ComponentDescriptor<any, { node: VNode }>()
   });
 ```
 
-## Keep Alive \*\*EXPERIMENTAL\*\*
+## Keep Alive
 
 Keep alive prevents reconciliation algorithm from disposing components, so when they are removed from the document,
 instead of disposing them, they are detached.
@@ -42,12 +42,12 @@ instead of disposing them, they are detached.
 const MyComponent = new ComponentDescriptor<{ showChild: boolean }, { aliveNode: VNode }>()
   .init((c) => {
     c.state = {
-      aliveNode: ChildComponent.createVNode().keepAlive(),
+      aliveComponent: ChildComponent.createComponent(),
     };
   })
   .vRender((c, root) => {
     if (this.props.showChild) {
-      root.children([c.state.aliveNode]);
+      root.children([ChildComponent.createVNode().keepAlive(c.state.aliveComponent)]);
     }
   });
 ```
