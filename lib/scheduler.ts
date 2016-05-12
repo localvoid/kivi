@@ -1,7 +1,8 @@
 import {Component} from "./component";
 import {SchedulerFlags, ComponentFlags} from "./misc";
-import {VNode, createVRoot} from "./vnode";
+import {VNode, vNodeMount, vNodeRender, createVRoot} from "./vnode";
 import {VModel} from "./vmodel";
+import {reconciler} from "./reconciler";
 
 export type SchedulerCallback = () => void;
 
@@ -441,7 +442,7 @@ export class Scheduler {
             if (componentGroup !== null) {
               componentGroups[i] = null;
               for (j = 0; j < componentGroup.length; j++) {
-                componentGroup[j].update();
+                schedulerUpdateComponent(this, componentGroup[j]);
               }
             }
           }
@@ -472,7 +473,7 @@ export class Scheduler {
             updateComponents[--i] = updateComponents.pop();
           }
         } else {
-          component.update();
+          schedulerUpdateComponent(this, component);
         }
       }
     } while ((frame._flags & (FrameTaskFlags.Component | FrameTaskFlags.Write | FrameTaskFlags.Read)) !== 0);
@@ -526,26 +527,43 @@ export function schedulerUpdateComponent(scheduler: Scheduler, component: Compon
   }
 
   if ((component.flags & (ComponentFlags.Dirty | ComponentFlags.Attached)) ===
-    (ComponentFlags.Dirty | ComponentFlags.Attached)) {
+      (ComponentFlags.Dirty | ComponentFlags.Attached)) {
     if (((scheduler._flags & SchedulerFlags.EnabledThrottling) === 0) ||
-      ((flags & ComponentFlags.HighPriorityUpdate) !== 0) ||
-      (scheduler.frameTimeRemaining() > 0)) {
+        ((scheduler._flags & SchedulerFlags.EnabledMounting) !== 0) ||
+        ((flags & ComponentFlags.HighPriorityUpdate) !== 0) ||
+        (scheduler.frameTimeRemaining() > 0)) {
       const update = component.descriptor._update;
       if (update === null) {
         const newRoot = ((flags & ComponentFlags.VModel) === 0) ?
           createVRoot() :
           (component.descriptor._tag as VModel<any>).createVRoot();
         component.descriptor._vRender(component, newRoot);
-        component._vSync(newRoot, 0);
+        schedulerComponentVSync(scheduler, component, component.root as VNode, newRoot, 0);
       } else {
         component.descriptor._update(component);
       }
       component.mtime = scheduler.clock;
-      component.flags &= ~(ComponentFlags.Dirty | ComponentFlags.Mounting | ComponentFlags.InUpdateQueue);
+      component.flags &= ~(ComponentFlags.Dirty | ComponentFlags.InUpdateQueue);
     } else {
       scheduler.nextFrame().updateComponent(component);
     }
   }
+}
+
+export function schedulerComponentVSync(scheduler: Scheduler, component: Component<any, any>, oldRoot: VNode,
+    newRoot: VNode, renderFlags: number): void {
+  if (oldRoot === null) {
+    newRoot.cref = component;
+    if ((scheduler._flags & SchedulerFlags.EnabledMounting) !== 0) {
+      vNodeMount(newRoot, component.element, component);
+    } else {
+      newRoot.ref = component.element;
+      vNodeRender(newRoot, component, renderFlags);
+    }
+  } else {
+    reconciler.sync(oldRoot, newRoot, component, renderFlags);
+  }
+  component.root = newRoot;
 }
 
 /**

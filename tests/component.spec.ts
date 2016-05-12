@@ -66,13 +66,6 @@ describe("Component", () => {
       expect(c.depth).toBe(2);
     });
 
-    it("should have parent assigned to parent component", () => {
-      const d = new ComponentDescriptor<any, any>();
-      const p = d.createComponent();
-      const c = d.createComponent(p);
-      expect(c.parent).toBe(p);
-    });
-
     it("should have mtime 0 when created", () => {
       const d = new ComponentDescriptor<any, any>();
       const c = d.createComponent();

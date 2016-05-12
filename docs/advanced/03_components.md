@@ -44,7 +44,7 @@ subcomponents.
 ```ts
 const MyComponent = new ComponentDescriptor()
   .update((c) => {
-    c.advancedVSync(RenderFlags.ShallowUpdate, c.createVRoot().children([
+    c.vSyncAdvanced(RenderFlags.ShallowUpdate, c.createVRoot().children([
       ChildComponent.createVRoot(),
       ChildComponent.createVRoot(),
     ]));

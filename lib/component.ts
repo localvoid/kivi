@@ -1,9 +1,8 @@
-import {SvgNamespace, ComponentDescriptorFlags, ComponentFlags, VNodeFlags, RenderFlags} from "./misc";
+import {SvgNamespace, ComponentDescriptorFlags, ComponentFlags, VNodeFlags, SchedulerFlags, RenderFlags} from "./misc";
 import {VModel} from "./vmodel";
-import {VNode, vNodeMount, vNodeRender, vNodeAttach, vNodeDetach, vNodeDispose, createVRoot} from "./vnode";
+import {VNode, vNodeAttach, vNodeDetach, vNodeDispose, createVRoot} from "./vnode";
 import {InvalidatorSubscription, Invalidator} from "./invalidator";
-import {scheduler, schedulerUpdateComponent} from "./scheduler";
-import {reconciler} from "./reconciler";
+import {scheduler, schedulerUpdateComponent, schedulerComponentVSync} from "./scheduler";
 
 /**
  * Component Descriptor.
@@ -379,7 +378,7 @@ export class ComponentDescriptor<P, S> {
    *     const component = MyComponent.createRootComponent(10);
    */
   createRootComponent(props?: P): Component<P, S> {
-    return this.createComponent(null, props);
+    return this.createComponent(undefined, props);
   }
 
   /**
@@ -398,7 +397,7 @@ export class ComponentDescriptor<P, S> {
    *
    *     const rootComponent = MyComponent.createRootComponent();
    */
-  createComponent(parent: Component<any, any> = null, props?: P): Component<P, S> {
+  createComponent(parent?: Component<any, any>, props?: P): Component<P, S> {
     let element: Element;
     let component: Component<P, S>;
 
@@ -423,7 +422,7 @@ export class ComponentDescriptor<P, S> {
       }
     } else {
       component = this._recycledPool.pop();
-      component.setParent(parent);
+      component.depth = parent === undefined ? 0 : parent.depth + 1;
     }
 
     return component;
@@ -443,12 +442,11 @@ export class ComponentDescriptor<P, S> {
    *     component.update();
    */
   mountComponent(element: Element, parent?: Component<any, any>, data?: P): Component<P, S> {
-    const component = new Component<P, S>(this._markFlags | ComponentFlags.Mounting, this, element,
-      parent === undefined ? null : parent, data);
+    const component = new Component<P, S>(this._markFlags , this, element, parent, data);
     if (this._init !== null) {
       this._init(component);
     }
-    component.attached();
+    componentAttached(component);
     return component;
   }
 }
@@ -480,10 +478,6 @@ export class Component<P, S> {
    */
   element: Element;
   /**
-   * Parent component.
-   */
-  parent: Component<any, any>;
-  /**
    * Depth in the components tree.
    *
    * Depth property is used by scheduler to determine its priority when updating components.
@@ -506,14 +500,13 @@ export class Component<P, S> {
   _subscriptions: InvalidatorSubscription[]|InvalidatorSubscription;
   _transientSubscriptions: InvalidatorSubscription[]|InvalidatorSubscription;
 
-  constructor(flags: number, descriptor: ComponentDescriptor<P, S>, element: Element, parent: Component<any, any>,
+  constructor(flags: number, descriptor: ComponentDescriptor<P, S>, element: Element, parent?: Component<any, any>,
       props?: P) {
     this.flags = flags;
     this.mtime = 0;
     this.descriptor = descriptor;
     this.element = element;
-    this.parent = parent;
-    this.depth = parent === null ? 0 : parent.depth + 1;
+    this.depth = parent === undefined ? 0 : parent.depth + 1;
     this.props = props === undefined ? null : props;
     this.state = null;
     this.root = ((flags & ComponentFlags.Canvas2D) === 0) ? null : (element as HTMLCanvasElement).getContext("2d");
@@ -548,16 +541,6 @@ export class Component<P, S> {
     return ((this.flags & ComponentFlags.VModel) === 0) ?
       createVRoot() :
       (this.descriptor._tag as VModel<any>).createVRoot();
-  }
-
-  /**
-   * Set parent component.
-   *
-   * When parent is changed component's depth will be reevaluated.
-   */
-  setParent(parent: Component<P, S>): void {
-    this.parent = parent;
-    this.depth = parent === null ? 0 : parent.depth + 1;
   }
 
   /**
@@ -648,7 +631,7 @@ export class Component<P, S> {
       }
     }
 
-    this._vSync(newRoot, 0);
+    schedulerComponentVSync(scheduler, this, this.root as VNode, newRoot, 0);
   }
 
   /**
@@ -657,7 +640,7 @@ export class Component<P, S> {
    * If this method is called during mounting phase, then Virtual DOM will be
    * mounted on top of the existing document tree.
    */
-  advancedVSync(renderFlags: RenderFlags, newRoot?: VNode): void {
+  vSyncAdvanced(renderFlags: RenderFlags, newRoot?: VNode): void {
     if (newRoot === undefined) {
       newRoot = ((this.flags & ComponentFlags.VModel) === 0) ?
         createVRoot() :
@@ -680,23 +663,7 @@ export class Component<P, S> {
       }
     }
 
-    this._vSync(newRoot, renderFlags);
-  }
-
-  _vSync(newRoot: VNode, renderFlags: RenderFlags = 0): void {
-    if (this.root === null) {
-      newRoot.cref = this;
-      if ((this.flags & ComponentFlags.Mounting) !== 0) {
-        vNodeMount(newRoot, this.element, this);
-        this.flags &= ~ComponentFlags.Mounting;
-      } else {
-        newRoot.ref = this.element;
-        vNodeRender(newRoot, this, renderFlags);
-      }
-    } else {
-      reconciler.sync(this.root as VNode, newRoot, this, renderFlags);
-    }
-    this.root = newRoot;
+    schedulerComponentVSync(scheduler, this, this.root as VNode, newRoot, renderFlags);
   }
 
   /**
@@ -716,26 +683,9 @@ export class Component<P, S> {
    * Attach method should be invoked when component is attached to the document.
    */
   attach(): void {
-    this.attached();
+    componentAttached(this);
     if (this.root !== null && ((this.flags & ComponentFlags.Canvas2D) === 0)) {
       vNodeAttach(this.root as VNode);
-    }
-  }
-
-  attached(): void {
-    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      if ((this.flags & ComponentFlags.Attached) !== 0) {
-        throw new Error("Failed to attach Component: component is already attached.");
-      }
-    }
-    this.flags |= ComponentFlags.Attached;
-    if ("<@KIVI_COMPONENT_RECYCLING@>" === "COMPONENT_RECYCLING_ENABLED") {
-      this.flags &= ~ComponentFlags.Recycled;
-    }
-
-    const attached = this.descriptor._attached;
-    if (attached !== null) {
-      attached(this);
     }
   }
 
@@ -746,25 +696,7 @@ export class Component<P, S> {
     if (this.root !== null && ((this.flags & ComponentFlags.Canvas2D) === 0)) {
       vNodeDetach(this.root as VNode);
     }
-    this.detached();
-  }
-
-  detached(): void {
-    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      if ((this.flags & ComponentFlags.Attached) === 0) {
-        throw new Error("Failed to detach Component: component is already detached.");
-      }
-    }
-    if ((this.flags & ComponentFlags.EnabledThrottling) !== 0) {
-      scheduler.disableThrottling();
-    }
-    this.flags &= ~(ComponentFlags.Attached | ComponentFlags.UpdateEachFrame | ComponentFlags.EnabledThrottling);
-    componentCancelSubscriptions(this);
-    componentCancelTransientSubscriptions(this);
-    const detached = this.descriptor._detached;
-    if (detached !== null) {
-      detached(this);
-    }
+    componentDetached(this);
   }
 
   /**
@@ -787,7 +719,7 @@ export class Component<P, S> {
       }
 
       if ((this.flags & ComponentFlags.Attached) !== 0) {
-        this.detached();
+        componentDetached(this);
       }
       const disposed = this.descriptor._disposed;
       if (disposed !== null) {
@@ -829,6 +761,41 @@ export class Component<P, S> {
     } else {
       (subscriptions as InvalidatorSubscription[]).push(s);
     }
+  }
+}
+
+export function componentAttached(component: Component<any, any>): void {
+  if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+    if ((component.flags & ComponentFlags.Attached) !== 0) {
+      throw new Error("Failed to attach Component: component is already attached.");
+    }
+  }
+  component.flags |= ComponentFlags.Attached;
+  if ("<@KIVI_COMPONENT_RECYCLING@>" === "COMPONENT_RECYCLING_ENABLED") {
+    component.flags &= ~ComponentFlags.Recycled;
+  }
+
+  const attached = component.descriptor._attached;
+  if (attached !== null) {
+    attached(component);
+  }
+}
+
+export function componentDetached(component: Component<any, any>): void {
+  if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+    if ((component.flags & ComponentFlags.Attached) === 0) {
+      throw new Error("Failed to detach Component: component is already detached.");
+    }
+  }
+  if ((component.flags & ComponentFlags.EnabledThrottling) !== 0) {
+    scheduler.disableThrottling();
+  }
+  component.flags &= ~(ComponentFlags.Attached | ComponentFlags.UpdateEachFrame | ComponentFlags.EnabledThrottling);
+  componentCancelSubscriptions(component);
+  componentCancelTransientSubscriptions(component);
+  const detached = component.descriptor._detached;
+  if (detached !== null) {
+    detached(component);
   }
 }
 
@@ -875,16 +842,16 @@ export function componentCancelTransientSubscriptions(component: Component<any, 
  */
 export function injectComponent<P, S>(descriptor: ComponentDescriptor<P, S>, container: Element, props?: P,
     sync?: boolean): Component<P, S> {
-  const c = descriptor.createComponent(null, props);
+  const c = descriptor.createComponent(undefined, props);
   if (sync) {
     container.appendChild(c.element);
-    c.attached();
-    c.update();
+    componentAttached(c);
+    schedulerUpdateComponent(scheduler, c);
   } else {
     scheduler.nextFrame().write(function() {
       container.appendChild(c.element);
-      c.attached();
-      c.update();
+      componentAttached(c);
+      schedulerUpdateComponent(scheduler, c);
     });
   }
   return c;
@@ -895,14 +862,17 @@ export function injectComponent<P, S>(descriptor: ComponentDescriptor<P, S>, con
  */
 export function mountComponent<P, S>(descriptor: ComponentDescriptor<P, S>, element: Element, props?: P,
     sync?: boolean): Component<P, S> {
-  const c = descriptor.mountComponent(element, null, props);
+  scheduler._flags |= SchedulerFlags.EnabledMounting;
+  const c = descriptor.mountComponent(element, undefined, props);
   if (sync) {
-    c.attached();
-    c.update();
+    componentAttached(c);
+    schedulerUpdateComponent(scheduler, c);
+    scheduler._flags &= ~SchedulerFlags.EnabledMounting;
   } else {
     scheduler.nextFrame().write(function() {
-      c.attached();
-      c.update();
+      componentAttached(c);
+      schedulerUpdateComponent(scheduler, c);
+      scheduler._flags &= ~SchedulerFlags.EnabledMounting;
     });
   }
   return c;

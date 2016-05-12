@@ -30,6 +30,8 @@ export const enum SchedulerFlags {
   EnabledThrottling       = 1 << 4,
   /// Time frame for executing frame tasks in the current frame is ended.
   ThrottledFrameExhausted = 1 << 5,
+  /// Mounting on top of existing html is enabled.
+  EnabledMounting         = 1 << 6,
 }
 
 /**
@@ -164,25 +166,23 @@ export const enum ComponentFlags {
   Disposed                   = 1,
   /// Component is in attached state.
   Attached                   = 1 << 1,
-  /// Component in in mounting state.
-  Mounting                   = 1 << 2,
   /// Component is dirty and should be updated.
-  Dirty                      = 1 << 3,
+  Dirty                      = 1 << 2,
   /// Component should be updated on each frame with high priority.
-  UpdateEachFrame            = 1 << 4,
+  UpdateEachFrame            = 1 << 3,
   /// Component is registered in update each frame queue, when this flag is off, it will be removed from queue on next
   /// frame.
-  InUpdateEachFrameQueue     = 1 << 5,
+  InUpdateEachFrameQueue     = 1 << 4,
   /// Component is in recycled pool.
-  Recycled                   = 1 << 6,
+  Recycled                   = 1 << 5,
   /// Prevents from checking props indentity.
-  DisabledCheckPropsIdentity = 1 << 7,
+  DisabledCheckPropsIdentity = 1 << 6,
   /// Component is registered in scheduler frame task queue for updates.
-  InUpdateQueue              = 1 << 8,
+  InUpdateQueue              = 1 << 7,
   /// Component has a high priority and should be updated even when time frame for incremental rendering is exhausted.
-  HighPriorityUpdate         = 1 << 9,
+  HighPriorityUpdate         = 1 << 8,
   /// Component is enabled scheduler throttling.
-  EnabledThrottling          = 1 << 10,
+  EnabledThrottling          = 1 << 9,
 
   /// See `SharedFlags.Svg`.
   Svg              = SharedFlags.Svg,
