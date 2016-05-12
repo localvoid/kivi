@@ -130,7 +130,7 @@ gulp.task("docs", function(done) {
     config: {
       output: "gh-pages",
       title: "kivi",
-      plugins: ["edit-link", "github", "anker-enable"],
+      plugins: ["edit-link", "github", "anker-enable", "ga"],
       pluginsConfig: {
         "edit-link": {
           "base": "https://github.com/localvoid/kivi/tree/master/docs",
@@ -138,6 +138,9 @@ gulp.task("docs", function(done) {
         },
         "github": {
           "url": "https://github.com/localvoid/kivi/",
+        },
+        "ga": {
+          "token": "UA-39594570-5",
         },
       },
     },

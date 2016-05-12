@@ -36,6 +36,7 @@
     "gitbook": "^2.6.7",
     "gitbook-plugin-anker-enable": "0.0.4",
     "gitbook-plugin-edit-link": "^2.0.2",
+    "gitbook-plugin-ga": "^1.0.1",
     "gitbook-plugin-github": "^2.0.0",
     "gulp": "^3.9.1",
     "gulp-gh-pages": "^0.5.4",
