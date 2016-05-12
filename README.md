@@ -7,6 +7,8 @@
 provides Virtual DOM API for DOM manipulations, Components, and Scheduler tightly integrated with Components. It doesn't
 have a router, or anything that is related to application state, kivi is just a view library.
 
+[Kivi JSFiddle](https://jsfiddle.net/localvoid/42ofn4ud/)
+
 ## Example
 
 ```js
