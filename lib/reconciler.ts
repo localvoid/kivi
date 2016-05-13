@@ -221,7 +221,7 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string, owne
                   "VNode sync children: children shape is changing, you should enable tracking by key with " +
                   "VNode method trackByKeyChildren(children).\n" +
                   "If you certain that children shape changes won't cause any problems with losing " +
-                  "state, you can remove parent warning with VNode method disableChildrenShapeError().");
+                  "state, you can remove this error message with VNode method disableChildrenShapeError().");
               }
             }
             while (i < b.length) {
@@ -267,7 +267,7 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string, owne
                   "VNode sync children: children shape is changing, you should enable tracking by key with " +
                   "VNode method trackByKeyChildren(children).\n" +
                   "If you certain that children shape changes won't cause any problems with losing " +
-                  "state, you can remove parent warning with VNode method disableChildrenShapeError().");
+                  "state, you can remove this error message with VNode method disableChildrenShapeError().");
               }
             }
             while (i < a.length) {
@@ -376,7 +376,7 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
         "VNode sync children: children shape is changing, you should enable tracking by key with " +
         "VNode method trackByKeyChildren(children).\n" +
         "If you certain that children shape changes won't cause any problems with losing " +
-        "state, you can remove parent warning with VNode method disableChildrenShapeError().");
+        "state, you can remove this error message with VNode method disableChildrenShapeError().");
     }
   }
 
@@ -414,28 +414,28 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
  *
  * 1. Find common suffix and prefix, and perform simple moves on the edges.
  *
- * This optimization technique is searching for nodes with identical keys by simultaneously looking at nodes from both
- * sides:
+ * This optimization technique is searching for nodes with identical keys by simultaneously looking at nodes in the
+ * old children list `A` and new children list `B` from both sides:
  *
- *  -> [a b c d e f g] <-
- *     [a b f d c g]
+ *  A: -> [a b c d e f g] <-
+ *  B:    [a b f d c g]
  *
  * Here we can skip nodes "a" and "b" at the begininng, and node "g" at the end.
  *
- *  -> [c d e f] <-
- *     [f d c]
+ *  A: -> [c d e f] <-
+ *  B:    [f d c]
  *
  * At this position it will try to look at the opposite edge, and if there is a node with the same key at the opposite
  * edge, it will perform simple move operation. Node "c" is moved to the right edge, and node "f" is moved to the left
  * edge.
  *
- *  -> [d e] <-
- *     [d]
+ *  A: -> [d e] <-
+ *  B:    [d]
  *
  * Now it will try again to find common prefix and suffix, node "d" is the same, so we can skip it.
  *
- *  -> [e] <-
- *     []
+ *  A: -> [e] <-
+ *  B:    []
  *
  * Here it will check if the size of one of the list is equal to zero, and if length of the old children list is zero,
  * it will insert all remaining nodes from the new list, or if length of the new children list is zero, it will remove
@@ -447,105 +447,122 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
  * When algorithm couldn't find a solution with this simple optimization technique, it will go to the next step of the
  * algorithm. For example:
  *
- *  -> [a b c d e f g] <-
- *     [a c b h f e g]
+ *  A: -> [a b c d e f g] <-
+ *  B:    [a c b h f e g]
  *
  * Nodes "a" and "g" at the edges are the same, skipping them.
  *
- *  -> [b c d e f] <-
- *     [c b h f e]
+ *  A: -> [b c d e f] <-
+ *  B:    [c b h f e]
  *
  * Here we are stuck, so we need to switch to the next step.
  *
  * 2. Look for removed and inserted nodes, and simultaneously check if one of the nodes is moved.
  *
- * First we create an array with the length of the new children list and assign to each position value `-1`, it has a
- * meaning of a new node that should be inserted. Later we will assign node positions in the old children list to this
+ * First we create an array `P` with the length of the new children list and assign to each position value `-1`, it has
+ * a meaning of a new node that should be inserted. Later we will assign node positions in the old children list to this
  * array.
  *
- *     [b c d e f]
- *     [c b h f e]
- *     [. . . . .] // . == -1
+ *  A: [b c d e f]
+ *  B: [c b h f e]
+ *  P: [. . . . .] // . == -1
  *
- * Then we need to build an index that maps keys with node positions of the remaining nodes from the new children
+ * Then we need to build an index `I` that maps keys with node positions of the remaining nodes from the new children
  * list.
  *
- *     [b c d e f]
- *     [c b h f e]
- *     [. . . . .] // . == -1
- *   {
- *     c: 0,
- *     b: 1,
- *     h: 2,
- *     f: 3,
- *     e: 4,
- *   }
- *   last = 0
+ *  A: [b c d e f]
+ *  B: [c b h f e]
+ *  P: [. . . . .] // . == -1
+ *  I: {
+ *    c: 0,
+ *    b: 1,
+ *    h: 2,
+ *    f: 3,
+ *    e: 4,
+ *  }
+ *  last = 0
  *
  * With this index, we start to iterate over the remaining nodes from the old children list and check if we can find a
  * node with the same key in the index. If we can't find any node, it means that it should be removed, otherwise we
  * assign position of the node in the old children list to the positions array.
  *
- *      *
- *     [b c d e f]
- *     [c b h f e]
- *     [. 0 . . .] // . == -1
- *   {
- *     c: 0,
- *     b: 1, <-
- *     h: 2,
- *     f: 3,
- *     e: 4,
- *   }
- *   last = 1
+ *  A: [b c d e f]
+ *      ^
+ *  B: [c b h f e]
+ *  P: [. 0 . . .] // . == -1
+ *  I: {
+ *    c: 0,
+ *    b: 1, <-
+ *    h: 2,
+ *    f: 3,
+ *    e: 4,
+ *  }
+ *  last = 1
  *
  * When we assigning positions to the positions array, we also keep a position of the last seen node in the new children
  * list, if the last seen position is larger than current position of the node at the new list, then we are switching
  * `moved` flag to `true`.
  *
- *        *
- *     [b c d e f]
- *     [c b h f e]
- *     [1 0 . . .] // . == -1
- *   {
- *     c: 0, <-
- *     b: 1,
- *     h: 2,
- *     f: 3,
- *     e: 4,
- *   }
- *   last = 1 // last > 0; moved = true
+ *  A: [b c d e f]
+ *        ^
+ *  B: [c b h f e]
+ *  P: [1 0 . . .] // . == -1
+ *  I: {
+ *    c: 0, <-
+ *    b: 1,
+ *    h: 2,
+ *    f: 3,
+ *    e: 4,
+ *  }
+ *  last = 1 // last > 0; moved = true
  *
  * The last position `1` is larger than current position of the node at the new list `0`, switching `moved` flag to
  * `true`.
  *
- *          *
- *     [b c d e f]
- *     [c b h f e]
- *     [1 0 . . .] // . == -1
- *   {
- *     c: 0,
- *     b: 1,
- *     h: 2,
- *     f: 3,
- *     e: 4,
- *   }
- *   moved = true
+ *  A: [b c d e f]
+ *          ^
+ *  B: [c b h f e]
+ *  P: [1 0 . . .] // . == -1
+ *  I: {
+ *    c: 0,
+ *    b: 1,
+ *    h: 2,
+ *    f: 3,
+ *    e: 4,
+ *  }
+ *  moved = true
  *
  * Node with key "d" doesn't exist in the index, removing node.
  *
- *              *
- *     [b c d e f]
- *     [c b h f e]
- *     [1 0 . 4 3] // . == -1
- *   {
- *     c: 0,
- *     b: 1,
- *     h: 2,
- *     f: 3,
- *     e: 4, <-
- *   }
- *   moved = true
+ *  A: [b c d e f]
+ *            ^
+ *  B: [c b h f e]
+ *  P: [1 0 . . 3] // . == -1
+ *  I: {
+ *    c: 0,
+ *    b: 1,
+ *    h: 2,
+ *    f: 3,
+ *    e: 4, <-
+ *  }
+ *  moved = true
+ *
+ * Assign position for `e`.
+ *
+ *  A: [b c d e f]
+ *              ^
+ *  B: [c b h f e]
+ *  P: [1 0 . 4 3] // . == -1
+ *  I: {
+ *    c: 0,
+ *    b: 1,
+ *    h: 2,
+ *    f: 3, <-
+ *    e: 4,
+ *  }
+ *  moved = true
+ *
+ * Assign position for 'f'.
  *
  * At this point we are checking if `moved` flag is on, or if the length of the old children list minus the number of
  * removed nodes isn't equal to the length of the new children list. If any of this conditions is true, then we are
@@ -553,74 +570,67 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
  *
  * 3. Find minimum number of moves if `moved` flag is on, or insert new nodes if the length is changed.
  *
- *     [b c d e f]
- *              *
- *     [c b h f e]
- *     [1 0 . 4 3] // . == -1
- *   moved = true
- *
  * When `moved` flag is on, we need to find the
  * [longest increasing subsequence](http://en.wikipedia.org/wiki/Longest_increasing_subsequence) in the positions array,
  * and move all nodes that doesn't belong to this subsequence.
  *
- *     [b c d e f]
- *              *
- *     [c b h f e]
- *     [1 0 . 4 3] // . == -1
- *              *
- *           [1 4] // LIS
- *   moved = true
+ *  A: [b c d e f]
+ *  B: [c b h f e]
+ *  P: [1 0 . 4 3] // . == -1
+ *  LIS:     [1 4]
+ *  moved = true
  *
  * Now we just need to simultaneously iterate over the new children list and LIS from the end and check if the current
  * position is equal to a value from LIS.
  *
- *     [b c d e f]
- *            *
- *     [c b h f e]
- *     [1 0 . 4 3] // . == -1
- *            *
- *           [1 4] // LIS
- *   moved = true
+ *  A: [b c d e f]
+ *  B: [c b h f e]
+ *              ^  // new_pos == 4
+ *  P: [1 0 . 4 3] // . == -1
+ *  LIS:     [1 4]
+ *              ^  // new_pos == 4
+ *  moved = true
  *
  * Node "e" stays at the same place.
  *
- *     [b c d e f]
- *            *
- *     [c b h f e]
- *     [1 0 . 4 3] // . == -1
- *            *
- *           [1 4] // LIS
- *   moved = true
+ *  A: [b c d e f]
+ *  B: [c b h f e]
+ *            ^    // new_pos == 3
+ *  P: [1 0 . 4 3] // . == -1
+ *  LIS:     [1 4]
+ *            ^    // new_pos != 1
+ *  moved = true
  *
  * Node "f" is moved, move it before the next node "e".
  *
- *     [b c d e f]
- *          *
- *     [c b h f e]
- *     [1 0 . 4 3] // . == -1
- *            *
- *           [1 4] // LIS
- *   moved = true
+ *  A: [b c d e f]
+ *  B: [c b h f e]
+ *          ^      // new_pos == 2
+ *  P: [1 0 . 4 3] // . == -1
+ *          ^      // old_pos == -1
+ *  LIS:     [1 4]
+ *            ^
+ *  moved = true
  *
  * Node "h" has a `-1` value in the positions array, insert new node "h".
  *
- *     [b c d e f]
- *        *
- *     [c b h f e]
- *     [1 0 . 4 3] // . == -1
- *            *
- *           [1 4] // LIS
- *   moved = true
+ *  A: [b c d e f]
+ *  B: [c b h f e]
+ *        ^        // new_pos == 1
+ *  P: [1 0 . 4 3] // . == -1
+ *  LIS:     [1 4]
+ *            ^    // new_pos == 1
+ *  moved = true
  *
  * Node "b" stays at the same place.
  *
- *     [b c d e f]
- *      *
- *     [c b h f e]
- *     [1 0 . 4 3] // . == -1
- *         *
- *           [1 4] // LIS
- *   moved = true
+ *  A: [b c d e f]
+ *  B: [c b h f e]
+ *      ^          // new_pos == 0
+ *  P: [1 0 . 4 3] // . == -1
+ *  LIS:     [1 4]
+ *          ^      // new_pos != undefined
+ *  moved = true
  *
  * Node "c" is moved, move it before the next node "b".
  *
