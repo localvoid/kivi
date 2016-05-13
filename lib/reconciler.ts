@@ -450,18 +450,18 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
  *  -> [a b c d e f g] <-
  *     [a c b h f e g]
  *
- * Nodes "a" and "g" at edges are the same, skiping them.
+ * Nodes "a" and "g" at the edges are the same, skiping them.
  *
  *  -> [b c d e f] <-
  *     [c b h f e]
  *
- * Here we are stuck, so we need to switch to a more complex algorithm.
+ * Here we are stuck, so we need to switch to the next step.
  *
  * 2. Look for removed and inserted nodes, and simultaneously check if one of the nodes is moved.
  *
  * First we create an array with the length of the new children list and assign to each position value `-1`, it has a
- * meaning of a new node that should be inserted. Later we will assign to this array, node positions in the old children
- * list.
+ * meaning of a new node that should be inserted. Later we will assign node positions in the old children list to this
+ * array.
  *
  *     [b c d e f]
  *     [c b h f e]
@@ -484,7 +484,7 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
  *
  * With this index, we start to iterate on the remaining nodes from the old children list and check if we can find a
  * node with the same key in the index. If we can't find any node, it means that it should be removed, otherwise we
- * assign to the array, position of the node in the old children list.
+ * assign position of the node in the old children list to the positions array.
  *
  *      *
  *     [b c d e f]
@@ -499,9 +499,9 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
  *   }
  *   last = 1
  *
- * When we assigning positions to the array, we also keep a position of the last seen node in the new children list, if
- * the last seen position is higher than position of the node we are looking at, then we mark the new children list as
- * it has some moved nodes.
+ * When we assigning positions to the positions array, we also keep a position of the last seen node in the new children
+ * list, if the last seen position is higher than position of the node we are looking at, then we mark the new children
+ * list as it has some moved nodes.
  *
  *        *
  *     [b c d e f]
@@ -516,7 +516,8 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
  *   }
  *   last = 1 // last > 0; moved = true
  *
- * The last position is higher than position of the node we are looking at, marking list as it has some moved nodes.
+ * The last position `1` is larger than current position of the node at the new list `0`, switching moved flag to
+ * `true`.
  *
  *          *
  *     [b c d e f]
@@ -648,12 +649,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
   let pos: number;
   let node: VNode;
 
-  // Algorithm that works on simple cases with basic list transformations.
-  //
-  // It tries to reduce the diff problem by simultaneously iterating from the beginning and the end of both
-  // lists, if keys are the same, they"re synced, if node is moved from the beginning to the end of the
-  // current cursor positions or vice versa it just performs move operation and continues to reduce the diff
-  // problem.
+  // Step 1
   outer: do {
     stop = true;
 
@@ -750,6 +746,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
     while (aStart <= aEnd) {
       vNodeRemoveChild(parent, a[aStart++], owner);
     }
+  // Step 2
   } else {
     let aLength = aEnd - aStart + 1;
     let bLength = bEnd - bStart + 1;
@@ -826,6 +823,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
       }
     }
 
+    // Step 3
     if (moved) {
       const seq = _lis(sources);
       j = seq.length - 1;
