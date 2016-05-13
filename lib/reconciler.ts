@@ -409,6 +409,222 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
 
 /**
  * Sync children with track by keys algorithm.
+ *
+ * This algorithm finds a minimum number of DOM operations. It works in several steps:
+ *
+ * 1. Find common suffix and prefix, and perform simple moves on the edges.
+ *
+ * This optimization technique is searching for nodes with identical keys by simultaneously looking at nodes from both
+ * sides:
+ *
+ *  -> [a b c d e f g] <-
+ *     [a b f d c g]
+ *
+ * Here we can skip nodes "a" and "b" at the begininng, and node "g" at the end.
+ *
+ *  -> [c d e f] <-
+ *     [f d c]
+ *
+ * At this position it will try to look for the opposite edge, and if there is a node with the same key at the opposite
+ * edge, it will perform simple move operation. Node "c" is moved to the right edge, and node "f" is moved to the left
+ * edge.
+ *
+ *  -> [d e] <-
+ *     [d]
+ *
+ * Now it will try again to find common prefix and suffix, node "d" is the same, so we can skip it.
+ *
+ *  -> [e] <-
+ *     []
+ *
+ * Here it will check if the size of one of the list is equal to zero, and if length of the old children list is zero,
+ * it will insert all remaining nodes from the new list, or if length of the new children list is zero, it will remove
+ * all remaining node from the old list.
+ *
+ * This simple optimization will cover most of the real world use cases, even reversing the children list, except for
+ * sorting.
+ *
+ * When algorithm couldn't find a solution with this simple optimization, for example:
+ *
+ *  -> [a b c d e f g] <-
+ *     [a c b h f e g]
+ *
+ * Nodes at edges are the same.
+ *
+ *  -> [b c d e f] <-
+ *     [c b h f e]
+ *
+ * Here we are stuck, so we need to switch to a more complex algorithm.
+ *
+ * 2. Look for removed and inserted nodes, and simultaneously check if one of the nodes is moved.
+ *
+ * First we create an array with the length of the new children list and assign to each position value `-1`, it has a
+ * meaning of a new node that should be inserted. Later we will assign to this array, node positions in the old children
+ * list.
+ *
+ *     [b c d e f]
+ *     [c b h f e]
+ *     [. . . . .] // . == -1
+ *
+ * Then we need to build an index that maps keys with a node positions of the remaining nodes from then new children
+ * list.
+ *
+ *     [b c d e f]
+ *     [c b h f e]
+ *     [. . . . .] // . == -1
+ *   {
+ *     c: 0,
+ *     b: 1,
+ *     h: 2,
+ *     f: 3,
+ *     e: 4,
+ *   }
+ *   last = 0
+ *
+ * With this index, we start to iterate on the remaining nodes from the old children list and check if we can find a
+ * node with the same key in the index. If we can't find any node, it means that it should be removed, otherwise we
+ * assign to the array, position of the node in the old children list.
+ *
+ *      *
+ *     [b c d e f]
+ *     [c b h f e]
+ *     [. 0 . . .] // . == -1
+ *   {
+ *     c: 0,
+ *     b: 1, <-
+ *     h: 2,
+ *     f: 3,
+ *     e: 4,
+ *   }
+ *   last = 1
+ *
+ * When we assigning positions to the array, we also keep a position of the last seen node in the new children list, if
+ * the last seen position is higher than position of the node we are looking at, then we mark the new children list as
+ * it has some moved nodes.
+ *
+ *        *
+ *     [b c d e f]
+ *     [c b h f e]
+ *     [1 0 . . .] // . == -1
+ *   {
+ *     c: 0, <-
+ *     b: 1,
+ *     h: 2,
+ *     f: 3,
+ *     e: 4,
+ *   }
+ *   last = 1 // last > 0; moved = true
+ *
+ * The last position is higher than position of the node we are looking at, marking list as it has some moved nodes.
+ *
+ *          *
+ *     [b c d e f]
+ *     [c b h f e]
+ *     [1 0 . . .] // . == -1
+ *   {
+ *     c: 0,
+ *     b: 1,
+ *     h: 2,
+ *     f: 3,
+ *     e: 4,
+ *   }
+ *   moved = true
+ *
+ * Node with key "d" doesn't exist in the index, removing node.
+ *
+ *              *
+ *     [b c d e f]
+ *     [c b h f e]
+ *     [1 0 . 4 3] // . == -1
+ *   {
+ *     c: 0,
+ *     b: 1,
+ *     h: 2,
+ *     f: 3,
+ *     e: 4, <-
+ *   }
+ *   moved = true
+ *
+ * At this point we are checking if `moved` flag is on, or if the length of the old children list minus the number of
+ * removed nodes isn't equal to the length of the new children list. If any of this conditions is true, then we are
+ * going to the next step.
+ *
+ * 3. Find minimum number of moves if `moved` flag is on, or insert new nodes if the length is changed.
+ *
+ *     [b c d e f]
+ *              *
+ *     [c b h f e]
+ *     [1 0 . 4 3] // . == -1
+ *   moved = true
+ *
+ * When `moved` flag is on, we need to find the longest increasing subsequence in the array with positions, and move all
+ * nodes that doesn't belong to this subsequence.
+ *
+ *     [b c d e f]
+ *              *
+ *     [c b h f e]
+ *     [1 0 . 4 3] // . == -1
+ *              *
+ *           [1 4] // LIS
+ *   moved = true
+ *
+ * Now we just need to simultaneously iterate on the new children list and LIS from the end and check if the current
+ * position is equal to a value from LIS.
+ *
+ *     [b c d e f]
+ *            *
+ *     [c b h f e]
+ *     [1 0 . 4 3] // . == -1
+ *            *
+ *           [1 4] // LIS
+ *   moved = true
+ *
+ * Node "e" stays at the same place.
+ *
+ *     [b c d e f]
+ *            *
+ *     [c b h f e]
+ *     [1 0 . 4 3] // . == -1
+ *            *
+ *           [1 4] // LIS
+ *   moved = true
+ *
+ * Node "f" is moved, move it before the next node "e".
+ *
+ *     [b c d e f]
+ *          *
+ *     [c b h f e]
+ *     [1 0 . 4 3] // . == -1
+ *            *
+ *           [1 4] // LIS
+ *   moved = true
+ *
+ * Node "h" has a `-1` value in the positions array, insert new node "h".
+ *
+ *     [b c d e f]
+ *        *
+ *     [c b h f e]
+ *     [1 0 . 4 3] // . == -1
+ *            *
+ *           [1 4] // LIS
+ *   moved = true
+ *
+ * Node "b" stays at the same place.
+ *
+ *     [b c d e f]
+ *      *
+ *     [c b h f e]
+ *     [1 0 . 4 3] // . == -1
+ *         *
+ *           [1 4] // LIS
+ *   moved = true
+ *
+ * Node "c" is moved, move it before the next node "b".
+ *
+ * When moved flag is off, we don't need to find LIS, and we just iterate over the new children list and check its
+ * current position in the positions array, if it is `-1`, then we insert new node.
+ *
+ * That is how children reconciliation algorithm is working in one of the fastest virtual dom libraries :)
  */
 function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: Component<any, any>,
     renderFlags: number): void {
@@ -495,8 +711,8 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
       aStartNode = a[aStart];
       bEndNode = b[bEnd];
       stop = false;
-      // In real-world scenarios there is a higher chance that next node after we move
-      // parent one will be the same, so we are jumping to the top of parent loop immediately.
+      // In a real-world scenarios there is a higher chance that next node after the move will be the same, so we
+      // immediately jump to the start of this prefix/suffix algo.
       continue outer;
     }
 
@@ -534,13 +750,6 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
       vNodeRemoveChild(parent, a[aStart++], owner);
     }
   } else {
-    // Perform more complex sync algorithm on the remaining nodes.
-    //
-    // We start by marking all nodes from b as inserted, then we try to find all removed nodes and
-    // simultaneously perform syncs on nodes that exists in both lists and replacing "inserted"
-    // marks with the position of the node from list b in list a. Then we just need to perform
-    // slightly modified LIS algorithm, that ignores "inserted" marks and find common subsequence and
-    // move all nodes that doesn"t belong to parent subsequence, or insert if they have "inserted" mark.
     let aLength = aEnd - aStart + 1;
     let bLength = bEnd - bStart + 1;
     const sources = new Array<number>(bLength);
@@ -618,9 +827,6 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
 
     if (moved) {
       const seq = _lis(sources);
-      // All modifications are performed from the right to left, so we can use insertBefore method and use
-      // reference to the html element from the next VNode. All Nodes from the right side should always be
-      // in the correct state.
       j = seq.length - 1;
       for (i = bLength - 1; i >= 0; i--) {
         if (sources[i] === -1) {
