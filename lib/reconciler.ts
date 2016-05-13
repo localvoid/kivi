@@ -425,7 +425,7 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
  *  -> [c d e f] <-
  *     [f d c]
  *
- * At this position it will try to look for the opposite edge, and if there is a node with the same key at the opposite
+ * At this position it will try to look at the opposite edge, and if there is a node with the same key at the opposite
  * edge, it will perform simple move operation. Node "c" is moved to the right edge, and node "f" is moved to the left
  * edge.
  *
@@ -439,17 +439,18 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
  *
  * Here it will check if the size of one of the list is equal to zero, and if length of the old children list is zero,
  * it will insert all remaining nodes from the new list, or if length of the new children list is zero, it will remove
- * all remaining node from the old list.
+ * all remaining nodes from the old list.
  *
- * This simple optimization will cover most of the real world use cases, even reversing the children list, except for
- * sorting.
+ * This simple optimization technique will cover most of the real world use cases, even reversing the children list,
+ * except for sorting.
  *
- * When algorithm couldn't find a solution with this simple optimization, for example:
+ * When algorithm couldn't find a solution with this simple optimization technique, it will go to the next step of the
+ * algorithm. For example:
  *
  *  -> [a b c d e f g] <-
  *     [a c b h f e g]
  *
- * Nodes at edges are the same.
+ * Nodes "a" and "g" at edges are the same, skiping them.
  *
  *  -> [b c d e f] <-
  *     [c b h f e]
