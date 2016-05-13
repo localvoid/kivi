@@ -450,7 +450,7 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
  *  -> [a b c d e f g] <-
  *     [a c b h f e g]
  *
- * Nodes "a" and "g" at the edges are the same, skiping them.
+ * Nodes "a" and "g" at the edges are the same, skipping them.
  *
  *  -> [b c d e f] <-
  *     [c b h f e]
@@ -467,7 +467,7 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
  *     [c b h f e]
  *     [. . . . .] // . == -1
  *
- * Then we need to build an index that maps keys with a node positions of the remaining nodes from then new children
+ * Then we need to build an index that maps keys with node positions of the remaining nodes from the new children
  * list.
  *
  *     [b c d e f]
@@ -482,7 +482,7 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
  *   }
  *   last = 0
  *
- * With this index, we start to iterate on the remaining nodes from the old children list and check if we can find a
+ * With this index, we start to iterate over the remaining nodes from the old children list and check if we can find a
  * node with the same key in the index. If we can't find any node, it means that it should be removed, otherwise we
  * assign position of the node in the old children list to the positions array.
  *
@@ -500,8 +500,8 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
  *   last = 1
  *
  * When we assigning positions to the positions array, we also keep a position of the last seen node in the new children
- * list, if the last seen position is higher than position of the node we are looking at, then we mark the new children
- * list as it has some moved nodes.
+ * list, if the last seen position is larger than current position of the node at the new list, then we are switching
+ * `moved` flag to `true`.
  *
  *        *
  *     [b c d e f]
@@ -516,7 +516,7 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
  *   }
  *   last = 1 // last > 0; moved = true
  *
- * The last position `1` is larger than current position of the node at the new list `0`, switching moved flag to
+ * The last position `1` is larger than current position of the node at the new list `0`, switching `moved` flag to
  * `true`.
  *
  *          *
@@ -559,8 +559,9 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
  *     [1 0 . 4 3] // . == -1
  *   moved = true
  *
- * When `moved` flag is on, we need to find the longest increasing subsequence in the array with positions, and move all
- * nodes that doesn't belong to this subsequence.
+ * When `moved` flag is on, we need to find the
+ * [longest increasing subsequence](http://en.wikipedia.org/wiki/Longest_increasing_subsequence) in the positions array,
+ * and move all nodes that doesn't belong to this subsequence.
  *
  *     [b c d e f]
  *              *
@@ -570,7 +571,7 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
  *           [1 4] // LIS
  *   moved = true
  *
- * Now we just need to simultaneously iterate on the new children list and LIS from the end and check if the current
+ * Now we just need to simultaneously iterate over the new children list and LIS from the end and check if the current
  * position is equal to a value from LIS.
  *
  *     [b c d e f]
@@ -713,7 +714,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
       continue outer;
     }
 
-    // Move and sync nodes from right to left
+    // Move and sync nodes from right to left.
     while (aEndNode._key === bStartNode._key) {
       if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
         if (!_canSyncVNodes(aEndNode, bStartNode)) {
@@ -861,11 +862,8 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
 }
 
 /**
- * Slightly modified Longest Increased Subsequence algorithm, it ignores items that have -1 value.
- * They"re representing new items.
- *
- * This algorithm is used to find minimum number of move operations when updating children with explicit
- * keys.
+ * Slightly modified Longest Increased Subsequence algorithm, it ignores items that have -1 value, they're representing
+ * new items.
  *
  * http://en.wikipedia.org/wiki/Longest_increasing_subsequence
  */
