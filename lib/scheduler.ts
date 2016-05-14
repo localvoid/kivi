@@ -25,13 +25,13 @@ class MicrotaskScheduler {
   constructor(callback: () => void) {
     this._observer = new MutationObserver(callback);
     this._node = document.createTextNode("");
-    this._toggle = 48; // charCode(48) === '0'
+    this._toggle = 0;
     this._observer.observe(this._node, {characterData: true});
   }
 
   requestNextTick(): void {
     this._toggle ^= 1;
-    this._node.data = String.fromCharCode(this._toggle);
+    this._node.data = this._toggle === 1 ? "1" : "0";
   }
 }
 
