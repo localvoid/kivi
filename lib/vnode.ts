@@ -863,11 +863,11 @@ export function vNodeMount(vnode: VNode, node: Node, owner: Component<any, any>)
   vNodeFreeze(vnode);
 }
 
-  /**
-   * Create Comment placeholder.
-   *
-   * Comment placeholder can be used to delay element appearance in animations.
-   */
+/**
+ * Create Comment placeholder.
+ *
+ * Comment placeholder can be used to delay element appearance in animations.
+ */
 export function vNodeCreateCommentPlaceholder(vnode: VNode): void {
   if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
     if (vnode.ref !== null) {
