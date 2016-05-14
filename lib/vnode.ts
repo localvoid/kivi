@@ -23,10 +23,6 @@ import {scheduler, schedulerUpdateComponent} from "./scheduler";
  *     const textNode = createVText("text content");
  *     // Component's root node
  *     const root = createVRoot();
- *     // Text input
- *     const textInput = createVTextInput();
- *     // Checked input
- *     const checkedInput = createVCheckedInput();
  *
  * VNode instances can't be reused to represent multiple DOM nodes.
  *
@@ -1142,18 +1138,4 @@ export function createVSvgElement(tagName: string): VNode {
  */
 export function createVRoot(): VNode {
   return new VNode(VNodeFlags.Root, null, null);
-}
-
-/**
- * Create a VNode representing a HTMLInputElement with text value.
- */
-export function createVTextInput(): VNode {
-  return new VNode(VNodeFlags.Element | VNodeFlags.TextInputElement, "input", null);
-}
-
-/**
- * Create a VNode representing a HTMLInputElement with checked value.
- */
-export function createVCheckedInput(): VNode {
-  return new VNode(VNodeFlags.Element | VNodeFlags.CheckedInputElement, "input", null);
 }

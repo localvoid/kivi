@@ -38,7 +38,7 @@ export const enum SchedulerFlags {
  * Flags shared between VModel, VNode, ComponentDescriptor and Component objects.
  *
  * They can be easily copied with a binary or operator from object with one type to another with different type. For
- * example, when creating VNode from VModel, we are marking flags like IsVModel directly on a VModel object.
+ * example, when creating VNode from VModel, we are marking flags like `VModel` directly on a VModel object.
  *
  * 16-24 bits are reserved for shared flags.
  */

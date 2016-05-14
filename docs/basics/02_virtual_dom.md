@@ -24,12 +24,6 @@ function createVText(content: string): VNode;
 
 // Creates a virtual node representing a Component's root element.
 function createVRoot(): VNode;
-
-// Creates a virtual node representing an Input Element with text value.
-function createVTextInput(): VNode;
-
-// Creates a virtual node representing an Input Element with checked value.
-function createVCheckedInput(): VNode;
 ```
 
 ### Setting VNode properties
@@ -74,8 +68,8 @@ const container = createVElement("div")
   ]);
 ```
 
-To find minimum number of move operations, kivi reconciliation algorithm is using
-[Longest Increasing Subsequence](https://en.wikipedia.org/wiki/Longest_increasing_subsequence) algorithm. It is highly
-optimized and in most real world situations that involve simple moves of one or two nodes it won't perform LIS
-computation. See [uibench](https://localvoid.github.io/uibench/) benchmark to find out how kivi handles different use
-cases.
+To learn more about kivi children reconciliation algorithm, read
+[the comment](https://github.com/localvoid/kivi/blob/569ba49acd7d5c8809cfc621eb02ec6206f0d3c9/lib/reconciler.ts#L410-L641)
+in the source code, it explains how kivi is able to find minimum number of DOM operations. This algorithm is highly
+optimized and runs really fast in most real world use cases, see [uibench](https://localvoid.github.io/uibench/)
+benchmark to find out how kivi handles different use cases.
