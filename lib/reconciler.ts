@@ -471,8 +471,8 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
  *
  * Now it will try again to find common prefix and suffix, node "d" is the same, so we can skip it.
  *
- *  A: -> [e] <-
- *  B: -> [] <-
+ *  A: [e]
+ *  B: []
  *
  * Here it will check if the size of one of the list is equal to zero, and if length of the old children list is zero,
  * it will insert all remaining nodes from the new list, or if length of the new children list is zero, it will remove
