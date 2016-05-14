@@ -6,7 +6,7 @@ import {reconciler} from "./reconciler";
 
 export type SchedulerCallback = () => void;
 
-const enum FrameTaskFlags {
+const enum FrameTasksGroupFlags {
   Component = 1,
   Write     = 1 << 1,
   Read      = 1 << 2,
@@ -57,12 +57,40 @@ class MacrotaskScheduler {
   }
 }
 
-export class Frame {
+/**
+ * Frame tasks group contains tasks for updating components, read dom and write dom tasks, and tasks that should be
+ * executed after all other tasks are finished.
+ *
+ * To get access to the frame tasks group, use: `currentFrame()` and `nextFrame()` scheduler methods.
+ *
+ *     scheduler.currentFrame().read(() => {
+ *       console.log(element.clientWidth);
+ *     });
+ */
+export class FrameTasksGroup {
+  /**
+   * See `FrameTasksGroupFlags` for details.
+   */
   _flags: number;
+  /**
+   * Array of component arrays indexed by their depth.
+   */
   _componentTasks: Component<any, any>[][];
+  /**
+   * Write DOM task queue.
+   */
   _writeTasks: SchedulerCallback[];
+  /**
+   * Read DOM task queue.
+   */
   _readTasks: SchedulerCallback[];
+  /**
+   * Tasks that should be executed when all other tasks are finished.
+   */
   _afterTasks: SchedulerCallback[];
+  /**
+   * Element that should be focused.
+   */
   _focus: Element|VNode;
 
   constructor() {
@@ -79,7 +107,7 @@ export class Frame {
    */
   updateComponent(component: Component<any, any>): void {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      if ((this._flags & FrameTaskFlags.RWLock) !== 0) {
+      if ((this._flags & FrameTasksGroupFlags.RWLock) !== 0) {
         throw new Error("Failed to add update component task to the current frame, current frame is locked for read" +
                         " and write tasks.");
       }
@@ -89,7 +117,7 @@ export class Frame {
       component.flags |= ComponentFlags.InUpdateQueue;
       const priority = component.depth;
 
-      this._flags |= FrameTaskFlags.Component;
+      this._flags |= FrameTasksGroupFlags.Component;
       while (priority >= this._componentTasks.length) {
         this._componentTasks.push(null);
       }
@@ -108,13 +136,13 @@ export class Frame {
    */
   write(callback: SchedulerCallback): void {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      if ((this._flags & FrameTaskFlags.RWLock) !== 0) {
+      if ((this._flags & FrameTasksGroupFlags.RWLock) !== 0) {
         throw new Error("Failed to add update component task to the current frame, current frame is locked for read" +
                         " and write tasks.");
       }
     }
 
-    this._flags |= FrameTaskFlags.Write;
+    this._flags |= FrameTasksGroupFlags.Write;
     if (this._writeTasks === null) {
       this._writeTasks = [];
     }
@@ -126,13 +154,13 @@ export class Frame {
    */
   read(callback: SchedulerCallback): void {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      if ((this._flags & FrameTaskFlags.RWLock) !== 0) {
+      if ((this._flags & FrameTasksGroupFlags.RWLock) !== 0) {
         throw new Error("Failed to add update component task to the current frame, current frame is locked for read" +
                         " and write tasks.");
       }
     }
 
-    this._flags |= FrameTaskFlags.Read;
+    this._flags |= FrameTasksGroupFlags.Read;
     if (this._readTasks === null) {
       this._readTasks = [];
     }
@@ -143,7 +171,7 @@ export class Frame {
    * Add new task to the task queue that will execute tasks when all DOM tasks are finished.
    */
   after(callback: SchedulerCallback): void {
-    this._flags |= FrameTaskFlags.After;
+    this._flags |= FrameTasksGroupFlags.After;
     if (this._afterTasks === null) {
       this._afterTasks = [];
     }
@@ -157,15 +185,25 @@ export class Frame {
     this._focus = node;
   }
 
+  /**
+   * Place a lock on adding new read and write task.
+   *
+   * Works in DEBUG mode only.
+   */
   _rwLock(): void {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      this._flags |= FrameTaskFlags.RWLock;
+      this._flags |= FrameTasksGroupFlags.RWLock;
     }
   }
 
+  /**
+   * Remove a lock from adding new read and write tasks.
+   *
+   * Works in DEBUG mode only.
+   */
   _rwUnlock(): void {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      this._flags &= ~FrameTaskFlags.RWLock;
+      this._flags &= ~FrameTasksGroupFlags.RWLock;
     }
   }
 }
@@ -192,8 +230,8 @@ export class Scheduler {
   time: number;
   private _microtasks: SchedulerCallback[];
   private _macrotasks: SchedulerCallback[];
-  private _currentFrame: Frame;
-  private _nextFrame: Frame;
+  private _currentFrame: FrameTasksGroup;
+  private _nextFrame: FrameTasksGroup;
   /**
    * Components array that should be updated on each frame.
    */
@@ -225,8 +263,8 @@ export class Scheduler {
     this.time = 0;
     this._microtasks = [];
     this._macrotasks = [];
-    this._currentFrame = new Frame();
-    this._nextFrame = new Frame();
+    this._currentFrame = new FrameTasksGroup();
+    this._nextFrame = new FrameTasksGroup();
     this._updateComponents = [];
     this._microtaskScheduler = new MicrotaskScheduler(this._handleMicrotaskScheduler);
     this._macrotaskScheduler = new MacrotaskScheduler(this._handleMacrotaskScheduler);
@@ -249,14 +287,14 @@ export class Scheduler {
   /**
    * Get task list for the current frame.
    */
-  currentFrame(): Frame {
+  currentFrame(): FrameTasksGroup {
     return this._currentFrame;
   }
 
   /**
    * Get task list for the next frame.
    */
-  nextFrame(): Frame {
+  nextFrame(): FrameTasksGroup {
     this._requestAnimationFrame();
     return this._nextFrame;
   }
@@ -422,8 +460,8 @@ export class Scheduler {
     // Perform read/write batching. Start with executing read DOM tasks, then update components, execute write DOM tasks
     // and repeat until all read and write tasks are executed.
     do {
-      while ((frame._flags & FrameTaskFlags.Read) !== 0) {
-        frame._flags &= ~FrameTaskFlags.Read;
+      while ((frame._flags & FrameTasksGroupFlags.Read) !== 0) {
+        frame._flags &= ~FrameTasksGroupFlags.Read;
         tasks = frame._readTasks;
         frame._readTasks = null;
 
@@ -432,9 +470,9 @@ export class Scheduler {
         }
       }
 
-      while ((frame._flags & (FrameTaskFlags.Component | FrameTaskFlags.Write)) !== 0) {
-        if ((frame._flags & FrameTaskFlags.Component) !== 0) {
-          frame._flags &= ~FrameTaskFlags.Component;
+      while ((frame._flags & (FrameTasksGroupFlags.Component | FrameTasksGroupFlags.Write)) !== 0) {
+        if ((frame._flags & FrameTasksGroupFlags.Component) !== 0) {
+          frame._flags &= ~FrameTasksGroupFlags.Component;
           const componentGroups = frame._componentTasks;
 
           for (i = 0; i < componentGroups.length; i++) {
@@ -448,8 +486,8 @@ export class Scheduler {
           }
         }
 
-        if ((frame._flags & FrameTaskFlags.Write) !== 0) {
-          frame._flags &= ~FrameTaskFlags.Write;
+        if ((frame._flags & FrameTasksGroupFlags.Write) !== 0) {
+          frame._flags &= ~FrameTasksGroupFlags.Write;
           tasks = frame._writeTasks;
           frame._writeTasks = null;
           for (i = 0; i < tasks.length; i++) {
@@ -476,14 +514,16 @@ export class Scheduler {
           schedulerUpdateComponent(this, component);
         }
       }
-    } while ((frame._flags & (FrameTaskFlags.Component | FrameTaskFlags.Write | FrameTaskFlags.Read)) !== 0);
+    } while ((frame._flags & (FrameTasksGroupFlags.Component |
+                              FrameTasksGroupFlags.Write |
+                              FrameTasksGroupFlags.Read)) !== 0);
 
     // Lock current from adding read and write tasks in debug mode.
     this._currentFrame._rwLock();
 
     // Perform tasks that should be executed when all DOM ops are finished.
-    while ((frame._flags & FrameTaskFlags.After) !== 0) {
-      frame._flags &= ~FrameTaskFlags.After;
+    while ((frame._flags & FrameTasksGroupFlags.After) !== 0) {
+      frame._flags &= ~FrameTasksGroupFlags.After;
 
       tasks = frame._afterTasks;
       frame._afterTasks = null;
@@ -511,6 +551,9 @@ export class Scheduler {
   }
 }
 
+/**
+ * Note: Tried to separate passing new props and move it to component's api, it is worse :)
+ */
 export function schedulerUpdateComponent(scheduler: Scheduler, component: Component<any, any>, newProps?: any): void {
   const flags = component.flags;
 
@@ -550,6 +593,10 @@ export function schedulerUpdateComponent(scheduler: Scheduler, component: Compon
   }
 }
 
+/**
+ * Note: I am aware that it is ugly, and it may seems that it should be a part of component's api, maybe later I'll
+ * revisit this part. My thought was that reconciliation algorithm should be a part of the scheduler.
+ */
 export function schedulerComponentVSync(scheduler: Scheduler, component: Component<any, any>, oldRoot: VNode,
     newRoot: VNode, renderFlags: number): void {
   if (oldRoot === null) {
@@ -568,5 +615,7 @@ export function schedulerComponentVSync(scheduler: Scheduler, component: Compone
 
 /**
  * Global scheduler instance.
+ *
+ * Note: Just move on, don't want to hear how it will break your nice unit tests :)
  */
 export const scheduler = new Scheduler();
