@@ -1,7 +1,7 @@
-[![Build status](https://img.shields.io/travis/localvoid/kivi.svg?maxAge=2592000&style=flat-square)](https://travis-ci.org/localvoid/kivi)
-[![Npm version](https://img.shields.io/npm/v/kivi.svg?maxAge=2592000&style=flat-square)](https://www.npmjs.com/package/kivi)
-[![Npm downloads](https://img.shields.io/npm/dm/kivi.svg?maxAge=2592000&style=flat-square)](https://www.npmjs.com/package/kivi)
-[![License](https://img.shields.io/npm/l/kivi.svg?maxAge=2592000&style=flat-square)](https://www.npmjs.com/package/kivi)
+[![Build status](https://img.shields.io/travis/localvoid/kivi.svg?style=flat-square)](https://travis-ci.org/localvoid/kivi)
+[![Npm version](https://img.shields.io/npm/v/kivi.svg?style=flat-square)](https://www.npmjs.com/package/kivi)
+[![Npm downloads](https://img.shields.io/npm/dm/kivi.svg?style=flat-square)](https://www.npmjs.com/package/kivi)
+[![License](https://img.shields.io/npm/l/kivi.svg?style=flat-square)](https://www.npmjs.com/package/kivi)
 
 [Kivi](http://github.com/localvoid/kivi) is a javascript (TypeScript) library for building web user interfaces. It
 provides Virtual DOM API for DOM manipulations, Components, and Scheduler tightly integrated with Components. It doesn't
