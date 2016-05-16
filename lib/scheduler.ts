@@ -6,6 +6,19 @@ import {reconciler} from "./reconciler";
 
 export type SchedulerCallback = () => void;
 
+/**
+ * Minimum time frame duration for throttled tasks.
+ */
+const MinThrottleDuration = 2;
+/**
+ * Maximum time frame duration for throttled tasks.
+ */
+const MaxThrottleDuration = 12;
+/**
+ * Default time frame duration for throttled tasks.
+ */
+const DefaultThrottleDuration = 10;
+
 const enum FrameTasksGroupFlags {
   Component = 1,
   Write     = 1 << 1,
@@ -241,17 +254,12 @@ export class Scheduler {
   private _macrotaskScheduler: MacrotaskScheduler;
 
   /**
-   * Default duration in ms that will be available for tasks each frame.
-   */
-  defaultThrottleDuration: number;
-  /**
    * Usage counter of dependencies that enabled throttling, when it goes to zero, throttling mode is disabled.
    */
   private _throttleEnabledCounter: number;
-  /**
-   * Maximum amount of processing time in ms available to update component tasks each frame.
-   */
-  private _throttledTimePerFrame: number;
+  private _throttledFrameDuration: number;
+  private _throttledFps: number;
+  private _throttledDiffWindow: number;
   /**
    * High Res timestamp of a point in time when low priority components should stop updating in a throttled mode.
    */
@@ -269,9 +277,10 @@ export class Scheduler {
     this._microtaskScheduler = new MicrotaskScheduler(this._handleMicrotaskScheduler);
     this._macrotaskScheduler = new MacrotaskScheduler(this._handleMacrotaskScheduler);
 
-    this.defaultThrottleDuration = 5;
     this._throttleEnabledCounter = 0;
-    this._throttledTimePerFrame = 0;
+    this._throttledFrameDuration = DefaultThrottleDuration;
+    this._throttledFps = 60;
+    this._throttledDiffWindow = 0;
     this._throttledFrameDeadline = 0;
 
     this._currentFrame._rwLock();
@@ -308,17 +317,9 @@ export class Scheduler {
    * Each time throttling is enabled, it increases internal counter that tracks how many times it is enabled, and when
    * counters goes to zero, throttling mode will be disabled.
    */
-  enableThrottling(msPerFrame?: number): void {
-    if (msPerFrame === undefined) {
-      msPerFrame = this.defaultThrottleDuration;
-    }
+  enableThrottling(): void {
     this._throttleEnabledCounter++;
-    if ((this._flags & SchedulerFlags.EnabledThrottling) === 0) {
-      this._flags |= SchedulerFlags.EnabledThrottling;
-      this._throttledTimePerFrame = msPerFrame;
-    } else if (this._throttledTimePerFrame > msPerFrame) {
-      this._throttledTimePerFrame = msPerFrame;
-    }
+    this._flags |= SchedulerFlags.EnabledThrottling;
   }
 
   /**
@@ -441,7 +442,24 @@ export class Scheduler {
     this._flags |= SchedulerFlags.Running;
     this.time = Date.now();
     if ((this._flags & SchedulerFlags.EnabledThrottling) !== 0) {
-      this._throttledFrameDeadline = t + this._throttledTimePerFrame;
+      this.scheduleMacrotask(() => {
+        const elapsed = (window.performance.now() - t) / 1000;
+        this._throttledFps = Math.round((this._throttledFps + (1 / elapsed)) / 2);
+        this._throttledDiffWindow += (this._throttledFps < 45) ? -1 : 1;
+        if (this._throttledDiffWindow > 5) {
+          this._throttledDiffWindow = 0;
+          this._throttledFrameDuration += 0.1;
+        } else if (this._throttledDiffWindow < -5) {
+          this._throttledDiffWindow = 0;
+          this._throttledFrameDuration *= 0.66;
+        }
+        if (this._throttledFrameDuration > MaxThrottleDuration) {
+          this._throttledFrameDuration = MaxThrottleDuration;
+        } else if (this._throttledFrameDuration < MinThrottleDuration) {
+          this._throttledFrameDuration = MinThrottleDuration;
+        }
+      });
+      this._throttledFrameDeadline = t + this._throttledFrameDuration;
     }
 
     const frame = this._nextFrame;
