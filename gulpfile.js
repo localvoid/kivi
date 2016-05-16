@@ -20,6 +20,7 @@ gulp.task("build:es6", function() {
       emitError: false
     }))
     .pipe(ts(Object.assign(tsConfig.compilerOptions, {
+      typescript: require("typescript"),
       target: "es6",
       declaration: true,
     })));
@@ -65,6 +66,7 @@ gulp.task("build:tests", function() {
     entry: "tests/index.spec.ts",
     plugins: [
       rollupTypeScript(Object.assign(tsConfig.compilerOptions, {
+        typescript: require("typescript"),
         target: "es5",
       })),
       rollupReplace({

@@ -10,12 +10,13 @@ import {InvalidatorSubscriptionFlags} from "./misc";
 export class InvalidatorSubscription {
   _flags: number;
   invalidator: Invalidator;
-  private _component: Component<any, any>;
-  private _callback: Function;
+  private _component: Component<any, any> | null;
+  private _callback: Function | null;
   // used for debugging
   private _isCanceled: boolean;
 
-  constructor(flags: number, invalidator: Invalidator, component: Component<any, any>, callback: Function) {
+  constructor(flags: number, invalidator: Invalidator, component: Component<any, any> | null,
+      callback: Function | null) {
     this._flags = flags;
     this.invalidator = invalidator;
     this._component = component;
@@ -31,7 +32,7 @@ export class InvalidatorSubscription {
    */
   cancel(): void {
     let component: Component<any, any>;
-    let subscriptions: InvalidatorSubscription|InvalidatorSubscription[];
+    let subscriptions: InvalidatorSubscription | InvalidatorSubscription[];
     let i: number;
 
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -45,8 +46,8 @@ export class InvalidatorSubscription {
       this.invalidator._removeSubscription(this);
 
       if ((this._flags & InvalidatorSubscriptionFlags.Component) !== 0) {
-        component = this._component;
-        subscriptions = component._subscriptions;
+        component = this._component!;
+        subscriptions = component._subscriptions!;
         if (subscriptions.constructor === InvalidatorSubscription ||
           (subscriptions as InvalidatorSubscription[]).length === 1) {
           if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -68,15 +69,15 @@ export class InvalidatorSubscription {
               throw new Error("Failed to remove subscription from Component: cannot find appropriate subscription.");
             }
           }
-          (subscriptions as InvalidatorSubscription[])[i] = (subscriptions as InvalidatorSubscription[]).pop();
+          (subscriptions as InvalidatorSubscription[])[i] = (subscriptions as InvalidatorSubscription[]).pop()!;
         }
       }
     } else {
       this.invalidator._removeTransientSubscription(this);
 
       if ((this._flags & InvalidatorSubscriptionFlags.Component) !== 0) {
-        component = this._component;
-        subscriptions = component._transientSubscriptions;
+        component = this._component!;
+        subscriptions = component._transientSubscriptions!;
         if (subscriptions.constructor === InvalidatorSubscription ||
           (subscriptions as InvalidatorSubscription[]).length === 1) {
           if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -98,7 +99,7 @@ export class InvalidatorSubscription {
               throw new Error("Failed to remove subscription from Component: cannot find appropriate subscription.");
             }
           }
-          (subscriptions as InvalidatorSubscription[])[i] = (subscriptions as InvalidatorSubscription[]).pop();
+          (subscriptions as InvalidatorSubscription[])[i] = (subscriptions as InvalidatorSubscription[]).pop()!;
         }
       }
     }
@@ -106,9 +107,9 @@ export class InvalidatorSubscription {
 
   _invalidate(): void {
     if ((this._flags & InvalidatorSubscriptionFlags.Component) !== 0) {
-      this._component.invalidate();
+      this._component!.invalidate();
     } else {
-      this._callback();
+      this._callback!();
     }
   }
 }
@@ -125,10 +126,10 @@ export class Invalidator {
    */
   mtime: number;
 
-  private _subscription: InvalidatorSubscription;
-  private _subscriptions: InvalidatorSubscription[];
-  private _transientSubscription: InvalidatorSubscription;
-  private _transientSubscriptions: InvalidatorSubscription[];
+  private _subscription: InvalidatorSubscription | null;
+  private _subscriptions: InvalidatorSubscription[] | null;
+  private _transientSubscription: InvalidatorSubscription | null;
+  private _transientSubscriptions: InvalidatorSubscription[] | null;
 
   constructor() {
     this.mtime = scheduler.clock;
@@ -249,11 +250,11 @@ export class Invalidator {
 
     if (this._subscription === subscription) {
       this._subscription = null;
-    } else if (this._subscriptions.length === 1) {
+    } else if (this._subscriptions!.length === 1) {
       this._subscriptions = null;
     } else {
-      const i = this._subscriptions.indexOf(subscription);
-      this._subscriptions[i] = this._subscriptions.pop();
+      const i = this._subscriptions!.indexOf(subscription);
+      this._subscriptions![i] = this._subscriptions!.pop()!;
     }
   }
 
@@ -265,7 +266,7 @@ export class Invalidator {
         this._transientSubscriptions = null;
       } else {
         const i = this._transientSubscriptions.indexOf(subscription);
-        this._transientSubscriptions[i] = this._transientSubscriptions.pop();
+        this._transientSubscriptions[i] = this._transientSubscriptions.pop()!;
       }
     }
   }

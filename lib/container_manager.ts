@@ -5,7 +5,7 @@ import {ContainerManagerDescriptorDebugFlags} from "./misc";
 export type InsertChildHandler<S> = (manager: ContainerManager<S>,
                                      container: Element,
                                      node: VNode,
-                                     nextRef: Node,
+                                     nextRef: Node | null,
                                      owner: Component<any, any>,
                                      renderFlags: number) => void;
 
@@ -19,7 +19,7 @@ export type ReplaceChildHandler<S> = (manager: ContainerManager<S>,
 export type MoveChildHandler<S> = (manager: ContainerManager<S>,
                                    container: Element,
                                    node: VNode,
-                                   nextRef: Node,
+                                   nextRef: Node | null,
                                    owner: Component<any, any>) => void;
 
 export type RemoveChildHandler<S> = (manager: ContainerManager<S>,
@@ -33,10 +33,10 @@ export type RemoveChildHandler<S> = (manager: ContainerManager<S>,
  * @final
  */
 export class ContainerManagerDescriptor<S> {
-  _insertChild: InsertChildHandler<S>;
-  _replaceChild: ReplaceChildHandler<S>;
-  _moveChild: MoveChildHandler<S>;
-  _removeChild: RemoveChildHandler<S>;
+  _insertChild: InsertChildHandler<S> | null;
+  _replaceChild: ReplaceChildHandler<S> | null;
+  _moveChild: MoveChildHandler<S> | null;
+  _removeChild: RemoveChildHandler<S> | null;
   _debugFlags: number;
 
   constructor() {
@@ -50,7 +50,7 @@ export class ContainerManagerDescriptor<S> {
     }
   }
 
-  create(state: S = null): ContainerManager<S> {
+  create(state?: S): ContainerManager<S> {
     return new ContainerManager<S>(this, state);
   }
 
@@ -88,10 +88,10 @@ export class ContainerManagerDescriptor<S> {
  */
 export class ContainerManager<S> {
   descriptor: ContainerManagerDescriptor<S>;
-  state: S;
+  state: S | null;
 
   constructor(descriptor: ContainerManagerDescriptor<S>, state?: S) {
     this.descriptor = descriptor;
-    this.state = state;
+    this.state = state === undefined ? null : state;
   }
 }

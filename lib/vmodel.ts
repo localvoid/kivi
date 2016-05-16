@@ -50,7 +50,7 @@ export class VModel<D> {
    * When virtual node is mounted on top of existing HTML, all properties from model will be assigned during mounting
    * phase.
    */
-  _props: {[key: string]: any};
+  _props: {[key: string]: any} | null;
   /**
    * Attributes.
    *
@@ -62,30 +62,30 @@ export class VModel<D> {
    * If attribute is prefixed with "xlink:", or "xml:" namespace, it will assign attributes with `setAttributeNS`
    * method and use appropriate namespaces.
    */
-  _attrs: {[key: string]: any};
+  _attrs: {[key: string]: any} | null;
   /**
    * Style in css string format.
    *
    * Style is assigned to DOM nodes with `style.cssText` property, if virtual node represents an element from svg
    * namespace, style will be assigned with `setAttribute("style", "cssText")` method.
    */
-  _style: string;
+  _style: string | null;
   /**
    * Class name.
    *
    * Class name is assigned to DOM nodes with `className` property, if virtual node represents an element from svg
    * namespace, class name will be assigned with `setAttribute("class", "className")` method.
    */
-  _className: string;
+  _className: string | null;
 
   /**
    * Update handler is used to override default reconciliation algorithm.
    */
-  private _updateHandler: VModelUpdateHandler<D>;
+  private _updateHandler: VModelUpdateHandler<D> | null;
   /**
    * Reference to an element that will be cloned when DOM node cloning is enabled.
    */
-  private _ref: Element;
+  private _ref: Element | null;
 
   constructor(tagName: string) {
     this._markFlags = VNodeFlags.VModel;
@@ -260,7 +260,7 @@ export class VModel<D> {
    * Update DOM Node with an update handler.
    */
   update(element: Element, oldProps: D, newProps: D): void {
-    this._updateHandler(element, oldProps, newProps);
+    this._updateHandler!(element, oldProps, newProps);
   }
 }
 

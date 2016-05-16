@@ -10,12 +10,12 @@ export class LifecycleState {
   checkDisposed = -1;
 }
 
-export const LifecycleComponent = new ComponentDescriptor<any, LifecycleState>()
+export const LifecycleComponent = new ComponentDescriptor<null, LifecycleState>()
   .init((c) => {
     c.state = new LifecycleState();
     c.state.checkInit = c.state.lifecycleCounter++;
   })
-  .update((c) => { c.state.checkUpdate = c.state.lifecycleCounter++; })
-  .attached((c) => { c.state.checkAttached = c.state.lifecycleCounter++; })
-  .detached((c) => { c.state.checkDetached = c.state.lifecycleCounter++; })
-  .disposed((c) => { c.state.checkDisposed = c.state.lifecycleCounter++; });
+  .update((c) => { c.state!.checkUpdate = c.state!.lifecycleCounter++; })
+  .attached((c) => { c.state!.checkAttached = c.state!.lifecycleCounter++; })
+  .detached((c) => { c.state!.checkDetached = c.state!.lifecycleCounter++; })
+  .disposed((c) => { c.state!.checkDisposed = c.state!.lifecycleCounter++; });

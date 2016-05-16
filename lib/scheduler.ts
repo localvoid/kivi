@@ -75,23 +75,23 @@ export class FrameTasksGroup {
   /**
    * Array of component arrays indexed by their depth.
    */
-  _componentTasks: Component<any, any>[][];
+  _componentTasks: Array<Component<any, any>[] | null>;
   /**
    * Write DOM task queue.
    */
-  _writeTasks: SchedulerCallback[];
+  _writeTasks: SchedulerCallback[] | null;
   /**
    * Read DOM task queue.
    */
-  _readTasks: SchedulerCallback[];
+  _readTasks: SchedulerCallback[] | null;
   /**
    * Tasks that should be executed when all other tasks are finished.
    */
-  _afterTasks: SchedulerCallback[];
+  _afterTasks: SchedulerCallback[] | null;
   /**
    * Element that should be focused.
    */
-  _focus: Element|VNode;
+  _focus: Element | VNode | null;
 
   constructor() {
     this._flags = 0;
@@ -462,7 +462,7 @@ export class Scheduler {
     do {
       while ((frame._flags & FrameTasksGroupFlags.Read) !== 0) {
         frame._flags &= ~FrameTasksGroupFlags.Read;
-        tasks = frame._readTasks;
+        tasks = frame._readTasks!;
         frame._readTasks = null;
 
         for (i = 0; i < tasks.length; i++) {
@@ -488,7 +488,7 @@ export class Scheduler {
 
         if ((frame._flags & FrameTasksGroupFlags.Write) !== 0) {
           frame._flags &= ~FrameTasksGroupFlags.Write;
-          tasks = frame._writeTasks;
+          tasks = frame._writeTasks!;
           frame._writeTasks = null;
           for (i = 0; i < tasks.length; i++) {
             tasks[i]();
@@ -508,7 +508,7 @@ export class Scheduler {
           if (i === j) {
             updateComponents.pop();
           } else {
-            updateComponents[--i] = updateComponents.pop();
+            updateComponents[--i] = updateComponents.pop()!;
           }
         } else {
           schedulerUpdateComponent(this, component);
@@ -525,7 +525,7 @@ export class Scheduler {
     while ((frame._flags & FrameTasksGroupFlags.After) !== 0) {
       frame._flags &= ~FrameTasksGroupFlags.After;
 
-      tasks = frame._afterTasks;
+      tasks = frame._afterTasks!;
       frame._afterTasks = null;
       for (i = 0; i < tasks.length; i++) {
         tasks[i]();
@@ -580,10 +580,10 @@ export function schedulerUpdateComponent(scheduler: Scheduler, component: Compon
         const newRoot = ((flags & ComponentFlags.VModel) === 0) ?
           createVRoot() :
           (component.descriptor._tag as VModel<any>).createVRoot();
-        component.descriptor._vRender(component, newRoot);
+        component.descriptor._vRender!(component, newRoot);
         schedulerComponentVSync(scheduler, component, component.root as VNode, newRoot, 0);
       } else {
-        component.descriptor._update(component);
+        component.descriptor._update!(component);
       }
       component.mtime = scheduler.clock;
       component.flags &= ~(ComponentFlags.Dirty | ComponentFlags.InUpdateQueue);

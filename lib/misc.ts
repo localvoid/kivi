@@ -202,7 +202,7 @@ export const enum ContainerManagerDescriptorDebugFlags {
   AcceptKeyedChildrenOnly = 1
 }
 
-export type VNodeRecursiveListValue = VNode|VNodeRecursiveList;
+export type VNodeRecursiveListValue = VNode | VNodeRecursiveList | null;
 export interface VNodeRecursiveList extends Array<VNodeRecursiveListValue> {}
 
 /**
@@ -214,7 +214,7 @@ export function filterVNodes(nodes: VNodeRecursiveList): VNode[] {
   while (copy.length > 0) {
     const item = copy.shift();
     if (item !== null) {
-      if (item.constructor === VNode) {
+      if (item!.constructor === VNode) {
         flatten.push(item as any);
       } else {
         copy = (item as any).concat(copy);

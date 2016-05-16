@@ -37,7 +37,7 @@ export class VNode {
    * Tag name of the element, or reference to VModel if virtual node represents an element, or ComponentDescriptor
    * if it represents a component.
    */
-  _tag: string|VModel<any>|ComponentDescriptor<any, any>;
+  _tag: string | VModel<any> | ComponentDescriptor<any, any> | null;
   /**
    * Children reconciliation algorithm is using key property to find the same node in the previous children array. Key
    * should be unique among its siblings.
@@ -65,37 +65,37 @@ export class VNode {
    * If attribute is prefixed with "xlink:", or "xml:" namespace, it will assign attributes with `setAttributeNS`
    * method and use appropriate namespaces.
    */
-  _attrs: {[key: string]: any};
+  _attrs: {[key: string]: any} | null;
   /**
    * Style in css string format.
    *
    * Style is assigned to DOM nodes with `style.cssText` property, if virtual node represents an element from svg
    * namespace, style will be assigned with `setAttribute("style", "cssText")` method.
    */
-  _style: string;
+  _style: string | null;
   /**
    * Class name.
    *
    * Class name is assigned to DOM nodes with `className` property, if virtual node represents an element from svg
    * namespace, class name will be assigned with `setAttribute("class", "className")` method.
    */
-  _className: string;
+  _className: string | null;
   /**
    * Children property can contain flat array of children virtual nodes, or text if it contains a single text node
    * child. If virtual node represents an input field, children property will contain input value.
    */
-  _children: VNode[]|string|boolean;
+  _children: VNode[] | string | boolean | null;
   /**
    * Reference to HTML Node. It will be available after virtual node is created or synced. Each time VNode is synced,
    * reference to the HTML Node is transferred from old virtual node to the new one.
    */
-  ref: Node;
+  ref: Node | null;
   /**
    * cref property can be a reference to a Component or Container Manager. If virtual node is a Component, then cref
    * will be available after virtual node is created or synced. Each time virtual node is synced, reference to a
    * Component is transferred from old virtual node to the new one.
    */
-  cref: Component<any, any>|ContainerManager<any>;
+  cref: Component<any, any> | ContainerManager<any> | null;
 
   /**
    * Debug properties are used because VNode properties are frozen.
@@ -104,7 +104,7 @@ export class VNode {
    */
   _debugProperties: {flags: number};
 
-  constructor(flags: number, tag: string|VModel<any>|ComponentDescriptor<any, any>, props: any) {
+  constructor(flags: number, tag: string | VModel<any> | ComponentDescriptor<any, any> | null, props: any) {
     this._flags = flags;
     this._tag = tag;
     this._key = null;
@@ -171,7 +171,7 @@ export class VNode {
         if (model._props !== null) {
           const keys = Object.keys(props);
           for (let i = 0; i < keys.length; i++) {
-            if (model._attrs.hasOwnProperty(keys[i])) {
+            if (model._props.hasOwnProperty(keys[i])) {
               throw new Error(`Failed to set props on VNode: VNode is using VModel that uses the same` +
                               ` property "${keys[i]}".`);
             }
@@ -218,7 +218,7 @@ export class VNode {
         if (model._props !== null) {
           const keys = Object.keys(props);
           for (let i = 0; i < keys.length; i++) {
-            if (model._attrs.hasOwnProperty(keys[i])) {
+            if (model._props.hasOwnProperty(keys[i])) {
               throw new Error(`Failed to set props on VNode: VNode is using VModel that uses the same` +
                               ` property "${keys[i]}".`);
             }
@@ -970,11 +970,11 @@ export function vNodeDispose(vnode: VNode): void {
   }
 }
 
-export function vNodeInsertChild(parent: VNode, node: VNode, nextRef: Node, owner: Component<any, any>,
+export function vNodeInsertChild(parent: VNode, node: VNode, nextRef: Node | null, owner: Component<any, any>,
     renderFlags: number): void {
   if (((parent._flags & VNodeFlags.ManagedContainer) !== 0) &&
       (parent.cref as ContainerManager<any>).descriptor._insertChild !== null) {
-    (parent.cref as ContainerManager<any>).descriptor._insertChild(
+    (parent.cref as ContainerManager<any>).descriptor._insertChild!(
       parent.cref as ContainerManager<any>, parent.ref as Element, node, nextRef, owner, renderFlags);
   } else {
     insertVNodeBefore(parent.ref as Element, node, nextRef, owner, renderFlags);
@@ -985,17 +985,17 @@ export function vNodeReplaceChild(parent: VNode, newNode: VNode, refNode: VNode,
     renderFlags: number): void {
   if (((parent._flags & VNodeFlags.ManagedContainer) !== 0) &&
       (parent.cref as ContainerManager<any>).descriptor._replaceChild !== null) {
-    (parent.cref as ContainerManager<any>).descriptor._replaceChild(
+    (parent.cref as ContainerManager<any>).descriptor._replaceChild!(
       parent.cref as ContainerManager<any>, parent.ref as Element, newNode, refNode, owner, renderFlags);
   } else {
     replaceVNode(parent.ref as Element, newNode, refNode, owner, renderFlags);
   }
 }
 
-export function vNodeMoveChild(parent: VNode, node: VNode, nextRef: Node, owner: Component<any, any>): void {
+export function vNodeMoveChild(parent: VNode, node: VNode, nextRef: Node | null, owner: Component<any, any>): void {
   if (((parent._flags & VNodeFlags.ManagedContainer) !== 0) &&
       (parent.cref as ContainerManager<any>).descriptor._moveChild !== null) {
-    (parent.cref as ContainerManager<any>).descriptor._moveChild(
+    (parent.cref as ContainerManager<any>).descriptor._moveChild!(
       parent.cref as ContainerManager<any>, parent.ref as Element, node, nextRef, owner);
   } else {
     moveVNode(parent.ref as Element, node, nextRef, owner);
@@ -1005,7 +1005,7 @@ export function vNodeMoveChild(parent: VNode, node: VNode, nextRef: Node, owner:
 export function vNodeRemoveChild(parent: VNode, node: VNode, owner: Component<any, any>): void {
   if (((parent._flags & VNodeFlags.ManagedContainer) !== 0) &&
       (parent.cref as ContainerManager<any>).descriptor._removeChild !== null) {
-    (parent.cref as ContainerManager<any>).descriptor._removeChild(
+    (parent.cref as ContainerManager<any>).descriptor._removeChild!(
       parent.cref as ContainerManager<any>, parent.ref as Element, node, owner);
   } else {
     removeVNode(parent.ref as Element, node, owner);
@@ -1043,11 +1043,11 @@ export function vNodeFreeze(vnode: VNode): void {
  *
  * Can be used as a generic method to insert nodes in ContainerManager.
  */
-export function insertVNodeBefore(container: Element, node: VNode, nextRef: Node, owner: Component<any, any>,
+export function insertVNodeBefore(container: Element, node: VNode, nextRef: Node | null, owner: Component<any, any>,
     renderFlags: number): void {
   if (node.ref === null) {
     vNodeInstantiate(node, owner);
-    container.insertBefore(node.ref, nextRef);
+    container.insertBefore(node.ref!, nextRef!);
     vNodeAttached(node);
     vNodeRender(node, owner, renderFlags);
   } else {
@@ -1056,7 +1056,7 @@ export function insertVNodeBefore(container: Element, node: VNode, nextRef: Node
         throw new Error("Failed to replace node: VNode instance already has been used to create DOM node.");
       }
     }
-    container.insertBefore(node.ref, nextRef);
+    container.insertBefore(node.ref, nextRef!);
     vNodeAttach(node);
     if ((renderFlags & RenderFlags.ShallowUpdate) === 0) {
       schedulerUpdateComponent(scheduler, node.cref as Component<any, any>,
@@ -1074,7 +1074,7 @@ export function replaceVNode(container: Element, newNode: VNode, refNode: VNode,
     renderFlags: number): void {
   if (newNode.ref === null) {
     vNodeInstantiate(newNode, owner);
-    container.replaceChild(newNode.ref, refNode.ref);
+    container.replaceChild(newNode.ref!, refNode.ref!);
     vNodeAttached(newNode);
     vNodeRender(newNode, owner, renderFlags);
   } else {
@@ -1083,7 +1083,7 @@ export function replaceVNode(container: Element, newNode: VNode, refNode: VNode,
         throw new Error("Failed to replace node: VNode instance already has been used to create DOM node.");
       }
     }
-    container.replaceChild(newNode.ref, refNode.ref);
+    container.replaceChild(newNode.ref, refNode.ref!);
     vNodeAttach(newNode);
     if ((renderFlags & RenderFlags.ShallowUpdate) === 0) {
       schedulerUpdateComponent(scheduler, newNode.cref as Component<any, any>,
@@ -1098,8 +1098,8 @@ export function replaceVNode(container: Element, newNode: VNode, refNode: VNode,
  *
  * Can be used as a generic method to move nodes in ContainerManager.
  */
-export function moveVNode(container: Element, node: VNode, nextRef: Node, owner: Component<any, any>): void {
-  container.insertBefore(node.ref, nextRef);
+export function moveVNode(container: Element, node: VNode, nextRef: Node | null, owner: Component<any, any>): void {
+  container.insertBefore(node.ref!, nextRef!);
 }
 
 /**
@@ -1108,7 +1108,7 @@ export function moveVNode(container: Element, node: VNode, nextRef: Node, owner:
  * Can be used as a generic method to remove nodes in ContainerManager.
  */
 export function removeVNode(container: Element, node: VNode, owner: Component<any, any>): void {
-  container.removeChild(node.ref);
+  container.removeChild(node.ref!);
   vNodeDispose(node);
 }
 

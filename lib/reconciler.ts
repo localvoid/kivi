@@ -66,7 +66,7 @@ function _syncVNodes(a: VNode, b: VNode, owner: Component<any, any>, renderFlags
 
   if ((flags & VNodeFlags.Text) !== 0) {
     if (a._props !== b._props) {
-      a.ref.nodeValue = b._props as string;
+      a.ref!.nodeValue = b._props as string;
     }
   } else if ((flags & (VNodeFlags.Element | VNodeFlags.Root)) !== 0) {
     if ((flags & VNodeFlags.VModelUpdateHandler) === 0) {
@@ -174,16 +174,16 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string, owne
 
   if (typeof a === "string") {
     if (b === null) {
-      parent.ref.removeChild(parent.ref.firstChild);
+      parent.ref!.removeChild(parent.ref!.firstChild);
     } else if (typeof b === "string") {
-      let c = parent.ref.firstChild;
+      let c = parent.ref!.firstChild;
       if (c) {
         c.nodeValue = b;
       } else {
-        parent.ref.textContent = b;
+        parent.ref!.textContent = b;
       }
     } else {
-      parent.ref.removeChild(parent.ref.firstChild);
+      parent.ref!.removeChild(parent.ref!.firstChild);
       while (i < b.length) {
         vNodeInsertChild(parent, b[i++], null, owner, renderFlags);
       }
@@ -194,7 +194,7 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string, owne
         vNodeRemoveChild(parent, a[i++], owner);
       }
     }
-    parent.ref.textContent = b;
+    parent.ref!.textContent = b;
   } else {
     if (a !== null && a.length !== 0) {
       if (b === null || b.length === 0) {
@@ -374,7 +374,7 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
   let aNode: VNode;
   let bNode: VNode;
   let nextPos: number;
-  let next: Node;
+  let next: Node | null;
 
   // Sync similar nodes at the beginning.
   while (aStart <= aEnd && bStart <= bEnd) {
@@ -687,10 +687,10 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
   let aEndNode = a[aEnd];
   let bEndNode = b[bEnd];
   let i: number;
-  let j: number;
+  let j: number | undefined;
   let stop = false;
   let nextPos: number;
-  let next: Node;
+  let next: Node | null;
   let aNode: VNode;
   let bNode: VNode;
   let lastTarget = 0;
@@ -967,7 +967,7 @@ function _lis(a: number[]): number[] {
 /**
  * Sync HTML attributes with static shape.
  */
-function syncStaticShapeAttrs(node: Element, a: {[key: string]: any}, b: {[key: string]: any}): void {
+function syncStaticShapeAttrs(node: Element, a: {[key: string]: any} | null, b: {[key: string]: any} | null): void {
   if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
     if (a === null || b === null) {
       throw new Error("Failed to update attrs with static shape: attrs object have dynamic shape.");
@@ -981,12 +981,12 @@ function syncStaticShapeAttrs(node: Element, a: {[key: string]: any}, b: {[key: 
   for (i = 0; i < keys.length; i++) {
     key = keys[i];
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      if (!b.hasOwnProperty(key)) {
+      if (!b!.hasOwnProperty(key)) {
         throw new Error("Failed to update attrs with static shape: attrs object have dynamic shape.");
       }
     }
-    const bValue = b[key];
-    if (a[key] !== bValue) {
+    const bValue = b![key];
+    if (a![key] !== bValue) {
       setAttr(node, key, bValue);
     }
   }
@@ -995,7 +995,7 @@ function syncStaticShapeAttrs(node: Element, a: {[key: string]: any}, b: {[key: 
     keys = Object.keys(b);
     for (i = 0; i < keys.length; i++) {
       key = keys[i];
-      if (!a.hasOwnProperty(key)) {
+      if (!a!.hasOwnProperty(key)) {
         throw new Error("Failed to update attrs with static shape: attrs object have dynamic shape.");
       }
     }
@@ -1005,7 +1005,7 @@ function syncStaticShapeAttrs(node: Element, a: {[key: string]: any}, b: {[key: 
 /**
  * Sync attributes with dynamic shape.
  */
-function syncDynamicShapeAttrs(node: Element, a: {[key: string]: any}, b: {[key: string]: any}): void {
+function syncDynamicShapeAttrs(node: Element, a: {[key: string]: any} | null, b: {[key: string]: any} | null): void {
   let i: number;
   let keys: string[];
   let key: string;

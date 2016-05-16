@@ -54,6 +54,6 @@
     "rollup-plugin-replace": "^1.1.0",
     "rollup-plugin-typescript": "^0.7.5",
     "tslint": "^3.9.0",
-    "typescript": "^1.8.10"
+    "typescript": "^1.9.0-dev.20160516"
   }
 }

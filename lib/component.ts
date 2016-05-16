@@ -55,37 +55,37 @@ export class ComponentDescriptor<P, S> {
   /**
    * Lifecycle handler init.
    */
-  _init: (component: Component<P, S>) => void;
+  _init: ((component: Component<P, S>) => void) | null;
   /**
    * New props received handler overrides default props received behavior and it should mark component as dirty if new
    * received props will cause change in component's representation.
    */
-  _newPropsReceived: (component: Component<P, S>, newProps: P) => void;
+  _newPropsReceived: ((component: Component<P, S>, newProps: P) => void) | null;
   /**
    * Lifecycle handler update.
    */
-  _update: (component: Component<P, S>) => void;
+  _update: ((component: Component<P, S>) => void) | null;
   /**
    * Default virtual dom render function.
    */
-  _vRender: (component: Component<P, S>, root: VNode) => void;
+  _vRender: ((component: Component<P, S>, root: VNode) => void) | null;
   /**
    * Lifecycle handler attached.
    */
-  _attached: (component: Component<P, S>) => void;
+  _attached: ((component: Component<P, S>) => void) | null;
   /**
    * Lifecycle handler detached.
    */
-  _detached: (component: Component<P, S>) => void;
+  _detached: ((component: Component<P, S>) => void) | null;
   /**
    * Lifecycle hdnaler disposed.
    */
-  _disposed: (component: Component<P, S>) => void;
+  _disposed: ((component: Component<P, S>) => void) | null;
 
   /**
    * Pool of recycled components.
    */
-  _recycledPool: Component<P, S>[];
+  _recycledPool: Component<P, S>[] | null;
   /**
    * Maximum number of recycled components (recycled pool size).
    */
@@ -403,7 +403,7 @@ export class ComponentDescriptor<P, S> {
 
     if ("<@KIVI_COMPONENT_RECYCLING@>" !== "COMPONENT_RECYCLING_ENABLED" ||
         ((this._flags & ComponentDescriptorFlags.EnabledRecycling) === 0) ||
-        (this._recycledPool.length === 0)) {
+        (this._recycledPool!.length === 0)) {
 
       if ((this._flags & ComponentDescriptorFlags.VModel) === 0) {
         element = ((this._flags & ComponentDescriptorFlags.Svg) === 0) ?
@@ -421,7 +421,7 @@ export class ComponentDescriptor<P, S> {
         this._init(component);
       }
     } else {
-      component = this._recycledPool.pop();
+      component = this._recycledPool!.pop()!;
       component.depth = parent === undefined ? 0 : parent.depth + 1;
     }
 
@@ -486,19 +486,19 @@ export class Component<P, S> {
   /**
    * Component's props.
    */
-  props: P;
+  props: P | null;
   /**
    * Component's state.
    */
-  state: S;
+  state: S | null;
   /**
    * Root node can contain a virtual dom root if Component represents a DOM subtree, or Canvas context if Component is
    * a Canvas object.
    */
-  root: VNode|CanvasRenderingContext2D;
+  root: VNode | CanvasRenderingContext2D | null;
 
-  _subscriptions: InvalidatorSubscription[]|InvalidatorSubscription;
-  _transientSubscriptions: InvalidatorSubscription[]|InvalidatorSubscription;
+  _subscriptions: InvalidatorSubscription[] | InvalidatorSubscription | null;
+  _transientSubscriptions: InvalidatorSubscription[] | InvalidatorSubscription | null;
 
   constructor(flags: number, descriptor: ComponentDescriptor<P, S>, element: Element, parent?: Component<any, any>,
       props?: P) {
@@ -613,7 +613,12 @@ export class Component<P, S> {
       newRoot = ((this.flags & ComponentFlags.VModel) === 0) ?
         createVRoot() :
         (this.descriptor._tag as VModel<any>).createVRoot();
-      this.descriptor._vRender(this, newRoot);
+      if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+        if (this.descriptor._vRender === null) {
+          throw new Error("Failed to sync: Component doesn't implement vRender method.");
+        }
+      }
+      this.descriptor._vRender!(this, newRoot);
     }
 
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -645,7 +650,12 @@ export class Component<P, S> {
       newRoot = ((this.flags & ComponentFlags.VModel) === 0) ?
         createVRoot() :
         (this.descriptor._tag as VModel<any>).createVRoot();
-      this.descriptor._vRender(this, newRoot);
+      if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+        if (this.descriptor._vRender === null) {
+          throw new Error("Failed to sync: Component doesn't implement vRender method.");
+        }
+      }
+      this.descriptor._vRender!(this, newRoot);
     }
 
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -711,7 +721,7 @@ export class Component<P, S> {
 
     if ("<@KIVI_COMPONENT_RECYCLING@>" !== "COMPONENT_RECYCLING_ENABLED" ||
         ((this.flags & ComponentFlags.EnabledRecycling) === 0) ||
-        (this.descriptor._recycledPool.length >= this.descriptor._maxRecycled)) {
+        (this.descriptor._recycledPool!.length >= this.descriptor._maxRecycled)) {
       this.flags |= ComponentFlags.Disposed;
 
       if (this.root !== null && ((this.flags & ComponentFlags.Canvas2D) === 0)) {
@@ -727,7 +737,7 @@ export class Component<P, S> {
       }
     } else {
       this.detach();
-      this.descriptor._recycledPool.push(this);
+      this.descriptor._recycledPool!.push(this);
     }
   }
 
