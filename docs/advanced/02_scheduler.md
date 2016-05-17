@@ -60,7 +60,7 @@ class Data {
 }
 
 const MyComponent = new ComponentDescriptor<Data, any>()
-  .newPropsReceived((c, newProps) => {
+  .newPropsReceived((c, oldProps, newProps) => {
     if (c.mtime < newProps.mtime) {
       c.markDirty();
     }

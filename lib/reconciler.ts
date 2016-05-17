@@ -20,8 +20,8 @@ export class Reconciler {
     this.flags = 0;
   }
 
-  sync(a: VNode, b: VNode, owner: Component<any, any>, renderFlags: number): void {
-    _syncVNodes(a, b, owner, this.flags | renderFlags);
+  sync(a: VNode, b: VNode, renderFlags: number, owner?: Component<any, any>): void {
+    _syncVNodes(a, b, this.flags | renderFlags, owner);
   }
 }
 
@@ -31,7 +31,7 @@ export class Reconciler {
  * When node `a` is synced with node `b`, `a` node should be considered as destroyed, and any access to it after sync
  * is an undefined behavior.
  */
-function _syncVNodes(a: VNode, b: VNode, owner: Component<any, any>, renderFlags: number): void {
+function _syncVNodes(a: VNode, b: VNode, renderFlags: number, owner: Component<any, any> | undefined): void {
   if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
     if ((a._debugProperties.flags & (VNodeDebugFlags.Rendered | VNodeDebugFlags.Mounted)) === 0) {
       throw new Error("Failed to sync VNode: VNode should be rendered or mounted before sync.");
@@ -106,7 +106,7 @@ function _syncVNodes(a: VNode, b: VNode, owner: Component<any, any>, renderFlags
       if ((flags & VNodeFlags.Root) === 0) {
         (a._tag as VModel<any>).update(ref, a._props, b._props);
       } else {
-        (owner.descriptor._tag as VModel<any>).update(ref, a._props, b._props);
+        (owner!.descriptor._tag as VModel<any>).update(ref, a._props, b._props);
       }
     }
 
@@ -116,8 +116,8 @@ function _syncVNodes(a: VNode, b: VNode, owner: Component<any, any>, renderFlags
           a,
           a._children as VNode[] | string,
           b._children as VNode[] | string,
-          owner,
-          renderFlags);
+          renderFlags,
+          owner);
       }
     } else {
       if ((flags & VNodeFlags.TextInputElement) !== 0) {
@@ -165,8 +165,8 @@ function _canSyncVNodes(a: VNode, b: VNode): boolean {
 /**
  * Sync old children list with the new one.
  */
-function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string, owner: Component<any, any>,
-     renderFlags: number): void {
+function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string, renderFlags: number,
+    owner: Component<any, any> | undefined): void {
   let aNode: VNode;
   let bNode: VNode;
   let i = 0;
@@ -185,7 +185,7 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string, owne
     } else {
       parent.ref!.removeChild(parent.ref!.firstChild);
       while (i < b.length) {
-        vNodeInsertChild(parent, b[i++], null, owner, renderFlags);
+        vNodeInsertChild(parent, b[i++], null, renderFlags, owner);
       }
     }
   } else if (typeof b === "string") {
@@ -209,9 +209,9 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string, owne
           bNode = b[0];
 
           if (_canSyncVNodes(aNode, bNode)) {
-            _syncVNodes(aNode, bNode, owner, renderFlags);
+            _syncVNodes(aNode, bNode, renderFlags, owner);
           } else {
-            vNodeReplaceChild(parent, bNode, aNode, owner, renderFlags);
+            vNodeReplaceChild(parent, bNode, aNode, renderFlags, owner);
           }
         } else if (a.length === 1) {
           // Fast path when a have 1 child.
@@ -229,11 +229,11 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string, owne
             while (i < b.length) {
               bNode = b[i++];
               if (_canSyncVNodes(aNode, bNode)) {
-                _syncVNodes(aNode, bNode, owner, renderFlags);
+                _syncVNodes(aNode, bNode, renderFlags, owner);
                 synced = true;
                 break;
               }
-              vNodeInsertChild(parent, bNode, aNode.ref, owner, renderFlags);
+              vNodeInsertChild(parent, bNode, aNode.ref, renderFlags, owner);
             }
           } else {
             while (i < b.length) {
@@ -245,16 +245,16 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string, owne
                                     " same key.");
                   }
                 }
-                _syncVNodes(aNode, bNode, owner, renderFlags);
+                _syncVNodes(aNode, bNode, renderFlags, owner);
                 synced = true;
                 break;
               }
-              vNodeInsertChild(parent, bNode, aNode.ref, owner, renderFlags);
+              vNodeInsertChild(parent, bNode, aNode.ref, renderFlags, owner);
             }
           }
           if (synced) {
             while (i < b.length) {
-              vNodeInsertChild(parent, b[i++], null, owner, renderFlags);
+              vNodeInsertChild(parent, b[i++], null, renderFlags, owner);
             }
           } else {
             vNodeRemoveChild(parent, aNode, owner);
@@ -275,7 +275,7 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string, owne
             while (i < a.length) {
               aNode = a[i++];
               if (_canSyncVNodes(aNode, bNode)) {
-                _syncVNodes(aNode, bNode, owner, renderFlags);
+                _syncVNodes(aNode, bNode, renderFlags, owner);
                 synced = true;
                 break;
               }
@@ -291,7 +291,7 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string, owne
                                     " same key.");
                   }
                 }
-                _syncVNodes(aNode, bNode, owner, renderFlags);
+                _syncVNodes(aNode, bNode, renderFlags, owner);
                 synced = true;
                 break;
               }
@@ -304,21 +304,21 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string, owne
               vNodeRemoveChild(parent, a[i++], owner);
             }
           } else {
-            vNodeInsertChild(parent, bNode, null, owner, renderFlags);
+            vNodeInsertChild(parent, bNode, null, renderFlags, owner);
           }
         } else {
           // a and b have more than 1 child.
           if ((parent._flags & VNodeFlags.TrackByKeyChildren) === 0) {
-            _syncChildrenNaive(parent, a, b, owner, renderFlags);
+            _syncChildrenNaive(parent, a, b, renderFlags, owner);
           } else {
-            _syncChildrenTrackByKeys(parent, a, b, owner, renderFlags);
+            _syncChildrenTrackByKeys(parent, a, b, renderFlags, owner);
           }
         }
       }
     } else if (b !== null && b.length > 0) {
       // a is empty, insert all children from b.
       for (i = 0; i < b.length; i++) {
-        vNodeInsertChild(parent, b[i], null, owner, renderFlags);
+        vNodeInsertChild(parent, b[i], null, renderFlags, owner);
       }
     }
   }
@@ -365,8 +365,8 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string, owne
  * Length of the old list is larger than length of the new list, remove remaining nodes from the old list.
  *
  */
-function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Component<any, any>,
-    renderFlags: number): void {
+function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], renderFlags: number,
+    owner: Component<any, any> | undefined): void {
   let aStart = 0;
   let bStart = 0;
   let aEnd = a.length - 1;
@@ -388,7 +388,7 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
     aStart++;
     bStart++;
 
-    _syncVNodes(aNode, bNode, owner, renderFlags);
+    _syncVNodes(aNode, bNode, renderFlags, owner);
   }
 
   // Sync similar nodes at the end.
@@ -403,7 +403,7 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
     aEnd--;
     bEnd--;
 
-    _syncVNodes(aNode, bNode, owner, renderFlags);
+    _syncVNodes(aNode, bNode, renderFlags, owner);
   }
 
   if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -423,9 +423,9 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
     aNode = a[aStart++];
     bNode = b[bStart++];
     if (_canSyncVNodes(aNode, bNode)) {
-      _syncVNodes(aNode, bNode, owner, renderFlags);
+      _syncVNodes(aNode, bNode, renderFlags, owner);
     } else {
-      vNodeReplaceChild(parent, bNode, aNode, owner, renderFlags);
+      vNodeReplaceChild(parent, bNode, aNode, renderFlags, owner);
     }
   }
 
@@ -439,7 +439,7 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
     nextPos = bEnd + 1;
     next = nextPos < b.length ? b[nextPos].ref : null;
     do {
-      vNodeInsertChild(parent, b[bStart++], next, owner, renderFlags);
+      vNodeInsertChild(parent, b[bStart++], next, renderFlags, owner);
     } while (bStart <= bEnd);
   }
 }
@@ -676,8 +676,8 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
  *
  * That is how children reconciliation algorithm is working in one of the fastest virtual dom libraries :)
  */
-function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: Component<any, any>,
-    renderFlags: number): void {
+function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], renderFlags: number,
+    owner: Component<any, any> | undefined): void {
   let aStart = 0;
   let bStart = 0;
   let aEnd = a.length - 1;
@@ -708,7 +708,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
           throw new Error("VNode sync children failed: cannot sync two different children with the same key.");
         }
       }
-      _syncVNodes(aStartNode, bStartNode, owner, renderFlags);
+      _syncVNodes(aStartNode, bStartNode, renderFlags, owner);
       aStart++;
       bStart++;
       if (aStart > aEnd || bStart > bEnd) {
@@ -726,7 +726,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
           throw new Error("VNode sync children failed: cannot sync two different children with the same key.");
         }
       }
-      _syncVNodes(aEndNode, bEndNode, owner, renderFlags);
+      _syncVNodes(aEndNode, bEndNode, renderFlags, owner);
       aEnd--;
       bEnd--;
       if (aStart > aEnd || bStart > bEnd) {
@@ -744,7 +744,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
           throw new Error("VNode sync children failed: cannot sync two different children with the same key.");
         }
       }
-      _syncVNodes(aStartNode, bEndNode, owner, renderFlags);
+      _syncVNodes(aStartNode, bEndNode, renderFlags, owner);
       nextPos = bEnd + 1;
       next = nextPos < b.length ? b[nextPos].ref : null;
       vNodeMoveChild(parent, bEndNode, next, owner);
@@ -768,7 +768,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
           throw new Error("VNode sync children failed: cannot sync two different children with the same key.");
         }
       }
-      _syncVNodes(aEndNode, bStartNode, owner, renderFlags);
+      _syncVNodes(aEndNode, bStartNode, renderFlags, owner);
       vNodeMoveChild(parent, bStartNode, aStartNode.ref, owner);
       aEnd--;
       bStart++;
@@ -787,7 +787,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
     nextPos = bEnd + 1;
     next = nextPos < b.length ? b[nextPos].ref : null;
     while (bStart <= bEnd) {
-      vNodeInsertChild(parent, b[bStart++], next, owner, renderFlags);
+      vNodeInsertChild(parent, b[bStart++], next, renderFlags, owner);
     }
   } else if (bStart > bEnd) {
     // All nodes from b are synced, remove the rest from a.
@@ -828,7 +828,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
                 throw new Error("VNode sync children failed: cannot sync two different children with the same key.");
               }
             }
-            _syncVNodes(aNode, bNode, owner, renderFlags);
+            _syncVNodes(aNode, bNode, renderFlags, owner);
             removed = false;
             break;
           }
@@ -863,7 +863,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
               throw new Error("VNode sync children failed: cannot sync two different children with the same key.");
             }
           }
-          _syncVNodes(aNode, bNode, owner, renderFlags);
+          _syncVNodes(aNode, bNode, renderFlags, owner);
         } else {
           vNodeRemoveChild(parent, aNode, owner);
           removeOffset++;
@@ -881,7 +881,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
           node = b[pos];
           nextPos = pos + 1;
           next = nextPos < b.length ? b[nextPos].ref : null;
-          vNodeInsertChild(parent, node, next, owner, renderFlags);
+          vNodeInsertChild(parent, node, next, renderFlags, owner);
         } else {
           if (j < 0 || i !== seq[j]) {
             pos = i + bStart;
@@ -901,7 +901,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
           node = b[pos];
           nextPos = pos + 1;
           next = nextPos < b.length ? b[nextPos].ref : null;
-          vNodeInsertChild(parent, node, next, owner, renderFlags);
+          vNodeInsertChild(parent, node, next, renderFlags, owner);
         }
       }
     }

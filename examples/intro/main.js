@@ -1,5 +1,7 @@
 const Main = new kivi.ComponentDescriptor()
-  .vRender((c, root) => { root.children(`Hello ${c.props}`); });
+  .update((c, props) => {
+    c.vSync(c.createVRoot().children(`Hello ${props}`));
+  });
 
 document.addEventListener("DOMContentLoaded", () => {
   kivi.injectComponent(Main, document.body, "world");

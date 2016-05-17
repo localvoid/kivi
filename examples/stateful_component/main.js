@@ -1,17 +1,14 @@
 const Main = new kivi.ComponentDescriptor()
-  .init((c) => {
-    c.state = {
-      elapsedSeconds: 0
-    };
-
+  .createState((c) => ({elapsedSeconds: 0}))
+  .init((c, props, state) => {
     const startTime = Date.now();
     setInterval(() => {
-      c.state.elapsedSeconds = Date.now() - startTime;
+      state.elapsedSeconds = Date.now() - startTime;
       c.invalidate();
     }, 50);
   })
-  .vRender((c, root) => {
-    root.children(`Elapsed time: ${(c.state.elapsedSeconds / 1000).toFixed(1)}`);
+  .update((c, props, state) => {
+    c.vSync(c.createVRoot().children(`Elapsed time: ${(state.elapsedSeconds / 1000).toFixed(1)}`));
   });
 
 document.addEventListener("DOMContentLoaded", () => {

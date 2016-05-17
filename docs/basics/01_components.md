@@ -11,7 +11,8 @@ to its descriptor.
 
 ## ComponentDescriptor
 
-For typescript developers, ComponentDescriptor has two parameteric types: `P` for props type and `S` for state type.
+TypeScript developers can provide types for props and state, ComponentDescriptor has two parameteric types: `P` for
+props type and `S` for state type.
 
 To create component instances, we can use one of the two methods: `createComponent`, or `createRootComponent`. The
 difference between them is that root component doesn't have any parent component. For example:
@@ -37,13 +38,11 @@ class State {
 
 const MyComponent = new ComponentDescriptor<Props, State>()
   .canvas()
-  .init((c) => {
-    c.state = new State(c.props);
-  })
-  .update((c) => {
+  .createState((c, props) => new State(props))
+  .update((c, props, state) => {
     const ctx = c.get2DContext();
     ctx.fillStyle = 'rgba(0, 0, 0, 1)';
-    ctx.fillRect(c.props.x, c.props.y, c.state.xy, c.state.xy);
+    ctx.fillRect(props.x, props.y, state.xy, state.xy);
   });
 
 const componentInstance = MyComponent.createRootComponent(new Data(10, 20));
@@ -55,7 +54,7 @@ Component descriptor instance has many different methods to set properties, all 
 chaining. For example:
 
 ```ts
-const MyComponent = new ComponentDescriptor<number, any>()
+const MyComponent = new ComponentDescriptor<number, void>()
   .svg()
   .tagName("a")
   .update((c) => { c.element.width = this.props; });
@@ -70,22 +69,19 @@ ComponentDescriptor<P, S>.svg(): ComponentDescriptor<P, S>;
 
 ## Using Virtual DOM
 
-To use virtual dom in components, we need to declare a function `vRender` in `ComponentDescriptor` that will render
-components representation with a virtual dom. For example:
+To use virtual dom in components, we need to call a `vSync` method that will sync component's representation with a
+virtual dom. For example:
 
 ```ts
-const MyComponent = new ComponentDescriptor<{title: string, content: string}, any>()
-  .vRender((c, root) => {
-    root.children([
-      createVElement("h1").children(c.props.title),
-      createVElement("p").children(c.props.content),
-    ]);
+const MyComponent = new ComponentDescriptor<{title: string, content: string}, void>()
+  .update((c, props) => {
+    c.vSync(c.createVRoot()
+      .children([
+        createVElement("h1").children(props.title),
+        createVElement("p").children(props.content),
+      ]));
   });
 ```
-
-First parameter of a render function is a component instance, and the second is a virtual node representing a root
-element.
-
 To create virtual nodes that represent components, use component descriptor method `createVNode(data?: D)`. For example:
 
 ```ts
@@ -101,7 +97,7 @@ To use canvas as a surface for component representation, enable canvas mode with
 `descriptor.canvas()`. For example:
 
 ```ts
-const MyCanvasComponent = new ComponentDescriptor<any, any>()
+const MyCanvasComponent = new ComponentDescriptor<void, void>()
   .canvas()
   .update((c) => {
     const ctx = c.get2DContext();
@@ -112,22 +108,37 @@ const MyCanvasComponent = new ComponentDescriptor<any, any>()
 
 ## Lifecycle methods
 
+### createState
+
+Create state handler will be invoked immediately after component is instantiated and it should return initial state.
+
+```ts
+const MyComponent = new ComponentDescriptor<number, number>()
+  .createState((c, props) => props * props)
+  .update((c, props, state) => {
+    c.vSync(c.createVRoot().children(state.toString()));
+  });
+```
+
+
 ### init
 
-Init handler will be invoked immediately after component is instantiated, `element` and `props` properties will be
+Init handler will be invoked after component state is created, `element` and `props` properties will be
 initialized before init handler is invoked.
 
 ```ts
-const MyComponent = new ComponentDescriptor<any, any>()
+const MyComponent = new ComponentDescriptor<void, void>()
   .tagName("button")
-  .init((c) => {
+  .init((c, props, state) => {
     c.element.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
       console.log("clicked");
     });
   })
-  .vRender((c, root) => { root.children("click me"); });
+  .update((c) => {
+    c.vSync(c.createVRoot().children("click me"));
+  });
 ```
 
 ### update
@@ -139,8 +150,10 @@ Update handler completely overrides default update behavior, so to continue usin
 use `vSync` method.
 
 ```ts
-const MyComponent = new ComponentDescriptor<{a: number}, any>()
-  .update((c) => { c.vSync(c.createVRoot().children("content")); });
+const MyComponent = new ComponentDescriptor<{a: number}, void>()
+  .update((c, props, state) => {
+     c.vSync(c.createVRoot().children(props.a.toString()));
+  });
 ```
 
 ### attached
@@ -150,11 +163,13 @@ Attached handler will be invoked when component is attached to the document.
 ```ts
 const onChange = new Invalidator();
 
-const MyComponent = new ComponentDescriptor<any, any>()
-  .attached((c) => {
+const MyComponent = new ComponentDescriptor<void, void>()
+  .attached((c, props, state) => {
     c.subscribe(onChange);
   })
-  .vRender((c, root) => { root.children("content"); });
+  .update((c) => {
+     c.vSync(c.createVRoot().children("content"));
+  });
 
 onChange.invalidate();
 ```
@@ -164,19 +179,17 @@ onChange.invalidate();
 Detached handler will be invoked when component is detached from the document.
 
 ```ts
-const MyComponent = new ComponentDescriptor<any, {onResize: (e: Event) => void}>()
-  .init((c) => {
-    c.state = {
-      onResize: (e) => { console.log("window resized"); }
-    };
+const MyComponent = new ComponentDescriptor<void, {onResize: (e: Event) => void}>()
+  .createState((c) => ({onResize: (e) => { console.log("window resized"); }}))
+  .attached((c, props, state) => {
+    window.addEventListener("resize", state.onResize);
   })
-  .attached((c) => {
-    window.addEventListener("resize", c.state.onResize);
+  .detached((c, props, state) => {
+    window.removeEventListener(state.onResize);
   })
-  .detached((c) => {
-    window.removeEventListener(c.state.onResize);
-  })
-  .vRender((c, root) => { root.children("content"); });
+  .update((c) => {
+     c.vSync(c.createVRoot().children("content"));
+  });
 ```
 
 ### disposed
@@ -186,14 +199,16 @@ Disposed handler will be invoked when component is disposed.
 ```ts
 let allocatedComponents = 0;
 
-const MyComponent = new ComponentDescriptor<any, {onResize: (e: Event) => void}>()
+const MyComponent = new ComponentDescriptor<void, void>()
   .init((c) => {
     allocatedComponents++;
   })
   .disposed((c) => {
     allocatedComponents--;
   })
-  .vRender((c, root) => { root.children("content"); });
+  .update((c) => {
+     c.vSync(c.createVRoot().children("content"));
+  });
 ```
 
 ### newPropsReceived
@@ -202,11 +217,13 @@ New props received handler overrides default props received behavior and it shou
 received props will cause change in component's representation.
 
 ```ts
-const MyComponent = new ComponentDescriptor<{a: number}, any>()
-  .newPropsReceived((c, newProps) => {
-    if (c.props.a !== newProps.a) {
+const MyComponent = new ComponentDescriptor<{a: number}, void>()
+  .newPropsReceived((c, oldProps, newProps) => {
+    if (oldProps.a !== newProps.a) {
       c.markDirty();
     }
   })
-  .vRender((c, root) => { root.children(c.props.toString()); });
+  .update((c) => {
+     c.vSync(c.createVRoot().children(props.a.toString()));
+  });
 ```

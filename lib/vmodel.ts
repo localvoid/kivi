@@ -259,7 +259,7 @@ export class VModel<D> {
   /**
    * Update DOM Node with an update handler.
    */
-  update(element: Element, oldProps: D, newProps: D): void {
+  update(element: Element, oldProps: D | undefined, newProps: D): void {
     this._updateHandler!(element, oldProps, newProps);
   }
 }
@@ -267,7 +267,7 @@ export class VModel<D> {
 /**
  * VModel update handler is used to override default reconciliation algorithm.
  *
- * When `oldProps` is `null`, it means that element is created.
+ * When `oldProps` is `undefined`, it means that element is created.
  */
-export type VModelUpdateHandler<D> = (element: Element, oldProps: D, newProps: D) => void;
+export type VModelUpdateHandler<D> = (element: Element, oldProps: D | undefined, newProps: D) => void;
 

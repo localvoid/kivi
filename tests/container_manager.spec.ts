@@ -5,15 +5,15 @@ import {reconciler} from "../lib/reconciler";
 
 describe("ContainerManager", () => {
   it("should invoke insertChild", () => {
-    let testManager: ContainerManager<any> = null;
-    let testContainer: Element = null;
-    let testNode: VNode = null;
-    let testNextRef: Node = null;
-    let testOwner: Component<any, any> = null;
+    let testManager: ContainerManager<any> | null = null;
+    let testContainer: Element | null = null;
+    let testNode: VNode | null = null;
+    let testNextRef: Node | null = null;
+    let testOwner: Component<any, any> | undefined | null = null;
 
     const CM = new ContainerManagerDescriptor()
       .insertChild((manager: ContainerManager<any>, container: Element, node: VNode, nextRef: Node,
-          owner: Component<any, any>, renderFlags: number) => {
+          renderFlags: number, owner: Component<any, any> | undefined) => {
         testManager = manager;
         testContainer = container;
         testNode = node;
@@ -26,27 +26,27 @@ describe("ContainerManager", () => {
     const insertedChild = createVElement("span");
     const b = createVElement("div").managedContainer(manager).children([insertedChild]);
 
-    vNodeInstantiate(a, null);
+    vNodeInstantiate(a, undefined);
     vNodeAttached(a);
-    vNodeRender(a, null, 0);
-    reconciler.sync(a, b, null, 0);
+    vNodeRender(a, 0, undefined);
+    reconciler.sync(a, b, 0, undefined);
 
     expect(testManager).toBe(manager);
     expect(testContainer).toBe(b.ref);
     expect(testNode).toBe(insertedChild);
     expect(testNextRef).toBeNull();
-    expect(testOwner).toBeNull();
+    expect(testOwner).toBeUndefined();
   });
 
   it("should invoke removeChild", () => {
-    let testManager: ContainerManager<any> = null;
-    let testContainer: Element = null;
-    let testNode: VNode = null;
-    let testOwner: Component<any, any> = null;
+    let testManager: ContainerManager<any> | null = null;
+    let testContainer: Element | null = null;
+    let testNode: VNode | null = null;
+    let testOwner: Component<any, any> | undefined | null = null;
 
     const CM = new ContainerManagerDescriptor()
       .removeChild((manager: ContainerManager<any>, container: Element, node: VNode,
-          owner: Component<any, any>) => {
+          owner: Component<any, any> | undefined) => {
         testManager = manager;
         testContainer = container;
         testNode = node;
@@ -58,27 +58,27 @@ describe("ContainerManager", () => {
     const a = createVElement("div").managedContainer(manager).children([removedChild]);
     const b = createVElement("div").managedContainer(manager);
 
-    vNodeInstantiate(a, null);
+    vNodeInstantiate(a, undefined);
     vNodeAttached(a);
-    vNodeRender(a, null, 0);
-    reconciler.sync(a, b, null, 0);
+    vNodeRender(a, 0, undefined);
+    reconciler.sync(a, b, 0, undefined);
 
     expect(testManager).toBe(manager);
     expect(testContainer).toBe(b.ref);
     expect(testNode).toBe(removedChild);
-    expect(testOwner).toBeNull();
+    expect(testOwner).toBeUndefined();
   });
 
   it("should invoke moveChild", () => {
-    let testManager: ContainerManager<any> = null;
-    let testContainer: Element = null;
-    let testNode: VNode = null;
-    let testNextRef: Node = null;
-    let testOwner: Component<any, any> = null;
+    let testManager: ContainerManager<any> | null = null;
+    let testContainer: Element | null = null;
+    let testNode: VNode | null = null;
+    let testNextRef: Node | null = null;
+    let testOwner: Component<any, any> | undefined | null = null;
 
     const CM = new ContainerManagerDescriptor()
       .moveChild((manager: ContainerManager<any>, container: Element, node: VNode, nextRef: Node,
-          owner: Component<any, any>) => {
+          owner: Component<any, any> | undefined) => {
         testManager = manager;
         testContainer = container;
         testNode = node;
@@ -94,28 +94,28 @@ describe("ContainerManager", () => {
     const a = createVElement("div").managedContainer(manager).trackByKeyChildren([movedChildA, tmpChildA]);
     const b = createVElement("div").managedContainer(manager).trackByKeyChildren([tmpChildB, movedChildB]);
 
-    vNodeInstantiate(a, null);
+    vNodeInstantiate(a, undefined);
     vNodeAttached(a);
-    vNodeRender(a, null, 0);
-    reconciler.sync(a, b, null, 0);
+    vNodeRender(a, 0, undefined);
+    reconciler.sync(a, b, 0, undefined);
 
     expect(testManager).toBe(manager);
     expect(testContainer).toBe(b.ref);
     expect(testNode).toBe(movedChildB);
     expect(testNextRef).toBeNull();
-    expect(testOwner).toBeNull();
+    expect(testOwner).toBeUndefined();
   });
 
   it("should invoke replaceChild", () => {
-    let testManager: ContainerManager<any> = null;
-    let testContainer: Element = null;
-    let testNewNode: VNode = null;
-    let testRefNode: VNode = null;
-    let testOwner: Component<any, any> = null;
+    let testManager: ContainerManager<any> | null = null;
+    let testContainer: Element | null = null;
+    let testNewNode: VNode | null = null;
+    let testRefNode: VNode | null = null;
+    let testOwner: Component<any, any> | undefined | null = null;
 
     const CM = new ContainerManagerDescriptor()
       .replaceChild((manager: ContainerManager<any>, container: Element, newNode: VNode, refNode: VNode,
-          owner: Component<any, any>, renderFlags: number) => {
+          renderFlags: number, owner: Component<any, any> | undefined) => {
         testManager = manager;
         testContainer = container;
         testNewNode = newNode;
@@ -129,15 +129,15 @@ describe("ContainerManager", () => {
     const a = createVElement("div").managedContainer(manager).children([tmpChild]);
     const b = createVElement("div").managedContainer(manager).children([replacedChild]);
 
-    vNodeInstantiate(a, null);
+    vNodeInstantiate(a, undefined);
     vNodeAttached(a);
-    vNodeRender(a, null, 0);
-    reconciler.sync(a, b, null, 0);
+    vNodeRender(a, 0, undefined);
+    reconciler.sync(a, b, 0, undefined);
 
     expect(testManager).toBe(manager);
     expect(testContainer).toBe(b.ref);
     expect(testNewNode).toBe(replacedChild);
     expect(testRefNode).toBe(tmpChild);
-    expect(testOwner).toBeNull();
+    expect(testOwner).toBeUndefined();
   });
 });

@@ -18,18 +18,15 @@ When some part of component is just a large static block, it is possible to prev
 diffing it by reusing the same virtual node on each render. For example:
 
 ```ts
-const MyComponent = new ComponentDescriptor<any, { node: VNode }>()
-  .init((c) => {
-    c.state = {
-      node: createVElement("div").children("pretend that there is some heavy content..."),
-    };
-  })
-  .vRender((c, root) => {
-    root.children([
-      createVElement("section").className("header"),
-      c.state.node,
-      createVElement("section").className("footer"),
-    ]);
+const MyComponent = new ComponentDescriptor<void, {node: VNode}>()
+  .createState((c) => ({node: createVElement("div").children("pretend that there is some heavy content...")}))
+  .update((c, props, state) => {
+    c.vSync(c.createVRoot()
+      .children([
+        createVElement("section").className("header"),
+        state.node,
+        createVElement("section").className("footer"),
+      ]));
   });
 ```
 
@@ -39,15 +36,13 @@ Keep alive prevents reconciliation algorithm from disposing components, so when 
 instead of disposing them, they are detached.
 
 ```ts
-const MyComponent = new ComponentDescriptor<{ showChild: boolean }, { aliveNode: VNode }>()
-  .init((c) => {
-    c.state = {
-      aliveComponent: ChildComponent.createComponent(),
-    };
-  })
-  .vRender((c, root) => {
-    if (this.props.showChild) {
-      root.children([ChildComponent.createVNode().keepAlive(c.state.aliveComponent)]);
+const MyComponent = new ComponentDescriptor<{showChild: boolean}, {aliveComponent: Component}>()
+  .createState((c) => ({aliveComponent: ChildComponent.createComponent()}))
+  .update((c, props, state) => {
+    const root = c.createVRoot();
+    if (props.showChild) {
+      root.children([ChildComponent.createVNode().keepAlive(state.aliveComponent)]);
     }
+    c.vSync(root);
   });
 ```

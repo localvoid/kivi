@@ -15,11 +15,11 @@ Simple application with a component that prints "Hello World".
 import {ComponentDescriptor, injectComponent} from "kivi";
 
 const HelloWorld = new ComponentDescriptor()
-  .vRender((c, root) => {
-    root.children(`Hello ${c.props}`);
+  .update((c, props) => {
+    c.vSync(c.createVRoot().children(`Hello ${props.name}`));
   });
 
-injectComponent(Main, document.body, "World");
+injectComponent(Main, document.body, {name: "World"});
 ```
 
 ## Performance

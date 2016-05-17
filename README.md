@@ -15,9 +15,11 @@ have a router, or anything that is related to application state, kivi is just a 
 import {ComponentDescriptor, injectComponent} from "kivi";
 
 const HelloWorld = new ComponentDescriptor()
-  .vRender((c, root) => { root.children(`Hello ${c.props}`); });
+  .update((c, props) => {
+     c.vSync(c.createVRoot.children(`Hello ${props.name}`));
+  });
 
-injectComponent(Main, document.body, "World");
+injectComponent(Main, document.body, {name: "World"});
 ```
 
 ## Documentation

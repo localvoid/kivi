@@ -13,26 +13,26 @@ type InsertChildHandler<S> = (manager: ContainerManager<S>,
                               container: Element,
                               node: VNode,
                               nextRef: Node,
-                              owner: Component<any, any>,
-                              renderFlags: number) => void;
+                              renderFlags: number,
+                              owner: Component<any, any> | undefined) => void;
 
 type ReplaceChildHandler<S> = (manager: ContainerManager<S>,
                                container: Element,
                                newNode: VNode,
                                refNode: VNode,
-                               owner: Component<any, any>,
-                               renderFlags: number) => void;
+                               renderFlags: number,
+                               owner: Component<any, any> | undefined) => void;
 
 type MoveChildHandler<S> = (manager: ContainerManager<S>,
                             container: Element,
                             node: VNode,
                             nextRef: Node,
-                            owner: Component<any, any>) => void;
+                            owner: Component<any, any> | undefined) => void;
 
 type RemoveChildHandler<S> = (manager: ContainerManager<S>,
                               container: Element,
                               now: VNode,
-                              owner: Component<any, any>) => void;
+                              owner: Component<any, any> | undefined) => void;
 ```
 
 To make things easier, kivi provides generic functions for DOM node lists manipulations that will invoke all lifecycle
@@ -43,26 +43,26 @@ function insertVNodeBefore(
   container: Element,
   node: VNode,
   nextRef: Node,
-  owner: Component<any, any>,
-  renderFlags: number): void;
+  renderFlags: number,
+  owner: Component<any, any> | undefined): void;
 
 function replaceVNode(
   container: Element,
   newNode: VNode,
   refNode: VNode,
-  owner: Component<any, any>,
-  renderFlags: number): void;
+  renderFlags: numberm
+  owner: Component<any, any> | undefined): void;
 
 function moveVNode(
   container: Element,
   node: VNode,
   nextRef: Node,
-  owner: Component<any, any>): void;
+  owner: Component<any, any> | undefined): void;
 
 function removeVNode(
   container: Element,
   node: VNode,
-  owner: Component<any, any>): void;
+  owner: Component<any, any> | undefined): void;
 ```
 
 To use container manager in a virtual dom, just assign container manager instance to a virtual dom element with
@@ -73,19 +73,19 @@ To use container manager in a virtual dom, just assign container manager instanc
 ```ts
 const MyManager = new ContainerManagerDescriptor()
   .insertChild((manager: ContainerManager<any>, container: Element, node: VNode,
-      nextRef: Node, owner: Component<any, any>, renderFlags: number) => {
+      nextRef: Node, renderFlags: number, owner: Component<any, any> | undefined) => {
     console.log("Node inserted");
   })
   .removeChild((manager: ContainerManager<any>, container: Element, node: VNode,
-      owner: Component<any, any>) => {
+      owner: Component<any, any> | undefined) => {
     console.log("Node removed");
   });
   .moveChild((manager: ContainerManager<any>, container: Element, node: VNode,
-      nextRef: Node, owner: Component<any, any>) => {
+      nextRef: Node, owner: Component<any, any> | undefined) => {
     console.log("Node moved");
   });
   .replaceChild((manager: ContainerManager<any>, container: Element, newNode: VNode,
-      refNode: VNode, owner: Component<any, any>, renderFlags: number) => {
+      refNode: VNode, renderFlags: number, owner: Component<any, any> | undefined) => {
     console.log("Node replaced");
   });
 
