@@ -4,8 +4,8 @@
 [![License](https://img.shields.io/npm/l/kivi.svg?style=flat-square)](https://www.npmjs.com/package/kivi)
 
 [Kivi](http://github.com/localvoid/kivi) is a javascript (TypeScript) library for building web user interfaces. It
-provides Virtual DOM API for DOM manipulations, Components, and Scheduler tightly integrated with Components. It doesn't
-have a router, or anything that is related to application state, kivi is just a view library.
+provides Actor model for application state, Virtual DOM API for DOM manipulations, UI Components, and Scheduler tightly
+integrated with UI Components.
 
 [Kivi JSFiddle](https://jsfiddle.net/localvoid/42ofn4ud/)
 
