@@ -26,12 +26,14 @@ export const enum SchedulerFlags {
   MacrotaskPending        = 1 << 2,
   /// Frametasks are pending for execution in frametasks queue.
   FrametaskPending        = 1 << 3,
+  /// Actors are pending for execution.
+  ActorPending            = 1 << 4,
   /// When throttling is enabled, component updates are switched to incremental mode.
-  EnabledThrottling       = 1 << 4,
+  EnabledThrottling       = 1 << 5,
   /// Time frame for executing frame tasks in the current frame is ended.
-  ThrottledFrameExhausted = 1 << 5,
+  ThrottledFrameExhausted = 1 << 6,
   /// Mounting on top of existing html is enabled.
-  EnabledMounting         = 1 << 6,
+  EnabledMounting         = 1 << 7,
 }
 
 /**

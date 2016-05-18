@@ -1,6 +1,7 @@
 import {Component} from "./component";
 import {SchedulerFlags, ComponentFlags} from "./misc";
 import {VNode, vNodeMount, vNodeRender} from "./vnode";
+import {Actor, ActorFlags, Message, actorAddMessage, actorRun} from "./actor";
 import {reconciler} from "./reconciler";
 
 export type SchedulerCallback = () => void;
@@ -249,6 +250,8 @@ export class Scheduler {
    */
   private _updateComponents: Component<any, any>[];
 
+  private _activeActors: Actor<any>[];
+
   private _microtaskScheduler: MicrotaskScheduler;
   private _macrotaskScheduler: MacrotaskScheduler;
 
@@ -273,6 +276,7 @@ export class Scheduler {
     this._currentFrame = new FrameTasksGroup();
     this._nextFrame = new FrameTasksGroup();
     this._updateComponents = [];
+    this._activeActors = [];
     this._microtaskScheduler = new MicrotaskScheduler(this._handleMicrotaskScheduler);
     this._macrotaskScheduler = new MacrotaskScheduler(this._handleMacrotaskScheduler);
 
@@ -370,7 +374,9 @@ export class Scheduler {
   scheduleMicrotask(callback: SchedulerCallback): void {
     if ((this._flags & SchedulerFlags.MicrotaskPending) === 0) {
       this._flags |= SchedulerFlags.MicrotaskPending;
-      this._microtaskScheduler.requestNextTick();
+      if ((this._flags & SchedulerFlags.ActorPending) === 0) {
+        this._microtaskScheduler.requestNextTick();
+      }
     }
     this._microtasks.push(callback);
   }
@@ -384,6 +390,23 @@ export class Scheduler {
       this._macrotaskScheduler.requestNextTick();
     }
     this._macrotasks.push(callback);
+  }
+
+  /**
+   * Send message to an actor.
+   */
+  sendMessage(actor: Actor<any>, message: Message<any>): void {
+    if ((actor._flags & ActorFlags.Active) === 0) {
+      if ((this._flags & SchedulerFlags.ActorPending) === 0) {
+        this._flags |= SchedulerFlags.ActorPending;
+        if ((this._flags & SchedulerFlags.MicrotaskPending) === 0) {
+          this._microtaskScheduler.requestNextTick();
+        }
+      }
+      this._activeActors.push(actor);
+      actor._flags |= ActorFlags.Active;
+    }
+    actorAddMessage(actor, message);
   }
 
   /**
@@ -404,16 +427,27 @@ export class Scheduler {
     this._flags |= SchedulerFlags.Running;
     this.time = Date.now();
 
-    while (this._microtasks.length > 0) {
-      let tasks = this._microtasks;
-      this._microtasks = [];
-      for (let i = 0; i < tasks.length; i++) {
-        tasks[i]();
+    do {
+      while (this._microtasks.length > 0) {
+        let tasks = this._microtasks;
+        this._microtasks = [];
+        for (let i = 0; i < tasks.length; i++) {
+          tasks[i]();
+        }
+        this.clock++;
       }
-    }
 
-    this.clock++;
-    this._flags &= ~(SchedulerFlags.MicrotaskPending | SchedulerFlags.Running);
+      if (this._activeActors.length > 0) {
+        const activeActors = this._activeActors;
+        this._activeActors = [];
+        for (let i = 0; i < activeActors.length; i++) {
+          actorRun(activeActors[i]);
+          this.clock++;
+        }
+      }
+    } while (this._microtasks.length > 0 && this._activeActors.length > 0);
+
+    this._flags &= ~(SchedulerFlags.MicrotaskPending | SchedulerFlags.ActorPending | SchedulerFlags.Running);
   };
 
   private _handleMacrotaskScheduler = () => {
