@@ -11,6 +11,15 @@ export const enum MessageFlags {
   Trace = 1,
 }
 
+let _nextMessageFlag = 1;
+
+/**
+ * Acquire a message flag at runtime.
+ */
+export function acquireMessageFlag(): number {
+  return 1 << _nextMessageFlag++;
+}
+
 /**
  * Actor flags.
  */
@@ -28,6 +37,8 @@ export type ActorMessageHandler<S> = (state: S, message: Message<any>) => S;
 
 /**
  * Middleware handler.
+ *
+ * The `next` function should be invoked synchronously. Middlewares doesn't support async execution.
  */
 export type ActorMiddleware<S> = (actor: Actor<S>, message: Message<any>, next: ActorNextMiddleware<S>) => void;
 export type ActorNextMiddleware<S> = (message: Message<any>) => void;
@@ -58,12 +69,17 @@ export class MessageGroup {
    * Static identifier.
    */
   readonly id: number | string;
+  /**
+   * Metadata.
+   */
+  _meta: Map<Symbol, any>;
 
   constructor(id: number | string) {
     this._nextId = 0;
     this._markDescriptorFlags = 0;
     this._markMessageFlags = 0;
     this.id = id;
+    this._meta = new Map<Symbol, any>();
   }
 
   /**
@@ -85,6 +101,14 @@ export class MessageGroup {
    */
   enableTracing(): MessageGroup {
     this._markMessageFlags |= MessageFlags.Trace;
+    return this;
+  }
+
+  /**
+   * Set metadata.
+   */
+  setMeta<M>(key: Symbol, value: M): MessageGroup {
+    this._meta.set(key, value);
     return this;
   }
 
@@ -120,6 +144,10 @@ export class MessageDescriptor<P> {
    * Message group.
    */
   readonly group: MessageGroup;
+  /**
+   * Metadata.
+   */
+  _meta: Map<Symbol, any>;
 
   constructor(group: MessageGroup, uid: number, id: number | string, flags: number, messageFlags: number) {
     this._flags = flags;
@@ -127,6 +155,7 @@ export class MessageDescriptor<P> {
     this.uid = uid;
     this.id = id;
     this.group = group;
+    this._meta = new Map<Symbol, any>();
   }
 
   /**
@@ -134,6 +163,14 @@ export class MessageDescriptor<P> {
    */
   enableTracing(): MessageDescriptor<P> {
     this._markFlags |= MessageFlags.Trace;
+    return this;
+  }
+
+  /**
+   * Add metadata.
+   */
+  setMeta<M>(key: Symbol, value: M): MessageDescriptor<P> {
+    this._meta.set(key, value);
     return this;
   }
 
@@ -161,11 +198,41 @@ export class Message<P> {
    * Message payload.
    */
   readonly payload: P;
+  /**
+   * Metadata.
+   */
+  _meta: Map<Symbol, any> | null;
 
   constructor(descriptor: MessageDescriptor<P>, payload: P, flags: number) {
     this._flags = flags;
     this.descriptor = descriptor;
     this.payload = payload;
+    this._meta = null;
+  }
+
+  /**
+   * Add metadata.
+   */
+  setMeta<M>(key: Symbol, value: M): Message<P> {
+    if (this._meta === null) {
+      this._meta = new Map<Symbol, any>();
+    }
+    this._meta.set(key, value);
+    return this;
+  }
+
+  /**
+   * Get metadata.
+   */
+  getMeta<M>(key: Symbol): M | undefined {
+    let value = this.descriptor.group._meta.get(key);
+    if (value === undefined) {
+      value = this.descriptor._meta.get(key);
+    }
+    if (value === undefined && this._meta !== null) {
+      value = this._meta.get(key);
+    }
+    return value;
   }
 }
 
