@@ -29,9 +29,8 @@ export type ActorMessageHandler<S> = (state: S, message: Message<any>) => S;
 /**
  * Middleware handler.
  */
-export type ActorMiddleware<S> =
-  (actor: Actor<S>, message: Message<any>, next: ActorMiddleware<S>) => void;
-
+export type ActorMiddleware<S> = (actor: Actor<S>, message: Message<any>, next: ActorNextMiddleware<S>) => void;
+export type ActorNextMiddleware<S> = (message: Message<any>) => void;
 
 /**
  * Message group.

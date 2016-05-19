@@ -240,31 +240,34 @@ class ActorExecutor {
   private _actorMiddleware: ActorMiddleware<any>[] | null = null;
   private _handler: ActorMessageHandler<any> | null = null;
 
-  _next = (actor: Actor<any>, message: Message<any>): void => {
+  _next = (message: Message<any>): void => {
     const flags = this._flags;
+    const actor = this._actor!;
+    let middleware: ActorMiddleware<any>;
 
-    if ((flags & ActorExecutorFlags.ExecSchedulerMiddleware) !== 0) {
-      this._middleware![this._middlewareIndex++](actor, message, this._next);
+    if (flags === 0) {
+      actor.state = this._handler!(actor.state, message);
+    } else if ((flags & ActorExecutorFlags.ExecSchedulerMiddleware) !== 0) {
+      middleware = this._middleware![this._middlewareIndex++];
       if (this._middlewareIndex === this._middleware!.length) {
         this._middlewareIndex = 0;
         this._flags &= ~ActorExecutorFlags.ExecSchedulerMiddleware;
       }
-    }
-    if ((flags & ActorExecutorFlags.ExecDescriptorMiddleware) !== 0) {
-      this._descriptorMiddleware![this._middlewareIndex++](actor, message, this._next);
+      middleware(actor, message, this._next);
+    } else if ((flags & ActorExecutorFlags.ExecDescriptorMiddleware) !== 0) {
+      middleware = this._descriptorMiddleware![this._middlewareIndex++];
       if (this._middlewareIndex === this._descriptorMiddleware!.length) {
         this._middlewareIndex = 0;
         this._flags &= ~ActorExecutorFlags.ExecDescriptorMiddleware;
       }
-    }
-    if ((flags & ActorExecutorFlags.ExecActorMiddleware) !== 0) {
-      this._actorMiddleware![this._middlewareIndex++](actor, message, this._next);
+      middleware(actor, message, this._next);
+    } else if ((flags & ActorExecutorFlags.ExecActorMiddleware) !== 0) {
+      middleware = this._actorMiddleware![this._middlewareIndex++];
       if (this._middlewareIndex === this._actorMiddleware!.length) {
         this._flags &= ~ActorExecutorFlags.ExecActorMiddleware;
       }
+      middleware(actor, message, this._next);
     }
-
-    actor.state = this._handler!(actor.state, message);
   }
 
   addMiddleware(middleware: ActorMiddleware<any>): void {
@@ -301,7 +304,7 @@ class ActorExecutor {
   run(message: Message<any>): void {
     this._middlewareIndex = 0;
     this._flags = this._initialState;
-    this._next(this._actor!, message);
+    this._next(message);
   }
 }
 
