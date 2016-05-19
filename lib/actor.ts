@@ -24,7 +24,14 @@ export const enum ActorFlags {
 /**
  * Message handler function.
  */
-export type ActorMessageHandler<S> = (message: Message<any>, state: S) => S;
+export type ActorMessageHandler<S> = (state: S, message: Message<any>) => S;
+
+/**
+ * Middleware handler.
+ */
+export type ActorMiddleware<S> =
+  (actor: Actor<S>, message: Message<any>, next: ActorMiddleware<S>) => void;
+
 
 /**
  * Message group.
@@ -186,11 +193,16 @@ export class ActorDescriptor<S> {
    * Message handler.
    */
   readonly _handleMessage: ActorMessageHandler<S>;
+  /**
+   * Middleware handlers.
+   */
+  _middleware: ActorMiddleware<S>[] | null;
 
   constructor(handleMessage: ActorMessageHandler<S>) {
     this._flags = 0;
     this._markFlags = 0;
     this._handleMessage = handleMessage;
+    this._middleware = null;
   }
 
   /**
@@ -199,6 +211,15 @@ export class ActorDescriptor<S> {
   create(state: S): Actor<S> {
     return new Actor(this, state, this._markFlags);
   }
+
+  addMiddleware(middleware: ActorMiddleware<any>): ActorDescriptor<S> {
+    if (this._middleware === null) {
+      this._middleware = [];
+    }
+    this._middleware.push(middleware);
+    return this;
+  }
+
 }
 
 /**
@@ -221,12 +242,17 @@ export class Actor<S> {
    * Message inbox.
    */
   _inbox: Message<any>[];
+  /**
+   * Middleware handlers.
+   */
+  _middleware: ActorMiddleware<S>[] | null;
 
   constructor(descriptor: ActorDescriptor<S>, state: S, flags: number) {
     this._flags = flags;
     this.descriptor = descriptor;
     this.state = state;
     this._inbox = [];
+    this._middleware = null;
   }
 
   /**
@@ -234,6 +260,14 @@ export class Actor<S> {
    */
   send(message: Message<any>): void {
     scheduler.sendMessage(this, message);
+  }
+
+  addMiddleware(middleware: ActorMiddleware<any>): Actor<S> {
+    if (this._middleware === null) {
+      this._middleware = [];
+    }
+    this._middleware.push(middleware);
+    return this;
   }
 }
 
@@ -244,15 +278,9 @@ export function actorAddMessage(actor: Actor<any>, message: Message<any>): void 
   actor._inbox.push(message);
 }
 
-export function actorRun(actor: Actor<any>) {
-  const handleMessage = actor.descriptor._handleMessage;
-  while ((actor._flags & ActorFlags.IncomingMessage) !== 0) {
-    const inbox = actor._inbox;
-    actor._inbox = [];
-    actor._flags &= ~ActorFlags.IncomingMessage;
-    for (let i = 0; i < inbox.length; i++) {
-      actor.state = handleMessage(inbox[i], actor.state);
-    }
-  }
-  actor._flags &= ~ActorFlags.Active;
+/**
+ * Helper function for TypeScript developers to extract payload from messages.
+ */
+export function getMessagePayload<P>(descriptor: MessageDescriptor<P>, message: Message<P>): P {
+  return message.payload;
 }
