@@ -37,8 +37,6 @@ export type ActorMessageHandler<S> = (state: S, message: Message<any>) => S;
 
 /**
  * Middleware handler.
- *
- * The `next` function should be invoked synchronously. Middlewares doesn't support async execution.
  */
 export type ActorMiddleware<S> = (actor: Actor<S>, message: Message<any>, next: ActorNextMiddleware<S>) => void;
 export type ActorNextMiddleware<S> = (message: Message<any>) => void;
