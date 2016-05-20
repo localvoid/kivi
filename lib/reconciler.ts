@@ -688,6 +688,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], renderF
   let bEndNode = b[bEnd];
   let i: number;
   let j: number | undefined;
+  let k: number | undefined;
   let stop = false;
   let nextPos: number;
   let next: Node | null;
@@ -696,6 +697,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], renderF
   let lastTarget = 0;
   let pos: number;
   let node: VNode;
+  let removed: boolean;
 
   // Step 1
   outer: do {
@@ -808,16 +810,59 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], renderF
     let moved = false;
     let removeOffset = 0;
 
-    // When lists a and b are small, we are using naive O(M*N) algorithm to find removed children.
-    if (aLength * bLength <= 16) {
+    // When children lists are small, we are using naive O(N) algorithm to find if child is removed.
+    if ((bLength <= 4) || ((aLength * bLength) <= 16)) {
+      k = 0; // visited
       for (i = aStart; i <= aEnd; i++) {
-        let removed = true;
+        removed = true;
         aNode = a[i];
-        for (j = bStart; j <= bEnd; j++) {
-          bNode = b[j];
-          if (aNode._key === bNode._key) {
-            sources[j - bStart] = i;
+        if (k < bLength) {
+          for (j = bStart; j <= bEnd; j++) {
+            bNode = b[j];
+            if (aNode._key === bNode._key) {
+              sources[j - bStart] = i;
 
+              if (lastTarget > j) {
+                moved = true;
+              } else {
+                lastTarget = j;
+              }
+              if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+                if (!_canSyncVNodes(aNode, bNode)) {
+                  throw new Error("VNode sync children failed: cannot sync two different children with the same key.");
+                }
+              }
+              _syncVNodes(aNode, bNode, renderFlags, owner);
+              k++;
+              removed = false;
+              break;
+            }
+          }
+        }
+        if (removed) {
+          vNodeRemoveChild(parent, aNode, owner);
+          removeOffset++;
+        }
+      }
+    } else {
+      const keyIndex = new Map<any, number>();
+      k = 0; // visited
+
+      for (i = bStart; i <= bEnd; i++) {
+        node = b[i];
+        keyIndex.set(node._key, i);
+      }
+
+      for (i = aStart; i <= aEnd; i++) {
+        removed = true;
+        aNode = a[i];
+
+        if (k < bLength) {
+          j = keyIndex.get(aNode._key);
+
+          if (j !== undefined) {
+            bNode = b[j];
+            sources[j - bStart] = i;
             if (lastTarget > j) {
               moved = true;
             } else {
@@ -829,42 +874,11 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], renderF
               }
             }
             _syncVNodes(aNode, bNode, renderFlags, owner);
+            k++;
             removed = false;
-            break;
           }
         }
         if (removed) {
-          vNodeRemoveChild(parent, aNode, owner);
-          removeOffset++;
-        }
-      }
-    } else {
-      const keyIndex = new Map<any, number>();
-
-      for (i = bStart; i <= bEnd; i++) {
-        node = b[i];
-        keyIndex.set(node._key, i);
-      }
-
-      for (i = aStart; i <= aEnd; i++) {
-        aNode = a[i];
-        j = keyIndex.get(aNode._key);
-
-        if (j !== undefined) {
-          bNode = b[j];
-          sources[j - bStart] = i;
-          if (lastTarget > j) {
-            moved = true;
-          } else {
-            lastTarget = j;
-          }
-          if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-            if (!_canSyncVNodes(aNode, bNode)) {
-              throw new Error("VNode sync children failed: cannot sync two different children with the same key.");
-            }
-          }
-          _syncVNodes(aNode, bNode, renderFlags, owner);
-        } else {
           vNodeRemoveChild(parent, aNode, owner);
           removeOffset++;
         }
