@@ -268,3 +268,23 @@ export function setAttr(node: Element, key: string, value: string): void {
     }
   }
 }
+
+/**
+ * This function doesn't do anything, it just returns the same `tagName` value.
+ *
+ * It is used so that when building application in production mode, we can replace all occurences of `getTagName`
+ * function and minify all tag names.
+ */
+export function getTagName(tagName: string): string {
+  return tagName;
+}
+
+/**
+ * This function doesn't do anything, it just returns the same `className` value.
+ *
+ * It is used so that when building application in production mode, we can replace all occurences of `getClassName`
+ * function and minify all clas names.
+ */
+export function getClassName(className: string): string {
+  return className;
+}
