@@ -50,7 +50,7 @@ function checkInnerHtmlEquals(ax: VNode[], bx: VNode[], cx: VNode[], keys: boole
 
   reconciler.sync(a, c, 0, undefined);
 
-  if (aDiv.innerHTML != bDiv.innerHTML) {
+  if (aDiv.innerHTML !== bDiv.innerHTML) {
     throw Error(`html doesn't match: ${aDiv.innerHTML} => ${bDiv.innerHTML}`);
   }
 }
