@@ -283,7 +283,7 @@ export function getTagName(tagName: string): string {
  * This function doesn't do anything, it just returns the same `className` value.
  *
  * It is used so that when building application in production mode, we can replace all occurences of `getClassName`
- * function and minify all clas names.
+ * function and minify all class names.
  */
 export function getClassName(className: string): string {
   return className;
