@@ -227,7 +227,7 @@ export class FrameTasksGroup {
   }
 }
 
-function createNextMiddlewareHandler(scheduler: Scheduler, actor: Actor<any>): ActorNextMiddleware<any> {
+function createNextMiddlewareHandler(scheduler: Scheduler, actor: Actor<any, any>): ActorNextMiddleware<any, any> {
   let flags = 0;
   let middlewareIndex = 0;
   let globalMiddleware = scheduler._actorMiddleware;
@@ -245,10 +245,10 @@ function createNextMiddlewareHandler(scheduler: Scheduler, actor: Actor<any>): A
   }
 
   const next = (message: Message<any>): void => {
-    let middleware: ActorMiddleware<any>;
+    let middleware: ActorMiddleware<any, any>;
 
     if (flags === 0) {
-      actor.state = actor.descriptor._handleMessage(actor.state, message);
+      actor.state = actor.descriptor._handleMessage!(actor, message, actor.props, actor.state);
     } else if ((flags & ActorExecutorFlags.ExecGlobalMiddleware) !== 0) {
       middleware = globalMiddleware![middlewareIndex++];
       if (middlewareIndex === globalMiddleware!.length) {
@@ -304,8 +304,8 @@ export class Scheduler {
    */
   private _updateComponents: Component<any, any>[];
 
-  _actorMiddleware: ActorMiddleware<any>[] | null;
-  _activeActors: Actor<any>[];
+  _actorMiddleware: ActorMiddleware<any, any>[] | null;
+  _activeActors: Actor<any, any>[];
 
   private _microtaskScheduler: MicrotaskScheduler;
   private _macrotaskScheduler: MacrotaskScheduler;
@@ -451,7 +451,7 @@ export class Scheduler {
   /**
    * Send message to an actor.
    */
-  sendMessage(actor: Actor<any>, message: Message<any>): void {
+  sendMessage(actor: Actor<any, any>, message: Message<any>): void {
     if ((actor._flags & ActorFlags.Active) === 0) {
       if ((this._flags & SchedulerFlags.ActorPending) === 0) {
         this._flags |= SchedulerFlags.ActorPending;
@@ -465,7 +465,7 @@ export class Scheduler {
     actorAddMessage(actor, message);
   }
 
-  addActorMiddleware(middleware: ActorMiddleware<any>): Scheduler {
+  addActorMiddleware(middleware: ActorMiddleware<any, any>): Scheduler {
     if (this._actorMiddleware === null) {
       this._actorMiddleware = [];
     }
