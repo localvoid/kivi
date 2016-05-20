@@ -12,6 +12,10 @@ export class InvalidatorSubscription {
   invalidator: Invalidator;
   private _component: Component<any, any> | null;
   private _callback: Function | null;
+  _invalidatorPrev: InvalidatorSubscription | null;
+  _invalidatorNext: InvalidatorSubscription | null;
+  _componentPrev: InvalidatorSubscription | null;
+  _componentNext: InvalidatorSubscription | null;
   // used for debugging
   private _isCanceled: boolean;
 
@@ -21,9 +25,28 @@ export class InvalidatorSubscription {
     this.invalidator = invalidator;
     this._component = component;
     this._callback = callback;
+    this._invalidatorPrev = null;
+    this._invalidatorNext = null;
+    this._componentPrev = null;
+    this._componentNext = null;
 
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       this._isCanceled = false;
+    }
+  }
+
+  _cancel(): void {
+    if (this._invalidatorPrev === null) {
+      if ((this._flags & InvalidatorSubscriptionFlags.Transient) === 0) {
+        this.invalidator._subscriptions = this._invalidatorNext;
+      } else {
+        this.invalidator._transientSubscriptions = this._invalidatorNext;
+      }
+    } else {
+      this._invalidatorPrev._invalidatorNext = this._invalidatorNext;
+    }
+    if (this._invalidatorNext !== null) {
+      this._invalidatorNext._invalidatorPrev = this._invalidatorPrev;
     }
   }
 
@@ -31,10 +54,6 @@ export class InvalidatorSubscription {
    * Cancel subscription.
    */
   cancel(): void {
-    let component: Component<any, any>;
-    let subscriptions: InvalidatorSubscription | InvalidatorSubscription[];
-    let i: number;
-
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if (this._isCanceled) {
         throw new Error("Failed to cancel InvalidatorSubscription: subscription cannot be canceled twice.");
@@ -42,65 +61,20 @@ export class InvalidatorSubscription {
       this._isCanceled = true;
     }
 
-    if ((this._flags & InvalidatorSubscriptionFlags.Transient) === 0) {
-      this.invalidator._removeSubscription(this);
+    this._cancel();
 
-      if ((this._flags & InvalidatorSubscriptionFlags.Component) !== 0) {
-        component = this._component!;
-        subscriptions = component._subscriptions!;
-        if (subscriptions.constructor === InvalidatorSubscription ||
-          (subscriptions as InvalidatorSubscription[]).length === 1) {
-          if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-            if (subscriptions.constructor === InvalidatorSubscription) {
-              if (subscriptions !== this) {
-                throw new Error("Failed to remove subscription from Component: cannot find appropriate subscription.");
-              }
-            } else {
-              if ((subscriptions as InvalidatorSubscription[])[0] !== this) {
-                throw new Error("Failed to remove subscription from Component: cannot find appropriate subscription.");
-              }
-            }
-          }
-          component._subscriptions = null;
+    if ((this._flags & InvalidatorSubscriptionFlags.Component) !== 0) {
+      if (this._componentPrev === null) {
+        if ((this._flags & InvalidatorSubscriptionFlags.Transient) === 0) {
+          this._component!._subscriptions = this._componentNext;
         } else {
-          i = (subscriptions as InvalidatorSubscription[]).indexOf(this);
-          if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-            if (i === -1) {
-              throw new Error("Failed to remove subscription from Component: cannot find appropriate subscription.");
-            }
-          }
-          (subscriptions as InvalidatorSubscription[])[i] = (subscriptions as InvalidatorSubscription[]).pop()!;
+          this._component!._transientSubscriptions = this._componentNext;
         }
+      } else {
+        this._componentPrev._componentNext = this._componentNext;
       }
-    } else {
-      this.invalidator._removeTransientSubscription(this);
-
-      if ((this._flags & InvalidatorSubscriptionFlags.Component) !== 0) {
-        component = this._component!;
-        subscriptions = component._transientSubscriptions!;
-        if (subscriptions.constructor === InvalidatorSubscription ||
-          (subscriptions as InvalidatorSubscription[]).length === 1) {
-          if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-            if (subscriptions.constructor === InvalidatorSubscription) {
-              if (subscriptions !== this) {
-                throw new Error("Failed to remove subscription from Component: cannot find appropriate subscription.");
-              }
-            } else {
-              if ((subscriptions as InvalidatorSubscription[])[0] !== this) {
-                throw new Error("Failed to remove subscription from Component: cannot find appropriate subscription.");
-              }
-            }
-          }
-          component._transientSubscriptions = null;
-        } else {
-          i = (subscriptions as InvalidatorSubscription[]).indexOf(this);
-          if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-            if (i === -1) {
-              throw new Error("Failed to remove subscription from Component: cannot find appropriate subscription.");
-            }
-          }
-          (subscriptions as InvalidatorSubscription[])[i] = (subscriptions as InvalidatorSubscription[]).pop()!;
-        }
+      if (this._componentNext !== null) {
+        this._componentNext._componentPrev = this._componentPrev;
       }
     }
   }
@@ -126,16 +100,12 @@ export class Invalidator {
    */
   mtime: number;
 
-  private _subscription: InvalidatorSubscription | null;
-  private _subscriptions: InvalidatorSubscription[] | null;
-  private _transientSubscription: InvalidatorSubscription | null;
-  private _transientSubscriptions: InvalidatorSubscription[] | null;
+  _subscriptions: InvalidatorSubscription | null;
+  _transientSubscriptions: InvalidatorSubscription | null;
 
   constructor() {
     this.mtime = scheduler.clock;
-    this._subscription = null;
     this._subscriptions = null;
-    this._transientSubscription = null;
     this._transientSubscriptions = null;
   }
 
@@ -144,7 +114,14 @@ export class Invalidator {
    */
   subscribe(callback: Function): InvalidatorSubscription {
     const s = new InvalidatorSubscription(0, this, null, callback);
-    this._addSubscription(s);
+    const firstSubscription = this._subscriptions;
+
+    if (firstSubscription !== null) {
+      firstSubscription._invalidatorPrev = s;
+      s._invalidatorNext = firstSubscription;
+    }
+
+    this._subscriptions = s;
     return s;
   }
 
@@ -153,7 +130,14 @@ export class Invalidator {
    */
   transientSubscribe(callback: Function): InvalidatorSubscription {
     const s = new InvalidatorSubscription(InvalidatorSubscriptionFlags.Transient, this, null, callback);
-    this._addTransientSubscription(s);
+    const firstSubscription = this._transientSubscriptions;
+
+    if (firstSubscription !== null) {
+      firstSubscription._invalidatorPrev = s;
+      s._invalidatorNext = firstSubscription;
+    }
+
+    this._transientSubscriptions = s;
     return s;
   }
 
@@ -162,7 +146,21 @@ export class Invalidator {
    */
   subscribeComponent(component: Component<any, any>): InvalidatorSubscription {
     const s = new InvalidatorSubscription(InvalidatorSubscriptionFlags.Component, this, component, null);
-    this._addSubscription(s);
+    const firstSubscription = this._subscriptions;
+    const firstComponentSubscription = component._subscriptions;
+
+    if (firstSubscription !== null) {
+      firstSubscription._invalidatorPrev = s;
+      s._invalidatorNext = firstSubscription;
+    }
+    if (firstComponentSubscription !== null) {
+      firstComponentSubscription._componentPrev = s;
+      s._componentNext = firstComponentSubscription;
+    }
+
+    this._subscriptions = s;
+    component._subscriptions = s;
+
     return s;
   }
 
@@ -173,7 +171,21 @@ export class Invalidator {
     const s = new InvalidatorSubscription(
       InvalidatorSubscriptionFlags.Component | InvalidatorSubscriptionFlags.Transient,
       this, component, null);
-    this._addTransientSubscription(s);
+    const firstSubscription = this._transientSubscriptions;
+    const firstComponentSubscription = component._transientSubscriptions;
+
+    if (firstSubscription !== null) {
+      firstSubscription._invalidatorPrev = s;
+      s._invalidatorNext = firstSubscription;
+    }
+    if (firstComponentSubscription !== null) {
+      firstComponentSubscription._componentPrev = s;
+      s._componentNext = firstComponentSubscription;
+    }
+
+    this._transientSubscriptions = s;
+    component._transientSubscriptions = s;
+
     return s;
   }
 
@@ -181,10 +193,7 @@ export class Invalidator {
    * Returns true if invalidator object has subscriptions.
    */
   hasSubscriptions(): boolean {
-    return (this._subscription !== null ||
-            this._subscriptions !== null ||
-            this._transientSubscription !== null ||
-            this._transientSubscriptions !== null);
+    return (this._subscriptions !== null || this._transientSubscriptions !== null);
   }
 
   /**
@@ -195,79 +204,19 @@ export class Invalidator {
     if (this.mtime < now) {
       this.mtime = now;
 
-      let i: number;
-
-      if (this._subscription !== null) {
-        this._subscription._invalidate();
-      } else if (this._subscriptions !== null) {
-        for (i = 0; i < this._subscriptions.length; i++) {
-          this._subscriptions[i]._invalidate();
-        }
+      let subscription = this._subscriptions;
+      while (subscription !== null) {
+        subscription._invalidate();
+        subscription = subscription._invalidatorNext;
       }
 
-      if (this._transientSubscription !== null) {
-        this._transientSubscription._invalidate();
-        this._transientSubscription = null;
-      } else if (this._transientSubscriptions !== null) {
-        for (i = 0; i < this._transientSubscriptions.length; i++) {
-          this._transientSubscriptions[i]._invalidate();
-        }
-        this._transientSubscriptions = null;
+      subscription = this._transientSubscriptions;
+      while (subscription !== null) {
+        subscription._invalidate();
+        subscription = subscription._invalidatorNext;
       }
-    }
-  }
 
-  _addSubscription(subscription: InvalidatorSubscription): void {
-    if (this._subscription !== null) {
-      this._subscriptions = [this._subscription, subscription];
-      this._subscription = null;
-    } else if (this._subscriptions === null) {
-      this._subscription = subscription;
-    } else {
-      this._subscriptions.push(subscription);
-    }
-  }
-
-  _addTransientSubscription(subscription: InvalidatorSubscription): void {
-    if (this._transientSubscription !== null) {
-      this._transientSubscriptions = [this._transientSubscription, subscription];
-      this._transientSubscription = null;
-    } else if (this._transientSubscriptions === null) {
-      this._transientSubscription = subscription;
-    } else {
-      this._transientSubscriptions.push(subscription);
-    }
-  }
-
-  _removeSubscription(subscription: InvalidatorSubscription): void {
-    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      if ((this._subscription !== null && this._subscription !== subscription) ||
-          (this._subscriptions !== null && this._subscriptions.indexOf(subscription) === -1) ||
-          (this._subscription === null && this._subscriptions === null)) {
-        throw new Error("Failed to remove subscription from Invalidator: cannot find appropriate subscription.");
-      }
-    }
-
-    if (this._subscription === subscription) {
-      this._subscription = null;
-    } else if (this._subscriptions!.length === 1) {
-      this._subscriptions = null;
-    } else {
-      const i = this._subscriptions!.indexOf(subscription);
-      this._subscriptions![i] = this._subscriptions!.pop()!;
-    }
-  }
-
-  _removeTransientSubscription(subscription: InvalidatorSubscription): void {
-    if (this._transientSubscription === subscription) {
-      this._transientSubscription = null;
-    } else if (this._transientSubscriptions !== null) {
-      if (this._transientSubscriptions.length === 1) {
-        this._transientSubscriptions = null;
-      } else {
-        const i = this._transientSubscriptions.indexOf(subscription);
-        this._transientSubscriptions[i] = this._transientSubscriptions.pop()!;
-      }
+      this._transientSubscriptions = null;
     }
   }
 }

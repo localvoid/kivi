@@ -519,8 +519,8 @@ export class Component<P, S> {
    */
   _root: VNode | CanvasRenderingContext2D | null;
 
-  _subscriptions: InvalidatorSubscription[] | InvalidatorSubscription | null;
-  _transientSubscriptions: InvalidatorSubscription[] | InvalidatorSubscription | null;
+  _subscriptions: InvalidatorSubscription | null;
+  _transientSubscriptions: InvalidatorSubscription | null;
 
   constructor(flags: number, descriptor: ComponentDescriptor<P, S>, element: Element, parent?: Component<any, any>,
       props?: P) {
@@ -746,16 +746,8 @@ export class Component<P, S> {
   /**
    * Subscribe to invalidator object.
    */
-  subscribe(invalidator: Invalidator): void {
-    const s = invalidator.subscribeComponent(this);
-    const subscriptions = this._subscriptions;
-    if (subscriptions === null) {
-      this._subscriptions = s;
-    } else if (subscriptions.constructor === InvalidatorSubscription) {
-      this._subscriptions = [this._subscriptions as InvalidatorSubscription, s];
-    } else {
-      (subscriptions as InvalidatorSubscription[]).push(s);
-    }
+  subscribe(invalidator: Invalidator): InvalidatorSubscription {
+    return invalidator.subscribeComponent(this);
   }
 
   /**
@@ -763,16 +755,8 @@ export class Component<P, S> {
    *
    * Each time component is invalidated, all transient subscriptions will be canceled.
    */
-  transientSubscribe(invalidator: Invalidator): void {
-    const s = invalidator.transientSubscribeComponent(this);
-    const subscriptions = this._transientSubscriptions;
-    if (subscriptions === null) {
-      this._transientSubscriptions = s;
-    } else if (subscriptions.constructor === InvalidatorSubscription) {
-      this._transientSubscriptions = [this._transientSubscriptions as InvalidatorSubscription, s];
-    } else {
-      (subscriptions as InvalidatorSubscription[]).push(s);
-    }
+  transientSubscribe(invalidator: Invalidator): InvalidatorSubscription {
+    return invalidator.transientSubscribeComponent(this);
   }
 }
 
@@ -815,38 +799,24 @@ export function componentDetached(component: Component<any, any>): void {
  * Cancel subscriptions.
  */
 export function componentCancelSubscriptions(component: Component<any, any>): void {
-  const subscriptions = component._subscriptions;
-  if (subscriptions !== null) {
-    if (subscriptions.constructor === InvalidatorSubscription) {
-      (subscriptions as InvalidatorSubscription).invalidator
-        ._removeSubscription(subscriptions as InvalidatorSubscription);
-    } else {
-      for (let i = 0; i < (subscriptions as InvalidatorSubscription[]).length; i++) {
-        const s = (subscriptions as InvalidatorSubscription[])[i];
-        s.invalidator._removeSubscription(s);
-      }
-    }
-    component._subscriptions = null;
+  let subscription = component._subscriptions;
+  while (subscription !== null) {
+    subscription._cancel();
+    subscription = subscription._componentNext;
   }
+  component._subscriptions = null;
 }
 
 /**
  * Cancel transient subscriptions.
  */
 export function componentCancelTransientSubscriptions(component: Component<any, any>): void {
-  const subscriptions = component._transientSubscriptions;
-  if (subscriptions !== null) {
-    if (subscriptions.constructor === InvalidatorSubscription) {
-      (subscriptions as InvalidatorSubscription).invalidator
-        ._removeTransientSubscription(subscriptions as InvalidatorSubscription);
-    } else {
-      for (let i = 0; i < (subscriptions as InvalidatorSubscription[]).length; i++) {
-        const s = (subscriptions as InvalidatorSubscription[])[i];
-        s.invalidator._removeTransientSubscription(s);
-      }
-    }
-    component._transientSubscriptions = null;
+  let subscription = component._transientSubscriptions;
+  while (subscription !== null) {
+    subscription._cancel();
+    subscription = subscription._componentNext;
   }
+  component._transientSubscriptions = null;
 }
 
 /**
