@@ -14,7 +14,7 @@ Simple application with a component that prints "Hello World".
 ```js
 import {ComponentDescriptor, injectComponent} from "kivi";
 
-const HelloWorld = new ComponentDescriptor()
+const Main = new ComponentDescriptor()
   .update((c, props) => {
     c.vSync(c.createVRoot().children(`Hello ${props.name}`));
   });
