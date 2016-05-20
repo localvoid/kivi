@@ -1,23 +1,21 @@
-var gulp = require("gulp");
-var del = require("del");
-var ts = require("gulp-typescript");
-var tslint = require("gulp-tslint");
-var tsConfig = require("./tsconfig.json");
-var merge = require("merge2");
-var rollup = require("rollup");
-var rollupTypeScript = require("rollup-plugin-typescript");
-var rollupReplace = require("rollup-plugin-replace");
-var rollupBabel = require("rollup-plugin-babel");
-var gitbook = require("gitbook");
-var ghPages = require("gulp-gh-pages");
+const gulp = require("gulp");
+const del = require("del");
+const tsConfig = require("./tsconfig.json");
+const rollup = require("rollup");
+const rollupTypeScript = require("rollup-plugin-typescript");
+const rollupReplace = require("rollup-plugin-replace");
 
-gulp.task("clean", del.bind(null, ["dist", "build"]));
+gulp.task("clean", del.bind(undefined, ["dist", "build"]));
 
-gulp.task("build:es6", function() {
-  var result = gulp.src(["lib/**/*.ts"])
+gulp.task("build:es6", () => {
+  const ts = require("gulp-typescript");
+  const tslint = require("gulp-tslint");
+  const merge = require("merge2");
+
+  const result = gulp.src(["lib/**/*.ts"])
     .pipe(tslint())
     .pipe(tslint.report("verbose", {
-      emitError: false
+      emitError: false,
     }))
     .pipe(ts(Object.assign(tsConfig.compilerOptions, {
       typescript: require("typescript"),
@@ -27,11 +25,11 @@ gulp.task("build:es6", function() {
 
   return merge([
     result.dts.pipe(gulp.dest("dist/typings")),
-    result.js.pipe(gulp.dest("build/es6"))
+    result.js.pipe(gulp.dest("build/es6")),
   ]);
 });
 
-gulp.task("dist:es6", ["build:es6"], function() {
+gulp.task("dist:es6", gulp.series("build:es6", () => {
   return rollup.rollup({
     entry: "build/es6/kivi.js",
   }).then(function(bundle) {
@@ -40,17 +38,20 @@ gulp.task("dist:es6", ["build:es6"], function() {
       dest: "dist/es6/kivi.js",
     });
   });
-});
+}));
 
-gulp.task("dist:umd", ["build:es6"], function() {
+gulp.task("dist:umd", () => {
   return rollup.rollup({
-    entry: "build/es6/kivi.js",
+    entry: "lib/kivi.ts",
     plugins: [
-      rollupBabel({
-        presets: ["es2015-rollup"]
-      }),
-    ]
-  }).then(function(bundle) {
+      rollupTypeScript(Object.assign(tsConfig.compilerOptions, {
+        typescript: require("typescript"),
+        target: "es5",
+        module: "es6",
+        declaration: false,
+      })),
+    ],
+  }).then((bundle) => {
     return bundle.write({
       format: "umd",
       moduleName: "kivi",
@@ -59,15 +60,15 @@ gulp.task("dist:umd", ["build:es6"], function() {
   });
 });
 
-gulp.task("dist", ["dist:es6", "dist:umd"]);
-
-gulp.task("build:tests", function() {
+gulp.task("build:tests", () => {
   return rollup.rollup({
     entry: "tests/index.spec.ts",
     plugins: [
       rollupTypeScript(Object.assign(tsConfig.compilerOptions, {
         typescript: require("typescript"),
         target: "es5",
+        module: "es6",
+        declaration: false,
       })),
       rollupReplace({
         delimiters: ["<@", "@>"],
@@ -75,7 +76,7 @@ gulp.task("build:tests", function() {
           KIVI_COMPONENT_RECYCLING: "COMPONENT_RECYCLING_ENABLED"
         }
       }),
-    ]
+    ],
   }).then(function(bundle) {
     return bundle.write({
       format: "iife",
@@ -85,17 +86,17 @@ gulp.task("build:tests", function() {
   });
 });
 
-gulp.task("test", ["build:tests"], function(done) {
-  var KarmaServer = require("karma").Server;
+gulp.task("test", gulp.series("build:tests", (done) => {
+  const KarmaServer = require("karma").Server;
 
   new KarmaServer({
     configFile: __dirname + "/karma.conf.js",
     singleRun: true,
   }, done).start();
-});
+}));
 
-gulp.task("test:sauce", ["build:tests"], function(done) {
-  var KarmaServer = require("karma").Server;
+gulp.task("test:sauce", gulp.series("build:tests", (done) => {
+  const KarmaServer = require("karma").Server;
 
   new KarmaServer({
     configFile: __dirname + "/karma.conf.js",
@@ -109,26 +110,12 @@ gulp.task("test:sauce", ["build:tests"], function(done) {
     reporters: ["progress", "saucelabs"],
     singleRun: true,
   }, done).start();
-});
+}));
 
-gulp.task("examples:ts", function() {
-  return gulp.src(["examples/**/*.ts"])
-    .pipe(ts({
-      target: "es6",
-      noImplicitAny: true,
-      removeComments: false,
-      moduleResolution: "node"
-    }))
-    .pipe(gulp.dest("build/examples"));
-});
+gulp.task("docs", (done) => {
+  const gitbook = require("gitbook");
 
-gulp.task("examples:html", function() {
-  return gulp.src(["examples/**/*.html"])
-    .pipe(gulp.dest("build/examples"));
-});
-
-gulp.task("docs", function(done) {
-  var book = new gitbook.Book("docs", {
+  const book = new gitbook.Book("docs", {
     config: {
       output: "gh-pages",
       title: "kivi",
@@ -148,14 +135,16 @@ gulp.task("docs", function(done) {
     },
   });
 
-  return book.parse().then(function() {
+  return book.parse().then(() => {
     return book.generate("website");
   });
 });
 
-gulp.task("gh-pages", ["docs"], function() {
+gulp.task("gh-pages", gulp.series("docs", () => {
+  const ghPages = require("gulp-gh-pages");
+
   return gulp.src("gh-pages/**/*")
     .pipe(ghPages());
-});
+}));
 
-gulp.task("examples", ["examples:html"]);
+gulp.task("dist", gulp.series("clean", gulp.parallel(["dist:es6", "dist:umd"])));
