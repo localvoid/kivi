@@ -86,6 +86,31 @@ gulp.task("build:tests", () => {
   });
 });
 
+gulp.task("build:random-tests.html", () => {
+  return gulp.src("tests/random/children_reconciliation.html")
+    .pipe(gulp.dest("build"));
+})
+
+gulp.task("build:random-tests", gulp.series("build:random-tests.html", () => {
+  return rollup.rollup({
+    entry: "tests/random/children_reconciliation.ts",
+    plugins: [
+      rollupTypeScript(Object.assign(tsConfig.compilerOptions, {
+        typescript: require("typescript"),
+        target: "es5",
+        module: "es6",
+        declaration: false,
+      })),
+    ],
+  }).then(function(bundle) {
+    return bundle.write({
+      format: "iife",
+      dest: "build/children_reconciliation.js",
+      sourceMap: "inline",
+    });
+  });
+}));
+
 gulp.task("test", gulp.series("build:tests", (done) => {
   const KarmaServer = require("karma").Server;
 
