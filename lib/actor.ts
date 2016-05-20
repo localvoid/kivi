@@ -8,16 +8,19 @@ import {scheduler} from "./scheduler";
  */
 export const enum MessageFlags {
   // Enable message tracing.
-  Trace = 1,
+  Trace         = 1,
+  // Message were created from an action initiated by user.
+  UserInitiated = 1 << 1
 }
 
-let _nextMessageFlag = 1;
+let _nextMessageFlag = 1 << 1;
 
 /**
  * Acquire a message flag at runtime.
  */
 export function acquireMessageFlag(): number {
-  return 1 << _nextMessageFlag++;
+  _nextMessageFlag <<= 1;
+  return _nextMessageFlag;
 }
 
 /**
