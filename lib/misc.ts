@@ -170,21 +170,23 @@ export const enum ComponentFlags {
   Attached                   = 1 << 1,
   /// Component is dirty and should be updated.
   Dirty                      = 1 << 2,
+  /// Default dirty flag. Component doesn't have any tips that describe which part is dirty.
+  DirtyView                  = 1 << 3,
   /// Component should be updated on each frame with high priority.
-  UpdateEachFrame            = 1 << 3,
+  UpdateEachFrame            = 1 << 4,
   /// Component is registered in update each frame queue, when this flag is off, it will be removed from queue on next
   /// frame.
-  InUpdateEachFrameQueue     = 1 << 4,
+  InUpdateEachFrameQueue     = 1 << 5,
   /// Component is in recycled pool.
-  Recycled                   = 1 << 5,
+  Recycled                   = 1 << 6,
   /// Prevents from checking props indentity.
-  DisabledCheckPropsIdentity = 1 << 6,
+  DisabledCheckPropsIdentity = 1 << 7,
   /// Component is registered in scheduler frame task queue for updates.
-  InUpdateQueue              = 1 << 7,
+  InUpdateQueue              = 1 << 8,
   /// Component has a high priority and should be updated even when time frame for incremental rendering is exhausted.
-  HighPriorityUpdate         = 1 << 8,
+  HighPriorityUpdate         = 1 << 9,
   /// Component is enabled scheduler throttling.
-  EnabledThrottling          = 1 << 9,
+  EnabledThrottling          = 1 << 10,
 
   /// See `SharedFlags.Svg`.
   Svg              = SharedFlags.Svg,

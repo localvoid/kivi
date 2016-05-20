@@ -679,7 +679,8 @@ export class Component<P, S> {
    *
    * It automatically cancels all transient subscriptions and schedules a component update on the next frame.
    */
-  invalidate(): void {
+  invalidate(dirtyFlags: number = ComponentFlags.DirtyView): void {
+    this.flags |= dirtyFlags;
     if ((this.flags & (ComponentFlags.Dirty | ComponentFlags.Disposed)) === 0) {
       this.flags |= ComponentFlags.Dirty;
       componentCancelTransientSubscriptions(this);
