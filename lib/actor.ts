@@ -35,11 +35,18 @@ export const enum MessageFlags {
   Consumed      = 1 << 2,
 }
 
+/**
+ * Global counter that generates unique ids for actors.
+ */
 let _nextActorId = 0;
+
+/**
+ * Highest bit used for a message flag.
+ */
 let _nextMessageFlag = 1 << 2;
 
 /**
- * Acquire a message flag at runtime.
+ * Acquire a new message flag at runtime.
  */
 export function acquireMessageFlag(): number {
   _nextMessageFlag <<= 1;
@@ -76,12 +83,14 @@ export type ActorNextMiddleware<P, S> = (message: Message<any>) => void;
  *     const RouterMessages = new MessageGroup("app.router");
  *     const ChangeRoute = RouterMessages.create<string>("changeRoute");
  *     const msg = ChangeRoute.create("/home");
+ *
+ *     actor.send(msg);
  */
 export class MessageGroup {
   /**
-   * Id counter that is used to generate unique ids for message descriptors.
+   * Metadata.
    */
-  _nextId: number;
+  _meta: Map<Symbol, any>;
   /**
    * Flags that will be marked on message descriptor instances. See `MessageDescriptorFlags` for details.
    */
@@ -91,20 +100,20 @@ export class MessageGroup {
    */
   _markMessageFlags: number;
   /**
+   * Id counter that is used to generate unique ids for message descriptors.
+   */
+  _nextId: number;
+  /**
    * Group name.
    */
   readonly name: number | string;
-  /**
-   * Metadata.
-   */
-  _meta: Map<Symbol, any>;
 
-  constructor(id: number | string) {
-    this._nextId = 0;
+  constructor(name: number | string) {
+    this._meta = new Map<Symbol, any>();
     this._markDescriptorFlags = 0;
     this._markMessageFlags = 0;
-    this.name = id;
-    this._meta = new Map<Symbol, any>();
+    this._nextId = 0;
+    this.name = name;
   }
 
   /**
@@ -140,8 +149,8 @@ export class MessageGroup {
   /**
    * Create a new message descriptor.
    */
-  create<P>(id: number | string): MessageDescriptor<P> {
-    return new MessageDescriptor<P>(this, this.acquireId(), id, this._markDescriptorFlags, this._markMessageFlags);
+  create<P>(name: string): MessageDescriptor<P> {
+    return new MessageDescriptor<P>(this, this.acquireId(), name, this._markDescriptorFlags, this._markMessageFlags);
   }
 }
 
@@ -158,28 +167,28 @@ export class MessageDescriptor<P> {
    */
   _markFlags: number;
   /**
-   * Unique id.
+   * Unique id among message in the same group.
    */
-  readonly uid: number;
-  /**
-   * Static identifier.
-   */
-  readonly id: number | string;
+  readonly id: number;
   /**
    * Message group.
    */
   readonly group: MessageGroup;
   /**
+   * Message name.
+   */
+  readonly name: string;
+  /**
    * Metadata.
    */
   _meta: Map<Symbol, any>;
 
-  constructor(group: MessageGroup, uid: number, id: number | string, flags: number, messageFlags: number) {
+  constructor(group: MessageGroup, id: number, name: string, flags: number, messageFlags: number) {
     this._flags = flags;
     this._markFlags = messageFlags;
-    this.uid = uid;
     this.id = id;
     this.group = group;
+    this.name = name;
     this._meta = new Map<Symbol, any>();
   }
 
@@ -261,7 +270,14 @@ export class Message<P> {
   }
 }
 
+/**
+ * System messages group.
+ */
 export const SystemMessageGroup = new MessageGroup(getMessageGroupName("system"));
+
+/**
+ * System message: actor disposed.
+ */
 export const ActorDisposedMessage = SystemMessageGroup.create<Actor<any, any>>(getMessageName("actorDisposed"));
 
 /**
@@ -287,6 +303,9 @@ export class ActorLink {
     a._links = this;
   }
 
+  /**
+   * Cancel link.
+   */
   cancel(): void {
     if (this._prev === null) {
       this.a._links = this._next;
@@ -363,6 +382,9 @@ export class ActorDescriptor<P, S> {
     return actor;
   }
 
+  /**
+   * Add middleware.
+   */
   addMiddleware(middleware: ActorMiddleware<any, any>): ActorDescriptor<P, S> {
     if (this._middleware === null) {
       this._middleware = [];
@@ -371,21 +393,33 @@ export class ActorDescriptor<P, S> {
     return this;
   }
 
+  /**
+   * Create state handler.
+   */
   createState(handler: (actor: Actor<P, S>, props: P | null) => S): ActorDescriptor<P, S> {
     this._createState = handler;
     return this;
   }
 
+  /**
+   * Init handler.
+   */
   init(handler: (actor: Actor<P, S>, props: P | null, state: S | null) => S): ActorDescriptor<P, S> {
     this._init = handler;
     return this;
   }
 
+  /**
+   * Handle message handler.
+   */
   handleMessage(handler: ActorMessageHandler<P, S>): ActorDescriptor<P, S> {
     this._handleMessage = handler;
     return this;
   }
 
+  /**
+   * Disposed handler.
+   */
   disposed(handler: (actor: Actor<P, S>, props: P | null, state: S | null) => S): ActorDescriptor<P, S> {
     this._disposed = handler;
     return this;
@@ -454,6 +488,9 @@ export class Actor<P, S> {
     return new ActorLink(this, actor);
   }
 
+  /**
+   * Dispose.
+   */
   dispose(): void {
     let link = this._links;
     if (link !== null) {
@@ -468,6 +505,9 @@ export class Actor<P, S> {
     }
   }
 
+  /**
+   * Add middleware.
+   */
   addMiddleware(middleware: ActorMiddleware<any, any>): Actor<P, S> {
     if (this._middleware === null) {
       this._middleware = [];
@@ -477,6 +517,9 @@ export class Actor<P, S> {
   }
 }
 
+/**
+ * Add message to actor inbox.
+ */
 export function actorAddMessage(actor: Actor<any, any>, message: Message<any>): void {
   if ((actor._flags & ActorFlags.IncomingMessage) === 0) {
     actor._flags |= ActorFlags.IncomingMessage;
