@@ -2,7 +2,26 @@
  * **EXPERIMENTAL** actors model implementation.
  */
 import {scheduler} from "./scheduler";
-import {getMessageGroupName, getMessageName} from "./misc";
+
+/**
+ * This function doesn't do anything, it just returns the same `groupName` value.
+ *
+ * It is used so that when building application in production mode, we can replace all occurences of
+ * `getMessageGroupName` function and minify all group names.
+ */
+export function getMessageGroupName(groupName: string): string {
+  return groupName;
+}
+
+/**
+ * This function doesn't do anything, it just returns the same `messageName` value.
+ *
+ * It is used so that when building application in production mode, we can replace all occurences of
+ * `getMessageName` function and minify all message names.
+ */
+export function getMessageName(messageName: string): string {
+  return messageName;
+}
 
 /**
  * Message flags.
