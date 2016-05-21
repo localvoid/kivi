@@ -1,7 +1,7 @@
 import {Component} from "./component";
 import {SchedulerFlags, ComponentFlags} from "./misc";
 import {VNode, vNodeMount, vNodeRender} from "./vnode";
-import {Actor, ActorFlags, ActorMiddleware, ActorNextMiddleware, Message, MessageFlags, actorAddMessage} from "./actor";
+import {Actor, ActorFlags, ActorMiddleware, ActorNextMiddleware, Message, MessageFlags} from "./actor";
 import {reconciler} from "./reconciler";
 
 export type SchedulerCallback = () => void;
@@ -452,17 +452,20 @@ export class Scheduler {
    * Send message to an actor.
    */
   sendMessage(actor: Actor<any, any>, message: Message<any>): void {
-    if ((actor._flags & ActorFlags.Active) === 0) {
-      if ((this._flags & SchedulerFlags.ActorPending) === 0) {
-        this._flags |= SchedulerFlags.ActorPending;
-        if ((this._flags & SchedulerFlags.MicrotaskPending) === 0) {
-          this._microtaskScheduler.requestNextTick();
+    if ((actor._flags & ActorFlags.Disposed) === 0) {
+      if ((actor._flags & ActorFlags.Active) === 0) {
+        if ((this._flags & SchedulerFlags.ActorPending) === 0) {
+          this._flags |= SchedulerFlags.ActorPending;
+          if ((this._flags & SchedulerFlags.MicrotaskPending) === 0) {
+            this._microtaskScheduler.requestNextTick();
+          }
         }
+        this._activeActors.push(actor);
+        actor._flags |= ActorFlags.Active;
       }
-      this._activeActors.push(actor);
-      actor._flags |= ActorFlags.Active;
+      actor._flags |= ActorFlags.IncomingMessage;
+      actor._inbox.push(message);
     }
-    actorAddMessage(actor, message);
   }
 
   addActorMiddleware(middleware: ActorMiddleware<any, any>): Scheduler {

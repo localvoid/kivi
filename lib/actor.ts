@@ -61,6 +61,8 @@ export const enum ActorFlags {
   Active          = 1,
   // Inbox has an incoming message.
   IncomingMessage = 1 << 1,
+  // Actor is disposed.
+  Disposed        = 1 << 2,
 }
 
 /**
@@ -492,6 +494,7 @@ export class Actor<P, S> {
    * Dispose.
    */
   dispose(): void {
+    this._flags |= ActorFlags.Disposed;
     let link = this._links;
     if (link !== null) {
       const msg = ActorDisposedMessage.create(this);
@@ -515,16 +518,6 @@ export class Actor<P, S> {
     this._middleware.push(middleware);
     return this;
   }
-}
-
-/**
- * Add message to actor inbox.
- */
-export function actorAddMessage(actor: Actor<any, any>, message: Message<any>): void {
-  if ((actor._flags & ActorFlags.IncomingMessage) === 0) {
-    actor._flags |= ActorFlags.IncomingMessage;
-  }
-  actor._inbox.push(message);
 }
 
 /**
