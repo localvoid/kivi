@@ -2,6 +2,7 @@
  * **EXPERIMENTAL** actors model implementation.
  */
 import {scheduler} from "./scheduler";
+import {getMessageGroupName, getMessageName} from "./misc";
 
 /**
  * Message flags.
@@ -239,6 +240,44 @@ export class Message<P> {
   }
 }
 
+export const SystemMessageGroup = new MessageGroup(getMessageGroupName("system"));
+export const ActorDisposedMessage = SystemMessageGroup.create<Actor<any, any>>(getMessageName("actorDisposed"));
+
+/**
+ * Link actor `a` to another actor `b`.
+ */
+export class ActorLink {
+  readonly a: Actor<any, any>;
+  readonly b: Actor<any, any>;
+  _prev: ActorLink | null;
+  _next: ActorLink | null;
+
+  constructor(a: Actor<any, any>, b: Actor<any, any>) {
+    this.a = a;
+    this.b = b;
+
+    const firstALink = a._links;
+
+    if (firstALink !== null) {
+      firstALink._prev = this;
+      this._next = firstALink;
+    }
+
+    a._links = this;
+  }
+
+  cancel(): void {
+    if (this._prev === null) {
+      this.a._links = this._next;
+    } else {
+      this._prev._next = this._next;
+    }
+    if (this._next !== null) {
+      this._next._prev = this._prev;
+    }
+  }
+}
+
 /**
  * Actor descriptor.
  *
@@ -364,6 +403,10 @@ export class Actor<P, S> {
    * Middleware handlers.
    */
   _middleware: ActorMiddleware<P, S>[] | null;
+  /**
+   * Links.
+   */
+  _links: ActorLink | null;
 
   constructor(descriptor: ActorDescriptor<P, S>, props: P | undefined, flags: number) {
     this.id = _nextActorId++;
@@ -373,6 +416,7 @@ export class Actor<P, S> {
     this.state = null;
     this._inbox = [];
     this._middleware = null;
+    this._links = null;
   }
 
   /**
@@ -382,7 +426,22 @@ export class Actor<P, S> {
     scheduler.sendMessage(this, message);
   }
 
+  /**
+   * Link with another actor.
+   */
+  link(actor: Actor<any, any>): ActorLink {
+    return new ActorLink(this, actor);
+  }
+
   dispose(): void {
+    let link = this._links;
+    if (link !== null) {
+      const msg = ActorDisposedMessage.create(this);
+      do {
+        link.b.send(msg);
+        link = link._next;
+      } while (link !== null);
+    }
     if (this.descriptor._disposed !== null) {
       this.descriptor._disposed(this, this.props, this.state);
     }
