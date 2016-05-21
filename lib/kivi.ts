@@ -1,14 +1,71 @@
-export * from "./scheduler";
-export * from "./invalidator";
-export * from "./vmodel";
-export * from "./vnode";
-export * from "./container_manager";
-export * from "./component";
-export {Reconciler, reconciler} from "./reconciler";
-export * from "./actor";
+export { scheduler } from "./scheduler";
+export { reconciler } from "./reconciler";
+export { VModel } from "./vmodel";
+
 export {
-  VNodeFlags, VModelFlags, ComponentDescriptorFlags, ComponentFlags, InvalidatorSubscriptionFlags,
-  RenderFlags, filterVNodes, getBackRef, getTagName, getClassName,
+  InvalidatorSubscription,
+  Invalidator,
+} from "./invalidator";
+
+export {
+  VNode,
+  vNodeInstantiate,
+  vNodeRender,
+  vNodeMount,
+  vNodeCreateCommentPlaceholder,
+  vNodeAttach,
+  vNodeDetach,
+  vNodeDispose,
+  insertVNodeBefore,
+  replaceVNode,
+  moveVNode,
+  removeVNode,
+  createVText,
+  createVElement,
+  createVSvgElement,
+  createVRoot,
+} from "./vnode";
+
+export {
+  ContainerManagerDescriptor,
+  ContainerManager,
+} from "./container_manager";
+
+export {
+  ComponentDescriptor,
+  Component,
+  injectComponent,
+  mountComponent,
+} from "./component";
+
+export {
+  MessageFlags,
+  ActorFlags,
+  getMessageGroupName,
+  getMessageName,
+  getMessagePayload,
+  acquireMessageFlag,
+  MessageGroup,
+  MessageDescriptor,
+  Message,
+  ActorDescriptor,
+  Actor,
+  ActorLink,
+  SystemMessageGroup,
+  ActorDisposedMessage,
+} from "./actor";
+
+export {
+  VNodeFlags,
+  VModelFlags,
+  ComponentDescriptorFlags,
+  ComponentFlags,
+  InvalidatorSubscriptionFlags,
+  RenderFlags,
+  filterVNodes,
+  getBackRef,
+  getTagName,
+  getClassName,
 } from "./misc";
 
 if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
