@@ -434,10 +434,10 @@ export class ComponentDescriptor<P, S> {
         (element as any as {xtag: Component<P, S>}).xtag = component;
       }
       if (this._createState !== null) {
-        component._state = this._createState(component, component._props!);
+        component.state = this._createState(component, component.props!);
       }
       if (this._init !== null) {
-        this._init(component, component._props!, component._state!);
+        this._init(component, component.props!, component.state!);
       }
     } else {
       component = this._recycledPool!.pop()!;
@@ -465,10 +465,10 @@ export class ComponentDescriptor<P, S> {
   mountComponent(element: Element, parent?: Component<any, any>, props?: P): Component<P, S> {
     const component = new Component<P, S>(this._markFlags , this, element, parent, props);
     if (this._createState !== null) {
-      component._state = this._createState(component, component._props!);
+      component.state = this._createState(component, component.props!);
     }
     if (this._init !== null) {
-      this._init(component, component._props!, component._state!);
+      this._init(component, component.props!, component.state!);
     }
     componentAttached(component);
     return component;
@@ -508,11 +508,11 @@ export class Component<P, S> {
   /**
    * Component's props.
    */
-  _props: P | null;
+  props: P | null;
   /**
    * Component's state.
    */
-  _state: S | null;
+  state: S | null;
   /**
    * Root node can contain a virtual dom root if Component represents a DOM subtree, or Canvas context if Component is
    * a Canvas object.
@@ -529,8 +529,8 @@ export class Component<P, S> {
     this.descriptor = descriptor;
     this.element = element;
     this.depth = parent === undefined ? 0 : parent.depth + 1;
-    this._props = props === undefined ? null : props;
-    this._state = null;
+    this.props = props === undefined ? null : props;
+    this.state = null;
     this._root = ((flags & ComponentFlags.Canvas2D) === 0) ? null : (element as HTMLCanvasElement).getContext("2d");
     this._subscriptions = null;
     this._transientSubscriptions = null;
@@ -735,7 +735,7 @@ export class Component<P, S> {
       }
       const disposed = this.descriptor._disposed;
       if (disposed !== null) {
-        disposed(this, this._props!, this._state!);
+        disposed(this, this.props!, this.state!);
       }
     } else {
       this.detach();
@@ -773,7 +773,7 @@ export function componentAttached(component: Component<any, any>): void {
 
   const attached = component.descriptor._attached;
   if (attached !== null) {
-    attached(component, component._props, component._state);
+    attached(component, component.props, component.state);
   }
 }
 
@@ -791,7 +791,7 @@ export function componentDetached(component: Component<any, any>): void {
   componentCancelTransientSubscriptions(component);
   const detached = component.descriptor._detached;
   if (detached !== null) {
-    detached(component, component._props, component._state);
+    detached(component, component.props, component.state);
   }
 }
 

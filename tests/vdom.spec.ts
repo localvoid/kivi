@@ -1055,7 +1055,7 @@ describe("VNode", () => {
       const node = createVElement("div").children([component]);
       vNodeInstantiate(node, undefined);
       vNodeRender(node, 0, undefined);
-      const state = component.getComponentRef<number, LifecycleState>()._state!;
+      const state = component.getComponentRef<number, LifecycleState>().state!;
       expect(state.checkInit).toBe(0);
       expect(state.checkAttached).toBe(1);
       expect(state.checkUpdate).toBe(2);
@@ -1070,7 +1070,7 @@ describe("VNode", () => {
       vNodeAttached(node);
       vNodeRender(node, 0, undefined);
       vNodeDetach(node);
-      const state = component.getComponentRef<number, LifecycleState>()._state!;
+      const state = component.getComponentRef<number, LifecycleState>().state!;
       expect(state.checkInit).toBe(0);
       expect(state.checkAttached).toBe(1);
       expect(state.checkUpdate).toBe(2);
@@ -1086,7 +1086,7 @@ describe("VNode", () => {
       vNodeRender(node, 0, undefined);
       vNodeDetach(node);
       vNodeAttach(node);
-      const state = component.getComponentRef<number, LifecycleState>()._state!;
+      const state = component.getComponentRef<number, LifecycleState>().state!;
       expect(state.checkInit).toBe(0);
       expect(state.checkAttached).toBe(4);
       expect(state.checkUpdate).toBe(2);
@@ -1101,7 +1101,7 @@ describe("VNode", () => {
       vNodeAttached(node);
       vNodeRender(node, 0, undefined);
       vNodeDispose(node);
-      const state = component.getComponentRef<number, LifecycleState>()._state!;
+      const state = component.getComponentRef<number, LifecycleState>().state!;
       expect(state.checkInit).toBe(0);
       expect(state.checkAttached).toBe(1);
       expect(state.checkUpdate).toBe(2);
@@ -1119,7 +1119,7 @@ describe("VNode", () => {
       vNodeAttach(node);
       vNodeDetach(node);
       vNodeDispose(node);
-      const state = component.getComponentRef<number, LifecycleState>()._state!;
+      const state = component.getComponentRef<number, LifecycleState>().state!;
       expect(state.checkInit).toBe(0);
       expect(state.checkAttached).toBe(4);
       expect(state.checkUpdate).toBe(2);
@@ -1133,7 +1133,7 @@ describe("VNode", () => {
       vNodeInstantiate(a, undefined);
       vNodeAttached(a);
       vNodeRender(a, RenderFlags.ShallowRender, undefined);
-      const state = component.getComponentRef<number, LifecycleState>()._state!;
+      const state = component.getComponentRef<number, LifecycleState>().state!;
       expect(state.checkInit).toBe(0);
       expect(state.checkAttached).toBe(1);
       expect(state.checkUpdate).toBe(-1);
@@ -1149,8 +1149,8 @@ describe("VNode", () => {
       vNodeInstantiate(a, undefined);
       vNodeAttached(a);
       vNodeRender(a, 0, undefined);
-      const stateA = componentA.getComponentRef<number, LifecycleState>()._state!;
-      expect(componentA.getComponentRef<number, LifecycleState>()._props).toBe(0);
+      const stateA = componentA.getComponentRef<number, LifecycleState>().state!;
+      expect(componentA.getComponentRef<number, LifecycleState>().props).toBe(0);
       expect(stateA.checkInit).toBe(0);
       expect(stateA.checkAttached).toBe(1);
       expect(stateA.checkUpdate).toBe(2);
@@ -1158,9 +1158,9 @@ describe("VNode", () => {
       expect(stateA.checkDisposed).toBe(-1);
 
       reconciler.sync(a, b, 0, undefined);
-      const stateB = componentB.getComponentRef<number, LifecycleState>()._state!;
-      expect(componentB.getComponentRef<number, LifecycleState>()._props).toBe(1);
-      expect((componentB.cref as Component<number, any>)._props).toBe(1);
+      const stateB = componentB.getComponentRef<number, LifecycleState>().state!;
+      expect(componentB.getComponentRef<number, LifecycleState>().props).toBe(1);
+      expect((componentB.cref as Component<number, any>).props).toBe(1);
       expect(stateB.checkInit).toBe(0);
       expect(stateB.checkAttached).toBe(1);
       expect(stateB.checkUpdate).toBe(3);
@@ -1176,7 +1176,7 @@ describe("VNode", () => {
       vNodeInstantiate(a, undefined);
       vNodeAttached(a);
       vNodeRender(a, 0, undefined);
-      const stateA = componentA.getComponentRef<number, LifecycleState>()._state!;
+      const stateA = componentA.getComponentRef<number, LifecycleState>().state!;
       expect(stateA.checkInit).toBe(0);
       expect(stateA.checkAttached).toBe(1);
       expect(stateA.checkUpdate).toBe(2);
@@ -1184,7 +1184,7 @@ describe("VNode", () => {
       expect(stateA.checkDisposed).toBe(-1);
 
       reconciler.sync(a, b, RenderFlags.ShallowUpdate, undefined);
-      const stateB = componentB.getComponentRef<number, LifecycleState>()._state!;
+      const stateB = componentB.getComponentRef<number, LifecycleState>().state!;
       expect(stateB.checkInit).toBe(0);
       expect(stateB.checkAttached).toBe(1);
       expect(stateB.checkUpdate).toBe(2);
@@ -1200,8 +1200,8 @@ describe("VNode", () => {
       vNodeInstantiate(a, undefined);
       vNodeAttached(a);
       vNodeRender(a, 0, undefined);
-      const stateA = componentA.getComponentRef<number, LifecycleState>()._state!;
-      expect(componentA.getComponentRef<number, LifecycleState>()._props).toBe(0);
+      const stateA = componentA.getComponentRef<number, LifecycleState>().state!;
+      expect(componentA.getComponentRef<number, LifecycleState>().props).toBe(0);
       expect(stateA.checkInit).toBe(0);
       expect(stateA.checkAttached).toBe(1);
       expect(stateA.checkUpdate).toBe(2);
@@ -1209,8 +1209,8 @@ describe("VNode", () => {
       expect(stateA.checkDisposed).toBe(-1);
 
       reconciler.sync(a, b, RenderFlags.ShallowUpdate, undefined);
-      const stateB = componentB.getComponentRef<number, LifecycleState>()._state!;
-      expect(componentB.getComponentRef<number, LifecycleState>()._props).toBe(0);
+      const stateB = componentB.getComponentRef<number, LifecycleState>().state!;
+      expect(componentB.getComponentRef<number, LifecycleState>().props).toBe(0);
       expect(stateB.checkInit).toBe(0);
       expect(stateB.checkAttached).toBe(1);
       expect(stateB.checkUpdate).toBe(2);
@@ -1293,7 +1293,7 @@ describe("VNode", () => {
       expect(t2.ref).toBe(e.lastChild);
       expect(component.ref).toBe(e2);
 
-      const state = component.getComponentRef<number, LifecycleState>()._state!;
+      const state = component.getComponentRef<number, LifecycleState>().state!;
       expect(state.checkInit).toBe(0);
       expect(state.checkAttached).toBe(1);
       expect(state.checkUpdate).toBe(2);

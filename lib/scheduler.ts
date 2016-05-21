@@ -687,7 +687,7 @@ export function schedulerUpdateComponent(scheduler: Scheduler, component: Compon
 
   if (newProps !== undefined) {
     if ((flags & ComponentFlags.Dirty) === 0) {
-      const oldProps = component._props;
+      const oldProps = component.props;
       const newPropsReceived = component.descriptor._newPropsReceived;
       if (newPropsReceived !== null) {
         newPropsReceived(component, oldProps, newProps);
@@ -695,7 +695,7 @@ export function schedulerUpdateComponent(scheduler: Scheduler, component: Compon
         component.markDirty();
       }
     }
-    component._props = newProps;
+    component.props = newProps;
   }
 
   if ((component.flags & (ComponentFlags.Dirty | ComponentFlags.Attached)) ===
@@ -704,7 +704,7 @@ export function schedulerUpdateComponent(scheduler: Scheduler, component: Compon
         ((scheduler._flags & SchedulerFlags.EnabledMounting) !== 0) ||
         ((flags & ComponentFlags.HighPriorityUpdate) !== 0) ||
         (scheduler.frameTimeRemaining() > 0)) {
-      component.descriptor._update!(component, component._props, component._state);
+      component.descriptor._update!(component, component.props, component.state);
       component.mtime = scheduler.clock;
       component.flags &= ~(ComponentFlags.Dirty | ComponentFlags.InUpdateQueue);
     } else {

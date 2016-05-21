@@ -76,54 +76,54 @@ describe("Component", () => {
   describe("lifecycle methods", () => {
     it("should execute init hook when component is created", () => {
       const c = LifecycleComponent.createRootComponent();
-      expect(c._state!.checkInit).toBe(0);
-      expect(c._state!.checkUpdate).toBe(-1);
-      expect(c._state!.checkAttached).toBe(-1);
-      expect(c._state!.checkDetached).toBe(-1);
-      expect(c._state!.checkDisposed).toBe(-1);
+      expect(c.state!.checkInit).toBe(0);
+      expect(c.state!.checkUpdate).toBe(-1);
+      expect(c.state!.checkAttached).toBe(-1);
+      expect(c.state!.checkDetached).toBe(-1);
+      expect(c.state!.checkDisposed).toBe(-1);
     });
 
     it("shouldn't execute update hook on update in detached state", () => {
       const c = LifecycleComponent.createRootComponent();
       c.update();
-      expect(c._state!.checkInit).toBe(0);
-      expect(c._state!.checkUpdate).toBe(-1);
-      expect(c._state!.checkAttached).toBe(-1);
-      expect(c._state!.checkDetached).toBe(-1);
-      expect(c._state!.checkDisposed).toBe(-1);
+      expect(c.state!.checkInit).toBe(0);
+      expect(c.state!.checkUpdate).toBe(-1);
+      expect(c.state!.checkAttached).toBe(-1);
+      expect(c.state!.checkDetached).toBe(-1);
+      expect(c.state!.checkDisposed).toBe(-1);
     });
 
     it("should execute update hook on update in attached state", () => {
       const c = LifecycleComponent.createRootComponent();
       c.attach();
       c.update();
-      expect(c._state!.checkInit).toBe(0);
-      expect(c._state!.checkUpdate).toBe(2);
-      expect(c._state!.checkAttached).toBe(1);
-      expect(c._state!.checkDetached).toBe(-1);
-      expect(c._state!.checkDisposed).toBe(-1);
+      expect(c.state!.checkInit).toBe(0);
+      expect(c.state!.checkUpdate).toBe(2);
+      expect(c.state!.checkAttached).toBe(1);
+      expect(c.state!.checkDetached).toBe(-1);
+      expect(c.state!.checkDisposed).toBe(-1);
     });
 
     it("should execute detached hook when component is detached", () => {
       const c = LifecycleComponent.createRootComponent();
       c.attach();
       c.detach();
-      expect(c._state!.checkInit).toBe(0);
-      expect(c._state!.checkUpdate).toBe(-1);
-      expect(c._state!.checkAttached).toBe(1);
-      expect(c._state!.checkDetached).toBe(2);
-      expect(c._state!.checkDisposed).toBe(-1);
+      expect(c.state!.checkInit).toBe(0);
+      expect(c.state!.checkUpdate).toBe(-1);
+      expect(c.state!.checkAttached).toBe(1);
+      expect(c.state!.checkDetached).toBe(2);
+      expect(c.state!.checkDisposed).toBe(-1);
     });
 
     it("should execute detached and disposed hook when component is disposed", () => {
       const c = LifecycleComponent.createRootComponent();
       c.attach();
       c.dispose();
-      expect(c._state!.checkInit).toBe(0);
-      expect(c._state!.checkUpdate).toBe(-1);
-      expect(c._state!.checkAttached).toBe(1);
-      expect(c._state!.checkDetached).toBe(2);
-      expect(c._state!.checkDisposed).toBe(3);
+      expect(c.state!.checkInit).toBe(0);
+      expect(c.state!.checkUpdate).toBe(-1);
+      expect(c.state!.checkAttached).toBe(1);
+      expect(c.state!.checkDetached).toBe(2);
+      expect(c.state!.checkDisposed).toBe(3);
     });
   });
 });
