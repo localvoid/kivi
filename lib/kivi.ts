@@ -8,7 +8,7 @@ export {Reconciler, reconciler} from "./reconciler";
 export * from "./actor";
 export {
   VNodeFlags, VModelFlags, ComponentDescriptorFlags, ComponentFlags, InvalidatorSubscriptionFlags,
-  RenderFlags, filterVNodes, getBackRef, getTagName, getClassName,
+  RenderFlags, filterVNodes, getBackRef, getTagName, getClassName, getMessageGroupName, getMessageName,
 } from "./misc";
 
 if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
