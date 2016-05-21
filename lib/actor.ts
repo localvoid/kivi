@@ -46,9 +46,19 @@ let _nextActorId = 0;
 let _nextMessageFlag = 1 << 2;
 
 /**
+ * Registry that is used in DEBUG mode to check that all message names are unique.
+ */
+let _uniqueMessageNameRegistry: Map<string, Set<string>> | undefined;
+
+/**
  * Acquire a new message flag at runtime.
  */
 export function acquireMessageFlag(): number {
+  if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+    if (_nextMessageFlag === 1 << 31) {
+      throw Error("Failed to acquire new message flag: no free message flags left.");
+    }
+  }
   _nextMessageFlag <<= 1;
   return _nextMessageFlag;
 }
@@ -108,14 +118,25 @@ export class MessageGroup {
   /**
    * Group name.
    */
-  readonly name: number | string;
+  readonly name: string;
 
-  constructor(name: number | string) {
+  constructor(name: string) {
     this._meta = new Map<Symbol, any>();
     this._markDescriptorFlags = 0;
     this._markMessageFlags = 0;
     this._nextId = 0;
     this.name = name;
+
+    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+      if (_uniqueMessageNameRegistry === undefined) {
+        _uniqueMessageNameRegistry = new Map<string, Set<string>>();
+      }
+      if (_uniqueMessageNameRegistry.has(name)) {
+        throw Error(`Failed to create a new message group: group with name "${name}" already exist.`);
+      } else {
+        _uniqueMessageNameRegistry.set(name, new Set<string>());
+      }
+    }
   }
 
   /**
@@ -192,6 +213,16 @@ export class MessageDescriptor<P> {
     this.group = group;
     this.name = name;
     this._meta = new Map<Symbol, any>();
+
+    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+      const messageNames = _uniqueMessageNameRegistry!.get(group.name);
+      if (messageNames!.has(name)) {
+        throw Error(`Failed to create a new message descriptor: descriptor with name "${name}" in message group ` +
+                    `"${group.name}" already exist.`);
+      } else {
+        messageNames!.add(name);
+      }
+    }
   }
 
   /**
@@ -291,6 +322,8 @@ export class ActorLink {
   _prev: ActorLink | null;
   _next: ActorLink | null;
 
+  private _isCanceled: boolean;
+
   constructor(a: Actor<any, any>, b: Actor<any, any>) {
     this.a = a;
     this.b = b;
@@ -303,12 +336,23 @@ export class ActorLink {
     }
 
     a._links = this;
+
+    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+      this._isCanceled = false;
+    }
   }
 
   /**
    * Cancel link.
    */
   cancel(): void {
+    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+      if (this._isCanceled) {
+        throw new Error("Failed to cancel actor link: actor link is already canceled.");
+      }
+      this._isCanceled = true;
+    }
+
     if (this._prev === null) {
       this.a._links = this._next;
     } else {
@@ -487,6 +531,16 @@ export class Actor<P, S> {
    * Link with another actor.
    */
   link(actor: Actor<any, any>): ActorLink {
+    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+      let link = this._links;
+      while (link !== null) {
+        if (link.b === actor) {
+          throw new Error("Failed to link an actor: actor is already linked to this actor.");
+        }
+        link = link._next;
+      }
+    }
+
     return new ActorLink(this, actor);
   }
 
@@ -494,6 +548,12 @@ export class Actor<P, S> {
    * Dispose.
    */
   dispose(): void {
+    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+      if ((this._flags & ActorFlags.Disposed) !== 0) {
+        throw new Error("Failed to dispose an actor: actor is already disposed.");
+      }
+    }
+
     this._flags |= ActorFlags.Disposed;
     let link = this._links;
     if (link !== null) {
