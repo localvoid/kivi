@@ -211,8 +211,8 @@ export class MessageDescriptor<P> {
   /**
    * Create a new message.
    */
-  create(payload: P): Message<P> {
-    return new Message<P>(this, payload, this._markFlags);
+  create(payload?: P): Message<P> {
+    return new Message<P>(this, payload === undefined ? null : payload, this._markFlags);
   }
 }
 
@@ -231,13 +231,13 @@ export class Message<P> {
   /**
    * Message payload.
    */
-  readonly payload: P;
+  readonly payload: P | null;
   /**
    * Metadata.
    */
   _meta: Map<Symbol, any> | null;
 
-  constructor(descriptor: MessageDescriptor<P>, payload: P, flags: number) {
+  constructor(descriptor: MessageDescriptor<P>, payload: P | null, flags: number) {
     this._flags = flags;
     this.descriptor = descriptor;
     this.payload = payload;
@@ -531,5 +531,5 @@ export function actorAddMessage(actor: Actor<any, any>, message: Message<any>): 
  * Helper function for TypeScript developers to extract payload from messages.
  */
 export function getMessagePayload<P>(descriptor: MessageDescriptor<P>, message: Message<P>): P {
-  return message.payload;
+  return message.payload!;
 }
