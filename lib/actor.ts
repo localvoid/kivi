@@ -17,7 +17,7 @@ export const enum MessageFlags {
 }
 
 let _nextActorId = 0;
-let _nextMessageFlag = 1 << 1;
+let _nextMessageFlag = 1 << 2;
 
 /**
  * Acquire a message flag at runtime.
