@@ -11,7 +11,9 @@ export const enum MessageFlags {
   // Enable message tracing.
   Trace         = 1,
   // Message were created from an action initiated by user.
-  UserInitiated = 1 << 1
+  UserInitiated = 1 << 1,
+  // Message were consumed by an actor.
+  Consumed      = 1 << 2,
 }
 
 let _nextActorId = 0;

@@ -1,7 +1,7 @@
 import {Component} from "./component";
 import {SchedulerFlags, ComponentFlags} from "./misc";
 import {VNode, vNodeMount, vNodeRender} from "./vnode";
-import {Actor, ActorFlags, ActorMiddleware, ActorNextMiddleware, Message, actorAddMessage} from "./actor";
+import {Actor, ActorFlags, ActorMiddleware, ActorNextMiddleware, Message, MessageFlags, actorAddMessage} from "./actor";
 import {reconciler} from "./reconciler";
 
 export type SchedulerCallback = () => void;
@@ -512,7 +512,9 @@ export class Scheduler {
             actor._inbox = [];
             actor._flags &= ~ActorFlags.IncomingMessage;
             for (let i = 0; i < inbox.length; i++) {
-              createNextMiddlewareHandler(this, actor)(inbox[i]);
+              const msg = inbox[i];
+              msg._flags |= MessageFlags.Consumed;
+              createNextMiddlewareHandler(this, actor)(msg);
             }
           }
 
