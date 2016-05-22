@@ -176,7 +176,7 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string, rend
     if (b === null) {
       parent.ref!.removeChild(parent.ref!.firstChild);
     } else if (typeof b === "string") {
-      let c = parent.ref!.firstChild;
+      const c = parent.ref!.firstChild;
       if (c) {
         c.nodeValue = b;
       } else {

@@ -586,7 +586,7 @@ export class VNode {
  * use `vNodeRender` method.
  */
 export function vNodeInstantiate(vnode: VNode, owner: Component<any, any> | undefined): void {
-  let flags = vnode._flags;
+  const flags = vnode._flags;
 
   if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
     if (vnode.ref !== null && ((flags & VNodeFlags.CommentPlaceholder) === 0)) {
@@ -676,7 +676,7 @@ export function vNodeRender(vnode: VNode, renderFlags: number, owner: Component<
 
       if (vnode._className !== null) {
         if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-          let className = ref.getAttribute("class");
+          const className = ref.getAttribute("class");
           if ((flags & VNodeFlags.Root) !== 0 && className) {
             printError(`VNode render: Component root node overwrited className property` +
               ` "${className}" with "${vnode._className}".`);
