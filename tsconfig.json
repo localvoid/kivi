@@ -11,8 +11,9 @@
     "node_modules",
     "dist",
     "examples",
-    "typings/main",
-    "typings/main.d.ts"
+    "typings/globals",
+    "typings/index.d.ts",
+    "tests"
   ],
   "compileOnSave": false
 }
