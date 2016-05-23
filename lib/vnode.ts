@@ -758,6 +758,8 @@ export function vNodeMount(vnode: VNode, node: Node, owner: Component<any, any> 
 
   const flags = vnode._flags;
   const children = vnode._children;
+  let keys: string[];
+  let key: string;
   let i: number;
 
   vnode.ref = node;
@@ -833,11 +835,22 @@ export function vNodeMount(vnode: VNode, node: Node, owner: Component<any, any> 
     }
 
     if ((vnode._flags & (VNodeFlags.Element | VNodeFlags.Root)) !== 0) {
-      // Assign properties on mount, because they don"t exist in html markup.
+      // Assign properties on mount, because they don't exist in html markup.
+      if ((flags & VNodeFlags.VModel) !== 0) {
+        const model = vnode._tag as VModel<any>;
+        if (model._props !== null) {
+          keys = Object.keys(model._props);
+          for (i = 0; i < keys.length; i++) {
+            key = keys[i];
+            (node as any)[key] = model._props[key];
+          }
+        }
+      }
+
       if (vnode._props !== null) {
-        const keys = Object.keys(vnode._props);
+        keys = Object.keys(vnode._props);
         for (i = 0; i < keys.length; i++) {
-          const key = keys[i];
+          key = keys[i];
           (node as any)[key] = vnode._props[key];
         }
       }
