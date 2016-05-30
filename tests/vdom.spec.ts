@@ -946,7 +946,7 @@ describe("VNode", () => {
            { key: 4, children: [1] }]],
 
         [[0, 1, { key: 2, children: [0] }, 3, { key: 4, children: [0] }, 5],
-          [6, 7, 3, { key: 2, children: [] }, { key: 4, children: [] }]]
+          [6, 7, 3, { key: 2, children: [] }, { key: 4, children: [] }]],
       ];
 
       describe("syncChildren string children", () => {

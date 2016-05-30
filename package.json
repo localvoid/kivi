@@ -29,6 +29,11 @@
     "url": "https://github.com/localvoid/kivi/issues"
   },
   "github": "https://github.com/localvoid/kivi",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "dependencies": {},
   "devDependencies": {
     "del": "^2.2.0",
@@ -47,6 +52,6 @@
     "rollup-plugin-replace": "^1.1.0",
     "rollup-plugin-typescript": "^0.7.5",
     "tslint": "^3.10.2",
-    "typescript": "^1.9.0-dev.20160520-1.0"
+    "typescript": "^1.9.0-dev.20160530-1.0"
   }
 }

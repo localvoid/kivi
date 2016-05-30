@@ -1,13 +1,21 @@
 const gulp = require("gulp");
+const series = gulp.series;
+const parallel = gulp.parallel;
 const del = require("del");
 const tsConfig = require("./tsconfig.json");
 const rollup = require("rollup");
 const rollupTypeScript = require("rollup-plugin-typescript");
 const rollupReplace = require("rollup-plugin-replace");
 
-gulp.task("clean", del.bind(undefined, ["dist", "build"]));
+function clean() {
+  return del(["dist", "build"]);
+}
 
-gulp.task("build:es6", () => {
+function cleanTests() {
+  return del("build/tests");
+}
+
+function buildES6() {
   const ts = require("gulp-typescript");
   const tslint = require("gulp-tslint");
   const merge = require("merge2");
@@ -27,9 +35,9 @@ gulp.task("build:es6", () => {
     result.dts.pipe(gulp.dest("dist/typings")),
     result.js.pipe(gulp.dest("build/es6")),
   ]);
-});
+}
 
-gulp.task("dist:es6", gulp.series("build:es6", () => {
+function distES6() {
   return rollup.rollup({
     entry: "build/es6/kivi.js",
   }).then(function(bundle) {
@@ -38,9 +46,9 @@ gulp.task("dist:es6", gulp.series("build:es6", () => {
       dest: "dist/es6/kivi.js",
     });
   });
-}));
+}
 
-gulp.task("dist:umd", () => {
+function distUMD() {
   return rollup.rollup({
     entry: "lib/kivi.ts",
     plugins: [
@@ -58,9 +66,9 @@ gulp.task("dist:umd", () => {
       dest: "dist/umd/kivi.js",
     });
   });
-});
+}
 
-gulp.task("build:tests", () => {
+function buildTests() {
   return rollup.rollup({
     entry: "tests/index.spec.ts",
     plugins: [
@@ -84,14 +92,14 @@ gulp.task("build:tests", () => {
       sourceMap: "inline",
     });
   });
-});
+}
 
-gulp.task("build:random-tests.html", () => {
+function buildFuzzyTestsHtml() {
   return gulp.src("tests/random/children_reconciliation.html")
     .pipe(gulp.dest("build"));
-})
+}
 
-gulp.task("build:random-tests", gulp.series("build:random-tests.html", () => {
+function buildFuzzyTestsJS() {
   return rollup.rollup({
     entry: "tests/random/children_reconciliation.ts",
     plugins: [
@@ -109,18 +117,18 @@ gulp.task("build:random-tests", gulp.series("build:random-tests.html", () => {
       sourceMap: "inline",
     });
   });
-}));
+}
 
-gulp.task("test", gulp.series("build:tests", (done) => {
+function runTests(done) {
   const KarmaServer = require("karma").Server;
 
   new KarmaServer({
     configFile: __dirname + "/karma.conf.js",
     singleRun: true,
   }, done).start();
-}));
+}
 
-gulp.task("test:sauce", gulp.series("build:tests", (done) => {
+function runTestsSauce(done) {
   const KarmaServer = require("karma").Server;
 
   new KarmaServer({
@@ -135,9 +143,9 @@ gulp.task("test:sauce", gulp.series("build:tests", (done) => {
     reporters: ["progress", "saucelabs"],
     singleRun: true,
   }, done).start();
-}));
+}
 
-gulp.task("docs", (done) => {
+function buildDocs() {
   const gitbook = require("gitbook");
 
   const book = new gitbook.Book("docs", {
@@ -160,16 +168,20 @@ gulp.task("docs", (done) => {
     },
   });
 
-  return book.parse().then(() => {
-    return book.generate("website");
-  });
-});
+  return book.parse().then(() => book.generate("website"));
+}
 
-gulp.task("gh-pages", gulp.series("docs", () => {
+function deployDocs() {
   const ghPages = require("gulp-gh-pages");
 
   return gulp.src("gh-pages/**/*")
     .pipe(ghPages());
-}));
+}
 
-gulp.task("dist", gulp.series("clean", gulp.parallel(["dist:es6", "dist:umd"])));
+exports.clean = clean;
+exports.dist = series(clean, parallel(series(buildES6, distES6), distUMD));
+exports.test = series(cleanTests, buildTests, runTests);
+exports.testSauce = series(cleanTests, buildTests, runTestsSauce);
+exports.docs = buildDocs;
+exports.deployDocs = series(buildDocs, deployDocs);
+exports.buildFuzzyTests = parallel(buildFuzzyTestsHtml, buildFuzzyTestsJS);

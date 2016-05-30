@@ -7,13 +7,8 @@
     "removeComments": false,
     "moduleResolution": "node"
   },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "examples",
-    "typings/globals",
-    "typings/index.d.ts",
-    "tests"
+  "files": [
+    "lib/"
   ],
   "compileOnSave": false
 }

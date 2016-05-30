@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e -o pipefail
+set -ex -o pipefail
 
 echo 'travis_fold:start:TEST'
 
@@ -12,7 +12,7 @@ export CHROME_BIN=/usr/bin/google-chrome
 
 echo 'travis_fold:start:test.run'
 sh -e /etc/init.d/xvfb start
-gulp test:sauce
+gulp testSauce
 echo 'travis_fold:end:test.run'
 
 echo 'travis_fold:end:TEST'
