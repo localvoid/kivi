@@ -66,6 +66,7 @@ export {
   getBackRef,
   getTagName,
   getClassName,
+  matchesWithAncestors,
 } from "./misc";
 
 if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {

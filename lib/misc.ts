@@ -290,3 +290,16 @@ export function getTagName(tagName: string): string {
 export function getClassName(className: string): string {
   return className;
 }
+
+export function matchesWithAncestors(element: Element, selector: string, sentinel: Element | null = null):
+    Element | undefined {
+  let e = element;
+  do {
+    if (e.matches(selector)) {
+      return e;
+    }
+    e = e.parentElement;
+  } while (e !== sentinel);
+
+  return undefined;
+}
