@@ -1,4 +1,5 @@
-import {SvgNamespace, ComponentDescriptorFlags, ComponentFlags, VNodeFlags, SchedulerFlags, RenderFlags} from "./misc";
+import {BrowserEngineType, BrowserEngine, SvgNamespace, ComponentDescriptorFlags, ComponentFlags, VNodeFlags,
+  SchedulerFlags, RenderFlags} from "./misc";
 import {VModel} from "./vmodel";
 import {VNode, vNodeAttach, vNodeDetach, vNodeDispose, createVRoot} from "./vnode";
 import {InvalidatorSubscription, Invalidator} from "./invalidator";
@@ -341,8 +342,10 @@ export class ComponentDescriptor<P, S> {
    *         c.vSync(c.createVRoot().children("content"));
    *       });
    */
-  enableBackRef(): ComponentDescriptor<P, S> {
-    this._flags |= ComponentDescriptorFlags.EnabledBackRef;
+  enableBackRef(webkitOnly = false): ComponentDescriptor<P, S> {
+    if (!webkitOnly || BrowserEngine === BrowserEngineType.WebKit) {
+      this._flags |= ComponentDescriptorFlags.EnabledBackRef;
+    }
     return this;
   }
 
@@ -858,4 +861,23 @@ export function mountComponent<P, S>(descriptor: ComponentDescriptor<P, S>, elem
     });
   }
   return c;
+}
+
+export function createEventHandler(handler: (e: Event) => void): (e: Event) => void {
+  if (BrowserEngine === BrowserEngineType.WebKit) {
+    return function(e) {
+      const context = (e.currentTarget as any as {xtag: Component<any, any>}).xtag;
+      handler.call(context, e);
+    };
+  }
+  return handler;
+}
+
+export function bindEventHandler(component: Component<any, any>, handler: (e: Event) => void): (e: Event) => void {
+  if (BrowserEngine === BrowserEngineType.WebKit) {
+    return handler;
+  }
+  return function(e) {
+    handler.call(component, e);
+  };
 }

@@ -36,6 +36,8 @@ export {
   Component,
   injectComponent,
   mountComponent,
+  createEventHandler,
+  bindEventHandler,
 } from "./component";
 
 export {
