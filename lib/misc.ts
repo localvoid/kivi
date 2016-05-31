@@ -4,6 +4,35 @@ export const SvgNamespace = "http://www.w3.org/2000/svg";
 export const XlinkNamespace = "http://www.w3.org/1999/xlink";
 export const XmlNamespace = "http://www.w3.org/XML/1998/namespace";
 
+declare global {
+  interface Element {
+    closest(selector: string): Element | null;
+  }
+}
+
+const ElementPrototype = Element.prototype;
+
+/**
+ * Matches polyfill.
+ */
+if (ElementPrototype.matches === undefined) {
+  ElementPrototype.matches = ElementPrototype.webkitMatchesSelector || ElementPrototype.msMatchesSelector;
+}
+
+/**
+ * Closest polyfill.
+ */
+if (ElementPrototype.closest === undefined) {
+  ElementPrototype.closest = function(selector: string) {
+    let parentNode = this;
+    let matches: Element;
+    while ((matches = parentNode && parentNode.matches) && !parentNode.matches(selector)) {
+      parentNode = parentNode.parentNode;
+    }
+    return matches ? parentNode : null;
+  };
+}
+
 /**
  * InvalidatorSubscription flags.
  */
@@ -292,7 +321,7 @@ export function getClassName(className: string): string {
 }
 
 export function matchesWithAncestors(element: Element, selector: string, sentinel: Element | null = null):
-    Element | undefined {
+    Element | null {
   let e = element;
   do {
     if (e.matches(selector)) {
@@ -301,5 +330,5 @@ export function matchesWithAncestors(element: Element, selector: string, sentine
     e = e.parentElement;
   } while (e !== sentinel);
 
-  return undefined;
+  return null;
 }
