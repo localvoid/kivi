@@ -1,5 +1,4 @@
-import {BrowserEngineType, BrowserEngine, SvgNamespace, ComponentDescriptorFlags, ComponentFlags, VNodeFlags,
-  SchedulerFlags, RenderFlags} from "./misc";
+import {SvgNamespace, ComponentDescriptorFlags, ComponentFlags, VNodeFlags, SchedulerFlags, RenderFlags} from "./misc";
 import {VModel} from "./vmodel";
 import {VNode, vNodeAttach, vNodeDetach, vNodeDispose, createVRoot} from "./vnode";
 import {InvalidatorSubscription, Invalidator} from "./invalidator";
@@ -342,10 +341,8 @@ export class ComponentDescriptor<P, S> {
    *         c.vSync(c.createVRoot().children("content"));
    *       });
    */
-  enableBackRef(webkitOnly = false): ComponentDescriptor<P, S> {
-    if (!webkitOnly || BrowserEngine === BrowserEngineType.WebKit) {
-      this._flags |= ComponentDescriptorFlags.EnabledBackRef;
-    }
+  enableBackRef(): ComponentDescriptor<P, S> {
+    this._flags |= ComponentDescriptorFlags.EnabledBackRef;
     return this;
   }
 
@@ -475,6 +472,22 @@ export class ComponentDescriptor<P, S> {
     }
     componentAttached(component);
     return component;
+  }
+
+  /**
+   * Create event handler.
+   */
+  createEventHandler(handler: (event: Event, component: Component<P, S>, props: P, state: S) => void):
+      (event: Event) => void {
+    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+      if ((this._flags & ComponentDescriptorFlags.EnabledBackRef) === 0) {
+        throw new Error("Failed to create an event handler: component descriptor should have enabled back reference.");
+      }
+    }
+    return function(event) {
+      const component = (event.currentTarget as any as { xtag: Component<P, S> }).xtag;
+      handler(event, component, component.props!, component.state!);
+    };
   }
 }
 
@@ -861,23 +874,4 @@ export function mountComponent<P, S>(descriptor: ComponentDescriptor<P, S>, elem
     });
   }
   return c;
-}
-
-export function createEventHandler(handler: (e: Event) => void): (e: Event) => void {
-  if (BrowserEngine === BrowserEngineType.WebKit) {
-    return function(e) {
-      const context = (e.currentTarget as any as {xtag: Component<any, any>}).xtag;
-      handler.call(context, e);
-    };
-  }
-  return handler;
-}
-
-export function bindEventHandler(component: Component<any, any>, handler: (e: Event) => void): (e: Event) => void {
-  if (BrowserEngine === BrowserEngineType.WebKit) {
-    return handler;
-  }
-  return function(e) {
-    handler.call(component, e);
-  };
 }
