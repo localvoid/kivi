@@ -495,22 +495,30 @@ export class ComponentDescriptor<P, S> {
    * Create delegated event handler.
    */
   createDelegatedEventHandler(selector: string, componentSelector: string | boolean,
-      handler: (event: Event, component: Component<P, S>, props: P, state: S) => void): (event: Event) => void {
+      handler: (event: Event, component: Component<P, S>, props: P, state: S, matchingTarget: Element) => void):
+      (event: Event) => void {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((this._flags & ComponentDescriptorFlags.EnabledBackRef) === 0) {
         throw new Error("Failed to create an event handler: component descriptor should have enabled back reference.");
       }
     }
     return function(event) {
-      let target = matchesWithAncestors(event.target as Element, selector, event.currentTarget as Element);
-      if (target !== null) {
+      let matchingTarget = matchesWithAncestors(event.target as Element, selector, event.currentTarget as Element);
+      if (matchingTarget !== null) {
+        let target: Element | null = matchingTarget;
         if (typeof componentSelector === "string") {
-          target = target.closest(componentSelector);
+          target = matchingTarget.closest(componentSelector);
+          if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+            if ((this._flags & ComponentDescriptorFlags.EnabledBackRef) === 0) {
+              throw new Error(`Failed to dispatch event to event handler: cannot find closest component with ` +
+                              `selector "${componentSelector}".`);
+            }
+          }
         } else if (!componentSelector) {
           target = event.currentTarget as Element;
         }
         const component = (target as any as { xtag: Component<P, S> }).xtag;
-        handler(event, component, component.props!, component.state!);
+        handler(event, component, component.props!, component.state!, matchingTarget);
       }
     };
   }
