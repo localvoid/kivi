@@ -258,13 +258,6 @@ export function filterVNodes(nodes: VNodeRecursiveList): VNode[] {
 }
 
 /**
- * Gets reference to component from a DOM node object.
- */
-export function getBackRef<T>(node: Node): T {
-  return (node as any as {xtag: T}).xtag;
-}
-
-/**
  * Set HTML attribute.
  */
 export function setAttr(node: Element, key: string, value: string): void {

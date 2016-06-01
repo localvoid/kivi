@@ -32,6 +32,7 @@ export {
 } from "./container_manager";
 
 export {
+  XTagElement,
   ComponentDescriptor,
   Component,
   injectComponent,
@@ -63,7 +64,6 @@ export {
   InvalidatorSubscriptionFlags,
   RenderFlags,
   filterVNodes,
-  getBackRef,
   getTagName,
   getClassName,
   matchesWithAncestors,

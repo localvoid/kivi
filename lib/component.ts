@@ -6,6 +6,13 @@ import {InvalidatorSubscription, Invalidator} from "./invalidator";
 import {scheduler, schedulerUpdateComponent, schedulerComponentVSync} from "./scheduler";
 
 /**
+ * Back reference to Component.
+ */
+export interface XTagElement<P, S> extends Element {
+  xtag: Component<P, S>;
+}
+
+/**
  * Component Descriptor.
  *
  * Each component should declare its properties and behavior in `ComponentDescriptor` object.
@@ -432,7 +439,7 @@ export class ComponentDescriptor<P, S> {
 
       component = new Component<P, S>(this._markFlags, this, element, parent, props);
       if ((this._flags & ComponentDescriptorFlags.EnabledBackRef) !== 0) {
-        (element as any as {xtag: Component<P, S>}).xtag = component;
+        (element as XTagElement<P, S>).xtag = component;
       }
       if (this._createState !== null) {
         component.state = this._createState(component, component.props!);
@@ -486,7 +493,7 @@ export class ComponentDescriptor<P, S> {
       }
     }
     return function(event) {
-      const component = (event.currentTarget as any as { xtag: Component<P, S> }).xtag;
+      const component = (event.currentTarget as XTagElement<P, S>).xtag;
       handler(event, component, component.props!, component.state!);
     };
   }
@@ -517,7 +524,7 @@ export class ComponentDescriptor<P, S> {
         } else if (!componentSelector) {
           target = event.currentTarget as Element;
         }
-        const component = (target as any as { xtag: Component<P, S> }).xtag;
+        const component = (target as XTagElement<P, S>).xtag;
         handler(event, component, component.props!, component.state!, matchingTarget);
       }
     };
