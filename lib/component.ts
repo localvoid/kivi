@@ -9,7 +9,8 @@ import {scheduler, schedulerUpdateComponent, schedulerComponentVSync} from "./sc
  * Back reference to Component.
  */
 export interface XTagElement<P, S> extends Element {
-  xtag: Component<P, S>;
+  xtag?: Component<P, S>;
+  dxtag?: Component<P, S>;
 }
 
 /**
@@ -494,7 +495,13 @@ export class ComponentDescriptor<P, S> {
     }
     return function(event) {
       const component = (event.currentTarget as XTagElement<P, S>).xtag;
-      handler(event, component, component.props!, component.state!);
+      if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+        if (component === undefined) {
+          throw new Error(`Failed to dispatch event to event handler: event currentTarget doesn't have back ` +
+                          `reference to component.`);
+        }
+      }
+      handler(event, component!, component!.props!, component!.state!);
     };
   }
 
@@ -525,7 +532,13 @@ export class ComponentDescriptor<P, S> {
           target = event.currentTarget as Element;
         }
         const component = (target as XTagElement<P, S>).xtag;
-        handler(event, component, component.props!, component.state!, matchingTarget);
+        if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+          if (component === undefined) {
+            throw new Error(`Failed to dispatch event to event handler: event component target doesn't have back ` +
+                            `reference to component.`);
+          }
+        }
+        handler(event, component!, component!.props!, component!.state!, matchingTarget);
       }
     };
   }
@@ -554,7 +567,7 @@ export class Component<P, S> {
   /**
    * Reference to the root element.
    */
-  element: Element;
+  element: XTagElement<P, S>;
   /**
    * Depth in the components tree.
    *
@@ -583,13 +596,17 @@ export class Component<P, S> {
     this.flags = flags;
     this.mtime = 0;
     this.descriptor = descriptor;
-    this.element = element;
+    this.element = element as XTagElement<P, S>;
     this.depth = parent === undefined ? 0 : parent.depth + 1;
     this.props = props === undefined ? null : props;
     this.state = null;
     this._root = ((flags & ComponentFlags.Canvas2D) === 0) ? null : (element as HTMLCanvasElement).getContext("2d");
     this._subscriptions = null;
     this._transientSubscriptions = null;
+
+    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+      this.element.dxtag = this;
+    }
   }
 
   /**
