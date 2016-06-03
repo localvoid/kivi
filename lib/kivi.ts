@@ -32,6 +32,7 @@ export {
 } from "./container_manager";
 
 export {
+  componentDescriptorRegistry,
   XTagElement,
   ComponentDescriptor,
   Component,

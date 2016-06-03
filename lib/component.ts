@@ -5,6 +5,10 @@ import {VNode, vNodeAttach, vNodeDetach, vNodeDispose, createVRoot} from "./vnod
 import {InvalidatorSubscription, Invalidator} from "./invalidator";
 import {scheduler, schedulerUpdateComponent, schedulerComponentVSync} from "./scheduler";
 
+export const componentDescriptorRegistry = ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") ?
+  new Map<string, ComponentDescriptor<any, any>>() :
+  undefined;
+
 /**
  * Back reference to Component.
  */
@@ -97,8 +101,12 @@ export class ComponentDescriptor<P, S> {
    * Maximum number of recycled components (recycled pool size).
    */
   _maxRecycled: number;
+  /**
+   * Name that is used in DEBUG mode.
+   */
+  name: string;
 
-  constructor() {
+  constructor(name?: string) {
     this._markFlags = ComponentFlags.Dirty;
     this._flags = 0;
     this._tag = "div";
@@ -109,6 +117,14 @@ export class ComponentDescriptor<P, S> {
     this._attached = null;
     this._detached = null;
     this._disposed = null;
+    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+      if (name === undefined) {
+        this.name = "unnamed";
+      } else {
+        this.name = name;
+        componentDescriptorRegistry!.set(name, this);
+      }
+    }
     if ("<@KIVI_COMPONENT_RECYCLING@>" === "COMPONENT_RECYCLING_ENABLED") {
       this._recycledPool = null;
       this._maxRecycled = 0;
