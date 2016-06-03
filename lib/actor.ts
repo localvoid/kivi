@@ -46,9 +46,18 @@ let _nextActorId = 0;
 let _nextMessageFlag = 1 << 2;
 
 /**
- * Registry that is used in DEBUG mode to check that all message names are unique.
+ * Message group registry that is used in DEBUG mode to check that all message names are unique.
  */
-let _uniqueMessageNameRegistry: Map<string, Set<string>> | undefined;
+export const MessageGroupRegistry = ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") ?
+  new Map<string, Set<string>>() :
+  undefined;
+
+/**
+ * Actor registry that is used in DEBUG mode.
+ */
+export const ActorRegistry = ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") ?
+  new Map<number, Actor<any, any>>() :
+  undefined;
 
 /**
  * Acquire a new message flag at runtime.
@@ -128,13 +137,10 @@ export class MessageGroup {
     this.name = name;
 
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      if (_uniqueMessageNameRegistry === undefined) {
-        _uniqueMessageNameRegistry = new Map<string, Set<string>>();
-      }
-      if (_uniqueMessageNameRegistry.has(name)) {
+      if (MessageGroupRegistry!.has(name)) {
         throw Error(`Failed to create a new message group: group with name "${name}" already exist.`);
       } else {
-        _uniqueMessageNameRegistry.set(name, new Set<string>());
+        MessageGroupRegistry!.set(name, new Set<string>());
       }
     }
   }
@@ -215,7 +221,7 @@ export class MessageDescriptor<P> {
     this._meta = new Map<Symbol, any>();
 
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      const messageNames = _uniqueMessageNameRegistry!.get(group.name);
+      const messageNames = MessageGroupRegistry!.get(group.name);
       if (messageNames!.has(name)) {
         throw Error(`Failed to create a new message descriptor: descriptor with name "${name}" in message group ` +
                     `"${group.name}" already exist.`);
@@ -518,6 +524,10 @@ export class Actor<P, S> {
     this._inbox = [];
     this._middleware = null;
     this._links = null;
+
+    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+      ActorRegistry!.set(this.id, this);
+    }
   }
 
   /**
@@ -549,6 +559,8 @@ export class Actor<P, S> {
    */
   dispose(): void {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+      ActorRegistry!.delete(this.id);
+
       if ((this._flags & ActorFlags.Disposed) !== 0) {
         throw new Error("Failed to dispose an actor: actor is already disposed.");
       }

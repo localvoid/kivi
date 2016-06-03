@@ -1,3 +1,4 @@
+import {printError} from "./debug";
 import {SvgNamespace, ComponentDescriptorFlags, ComponentFlags, VNodeFlags, SchedulerFlags, RenderFlags,
   matchesWithAncestors} from "./misc";
 import {VModel} from "./vmodel";
@@ -5,7 +6,10 @@ import {VNode, vNodeAttach, vNodeDetach, vNodeDispose, createVRoot} from "./vnod
 import {InvalidatorSubscription, Invalidator} from "./invalidator";
 import {scheduler, schedulerUpdateComponent, schedulerComponentVSync} from "./scheduler";
 
-export const componentDescriptorRegistry = ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") ?
+/**
+ * Component Descriptor registry used in DEBUG mode.
+ */
+export const ComponentDescriptorRegistry = ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") ?
   new Map<string, ComponentDescriptor<any, any>>() :
   undefined;
 
@@ -13,8 +17,15 @@ export const componentDescriptorRegistry = ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED
  * Back reference to Component.
  */
 export interface XTagElement<P, S> extends Element {
-  xtag?: Component<P, S>;
+  /**
+   * Back reference from Element to Component that is always present in DEBUG mode.
+   */
   dxtag?: Component<P, S>;
+  /**
+   * Back reference from Element to Component. There are two references so we can check in DEBUG mode if we are missing
+   * this backref in delegated event handlers.
+   */
+  xtag?: Component<P, S>;
 }
 
 /**
@@ -122,7 +133,11 @@ export class ComponentDescriptor<P, S> {
         this.name = "unnamed";
       } else {
         this.name = name;
-        componentDescriptorRegistry!.set(name, this);
+        if (ComponentDescriptorRegistry!.has(name)) {
+          printError(`Component with name ${name} is already registered in ComponentDescriptorRegistry.`);
+        } else {
+          ComponentDescriptorRegistry!.set(name, this);
+        }
       }
     }
     if ("<@KIVI_COMPONENT_RECYCLING@>" === "COMPONENT_RECYCLING_ENABLED") {

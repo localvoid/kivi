@@ -14,6 +14,8 @@ const ElementPrototype = Element.prototype;
 
 /**
  * Matches polyfill.
+ *
+ * Edge14, Android 4.4
  */
 if (ElementPrototype.matches === undefined) {
   ElementPrototype.matches = ElementPrototype.webkitMatchesSelector || ElementPrototype.msMatchesSelector;
@@ -21,6 +23,8 @@ if (ElementPrototype.matches === undefined) {
 
 /**
  * Closest polyfill.
+ *
+ * Edge13, iOS8.4, Android 4.4
  */
 if (ElementPrototype.closest === undefined) {
   ElementPrototype.closest = function(selector: string) {

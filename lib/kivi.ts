@@ -32,7 +32,7 @@ export {
 } from "./container_manager";
 
 export {
-  componentDescriptorRegistry,
+  ComponentDescriptorRegistry,
   XTagElement,
   ComponentDescriptor,
   Component,
@@ -41,6 +41,8 @@ export {
 } from "./component";
 
 export {
+  MessageGroupRegistry,
+  ActorRegistry,
   MessageFlags,
   ActorFlags,
   getMessageGroupName,

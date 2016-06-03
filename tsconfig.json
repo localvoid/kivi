@@ -7,8 +7,14 @@
     "removeComments": false,
     "moduleResolution": "node"
   },
-  "files": [
-    "lib/"
+  "exclude": [
+    "build",
+    "dist",
+    "node_modules",
+    "docs",
+    "examples",
+    "gh-pages",
+    "tools"
   ],
   "compileOnSave": false
 }
