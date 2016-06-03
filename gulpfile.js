@@ -37,34 +37,21 @@ function buildES6() {
   ]);
 }
 
-function distES6() {
+function dist() {
   return rollup.rollup({
     entry: "build/es6/kivi.js",
-  }).then(function(bundle) {
-    return bundle.write({
-      format: "es6",
-      dest: "dist/es6/kivi.js",
-    });
-  });
-}
-
-function distUMD() {
-  return rollup.rollup({
-    entry: "lib/kivi.ts",
-    plugins: [
-      rollupTypeScript(Object.assign(tsConfig.compilerOptions, {
-        typescript: require("typescript"),
-        target: "es5",
-        module: "es6",
-        declaration: false,
-      })),
-    ],
   }).then((bundle) => {
-    return bundle.write({
-      format: "umd",
-      moduleName: "kivi",
-      dest: "dist/umd/kivi.js",
-    });
+    return Promise.all([
+      bundle.write({
+        format: "es6",
+        dest: "dist/es6/kivi.js",
+      }),
+      bundle.write({
+        format: "umd",
+        moduleName: "kivi",
+        dest: "dist/umd/kivi.js",
+      }),
+    ]);
   });
 }
 
@@ -179,7 +166,7 @@ function deployDocs() {
 }
 
 exports.clean = clean;
-exports.dist = series(clean, parallel(series(buildES6, distES6), distUMD));
+exports.dist = series(clean, buildES6, dist);
 exports.test = series(cleanTests, buildTests, runTests);
 exports.testSauce = series(cleanTests, buildTests, runTestsSauce);
 exports.docs = buildDocs;
