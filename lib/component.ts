@@ -203,25 +203,6 @@ export class ComponentDescriptor<P, S> {
   }
 
   /**
-   * Disable data identity checking in default `newPropsReceived` handler.
-   *
-   *     const MyComponent = new ComponentDescriptor<{a: number}, void>()
-   *       .disableCheckDataIdentity()
-   *       .update((c, props) => {
-   *         c.vSync(c.createVRoot().children(props.a.toString()));
-   *       });
-   *
-   *     const data = {a: 10};
-   *     const component = MyComponent.createRootComponent(data);
-   *     data.a = 20;
-   *     component.update(data);
-   */
-  disableCheckDataIdentity(): ComponentDescriptor<P, S> {
-    this._markFlags |= ComponentFlags.DisabledCheckPropsIdentity;
-    return this;
-  }
-
-  /**
    * Set lifecycle handler createState.
    *
    * Create state handler should return a new state. It is invoked immediately after component instantiation.
@@ -408,6 +389,14 @@ export class ComponentDescriptor<P, S> {
   }
 
   /**
+   * Component has immutable props.
+   */
+  immutableProps(): ComponentDescriptor<P, S> {
+    this._markFlags |= ComponentFlags.ImmutableProps;
+    return this;
+  }
+
+  /**
    * Create a Virtual DOM node.
    *
    *     const MyComponent = new ComponentDescriptor<number, void>()
@@ -417,8 +406,28 @@ export class ComponentDescriptor<P, S> {
    *
    *     const vnode = MyComponent.createVNode(10);
    */
-  createVNode(data?: P): VNode {
-    return new VNode(VNodeFlags.Component, this, data === undefined ? null : data);
+  createVNode(props?: P): VNode {
+    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+      if ((this._markFlags & ComponentFlags.ImmutableProps) !== 0) {
+        throw new Error("Failed to create VNode: VNodes for components with immutable props should be created with " +
+                        "createImmutableVNode method.");
+      }
+    }
+    return new VNode(VNodeFlags.Component, this, props === undefined ? null : props);
+  }
+
+  /**
+   * Create a Virtual DOM node with immutable props.
+   *
+   *     const MyComponent = new ComponentDescriptor<number, void>()
+   *       .update((c, props) => {
+   *         c.vSync(c.createVRoot().children(props.toString()));
+   *       });
+   *
+   *     const vnode = MyComponent.createImmutableVNode(10);
+   */
+  createImmutableVNode(props?: P): VNode {
+    return new VNode(VNodeFlags.Component | VNodeFlags.ImmutableProps, this, props === undefined ? null : props);
   }
 
   /**
@@ -656,8 +665,10 @@ export class Component<P, S> {
    * Mark component as dirty and cancel all transient subscriptions.
    */
   markDirty(): void {
-    this.flags |= ComponentFlags.Dirty;
-    componentCancelTransientSubscriptions(this);
+    if ((this.flags & ComponentFlags.Dirty) === 0) {
+      this.flags |= ComponentFlags.Dirty;
+      componentCancelTransientSubscriptions(this);
+    }
   }
 
   /**

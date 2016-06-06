@@ -135,6 +135,8 @@ export const enum VNodeFlags {
   KeepAlive           = 1 << 11,
   /// Prevent from updating component's props on each update.
   BindOnce            = 1 << 12,
+  /// Immutable props.
+  ImmutableProps      = 1 << 13,
 
   /// See `SharedFlags.Svg`.
   Svg                 = SharedFlags.Svg,
@@ -212,14 +214,14 @@ export const enum ComponentFlags {
   InUpdateEachFrameQueue     = 1 << 5,
   /// Component is in recycled pool.
   Recycled                   = 1 << 6,
-  /// Prevents from checking props indentity.
-  DisabledCheckPropsIdentity = 1 << 7,
   /// Component is registered in scheduler frame task queue for updates.
-  InUpdateQueue              = 1 << 8,
+  InUpdateQueue              = 1 << 7,
   /// Component has a high priority and should be updated even when time frame for incremental rendering is exhausted.
-  HighPriorityUpdate         = 1 << 9,
+  HighPriorityUpdate         = 1 << 8,
   /// Component is enabled scheduler throttling.
-  EnabledThrottling          = 1 << 10,
+  EnabledThrottling          = 1 << 9,
+  /// Component has immutable props.
+  ImmutableProps             = 1 << 10,
 
   /// See `SharedFlags.Svg`.
   Svg              = SharedFlags.Svg,

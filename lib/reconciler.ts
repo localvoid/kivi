@@ -142,8 +142,10 @@ function _syncVNodes(a: VNode, b: VNode, renderFlags: number, owner: Component<a
       }
     }
 
-    if ((renderFlags & RenderFlags.ShallowUpdate) === 0) {
-      schedulerUpdateComponent(scheduler, component, (flags & VNodeFlags.BindOnce) === 0 ? b._props : undefined);
+    if (((flags & VNodeFlags.ImmutableProps) === 0) || a._props !== b._props) {
+      if ((renderFlags & RenderFlags.ShallowUpdate) === 0) {
+        schedulerUpdateComponent(scheduler, component, (flags & VNodeFlags.BindOnce) === 0 ? b._props : undefined);
+      }
     }
   }
 

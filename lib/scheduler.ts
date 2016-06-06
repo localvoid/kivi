@@ -692,15 +692,13 @@ export class Scheduler {
 export function schedulerUpdateComponent(scheduler: Scheduler, component: Component<any, any>, newProps?: any): void {
   const flags = component.flags;
 
-  if (newProps !== undefined) {
-    if ((flags & ComponentFlags.Dirty) === 0) {
-      const oldProps = component.props;
-      const newPropsReceived = component.descriptor._newPropsReceived;
-      if (newPropsReceived !== null) {
-        newPropsReceived(component, oldProps, newProps);
-      } else if ((flags & ComponentFlags.DisabledCheckPropsIdentity) !== 0 || (oldProps !== newProps)) {
-        component.markDirty();
-      }
+  if (newProps !== undefined && (flags & ComponentFlags.ImmutableProps) === 0) {
+    const oldProps = component.props;
+    const newPropsReceived = component.descriptor._newPropsReceived;
+    if (newPropsReceived !== null) {
+      newPropsReceived(component, oldProps, newProps);
+    } else {
+      component.markDirty();
     }
     component.props = newProps;
   }
