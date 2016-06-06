@@ -244,7 +244,7 @@ function createNextMiddlewareHandler(scheduler: Scheduler, actor: Actor<any, any
     flags |= ActorExecutorFlags.ExecActorMiddleware;
   }
 
-  const next = (message: Message<any>): void => {
+  function next(message: Message<any>): void {
     let middleware: ActorMiddleware<any, any>;
 
     if (flags === 0) {
@@ -270,7 +270,7 @@ function createNextMiddlewareHandler(scheduler: Scheduler, actor: Actor<any, any
       }
       middleware(actor, message, next);
     }
-  };
+  }
 
   return next;
 }
@@ -333,6 +333,10 @@ export class Scheduler {
     this._updateComponents = [];
     this._actorMiddleware = null;
     this._activeActors = [];
+    this._handleMicrotaskScheduler = this._handleMicrotaskScheduler.bind(this);
+    this._handleMacrotaskScheduler = this._handleMacrotaskScheduler.bind(this);
+    this._handleAnimationFrame = this._handleAnimationFrame.bind(this);
+
     this._microtaskScheduler = new MicrotaskScheduler(this._handleMicrotaskScheduler);
     this._macrotaskScheduler = new MacrotaskScheduler(this._handleMacrotaskScheduler);
 
@@ -490,7 +494,7 @@ export class Scheduler {
     this._flags &= ~SchedulerFlags.Running;
   }
 
-  private _handleMicrotaskScheduler = () => {
+  private _handleMicrotaskScheduler() {
     this._flags |= SchedulerFlags.Running;
     this.time = Date.now();
 
@@ -530,7 +534,7 @@ export class Scheduler {
     this._flags &= ~(SchedulerFlags.MicrotaskPending | SchedulerFlags.ActorPending | SchedulerFlags.Running);
   };
 
-  private _handleMacrotaskScheduler = () => {
+  private _handleMacrotaskScheduler() {
     this._flags &= ~SchedulerFlags.MacrotaskPending;
     this._flags |= SchedulerFlags.Running;
     this.time = Date.now();
@@ -545,7 +549,7 @@ export class Scheduler {
     this._flags &= ~SchedulerFlags.Running;
   };
 
-  private _handleAnimationFrame = (t: number) => {
+  private _handleAnimationFrame(t: number) {
     const updateComponents = this._updateComponents;
     let tasks: SchedulerCallback[];
     let i: number;

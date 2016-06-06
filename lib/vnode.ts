@@ -516,7 +516,7 @@ export class VNode {
    */
   keepAlive(component: Component<any, any>): VNode {
     this._flags |= VNodeFlags.KeepAlive;
-    this.ref = component.element;
+    this.ref = component.element as Node;
     this.cref = component;
     return this;
   }
@@ -600,16 +600,16 @@ export function vNodeInstantiate(vnode: VNode, owner: Component<any, any> | unde
   } else if ((flags & VNodeFlags.Element) !== 0) {
     if ((flags & VNodeFlags.VModel) === 0) {
       if ((flags & VNodeFlags.Svg) === 0) {
-        vnode.ref = document.createElement(vnode._tag as string);
+        vnode.ref = document.createElement(vnode._tag as string) as Node;
       } else {
-        vnode.ref = document.createElementNS(SvgNamespace, vnode._tag as string);
+        vnode.ref = document.createElementNS(SvgNamespace, vnode._tag as string) as Node;
       }
     } else {
-      vnode.ref = (vnode._tag as VModel<any>).createElement();
+      vnode.ref = (vnode._tag as VModel<any>).createElement() as Node;
     }
   } else if ((flags & VNodeFlags.KeepAlive) === 0) {
     const c = (vnode._tag as ComponentDescriptor<any, any>).createComponent(owner, vnode._props);
-    vnode.ref = c.element;
+    vnode.ref = c.element as Node;
     vnode.cref = c;
   }
 }

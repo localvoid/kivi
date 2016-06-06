@@ -930,12 +930,12 @@ export function injectComponent<P, S>(descriptor: ComponentDescriptor<P, S>, con
     sync?: boolean): Component<P, S> {
   const c = descriptor.createComponent(undefined, props);
   if (sync) {
-    container.appendChild(c.element);
+    container.appendChild(c.element as Node);
     componentAttached(c);
     schedulerUpdateComponent(scheduler, c);
   } else {
     scheduler.nextFrame().write(function() {
-      container.appendChild(c.element);
+      container.appendChild(c.element as Node);
       componentAttached(c);
       schedulerUpdateComponent(scheduler, c);
     });

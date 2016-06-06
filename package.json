@@ -36,6 +36,7 @@
   ],
   "dependencies": {},
   "devDependencies": {
+    "@types/jasmine": "^2.2.22-alpha",
     "del": "^2.2.0",
     "gulp": "github:gulpjs/gulp#4.0",
     "gulp-gh-pages": "^0.5.4",
@@ -52,6 +53,6 @@
     "rollup-plugin-replace": "^1.1.0",
     "rollup-plugin-typescript": "^0.7.5",
     "tslint": "^3.10.2",
-    "typescript": "^1.9.0-dev.20160530-1.0"
+    "typescript": "^1.9.0-dev.20160606-1.0"
   }
 }

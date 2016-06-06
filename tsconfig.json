@@ -10,7 +10,6 @@
   "exclude": [
     "build",
     "dist",
-    "node_modules",
     "docs",
     "examples",
     "gh-pages",

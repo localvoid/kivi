@@ -62,7 +62,7 @@ function _syncVNodes(a: VNode, b: VNode, renderFlags: number, owner: Component<a
     }
   }
 
-  b.ref = ref;
+  b.ref = a.ref;
 
   if ((flags & VNodeFlags.Text) !== 0) {
     if (a._props !== b._props) {
