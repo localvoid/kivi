@@ -1,6 +1,6 @@
 import {printError} from "./debug";
 import {SvgNamespace, ComponentDescriptorFlags, ComponentFlags, VNodeFlags, SchedulerFlags, RenderFlags,
-  matchesWithAncestors} from "./misc";
+  matchesWithAncestors, SelectorFn} from "./misc";
 import {VModel} from "./vmodel";
 import {VNode, vNodeAttach, vNodeDetach, vNodeDispose, createVRoot} from "./vnode";
 import {InvalidatorSubscription, Invalidator} from "./invalidator";
@@ -548,7 +548,7 @@ export class ComponentDescriptor<P, S> {
   /**
    * Create delegated event handler.
    */
-  createDelegatedEventHandler(selector: string, componentSelector: string | boolean,
+  createDelegatedEventHandler(selector: string | SelectorFn, componentSelector: string | SelectorFn | boolean,
       handler: (event: Event, component: Component<P, S>, props: P, state: S, matchingTarget: Element) => void):
       (event: Event) => void {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -561,7 +561,7 @@ export class ComponentDescriptor<P, S> {
       if (matchingTarget !== null) {
         let target: Element | null = matchingTarget;
         if (typeof componentSelector === "string") {
-          target = matchingTarget.closest(componentSelector);
+          target = matchesWithAncestors(matchingTarget, componentSelector, event.currentTarget as Element);
           if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
             if ((this._flags & ComponentDescriptorFlags.EnabledBackRef) === 0) {
               throw new Error(`Failed to dispatch event to event handler: cannot find closest component with ` +

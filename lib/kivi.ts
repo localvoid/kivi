@@ -60,6 +60,7 @@ export {
 } from "./actor";
 
 export {
+  SelectorFn,
   VNodeFlags,
   VModelFlags,
   ComponentDescriptorFlags,

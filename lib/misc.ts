@@ -22,20 +22,9 @@ if (ElementPrototype.matches === undefined) {
 }
 
 /**
- * Closest polyfill.
- *
- * Edge13, iOS8.4, Android 4.4
+ * Selector function should return true if element matches this selector.
  */
-if (ElementPrototype.closest === undefined) {
-  ElementPrototype.closest = function(selector: string) {
-    let parentNode = this;
-    let matches: Element;
-    while ((matches = parentNode && parentNode.matches) && !parentNode.matches(selector)) {
-      parentNode = parentNode.parentNode;
-    }
-    return matches ? parentNode : null;
-  };
-}
+export type SelectorFn = (element: Element) => boolean;
 
 /**
  * InvalidatorSubscription flags.
@@ -319,11 +308,15 @@ export function getClassName(className: string): string {
   return className;
 }
 
-export function matchesWithAncestors(element: Element, selector: string, sentinel: Element | null = null):
+export function matchesWithAncestors(element: Element, selector: string | SelectorFn, sentinel: Element | null = null):
     Element | null {
   let e = element;
   do {
-    if (e.matches(selector)) {
+    if (typeof selector === "string") {
+      if (e.matches(selector)) {
+        return e;
+      }
+    } else if (selector(e)) {
       return e;
     }
     e = e.parentElement;
