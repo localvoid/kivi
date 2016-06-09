@@ -560,7 +560,11 @@ export class ComponentDescriptor<P, S> {
       let matchingTarget = matchesWithAncestors(event.target as Element, selector, event.currentTarget as Element);
       if (matchingTarget !== null) {
         let target: Element | null = matchingTarget;
-        if (typeof componentSelector === "string") {
+        if (typeof componentSelector === "boolean") {
+          if (!componentSelector) {
+            target = event.currentTarget as Element;
+          }
+        } else {
           target = matchesWithAncestors(matchingTarget, componentSelector, event.currentTarget as Element);
           if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
             if ((this._flags & ComponentDescriptorFlags.EnabledBackRef) === 0) {
@@ -568,8 +572,6 @@ export class ComponentDescriptor<P, S> {
                               `selector "${componentSelector}".`);
             }
           }
-        } else if (!componentSelector) {
-          target = event.currentTarget as Element;
         }
         const component = (target as XTagElement<P, S>).xtag;
         if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
