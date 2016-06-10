@@ -727,9 +727,9 @@ export function schedulerComponentVSync(scheduler: Scheduler, component: Compone
   if (oldRoot === null) {
     newRoot.cref = component;
     if ((scheduler._flags & SchedulerFlags.EnabledMounting) !== 0) {
-      vNodeMount(newRoot, component.element, component);
+      vNodeMount(newRoot, component.element as Node, component);
     } else {
-      newRoot.ref = component.element;
+      newRoot.ref = component.element as Node;
       vNodeRender(newRoot, renderFlags, component);
     }
   } else {
