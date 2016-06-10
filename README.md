@@ -52,3 +52,13 @@ Benchmarks:
 - [uibench](https://localvoid.github.io/uibench/)
 - [dbmonster](https://localvoid.github.io/kivi-dbmonster/)
 - [dbmonster (incremental)](https://localvoid.github.io/kivi-dbmonster/?incremental=5)
+
+## Coding Guidelines
+
+- Explicit over implicit.
+- Pragmatic approach for solving problems. No need to create unnecessary abstractions, it is ok to repeat code if it
+improves readability.
+- User experience is more important than developer experience.
+- Code that is easier to debug is more important than API.
+- Javascript engine optimization priorities: V8, JSC, Chakra, SpiderMonkey.
+- Web browser engine optimization priorities: WebKit/Blink, other.
