@@ -40,19 +40,17 @@ function buildES6() {
 function dist() {
   return rollup.rollup({
     entry: "build/es6/kivi.js",
-  }).then((bundle) => {
-    return Promise.all([
-      bundle.write({
-        format: "es6",
-        dest: "dist/es6/kivi.js",
-      }),
-      bundle.write({
-        format: "umd",
-        moduleName: "kivi",
-        dest: "dist/umd/kivi.js",
-      }),
-    ]);
-  });
+  }).then((bundle) => Promise.all([
+    bundle.write({
+      format: "es6",
+      dest: "dist/es6/kivi.js",
+    }),
+    bundle.write({
+      format: "umd",
+      moduleName: "kivi",
+      dest: "dist/umd/kivi.js",
+    }),
+  ]));
 }
 
 function buildTests() {
@@ -72,13 +70,11 @@ function buildTests() {
         }
       }),
     ],
-  }).then(function(bundle) {
-    return bundle.write({
-      format: "iife",
-      dest: "build/tests.js",
-      sourceMap: "inline",
-    });
-  });
+  }).then((bundle) => bundle.write({
+    format: "iife",
+    dest: "build/tests.js",
+    sourceMap: "inline",
+  }));
 }
 
 function buildFuzzyTestsHtml() {
@@ -97,7 +93,7 @@ function buildFuzzyTestsJS() {
         declaration: false,
       })),
     ],
-  }).then(function(bundle) {
+  }).then(function (bundle) {
     return bundle.write({
       format: "iife",
       dest: "build/children_reconciliation.js",
