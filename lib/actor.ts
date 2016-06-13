@@ -393,11 +393,11 @@ export class ActorDescriptor<P, S> {
   /**
    * Create state handler.
    */
-  _createState: ((actor: Actor<P, S>, props: P | null) => S) | null;
+  _createState: ((actor: Actor<P, S>, props: P) => S) | null;
   /**
    * Init handler.
    */
-  _init: ((actor: Actor<P, S>, props: P | null, state: S | null) => void) | null;
+  _init: ((actor: Actor<P, S>, props: P, state: S) => void) | null;
   /**
    * Message handler.
    */
@@ -409,7 +409,7 @@ export class ActorDescriptor<P, S> {
   /**
    * Disposed handler.
    */
-  _disposed: ((actor: Actor<P, S>, props: P | null, state: S | null) => void) | null;
+  _disposed: ((actor: Actor<P, S>, props: P, state: S) => void) | null;
 
   constructor() {
     this._flags = 0;
@@ -426,10 +426,10 @@ export class ActorDescriptor<P, S> {
   create(props?: P): Actor<P, S> {
     const actor = new Actor<P, S>(this, props, this._markFlags);
     if (this._createState !== null) {
-      actor.state = this._createState(actor, actor.props);
+      actor.state = this._createState(actor, actor.props!);
     }
     if (this._init !== null) {
-      this._init(actor, actor.props, actor.state);
+      this._init(actor, actor.props!, actor.state!);
     }
     return actor;
   }
@@ -448,7 +448,7 @@ export class ActorDescriptor<P, S> {
   /**
    * Create state handler.
    */
-  createState(handler: (actor: Actor<P, S>, props: P | null) => S): ActorDescriptor<P, S> {
+  createState(handler: (actor: Actor<P, S>, props: P) => S): ActorDescriptor<P, S> {
     this._createState = handler;
     return this;
   }
@@ -456,7 +456,7 @@ export class ActorDescriptor<P, S> {
   /**
    * Init handler.
    */
-  init(handler: (actor: Actor<P, S>, props: P | null, state: S | null) => S): ActorDescriptor<P, S> {
+  init(handler: (actor: Actor<P, S>, props: P, state: S) => void): ActorDescriptor<P, S> {
     this._init = handler;
     return this;
   }
@@ -472,7 +472,7 @@ export class ActorDescriptor<P, S> {
   /**
    * Disposed handler.
    */
-  disposed(handler: (actor: Actor<P, S>, props: P | null, state: S | null) => S): ActorDescriptor<P, S> {
+  disposed(handler: (actor: Actor<P, S>, props: P, state: S) => void): ActorDescriptor<P, S> {
     this._disposed = handler;
     return this;
   }
@@ -531,6 +531,13 @@ export class Actor<P, S> {
   }
 
   /**
+   * Get current state.
+   */
+  getState(): S {
+    return this.state!;
+  }
+
+  /**
    * Send a message to an actor.
    */
   send(message: Message<any>): void {
@@ -576,7 +583,7 @@ export class Actor<P, S> {
       } while (link !== null);
     }
     if (this.descriptor._disposed !== null) {
-      this.descriptor._disposed(this, this.props, this.state);
+      this.descriptor._disposed(this, this.props!, this.state!);
     }
   }
 
