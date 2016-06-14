@@ -10,3 +10,4 @@ typings
 .idea
 .vscode
 .npm-debug
+npm-debug.log
