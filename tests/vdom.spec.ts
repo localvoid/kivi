@@ -5,6 +5,8 @@ import {VNode, vNodeInstantiate, vNodeRender, vNodeMount, vNodeAttached, vNodeAt
 import {Component} from "../lib/component";
 import {reconciler} from "../lib/reconciler";
 
+const expect = chai.expect;
+
 function injectVNode(parent: DocumentFragment, node: VNode, nextRef?: Element): void {
   vNodeInstantiate(node, undefined);
   parent.insertBefore(node.ref!, nextRef!);
@@ -53,7 +55,7 @@ function checkInnerHtmlEquals(ax: VNode[], bx: VNode[], cx: VNode[], keys: boole
 
   reconciler.sync(a, c, 0, undefined);
 
-  expect(aDiv.innerHTML).toBe(bDiv.innerHTML);
+  expect(aDiv.innerHTML).to.equal(bDiv.innerHTML);
 }
 
 describe("VNode", () => {
@@ -62,14 +64,14 @@ describe("VNode", () => {
       const f = document.createDocumentFragment();
       const a = createVElement("div");
       injectVNode(f, a, undefined);
-      expect((f.firstChild as Element).tagName).toBe("DIV");
+      expect((f.firstChild as Element).tagName).to.equal("DIV");
     });
 
     it("should create empty span", () => {
       const f = document.createDocumentFragment();
       const a = createVElement("span");
       injectVNode(f, a, undefined);
-      expect((f.firstChild as Element).tagName).toBe("SPAN");
+      expect((f.firstChild as Element).tagName).to.equal("SPAN");
     });
 
     it("should create div with 1 static shape attribute", () => {
@@ -79,8 +81,8 @@ describe("VNode", () => {
         a: "1",
       });
       injectVNode(f, a, undefined);
-      expect((f.firstChild as Element).hasAttributes()).toBeTruthy();
-      expect((f.firstChild as Element).getAttribute("a")).toBe("1");
+      expect((f.firstChild as Element).hasAttributes()).to.be.true;
+      expect((f.firstChild as Element).getAttribute("a")).to.equal("1");
     });
 
     it("should create div with 1 static shape attributes", () => {
@@ -91,9 +93,9 @@ describe("VNode", () => {
         b: "2",
       });
       injectVNode(f, a, undefined);
-      expect((f.firstChild as Element).hasAttributes()).toBeTruthy();
-      expect((f.firstChild as Element).getAttribute("a")).toBe("1");
-      expect((f.firstChild as Element).getAttribute("b")).toBe("2");
+      expect((f.firstChild as Element).hasAttributes()).to.be.true;
+      expect((f.firstChild as Element).getAttribute("a")).to.equal("1");
+      expect((f.firstChild as Element).getAttribute("b")).to.equal("2");
     });
 
     it("should create div with 1 dynamic shape attribute", () => {
@@ -103,8 +105,8 @@ describe("VNode", () => {
         a: "1",
       });
       injectVNode(f, a, undefined);
-      expect((f.firstChild as Element).hasAttributes()).toBeTruthy();
-      expect((f.firstChild as Element).getAttribute("a")).toBe("1");
+      expect((f.firstChild as Element).hasAttributes()).to.be.true;
+      expect((f.firstChild as Element).getAttribute("a")).to.equal("1");
     });
 
     it("should create div with 2 dynamic shape attributes", () => {
@@ -114,9 +116,9 @@ describe("VNode", () => {
         b: "2",
       });
       injectVNode(f, a, undefined);
-      expect((f.firstChild as Element).hasAttributes()).toBeTruthy();
-      expect((f.firstChild as Element).getAttribute("a")).toBe("1");
-      expect((f.firstChild as Element).getAttribute("b")).toBe("2");
+      expect((f.firstChild as Element).hasAttributes()).to.be.true;
+      expect((f.firstChild as Element).getAttribute("a")).to.equal("1");
+      expect((f.firstChild as Element).getAttribute("b")).to.equal("2");
     });
 
     it("should create div with 1 static shape property", () => {
@@ -126,7 +128,7 @@ describe("VNode", () => {
         xtag: "1",
       });
       injectVNode(f, a, undefined);
-      expect(((f.firstChild as any) as {xtag: string}).xtag).toBe("1");
+      expect(((f.firstChild as any) as {xtag: string}).xtag).to.equal("1");
     });
 
     it("should create div with 2 static shape properties", () => {
@@ -137,8 +139,8 @@ describe("VNode", () => {
         xtag2: "2",
       });
       injectVNode(f, a, undefined);
-      expect(((f.firstChild as any) as {xtag1: string}).xtag1).toBe("1");
-      expect(((f.firstChild as any) as {xtag2: string}).xtag2).toBe("2");
+      expect(((f.firstChild as any) as {xtag1: string}).xtag1).to.equal("1");
+      expect(((f.firstChild as any) as {xtag2: string}).xtag2).to.equal("2");
     });
 
     it("should create div with 1 dynamic shape property", () => {
@@ -148,7 +150,7 @@ describe("VNode", () => {
         xtag: "1",
       });
       injectVNode(f, a, undefined);
-      expect(((f.firstChild as any) as {xtag: string}).xtag).toBe("1");
+      expect(((f.firstChild as any) as {xtag: string}).xtag).to.equal("1");
     });
 
     it("should create div with 2 dynamic shape properties", () => {
@@ -159,51 +161,51 @@ describe("VNode", () => {
         xtag2: "2",
       });
       injectVNode(f, a, undefined);
-      expect(((f.firstChild as any) as {xtag1: string}).xtag1).toBe("1");
-      expect(((f.firstChild as any) as {xtag2: string}).xtag2).toBe("2");
+      expect(((f.firstChild as any) as {xtag1: string}).xtag1).to.equal("1");
+      expect(((f.firstChild as any) as {xtag2: string}).xtag2).to.equal("2");
     });
 
     it("should create div with style", () => {
       const f = document.createDocumentFragment();
       const a = createVElement("div").style("top: 10px");
       injectVNode(f, a, undefined);
-      expect((f.firstChild as HTMLElement).style.top).toBe("10px");
+      expect((f.firstChild as HTMLElement).style.top).to.equal("10px");
     });
 
     it("should create div with className", () => {
       const f = document.createDocumentFragment();
       const a = createVElement("div").className("a");
       injectVNode(f, a, undefined);
-      expect((f.firstChild as Element).classList.length).toBe(1);
-      expect((f.firstChild as Element).classList[0]).toBe("a");
+      expect((f.firstChild as Element).classList.length).to.equal(1);
+      expect((f.firstChild as Element).classList[0]).to.equal("a");
     });
 
     it("should create svg element with style", () => {
       const f = document.createDocumentFragment();
       const a = createVSvgElement("circle").style("top: 10px");
       injectVNode(f, a, undefined);
-      expect((f.firstChild as SVGElement).getAttribute("style")).toContain("10px");
+      expect((f.firstChild as SVGElement).getAttribute("style")).to.have.string("10px");
     });
 
     it("should create svg element with className", () => {
       const f = document.createDocumentFragment();
       const a = createVSvgElement("circle").className("a");
       injectVNode(f, a, undefined);
-      expect((f.firstChild as SVGElement).getAttribute("class")).toBe("a");
+      expect((f.firstChild as SVGElement).getAttribute("class")).to.equal("a");
     });
 
     it("should create svg element with xlink:href attribute", () => {
       const f = document.createDocumentFragment();
       const a = createVSvgElement("circle").attrs({"xlink:href": "a"});
       injectVNode(f, a, undefined);
-      expect((f.firstChild as SVGElement).getAttributeNS(XlinkNamespace, "href")).toBe("a");
+      expect((f.firstChild as SVGElement).getAttributeNS(XlinkNamespace, "href")).to.equal("a");
     });
 
     it("should create div with 1 child", () => {
       const f = document.createDocumentFragment();
       const a = createVElement("div").children([createVElement("span")]);
       injectVNode(f, a, undefined);
-      expect((f.firstChild as Element).childNodes.length).toBe(1);
+      expect((f.firstChild as Element).childNodes.length).to.equal(1);
     });
 
     it("should create div with 2 children", () => {
@@ -213,15 +215,15 @@ describe("VNode", () => {
         createVElement("span"),
       ]);
       injectVNode(f, a, undefined);
-      expect((f.firstChild as Element).childNodes.length).toBe(2);
+      expect((f.firstChild as Element).childNodes.length).to.equal(2);
     });
 
     it("should create div with child 'abc'", () => {
       const f = document.createDocumentFragment();
       const a = createVElement("div").children("abc");
       injectVNode(f, a, undefined);
-      expect((f.firstChild as Element).childNodes.length).toBe(1);
-      expect((f.firstChild as Element).firstChild.nodeValue).toBe("abc");
+      expect((f.firstChild as Element).childNodes.length).to.equal(1);
+      expect((f.firstChild as Element).firstChild.nodeValue).to.equal("abc");
     });
   });
 
@@ -233,7 +235,7 @@ describe("VNode", () => {
         const b = createVElement("div");
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect((f.firstChild as Element).hasAttributes()).toBeFalsy();
+        expect((f.firstChild as Element).hasAttributes()).to.be.false;
       });
 
       it("null => {} should throw exception", () => {
@@ -241,7 +243,7 @@ describe("VNode", () => {
         const a = createVElement("div");
         const b = createVElement("div").attrs({});
         injectVNode(f, a, undefined);
-        expect(() => reconciler.sync(a, b, 0, undefined)).toThrow();
+        expect(() => reconciler.sync(a, b, 0, undefined)).to.throw();
       });
 
       it("{} => null should throw exception", () => {
@@ -249,7 +251,7 @@ describe("VNode", () => {
         const a = createVElement("div").attrs({});
         const b = createVElement("div");
         injectVNode(f, a, undefined);
-        expect(() => reconciler.sync(a, b, 0, undefined)).toThrow();
+        expect(() => reconciler.sync(a, b, 0, undefined)).to.throw();
       });
 
       it("{} => {}", () => {
@@ -258,7 +260,7 @@ describe("VNode", () => {
         const b = createVElement("div").attrs({});
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect((f.firstChild as Element).hasAttributes()).toBeFalsy();
+        expect((f.firstChild as Element).hasAttributes()).to.be.false;
       });
 
       it("null => {a: 1} should throw exception", () => {
@@ -266,7 +268,7 @@ describe("VNode", () => {
         const a = createVElement("div");
         const b = createVElement("div").attrs({ a: "1" });
         injectVNode(f, a, undefined);
-        expect(() => reconciler.sync(a, b, 0, undefined)).toThrow();
+        expect(() => reconciler.sync(a, b, 0, undefined)).to.throw();
       });
 
       it("{} => {a: 1} should throw exception", () => {
@@ -274,7 +276,7 @@ describe("VNode", () => {
         const a = createVElement("div").attrs({});
         const b = createVElement("div").attrs({ a: "1" });
         injectVNode(f, a, undefined);
-        expect(() => reconciler.sync(a, b, 0, undefined)).toThrow();
+        expect(() => reconciler.sync(a, b, 0, undefined)).to.throw();
       });
 
       it("{} => {a: 1, b: 2}", () => {
@@ -282,7 +284,7 @@ describe("VNode", () => {
         const a = createVElement("div").attrs({});
         const b = createVElement("div").attrs({ a: "1", b: "2" });
         injectVNode(f, a, undefined);
-        expect(() => reconciler.sync(a, b, 0, undefined)).toThrow();
+        expect(() => reconciler.sync(a, b, 0, undefined)).to.throw();
       });
 
       it("{a: 1} => null", () => {
@@ -290,7 +292,7 @@ describe("VNode", () => {
         const a = createVElement("div").attrs({ a: "1" });
         const b = createVElement("div");
         injectVNode(f, a, undefined);
-        expect(() => reconciler.sync(a, b, 0, undefined)).toThrow();
+        expect(() => reconciler.sync(a, b, 0, undefined)).to.throw();
       });
 
       it("{a: 1} => {}", () => {
@@ -298,7 +300,7 @@ describe("VNode", () => {
         const a = createVElement("div").attrs({ a: "1" });
         const b = createVElement("div").attrs({});
         injectVNode(f, a, undefined);
-        expect(() => reconciler.sync(a, b, 0, undefined)).toThrow();
+        expect(() => reconciler.sync(a, b, 0, undefined)).to.throw();
       });
 
       it("{a: 1, b: 2} => {}", () => {
@@ -306,7 +308,7 @@ describe("VNode", () => {
         const a = createVElement("div").attrs({ a: "1", b: "2" });
         const b = createVElement("div").attrs({});
         injectVNode(f, a, undefined);
-        expect(() => reconciler.sync(a, b, 0, undefined)).toThrow();
+        expect(() => reconciler.sync(a, b, 0, undefined)).to.throw();
       });
 
       it("{a: 1} => {b: 2}", () => {
@@ -314,7 +316,7 @@ describe("VNode", () => {
         const a = createVElement("div").attrs({ a: "1" });
         const b = createVElement("div").attrs({ b: "2" });
         injectVNode(f, a, undefined);
-        expect(() => reconciler.sync(a, b, 0, undefined)).toThrow();
+        expect(() => reconciler.sync(a, b, 0, undefined)).to.throw();
       });
 
       it("{a: 1} => {a: 10}", () => {
@@ -323,8 +325,8 @@ describe("VNode", () => {
         const b = createVElement("div").attrs({ a: "10" });
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect((f.firstChild as Element).hasAttributes()).toBeTruthy();
-        expect((f.firstChild as Element).getAttribute("a")).toBe("10");
+        expect((f.firstChild as Element).hasAttributes()).to.be.true;
+        expect((f.firstChild as Element).getAttribute("a")).to.equal("10");
       });
 
       it("{a: 1, b: 2} => {a: 10, b: 20}", () => {
@@ -333,9 +335,9 @@ describe("VNode", () => {
         const b = createVElement("div").attrs({ a: "10", b: "20" });
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect((f.firstChild as Element).hasAttributes()).toBeTruthy();
-        expect((f.firstChild as Element).getAttribute("a")).toBe("10");
-        expect((f.firstChild as Element).getAttribute("b")).toBe("20");
+        expect((f.firstChild as Element).hasAttributes()).to.be.true;
+        expect((f.firstChild as Element).getAttribute("a")).to.equal("10");
+        expect((f.firstChild as Element).getAttribute("b")).to.equal("20");
       });
     });
 
@@ -346,7 +348,7 @@ describe("VNode", () => {
         const b = createVElement("div").dynamicShapeAttrs({});
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect((f.firstChild as Element).hasAttributes()).toBeFalsy();
+        expect((f.firstChild as Element).hasAttributes()).to.be.false;
       });
 
       it("{} => null", () => {
@@ -355,7 +357,7 @@ describe("VNode", () => {
         const b = createVElement("div").dynamicShapeAttrs();
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect((f.firstChild as Element).hasAttributes()).toBeFalsy();
+        expect((f.firstChild as Element).hasAttributes()).to.be.false;
       });
 
       it("{} => {}", () => {
@@ -364,7 +366,7 @@ describe("VNode", () => {
         const b = createVElement("div").dynamicShapeAttrs({});
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect((f.firstChild as Element).hasAttributes()).toBeFalsy();
+        expect((f.firstChild as Element).hasAttributes()).to.be.false;
       });
 
       it("null => {a: 1}", () => {
@@ -373,8 +375,8 @@ describe("VNode", () => {
         const b = createVElement("div").dynamicShapeAttrs({ a: "1" });
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect((f.firstChild as Element).hasAttributes()).toBeTruthy();
-        expect((f.firstChild as Element).getAttribute("a")).toBe("1");
+        expect((f.firstChild as Element).hasAttributes()).to.be.true;
+        expect((f.firstChild as Element).getAttribute("a")).to.equal("1");
       });
 
       it("{} => {a: 1}", () => {
@@ -383,8 +385,8 @@ describe("VNode", () => {
         const b = createVElement("div").dynamicShapeAttrs({ a: "1" });
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect((f.firstChild as Element).hasAttributes()).toBeTruthy();
-        expect((f.firstChild as Element).getAttribute("a")).toBe("1");
+        expect((f.firstChild as Element).hasAttributes()).to.be.true;
+        expect((f.firstChild as Element).getAttribute("a")).to.equal("1");
       });
 
       it("{} => {a: 1, b: 2}", () => {
@@ -393,9 +395,9 @@ describe("VNode", () => {
         const b = createVElement("div").dynamicShapeAttrs({ a: "1", b: "2" });
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect((f.firstChild as Element).hasAttributes()).toBeTruthy();
-        expect((f.firstChild as Element).getAttribute("a")).toBe("1");
-        expect((f.firstChild as Element).getAttribute("b")).toBe("2");
+        expect((f.firstChild as Element).hasAttributes()).to.be.true;
+        expect((f.firstChild as Element).getAttribute("a")).to.equal("1");
+        expect((f.firstChild as Element).getAttribute("b")).to.equal("2");
       });
 
       it("{} => {a: 1, b: 2, c: 3}", () => {
@@ -404,10 +406,10 @@ describe("VNode", () => {
         const b = createVElement("div").dynamicShapeAttrs({ a: "1", b: "2", c: "3" });
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect((f.firstChild as Element).hasAttributes()).toBeTruthy();
-        expect((f.firstChild as Element).getAttribute("a")).toBe("1");
-        expect((f.firstChild as Element).getAttribute("b")).toBe("2");
-        expect((f.firstChild as Element).getAttribute("c")).toBe("3");
+        expect((f.firstChild as Element).hasAttributes()).to.be.true;
+        expect((f.firstChild as Element).getAttribute("a")).to.equal("1");
+        expect((f.firstChild as Element).getAttribute("b")).to.equal("2");
+        expect((f.firstChild as Element).getAttribute("c")).to.equal("3");
       });
 
       it("{a: 1} => undefined", () => {
@@ -416,7 +418,7 @@ describe("VNode", () => {
         const b = createVElement("div").dynamicShapeAttrs();
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect((f.firstChild as Element).hasAttributes()).toBeFalsy();
+        expect((f.firstChild as Element).hasAttributes()).to.be.false;
       });
 
       it("{a: 1} => {}", () => {
@@ -425,7 +427,7 @@ describe("VNode", () => {
         const b = createVElement("div").dynamicShapeAttrs({});
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect((f.firstChild as Element).hasAttributes()).toBeFalsy();
+        expect((f.firstChild as Element).hasAttributes()).to.be.false;
       });
 
       it("{a: 1, b: 2} => {}", () => {
@@ -434,7 +436,7 @@ describe("VNode", () => {
         const b = createVElement("div").dynamicShapeAttrs({});
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect((f.firstChild as Element).hasAttributes()).toBeFalsy();
+        expect((f.firstChild as Element).hasAttributes()).to.be.false;
       });
 
       it("{a: 1} => {b: 2}", () => {
@@ -443,9 +445,9 @@ describe("VNode", () => {
         const b = createVElement("div").dynamicShapeAttrs({ b: "2" });
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect((f.firstChild as Element).hasAttributes()).toBeTruthy();
-        expect((f.firstChild as Element).hasAttribute("a")).toBeFalsy();
-        expect((f.firstChild as Element).getAttribute("b")).toBe("2");
+        expect((f.firstChild as Element).hasAttributes()).to.be.true;
+        expect((f.firstChild as Element).hasAttribute("a")).to.be.false;
+        expect((f.firstChild as Element).getAttribute("b")).to.equal("2");
       });
 
       it("{a: 1, b: 2} => {c: 3: d: 4}", () => {
@@ -454,11 +456,11 @@ describe("VNode", () => {
         const b = createVElement("div").dynamicShapeAttrs({ c: "3", d: "4" });
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect((f.firstChild as Element).hasAttributes()).toBeTruthy();
-        expect((f.firstChild as Element).hasAttribute("a")).toBeFalsy();
-        expect((f.firstChild as Element).hasAttribute("b")).toBeFalsy();
-        expect((f.firstChild as Element).getAttribute("c")).toBe("3");
-        expect((f.firstChild as Element).getAttribute("d")).toBe("4");
+        expect((f.firstChild as Element).hasAttributes()).to.be.true;
+        expect((f.firstChild as Element).hasAttribute("a")).to.be.false;
+        expect((f.firstChild as Element).hasAttribute("b")).to.be.false;
+        expect((f.firstChild as Element).getAttribute("c")).to.equal("3");
+        expect((f.firstChild as Element).getAttribute("d")).to.equal("4");
       });
 
       it("{a: 1} => {a: 10}", () => {
@@ -467,8 +469,8 @@ describe("VNode", () => {
         const b = createVElement("div").dynamicShapeAttrs({ a: "10" });
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect((f.firstChild as Element).hasAttributes()).toBeTruthy();
-        expect((f.firstChild as Element).getAttribute("a")).toBe("10");
+        expect((f.firstChild as Element).hasAttributes()).to.be.true;
+        expect((f.firstChild as Element).getAttribute("a")).to.equal("10");
       });
 
       it("{a: 1, b: 2} => {a: 10, b: 20}", () => {
@@ -477,9 +479,9 @@ describe("VNode", () => {
         const b = createVElement("div").dynamicShapeAttrs({ a: "10", b: "20" });
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect((f.firstChild as Element).hasAttributes()).toBeTruthy();
-        expect((f.firstChild as Element).getAttribute("a")).toBe("10");
-        expect((f.firstChild as Element).getAttribute("b")).toBe("20");
+        expect((f.firstChild as Element).hasAttributes()).to.be.true;
+        expect((f.firstChild as Element).getAttribute("a")).to.equal("10");
+        expect((f.firstChild as Element).getAttribute("b")).to.equal("20");
       });
     });
 
@@ -489,7 +491,7 @@ describe("VNode", () => {
         const a = createVElement("div");
         const b = createVElement("div").props({});
         injectVNode(f, a, undefined);
-        expect(() => reconciler.sync(a, b, 0, undefined)).toThrow();
+        expect(() => reconciler.sync(a, b, 0, undefined)).to.throw();
       });
 
       it("{} => null should throw exception", () => {
@@ -497,7 +499,7 @@ describe("VNode", () => {
         const a = createVElement("div").props({});
         const b = createVElement("div");
         injectVNode(f, a, undefined);
-        expect(() => reconciler.sync(a, b, 0, undefined)).toThrow();
+        expect(() => reconciler.sync(a, b, 0, undefined)).to.throw();
       });
 
       it("{} => {}", () => {
@@ -513,7 +515,7 @@ describe("VNode", () => {
         const a = createVElement("div");
         const b = createVElement("div").props({ a: "1" });
         injectVNode(f, a, undefined);
-        expect(() => reconciler.sync(a, b, 0, undefined)).toThrow();
+        expect(() => reconciler.sync(a, b, 0, undefined)).to.throw();
       });
 
       it("{} => {a: 1} should throw exception", () => {
@@ -521,7 +523,7 @@ describe("VNode", () => {
         const a = createVElement("div").props({});
         const b = createVElement("div").props({ a: "1" });
         injectVNode(f, a, undefined);
-        expect(() => reconciler.sync(a, b, 0, undefined)).toThrow();
+        expect(() => reconciler.sync(a, b, 0, undefined)).to.throw();
       });
 
       it("{} => {a: 1, b: 2}", () => {
@@ -529,7 +531,7 @@ describe("VNode", () => {
         const a = createVElement("div").props({});
         const b = createVElement("div").props({ a: "1", b: "2" });
         injectVNode(f, a, undefined);
-        expect(() => reconciler.sync(a, b, 0, undefined)).toThrow();
+        expect(() => reconciler.sync(a, b, 0, undefined)).to.throw();
       });
 
       it("{a: 1} => null", () => {
@@ -537,7 +539,7 @@ describe("VNode", () => {
         const a = createVElement("div").props({ a: "1" });
         const b = createVElement("div");
         injectVNode(f, a, undefined);
-        expect(() => reconciler.sync(a, b, 0, undefined)).toThrow();
+        expect(() => reconciler.sync(a, b, 0, undefined)).to.throw();
       });
 
       it("{a: 1} => {}", () => {
@@ -545,7 +547,7 @@ describe("VNode", () => {
         const a = createVElement("div").props({ a: "1" });
         const b = createVElement("div").props({});
         injectVNode(f, a, undefined);
-        expect(() => reconciler.sync(a, b, 0, undefined)).toThrow();
+        expect(() => reconciler.sync(a, b, 0, undefined)).to.throw();
       });
 
       it("{a: 1, b: 2} => {}", () => {
@@ -553,7 +555,7 @@ describe("VNode", () => {
         const a = createVElement("div").props({ a: "1", b: "2" });
         const b = createVElement("div").props({});
         injectVNode(f, a, undefined);
-        expect(() => reconciler.sync(a, b, 0, undefined)).toThrow();
+        expect(() => reconciler.sync(a, b, 0, undefined)).to.throw();
       });
 
       it("{a: 1} => {b: 2}", () => {
@@ -561,7 +563,7 @@ describe("VNode", () => {
         const a = createVElement("div").props({ a: "1" });
         const b = createVElement("div").props({ b: "2" });
         injectVNode(f, a, undefined);
-        expect(() => reconciler.sync(a, b, 0, undefined)).toThrow();
+        expect(() => reconciler.sync(a, b, 0, undefined)).to.throw();
       });
 
       it("{a: 1} => {a: 10}", () => {
@@ -570,7 +572,7 @@ describe("VNode", () => {
         const b = createVElement("div").props({ a: "10" });
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect(((f.firstChild as any) as {a: string}).a).toBe("10");
+        expect(((f.firstChild as any) as {a: string}).a).to.equal("10");
       });
 
       it("{a: 1, b: 2} => {a: 10, b: 20}", () => {
@@ -579,8 +581,8 @@ describe("VNode", () => {
         const b = createVElement("div").props({ a: "10", b: "20" });
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect(((f.firstChild as any) as {a: string}).a).toBe("10");
-        expect(((f.firstChild as any) as {b: string}).b).toBe("20");
+        expect(((f.firstChild as any) as {a: string}).a).to.equal("10");
+        expect(((f.firstChild as any) as {b: string}).b).to.equal("20");
       });
     });
 
@@ -590,7 +592,7 @@ describe("VNode", () => {
         const a = createVElement("div").dynamicShapeProps();
         const b = createVElement("div").dynamicShapeProps({});
         injectVNode(f, a, undefined);
-        expect(() => reconciler.sync(a, b, 0, undefined)).not.toThrow();
+        expect(() => reconciler.sync(a, b, 0, undefined)).not.to.throw();
       });
 
       it("{} => null", () => {
@@ -598,7 +600,7 @@ describe("VNode", () => {
         const a = createVElement("div").dynamicShapeProps({});
         const b = createVElement("div").dynamicShapeProps();
         injectVNode(f, a, undefined);
-        expect(() => reconciler.sync(a, b, 0, undefined)).not.toThrow();
+        expect(() => reconciler.sync(a, b, 0, undefined)).not.to.throw();
       });
 
       it("{} => {}", () => {
@@ -606,7 +608,7 @@ describe("VNode", () => {
         const a = createVElement("div").dynamicShapeProps({});
         const b = createVElement("div").dynamicShapeProps({});
         injectVNode(f, a, undefined);
-        expect(() => reconciler.sync(a, b, 0, undefined)).not.toThrow();
+        expect(() => reconciler.sync(a, b, 0, undefined)).not.to.throw();
       });
 
       it("null => {a: 1}", () => {
@@ -615,7 +617,7 @@ describe("VNode", () => {
         const b = createVElement("div").dynamicShapeProps({ a: "1" });
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect(((f.firstChild as any) as {a: string}).a).toBe("1");
+        expect(((f.firstChild as any) as {a: string}).a).to.equal("1");
       });
 
       it("{} => {a: 1}", () => {
@@ -624,7 +626,7 @@ describe("VNode", () => {
         const b = createVElement("div").dynamicShapeProps({ a: "1" });
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect(((f.firstChild as any) as {a: string}).a).toBe("1");
+        expect(((f.firstChild as any) as {a: string}).a).to.equal("1");
       });
 
       it("{} => {a: 1, b: 2}", () => {
@@ -633,8 +635,8 @@ describe("VNode", () => {
         const b = createVElement("div").dynamicShapeProps({ a: "1", b: "2" });
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect(((f.firstChild as any) as {a: string}).a).toBe("1");
-        expect(((f.firstChild as any) as {b: string}).b).toBe("2");
+        expect(((f.firstChild as any) as {a: string}).a).to.equal("1");
+        expect(((f.firstChild as any) as {b: string}).b).to.equal("2");
       });
 
       it("{} => {a: 1, b: 2, c: 3}", () => {
@@ -643,9 +645,9 @@ describe("VNode", () => {
         const b = createVElement("div").dynamicShapeProps({ a: "1", b: "2", c: "3" });
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect(((f.firstChild as any) as {a: string}).a).toBe("1");
-        expect(((f.firstChild as any) as {b: string}).b).toBe("2");
-        expect(((f.firstChild as any) as {c: string}).c).toBe("3");
+        expect(((f.firstChild as any) as {a: string}).a).to.equal("1");
+        expect(((f.firstChild as any) as {b: string}).b).to.equal("2");
+        expect(((f.firstChild as any) as {c: string}).c).to.equal("3");
       });
 
       it("{a: 1} => null", () => {
@@ -654,7 +656,7 @@ describe("VNode", () => {
         const b = createVElement("div").dynamicShapeProps();
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect(((f.firstChild as any) as {a: string}).a).toBeNull();
+        expect(((f.firstChild as any) as {a: string}).a).to.be.null;
       });
 
       it("{a: 1} => {}", () => {
@@ -663,7 +665,7 @@ describe("VNode", () => {
         const b = createVElement("div").dynamicShapeProps({});
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect(((f.firstChild as any) as {a: string}).a).toBeNull();
+        expect(((f.firstChild as any) as {a: string}).a).to.be.null;
       });
 
       it("{a: 1, b: 2} => {}", () => {
@@ -672,8 +674,8 @@ describe("VNode", () => {
         const b = createVElement("div").dynamicShapeProps({});
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect(((f.firstChild as any) as {a: string}).a).toBeNull();
-        expect(((f.firstChild as any) as {b: string}).b).toBeNull();
+        expect(((f.firstChild as any) as {a: string}).a).to.be.null;
+        expect(((f.firstChild as any) as {b: string}).b).to.be.null;
       });
 
       it("{a: 1} => {b: 2}", () => {
@@ -682,8 +684,8 @@ describe("VNode", () => {
         const b = createVElement("div").dynamicShapeProps({ b: "2" });
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect(((f.firstChild as any) as {a: string}).a).toBeNull();
-        expect(((f.firstChild as any) as {b: string}).b).toBe("2");
+        expect(((f.firstChild as any) as {a: string}).a).to.be.null;
+        expect(((f.firstChild as any) as {b: string}).b).to.equal("2");
       });
 
       it("{a: 1, b: 2} => {c: 3: d: 4}", () => {
@@ -692,10 +694,10 @@ describe("VNode", () => {
         const b = createVElement("div").dynamicShapeProps({ c: "3", d: "4" });
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect(((f.firstChild as any) as {a: string}).a).toBeNull();
-        expect(((f.firstChild as any) as {b: string}).b).toBeNull();
-        expect(((f.firstChild as any) as {c: string}).c).toBe("3");
-        expect(((f.firstChild as any) as {d: string}).d).toBe("4");
+        expect(((f.firstChild as any) as {a: string}).a).to.be.null;
+        expect(((f.firstChild as any) as {b: string}).b).to.be.null;
+        expect(((f.firstChild as any) as {c: string}).c).to.equal("3");
+        expect(((f.firstChild as any) as {d: string}).d).to.equal("4");
       });
 
       it("{a: 1} => {a: 10}", () => {
@@ -704,7 +706,7 @@ describe("VNode", () => {
         const b = createVElement("div").dynamicShapeProps({ a: "10" });
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect(((f.firstChild as any) as {a: string}).a).toBe("10");
+        expect(((f.firstChild as any) as {a: string}).a).to.equal("10");
       });
 
       it("{a: 1, b: 2} => {a: 10, b: 20}", () => {
@@ -713,8 +715,8 @@ describe("VNode", () => {
         const b = createVElement("div").dynamicShapeProps({ a: "10", b: "20" });
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect(((f.firstChild as any) as {a: string}).a).toBe("10");
-        expect(((f.firstChild as any) as {b: string}).b).toBe("20");
+        expect(((f.firstChild as any) as {a: string}).a).to.equal("10");
+        expect(((f.firstChild as any) as {b: string}).b).to.equal("20");
       });
     });
 
@@ -725,7 +727,7 @@ describe("VNode", () => {
         const b = createVElement("div");
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect((f.firstChild as Element).classList.length).toBe(0);
+        expect((f.firstChild as Element).classList.length).to.equal(0);
       });
 
       it("null => [1]", () => {
@@ -734,8 +736,8 @@ describe("VNode", () => {
         const b = createVElement("div").className("1");
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect((f.firstChild as Element).classList.length).toBe(1);
-        expect((f.firstChild as Element).classList[0]).toBe("1");
+        expect((f.firstChild as Element).classList.length).to.equal(1);
+        expect((f.firstChild as Element).classList[0]).to.equal("1");
       });
 
       it("[1] => null", () => {
@@ -744,7 +746,7 @@ describe("VNode", () => {
         const b = createVElement("div");
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect((f.firstChild as Element).classList.length).toBe(0);
+        expect((f.firstChild as Element).classList.length).to.equal(0);
       });
 
       it("null => [1, 2]", () => {
@@ -753,9 +755,9 @@ describe("VNode", () => {
         const b = createVElement("div").className("1 2");
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect((f.firstChild as Element).classList.length).toBe(2);
-        expect((f.firstChild as Element).classList[0]).toBe("1");
-        expect((f.firstChild as Element).classList[1]).toBe("2");
+        expect((f.firstChild as Element).classList.length).to.equal(2);
+        expect((f.firstChild as Element).classList[0]).to.equal("1");
+        expect((f.firstChild as Element).classList[1]).to.equal("2");
       });
     });
 
@@ -766,7 +768,7 @@ describe("VNode", () => {
         const b = createVElement("div");
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect((f.firstChild as HTMLElement).style.cssText).toBe("");
+        expect((f.firstChild as HTMLElement).style.cssText).to.equal("");
       });
 
       it("null => {top: 10px}", () => {
@@ -775,7 +777,7 @@ describe("VNode", () => {
         const b = createVElement("div").style("top: 10px");
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect((f.firstChild as HTMLElement).style.top).toBe("10px");
+        expect((f.firstChild as HTMLElement).style.top).to.equal("10px");
       });
 
       it("{top: 10px} => null", () => {
@@ -785,7 +787,7 @@ describe("VNode", () => {
         a.style("top: 10px");
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect((f.firstChild as HTMLElement).style.top).toBe("");
+        expect((f.firstChild as HTMLElement).style.top).to.equal("");
       });
 
       it("null => {top: 10px, left: 20px}", () => {
@@ -794,8 +796,8 @@ describe("VNode", () => {
         const b = createVElement("div").style("top: 10px; left: 20px");
         injectVNode(f, a, undefined);
         reconciler.sync(a, b, 0, undefined);
-        expect((f.firstChild as HTMLElement).style.top).toBe("10px");
-        expect((f.firstChild as HTMLElement).style.left).toBe("20px");
+        expect((f.firstChild as HTMLElement).style.top).to.equal("10px");
+        expect((f.firstChild as HTMLElement).style.left).to.equal("20px");
       });
     });
 
@@ -956,8 +958,8 @@ describe("VNode", () => {
           const b = createVElement("div").children("abc");
           injectVNode(f, a, undefined);
           reconciler.sync(a, b, 0, undefined);
-          expect((f.firstChild as Element).childNodes.length).toBe(1);
-          expect((f.firstChild as Element).firstChild.nodeValue).toBe("abc");
+          expect((f.firstChild as Element).childNodes.length).to.equal(1);
+          expect((f.firstChild as Element).firstChild.nodeValue).to.equal("abc");
         });
 
         it("'abc' => null", () => {
@@ -966,7 +968,7 @@ describe("VNode", () => {
           const b = createVElement("div");
           injectVNode(f, a, undefined);
           reconciler.sync(a, b, 0, undefined);
-          expect((f.firstChild as Element).childNodes.length).toBe(0);
+          expect((f.firstChild as Element).childNodes.length).to.equal(0);
         });
 
         it("'abc' => 'cde'", () => {
@@ -975,8 +977,8 @@ describe("VNode", () => {
           const b = createVElement("div").children("cde");
           injectVNode(f, a, undefined);
           reconciler.sync(a, b, 0, undefined);
-          expect((f.firstChild as Element).childNodes.length).toBe(1);
-          expect((f.firstChild as Element).firstChild.nodeValue).toBe("cde");
+          expect((f.firstChild as Element).childNodes.length).to.equal(1);
+          expect((f.firstChild as Element).firstChild.nodeValue).to.equal("cde");
         });
 
         it("[div] => 'cde'", () => {
@@ -985,8 +987,8 @@ describe("VNode", () => {
           const b = createVElement("div").children("cde");
           injectVNode(f, a, undefined);
           reconciler.sync(a, b, 0, undefined);
-          expect((f.firstChild as Element).childNodes.length).toBe(1);
-          expect((f.firstChild as Element).firstChild.nodeValue).toBe("cde");
+          expect((f.firstChild as Element).childNodes.length).to.equal(1);
+          expect((f.firstChild as Element).firstChild.nodeValue).to.equal("cde");
         });
 
         it("[div, div] => 'cde'", () => {
@@ -995,8 +997,8 @@ describe("VNode", () => {
           const b = createVElement("div").children("cde");
           injectVNode(f, a, undefined);
           reconciler.sync(a, b, 0, undefined);
-          expect((f.firstChild as Element).childNodes.length).toBe(1);
-          expect((f.firstChild as Element).firstChild.nodeValue).toBe("cde");
+          expect((f.firstChild as Element).childNodes.length).to.equal(1);
+          expect((f.firstChild as Element).firstChild.nodeValue).to.equal("cde");
         });
 
         it("'cde' => [div]", () => {
@@ -1005,8 +1007,8 @@ describe("VNode", () => {
           const b = createVElement("div").children([createVElement("div")]);
           injectVNode(f, a, undefined);
           reconciler.sync(a, b, 0, undefined);
-          expect((f.firstChild as Element).childNodes.length).toBe(1);
-          expect((f.firstChild.firstChild as Element).tagName).toBe("DIV");
+          expect((f.firstChild as Element).childNodes.length).to.equal(1);
+          expect((f.firstChild.firstChild as Element).tagName).to.equal("DIV");
         });
 
         it("'cde' => [div, span]", () => {
@@ -1015,9 +1017,9 @@ describe("VNode", () => {
           const b = createVElement("div").children([createVElement("div"), createVElement("span")]);
           injectVNode(f, a, undefined);
           reconciler.sync(a, b, 0, undefined);
-          expect((f.firstChild as Element).childNodes.length).toBe(2);
-          expect((f.firstChild.firstChild as Element).tagName).toBe("DIV");
-          expect((f.firstChild.lastChild as Element).tagName).toBe("SPAN");
+          expect((f.firstChild as Element).childNodes.length).to.equal(2);
+          expect((f.firstChild.firstChild as Element).tagName).to.equal("DIV");
+          expect((f.firstChild.lastChild as Element).tagName).to.equal("SPAN");
         });
       });
 
@@ -1056,11 +1058,11 @@ describe("VNode", () => {
       vNodeInstantiate(node, undefined);
       vNodeRender(node, 0, undefined);
       const state = component.getComponentRef<number, LifecycleState>().state!;
-      expect(state.checkInit).toBe(0);
-      expect(state.checkAttached).toBe(1);
-      expect(state.checkUpdate).toBe(2);
-      expect(state.checkDetached).toBe(-1);
-      expect(state.checkDisposed).toBe(-1);
+      expect(state.checkInit).to.equal(0);
+      expect(state.checkAttached).to.equal(1);
+      expect(state.checkUpdate).to.equal(2);
+      expect(state.checkDetached).to.equal(-1);
+      expect(state.checkDisposed).to.equal(-1);
     });
 
     it("should invoke detached hook when parent vnode is detached", () => {
@@ -1071,11 +1073,11 @@ describe("VNode", () => {
       vNodeRender(node, 0, undefined);
       vNodeDetach(node);
       const state = component.getComponentRef<number, LifecycleState>().state!;
-      expect(state.checkInit).toBe(0);
-      expect(state.checkAttached).toBe(1);
-      expect(state.checkUpdate).toBe(2);
-      expect(state.checkDetached).toBe(3);
-      expect(state.checkDisposed).toBe(-1);
+      expect(state.checkInit).to.equal(0);
+      expect(state.checkAttached).to.equal(1);
+      expect(state.checkUpdate).to.equal(2);
+      expect(state.checkDetached).to.equal(3);
+      expect(state.checkDisposed).to.equal(-1);
     });
 
     it("should invoke attached hook when parent vnode is detached and attached", () => {
@@ -1087,11 +1089,11 @@ describe("VNode", () => {
       vNodeDetach(node);
       vNodeAttach(node);
       const state = component.getComponentRef<number, LifecycleState>().state!;
-      expect(state.checkInit).toBe(0);
-      expect(state.checkAttached).toBe(4);
-      expect(state.checkUpdate).toBe(2);
-      expect(state.checkDetached).toBe(3);
-      expect(state.checkDisposed).toBe(-1);
+      expect(state.checkInit).to.equal(0);
+      expect(state.checkAttached).to.equal(4);
+      expect(state.checkUpdate).to.equal(2);
+      expect(state.checkDetached).to.equal(3);
+      expect(state.checkDisposed).to.equal(-1);
     });
 
     it("should invoke detached and disposed hook when parent vnode is disposed in attached state", () => {
@@ -1102,11 +1104,11 @@ describe("VNode", () => {
       vNodeRender(node, 0, undefined);
       vNodeDispose(node);
       const state = component.getComponentRef<number, LifecycleState>().state!;
-      expect(state.checkInit).toBe(0);
-      expect(state.checkAttached).toBe(1);
-      expect(state.checkUpdate).toBe(2);
-      expect(state.checkDetached).toBe(3);
-      expect(state.checkDisposed).toBe(4);
+      expect(state.checkInit).to.equal(0);
+      expect(state.checkAttached).to.equal(1);
+      expect(state.checkUpdate).to.equal(2);
+      expect(state.checkDetached).to.equal(3);
+      expect(state.checkDisposed).to.equal(4);
     });
 
     it("should invoke disposed hook when parent vnode is disposed in detached state", () => {
@@ -1120,11 +1122,11 @@ describe("VNode", () => {
       vNodeDetach(node);
       vNodeDispose(node);
       const state = component.getComponentRef<number, LifecycleState>().state!;
-      expect(state.checkInit).toBe(0);
-      expect(state.checkAttached).toBe(4);
-      expect(state.checkUpdate).toBe(2);
-      expect(state.checkDetached).toBe(5);
-      expect(state.checkDisposed).toBe(6);
+      expect(state.checkInit).to.equal(0);
+      expect(state.checkAttached).to.equal(4);
+      expect(state.checkUpdate).to.equal(2);
+      expect(state.checkDetached).to.equal(5);
+      expect(state.checkDisposed).to.equal(6);
     });
 
     it("shouldn't render component when shallow rendering is used", () => {
@@ -1134,11 +1136,11 @@ describe("VNode", () => {
       vNodeAttached(a);
       vNodeRender(a, RenderFlags.ShallowRender, undefined);
       const state = component.getComponentRef<number, LifecycleState>().state!;
-      expect(state.checkInit).toBe(0);
-      expect(state.checkAttached).toBe(1);
-      expect(state.checkUpdate).toBe(-1);
-      expect(state.checkDetached).toBe(-1);
-      expect(state.checkDisposed).toBe(-1);
+      expect(state.checkInit).to.equal(0);
+      expect(state.checkAttached).to.equal(1);
+      expect(state.checkUpdate).to.equal(-1);
+      expect(state.checkDetached).to.equal(-1);
+      expect(state.checkDisposed).to.equal(-1);
     });
 
     it("should update component on sync", () => {
@@ -1150,22 +1152,22 @@ describe("VNode", () => {
       vNodeAttached(a);
       vNodeRender(a, 0, undefined);
       const stateA = componentA.getComponentRef<number, LifecycleState>().state!;
-      expect(componentA.getComponentRef<number, LifecycleState>().props).toBe(0);
-      expect(stateA.checkInit).toBe(0);
-      expect(stateA.checkAttached).toBe(1);
-      expect(stateA.checkUpdate).toBe(2);
-      expect(stateA.checkDetached).toBe(-1);
-      expect(stateA.checkDisposed).toBe(-1);
+      expect(componentA.getComponentRef<number, LifecycleState>().props).to.equal(0);
+      expect(stateA.checkInit).to.equal(0);
+      expect(stateA.checkAttached).to.equal(1);
+      expect(stateA.checkUpdate).to.equal(2);
+      expect(stateA.checkDetached).to.equal(-1);
+      expect(stateA.checkDisposed).to.equal(-1);
 
       reconciler.sync(a, b, 0, undefined);
       const stateB = componentB.getComponentRef<number, LifecycleState>().state!;
-      expect(componentB.getComponentRef<number, LifecycleState>().props).toBe(1);
-      expect((componentB.cref as Component<number, any>).props).toBe(1);
-      expect(stateB.checkInit).toBe(0);
-      expect(stateB.checkAttached).toBe(1);
-      expect(stateB.checkUpdate).toBe(3);
-      expect(stateB.checkDetached).toBe(-1);
-      expect(stateB.checkDisposed).toBe(-1);
+      expect(componentB.getComponentRef<number, LifecycleState>().props).to.equal(1);
+      expect((componentB.cref as Component<number, any>).props).to.equal(1);
+      expect(stateB.checkInit).to.equal(0);
+      expect(stateB.checkAttached).to.equal(1);
+      expect(stateB.checkUpdate).to.equal(3);
+      expect(stateB.checkDetached).to.equal(-1);
+      expect(stateB.checkDisposed).to.equal(-1);
     });
 
     it("shouldn't update component when shallow updating is used", () => {
@@ -1177,19 +1179,19 @@ describe("VNode", () => {
       vNodeAttached(a);
       vNodeRender(a, 0, undefined);
       const stateA = componentA.getComponentRef<number, LifecycleState>().state!;
-      expect(stateA.checkInit).toBe(0);
-      expect(stateA.checkAttached).toBe(1);
-      expect(stateA.checkUpdate).toBe(2);
-      expect(stateA.checkDetached).toBe(-1);
-      expect(stateA.checkDisposed).toBe(-1);
+      expect(stateA.checkInit).to.equal(0);
+      expect(stateA.checkAttached).to.equal(1);
+      expect(stateA.checkUpdate).to.equal(2);
+      expect(stateA.checkDetached).to.equal(-1);
+      expect(stateA.checkDisposed).to.equal(-1);
 
       reconciler.sync(a, b, RenderFlags.ShallowUpdate, undefined);
       const stateB = componentB.getComponentRef<number, LifecycleState>().state!;
-      expect(stateB.checkInit).toBe(0);
-      expect(stateB.checkAttached).toBe(1);
-      expect(stateB.checkUpdate).toBe(2);
-      expect(stateB.checkDetached).toBe(-1);
-      expect(stateB.checkDisposed).toBe(-1);
+      expect(stateB.checkInit).to.equal(0);
+      expect(stateB.checkAttached).to.equal(1);
+      expect(stateB.checkUpdate).to.equal(2);
+      expect(stateB.checkDetached).to.equal(-1);
+      expect(stateB.checkDisposed).to.equal(-1);
     });
 
     it("shouldn't update component when shallow updating is used", () => {
@@ -1201,21 +1203,21 @@ describe("VNode", () => {
       vNodeAttached(a);
       vNodeRender(a, 0, undefined);
       const stateA = componentA.getComponentRef<number, LifecycleState>().state!;
-      expect(componentA.getComponentRef<number, LifecycleState>().props).toBe(0);
-      expect(stateA.checkInit).toBe(0);
-      expect(stateA.checkAttached).toBe(1);
-      expect(stateA.checkUpdate).toBe(2);
-      expect(stateA.checkDetached).toBe(-1);
-      expect(stateA.checkDisposed).toBe(-1);
+      expect(componentA.getComponentRef<number, LifecycleState>().props).to.equal(0);
+      expect(stateA.checkInit).to.equal(0);
+      expect(stateA.checkAttached).to.equal(1);
+      expect(stateA.checkUpdate).to.equal(2);
+      expect(stateA.checkDetached).to.equal(-1);
+      expect(stateA.checkDisposed).to.equal(-1);
 
       reconciler.sync(a, b, RenderFlags.ShallowUpdate, undefined);
       const stateB = componentB.getComponentRef<number, LifecycleState>().state!;
-      expect(componentB.getComponentRef<number, LifecycleState>().props).toBe(0);
-      expect(stateB.checkInit).toBe(0);
-      expect(stateB.checkAttached).toBe(1);
-      expect(stateB.checkUpdate).toBe(2);
-      expect(stateB.checkDetached).toBe(-1);
-      expect(stateB.checkDisposed).toBe(-1);
+      expect(componentB.getComponentRef<number, LifecycleState>().props).to.equal(0);
+      expect(stateB.checkInit).to.equal(0);
+      expect(stateB.checkAttached).to.equal(1);
+      expect(stateB.checkUpdate).to.equal(2);
+      expect(stateB.checkDetached).to.equal(-1);
+      expect(stateB.checkDisposed).to.equal(-1);
     });
   });
 
@@ -1226,7 +1228,7 @@ describe("VNode", () => {
 
       const v = createVElement("div").children("abc");
       vNodeMount(v, e, undefined);
-      expect(v.ref).toBe(e);
+      expect(v.ref).to.equal(e);
     });
 
     it("<div>'abc'</div>", () => {
@@ -1236,8 +1238,8 @@ describe("VNode", () => {
       const t = createVText("abc");
       const v = createVElement("div").children([t]);
       vNodeMount(v, e, undefined);
-      expect(v.ref).toBe(e);
-      expect(t.ref).toBe(e.firstChild);
+      expect(v.ref).to.equal(e);
+      expect(t.ref).to.equal(e.firstChild);
     });
 
     it("<div>'abc''def'</div>", () => {
@@ -1249,9 +1251,9 @@ describe("VNode", () => {
       const t2 = createVText("def");
       const v = createVElement("div").children([t1, t2]);
       vNodeMount(v, e, undefined);
-      expect(v.ref).toBe(e);
-      expect(t1.ref).toBe(e.firstChild);
-      expect(t2.ref).toBe(e.lastChild);
+      expect(v.ref).to.equal(e);
+      expect(t1.ref).to.equal(e.firstChild);
+      expect(t2.ref).to.equal(e.lastChild);
     });
 
     it("<div>'abc'<span>'123'</span>'def'</div>", () => {
@@ -1268,11 +1270,11 @@ describe("VNode", () => {
       const s = createVElement("span").children([t3]);
       const v = createVElement("div").children([t1, s, t2]);
       vNodeMount(v, e, undefined);
-      expect(v.ref).toBe(e);
-      expect(t1.ref).toBe(e.firstChild);
-      expect(t2.ref).toBe(e.lastChild);
-      expect(s.ref).toBe(e2);
-      expect(t3.ref).toBe(e2.firstChild);
+      expect(v.ref).to.equal(e);
+      expect(t1.ref).to.equal(e.firstChild);
+      expect(t2.ref).to.equal(e.lastChild);
+      expect(s.ref).to.equal(e2);
+      expect(t3.ref).to.equal(e2.firstChild);
     });
 
     it("<div>'abc'<LifeCycleComponent />'def'</div>", () => {
@@ -1288,17 +1290,17 @@ describe("VNode", () => {
       const t2 = createVText("def");
       const v = createVElement("div").children([t1, component, t2]);
       vNodeMount(v, e, undefined);
-      expect(v.ref).toBe(e);
-      expect(t1.ref).toBe(e.firstChild);
-      expect(t2.ref).toBe(e.lastChild);
-      expect(component.ref).toBe(e2);
+      expect(v.ref).to.equal(e);
+      expect(t1.ref).to.equal(e.firstChild);
+      expect(t2.ref).to.equal(e.lastChild);
+      expect(component.ref).to.equal(e2);
 
       const state = component.getComponentRef<number, LifecycleState>().state!;
-      expect(state.checkInit).toBe(0);
-      expect(state.checkAttached).toBe(1);
-      expect(state.checkUpdate).toBe(2);
-      expect(state.checkDetached).toBe(-1);
-      expect(state.checkDisposed).toBe(-1);
+      expect(state.checkInit).to.equal(0);
+      expect(state.checkAttached).to.equal(1);
+      expect(state.checkUpdate).to.equal(2);
+      expect(state.checkDetached).to.equal(-1);
+      expect(state.checkDisposed).to.equal(-1);
     });
   });
 
@@ -1306,15 +1308,15 @@ describe("VNode", () => {
     it("should create placeholder", () => {
       const e = createVElement("div");
       vNodeCreateCommentPlaceholder(e);
-      expect(e.ref!.nodeType).toBe(8);
+      expect(e.ref!.nodeType).to.equal(8);
     });
 
     it("should create element from placeholder", () => {
       const e = createVElement("div");
       vNodeCreateCommentPlaceholder(e);
-      expect(e.ref!.nodeType).toBe(8);
+      expect(e.ref!.nodeType).to.equal(8);
       vNodeInstantiate(e, undefined);
-      expect((e.ref as Element).tagName).toBe("DIV");
+      expect((e.ref as Element).tagName).to.equal("DIV");
     });
   });
 });

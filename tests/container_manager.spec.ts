@@ -3,6 +3,8 @@ import {VNode, vNodeInstantiate, vNodeAttached, vNodeRender, createVElement} fro
 import {Component} from "../lib/component";
 import {reconciler} from "../lib/reconciler";
 
+const expect = chai.expect;
+
 describe("ContainerManager", () => {
   it("should invoke insertChild", () => {
     let testManager: ContainerManager<any> | null = null;
@@ -31,11 +33,11 @@ describe("ContainerManager", () => {
     vNodeRender(a, 0, undefined);
     reconciler.sync(a, b, 0, undefined);
 
-    expect(testManager).toBe(manager);
-    expect(testContainer).toBe(b.ref);
-    expect(testNode).toBe(insertedChild);
-    expect(testNextRef).toBeNull();
-    expect(testOwner).toBeUndefined();
+    expect(testManager).to.equal(manager);
+    expect(testContainer).to.equal(b.ref);
+    expect(testNode).to.equal(insertedChild);
+    expect(testNextRef).to.be.null;
+    expect(testOwner).to.be.undefined;
   });
 
   it("should invoke removeChild", () => {
@@ -63,10 +65,10 @@ describe("ContainerManager", () => {
     vNodeRender(a, 0, undefined);
     reconciler.sync(a, b, 0, undefined);
 
-    expect(testManager).toBe(manager);
-    expect(testContainer).toBe(b.ref);
-    expect(testNode).toBe(removedChild);
-    expect(testOwner).toBeUndefined();
+    expect(testManager).to.equal(manager);
+    expect(testContainer).to.equal(b.ref);
+    expect(testNode).to.equal(removedChild);
+    expect(testOwner).to.be.undefined;
   });
 
   it("should invoke moveChild", () => {
@@ -99,11 +101,11 @@ describe("ContainerManager", () => {
     vNodeRender(a, 0, undefined);
     reconciler.sync(a, b, 0, undefined);
 
-    expect(testManager).toBe(manager);
-    expect(testContainer).toBe(b.ref);
-    expect(testNode).toBe(movedChildB);
-    expect(testNextRef).toBeNull();
-    expect(testOwner).toBeUndefined();
+    expect(testManager).to.equal(manager);
+    expect(testContainer).to.equal(b.ref);
+    expect(testNode).to.equal(movedChildB);
+    expect(testNextRef).to.be.null;
+    expect(testOwner).to.be.undefined;
   });
 
   it("should invoke replaceChild", () => {
@@ -134,10 +136,10 @@ describe("ContainerManager", () => {
     vNodeRender(a, 0, undefined);
     reconciler.sync(a, b, 0, undefined);
 
-    expect(testManager).toBe(manager);
-    expect(testContainer).toBe(b.ref);
-    expect(testNewNode).toBe(replacedChild);
-    expect(testRefNode).toBe(tmpChild);
-    expect(testOwner).toBeUndefined();
+    expect(testManager).to.equal(manager);
+    expect(testContainer).to.equal(b.ref);
+    expect(testNewNode).to.equal(replacedChild);
+    expect(testRefNode).to.equal(tmpChild);
+    expect(testOwner).to.be.undefined;
   });
 });

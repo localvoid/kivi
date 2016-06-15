@@ -1,15 +1,18 @@
-module.exports = function(config) {
+module.exports = function (config) {
   config.set({
-    frameworks: ["jasmine"],
+    frameworks: ["mocha", "chai"],
+
     files: [
       "build/tests.js",
-      {pattern: "lib/**/*.ts", included: false, watched: false},
-      {pattern: "tests/**/*.ts", included: false, watched: false},
+      { pattern: "lib/**/*.ts", included: false, watched: false },
+      { pattern: "tests/**/*.ts", included: false, watched: false },
     ],
 
     preprocessors: {
-      "build/tests.js": ["sourcemap"]
+      "build/tests.js": ["sourcemap"],
     },
+
+    reporters: ["mocha"],
 
     colors: true,
     autoWatch: true,
@@ -18,6 +21,13 @@ module.exports = function(config) {
     browserDisconnectTimeout: 10000,
     browserDisconnectTolerance: 2,
     browserNoActivityTimeout: 30000,
+
+    client: {
+      mocha: {
+        reporter: "html",
+        ui: "bdd",
+      }
+    },
 
     sauceLabs: {
       testName: "kivi",
@@ -62,8 +72,6 @@ module.exports = function(config) {
         version: "8.1"
       },
     },
-
-    reporters: ["progress"],
   });
 
   if (process.env.TRAVIS) {

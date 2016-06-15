@@ -1,14 +1,16 @@
 import {Invalidator} from "../lib/invalidator";
 import {scheduler} from "../lib/scheduler";
 
+const expect = chai.expect;
+
 describe("Invalidator", () => {
   it("should have mtime equal to scheduler clock when created", (done) => {
     const i1 = new Invalidator();
-    expect(i1.mtime).toBe(scheduler.clock);
+    expect(i1.mtime).to.equal(scheduler.clock);
     scheduler.scheduleMicrotask(() => {
       scheduler.scheduleMacrotask(() => {
         const i2 = new Invalidator();
-        expect(i2.mtime).toBe(scheduler.clock);
+        expect(i2.mtime).to.equal(scheduler.clock);
         done();
       });
     });
@@ -16,47 +18,47 @@ describe("Invalidator", () => {
 
   it("shouldn't have subscriptions when created", () => {
     const i = new Invalidator();
-    expect(i.hasSubscriptions()).toBeFalsy();
+    expect(i.hasSubscriptions()).to.be.false;
   });
 
   it("should have subscriptions after subscription", () => {
     const i = new Invalidator();
-    expect(i.hasSubscriptions()).toBeFalsy();
+    expect(i.hasSubscriptions()).to.be.false;
     i.subscribe(() => 0);
-    expect(i.hasSubscriptions()).toBeTruthy();
+    expect(i.hasSubscriptions()).to.be.true;
   });
 
   it("should have subscriptions after transient subscription", () => {
     const i = new Invalidator();
-    expect(i.hasSubscriptions()).toBeFalsy();
+    expect(i.hasSubscriptions()).to.be.false;
     i.transientSubscribe(() => 0);
-    expect(i.hasSubscriptions()).toBeTruthy();
+    expect(i.hasSubscriptions()).to.be.true;
   });
 
   it("should have subscriptions after multiple subscriptions", () => {
     const i = new Invalidator();
-    expect(i.hasSubscriptions()).toBeFalsy();
+    expect(i.hasSubscriptions()).to.be.false;
     i.subscribe(() => 0);
     i.subscribe(() => 0);
-    expect(i.hasSubscriptions()).toBeTruthy();
+    expect(i.hasSubscriptions()).to.be.true;
   });
 
   it("should have subscriptions after multiple transient subscriptions", () => {
     const i = new Invalidator();
-    expect(i.hasSubscriptions()).toBeFalsy();
+    expect(i.hasSubscriptions()).to.be.false;
     i.transientSubscribe(() => 0);
     i.transientSubscribe(() => 0);
-    expect(i.hasSubscriptions()).toBeTruthy();
+    expect(i.hasSubscriptions()).to.be.true;
   });
 
   it("should update mtime when invalidated", (done) => {
     const i = new Invalidator();
-    expect(i.mtime).toBe(scheduler.clock);
+    expect(i.mtime).to.equal(scheduler.clock);
     scheduler.scheduleMicrotask(() => {
       scheduler.scheduleMacrotask(() => {
-        expect(i.mtime).not.toBe(scheduler.clock);
+        expect(i.mtime).not.to.equal(scheduler.clock);
         i.invalidate();
-        expect(i.mtime).toBe(scheduler.clock);
+        expect(i.mtime).to.equal(scheduler.clock);
         done();
       });
     });
@@ -72,7 +74,7 @@ describe("Invalidator", () => {
       scheduler.scheduleMacrotask(() => {
         i.invalidate();
         i.invalidate();
-        expect(k).toBe(1);
+        expect(k).to.equal(1);
         done();
       });
     });
@@ -88,7 +90,7 @@ describe("Invalidator", () => {
       scheduler.scheduleMacrotask(() => {
         i.invalidate();
         i.invalidate();
-        expect(k).toBe(1);
+        expect(k).to.equal(1);
         done();
       });
     });
@@ -102,9 +104,9 @@ describe("Invalidator", () => {
     });
     scheduler.scheduleMicrotask(() => {
       scheduler.scheduleMacrotask(() => {
-        expect(i.hasSubscriptions()).toBeTruthy();
+        expect(i.hasSubscriptions()).to.be.true;
         i.invalidate();
-        expect(i.hasSubscriptions()).toBeTruthy();
+        expect(i.hasSubscriptions()).to.be.true;
         done();
       });
     });
@@ -118,9 +120,9 @@ describe("Invalidator", () => {
     });
     scheduler.scheduleMicrotask(() => {
       scheduler.scheduleMacrotask(() => {
-        expect(i.hasSubscriptions()).toBeTruthy();
+        expect(i.hasSubscriptions()).to.be.true;
         i.invalidate();
-        expect(i.hasSubscriptions()).toBeFalsy();
+        expect(i.hasSubscriptions()).to.be.false;
         done();
       });
     });
@@ -137,9 +139,9 @@ describe("Invalidator", () => {
     });
     scheduler.scheduleMicrotask(() => {
       scheduler.scheduleMacrotask(() => {
-        expect(i.hasSubscriptions()).toBeTruthy();
+        expect(i.hasSubscriptions()).to.be.true;
         i.invalidate();
-        expect(i.hasSubscriptions()).toBeFalsy();
+        expect(i.hasSubscriptions()).to.be.false;
         done();
       });
     });
@@ -152,11 +154,11 @@ describe("Invalidator", () => {
       k++;
     });
     s.cancel();
-    expect(i.hasSubscriptions()).toBeFalsy();
+    expect(i.hasSubscriptions()).to.be.false;
     scheduler.scheduleMicrotask(() => {
       scheduler.scheduleMacrotask(() => {
         i.invalidate();
-        expect(k).toBe(0);
+        expect(k).to.equal(0);
         done();
       });
     });
@@ -169,11 +171,11 @@ describe("Invalidator", () => {
       k++;
     });
     s.cancel();
-    expect(i.hasSubscriptions()).toBeFalsy();
+    expect(i.hasSubscriptions()).to.be.false;
     scheduler.scheduleMicrotask(() => {
       scheduler.scheduleMacrotask(() => {
         i.invalidate();
-        expect(k).toBe(0);
+        expect(k).to.equal(0);
         done();
       });
     });
@@ -193,8 +195,8 @@ describe("Invalidator", () => {
       scheduler.scheduleMacrotask(() => {
         i.invalidate();
         i.invalidate();
-        expect(k).toBe(1);
-        expect(j).toBe(1);
+        expect(k).to.equal(1);
+        expect(j).to.equal(1);
         done();
       });
     });
@@ -214,8 +216,8 @@ describe("Invalidator", () => {
       scheduler.scheduleMacrotask(() => {
         i.invalidate();
         i.invalidate();
-        expect(k).toBe(1);
-        expect(j).toBe(1);
+        expect(k).to.equal(1);
+        expect(j).to.equal(1);
         done();
       });
     });
