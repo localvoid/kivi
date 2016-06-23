@@ -95,7 +95,7 @@ export class VNode {
    * will be available after virtual node is created or synced. Each time virtual node is synced, reference to a
    * Component is transferred from old virtual node to the new one.
    */
-  cref: Component<any, any> | ContainerManager<any> | null;
+  cref: Component<any, any> | ContainerManager<any, any> | null;
 
   /**
    * Debug properties are used because VNode properties are frozen.
@@ -421,7 +421,7 @@ export class VNode {
           throw new Error("Failed to set children on VNode: VNode is using ContainerManager that doesn't accept" +
                           " children with string type.");
         }
-        if (((this.cref as ContainerManager<any>).descriptor._debugFlags &
+        if (((this.cref as ContainerManager<any, any>).descriptor._debugFlags &
             ContainerManagerDescriptorDebugFlags.AcceptKeyedChildrenOnly) !== 0) {
           throw new Error("Failed to set children on VNode: VNode is using ContainerManager that accepts only" +
                           " children with keys.");
@@ -526,7 +526,7 @@ export class VNode {
    *
    * Container Manager will be responsible for inserting, removing, replacing and moving children nodes.
    */
-  managedContainer(manager: ContainerManager<any>): VNode {
+  managedContainer(manager: ContainerManager<any, any>): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error("Failed to set managedContainer mode on VNode: managedContainer method should be called" +
@@ -996,9 +996,9 @@ export function vNodeDispose(vnode: VNode): void {
 export function vNodeInsertChild(parent: VNode, node: VNode, nextRef: Node | null, renderFlags: number,
     owner: Component<any, any> | undefined): void {
   if (((parent._flags & VNodeFlags.ManagedContainer) !== 0) &&
-      (parent.cref as ContainerManager<any>).descriptor._insertChild !== null) {
-    (parent.cref as ContainerManager<any>).descriptor._insertChild!(
-      parent.cref as ContainerManager<any>, parent.ref as Element, node, nextRef, renderFlags, owner);
+      (parent.cref as ContainerManager<any, any>).descriptor._insertChild !== null) {
+    (parent.cref as ContainerManager<any, any>).descriptor._insertChild!(
+      parent.cref as ContainerManager<any, any>, parent.ref as Element, node, nextRef, renderFlags, owner);
   } else {
     insertVNodeBefore(parent.ref as Element, node, nextRef, renderFlags, owner);
   }
@@ -1007,9 +1007,9 @@ export function vNodeInsertChild(parent: VNode, node: VNode, nextRef: Node | nul
 export function vNodeReplaceChild(parent: VNode, newNode: VNode, refNode: VNode, renderFlags: number,
     owner: Component<any, any> | undefined): void {
   if (((parent._flags & VNodeFlags.ManagedContainer) !== 0) &&
-      (parent.cref as ContainerManager<any>).descriptor._replaceChild !== null) {
-    (parent.cref as ContainerManager<any>).descriptor._replaceChild!(
-      parent.cref as ContainerManager<any>, parent.ref as Element, newNode, refNode, renderFlags, owner);
+      (parent.cref as ContainerManager<any, any>).descriptor._replaceChild !== null) {
+    (parent.cref as ContainerManager<any, any>).descriptor._replaceChild!(
+      parent.cref as ContainerManager<any, any>, parent.ref as Element, newNode, refNode, renderFlags, owner);
   } else {
     replaceVNode(parent.ref as Element, newNode, refNode, renderFlags, owner);
   }
@@ -1018,9 +1018,9 @@ export function vNodeReplaceChild(parent: VNode, newNode: VNode, refNode: VNode,
 export function vNodeMoveChild(parent: VNode, node: VNode, nextRef: Node | null,
     owner: Component<any, any> | undefined): void {
   if (((parent._flags & VNodeFlags.ManagedContainer) !== 0) &&
-      (parent.cref as ContainerManager<any>).descriptor._moveChild !== null) {
-    (parent.cref as ContainerManager<any>).descriptor._moveChild!(
-      parent.cref as ContainerManager<any>, parent.ref as Element, node, nextRef, owner);
+      (parent.cref as ContainerManager<any, any>).descriptor._moveChild !== null) {
+    (parent.cref as ContainerManager<any, any>).descriptor._moveChild!(
+      parent.cref as ContainerManager<any, any>, parent.ref as Element, node, nextRef, owner);
   } else {
     moveVNode(parent.ref as Element, node, nextRef, owner);
   }
@@ -1028,9 +1028,9 @@ export function vNodeMoveChild(parent: VNode, node: VNode, nextRef: Node | null,
 
 export function vNodeRemoveChild(parent: VNode, node: VNode, owner: Component<any, any> | undefined): void {
   if (((parent._flags & VNodeFlags.ManagedContainer) !== 0) &&
-      (parent.cref as ContainerManager<any>).descriptor._removeChild !== null) {
-    (parent.cref as ContainerManager<any>).descriptor._removeChild!(
-      parent.cref as ContainerManager<any>, parent.ref as Element, node, owner);
+      (parent.cref as ContainerManager<any, any>).descriptor._removeChild !== null) {
+    (parent.cref as ContainerManager<any, any>).descriptor._removeChild!(
+      parent.cref as ContainerManager<any, any>, parent.ref as Element, node, owner);
   } else {
     removeVNode(parent.ref as Element, node, owner);
   }
