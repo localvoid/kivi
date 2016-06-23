@@ -399,7 +399,7 @@ export class Scheduler {
 
     this._throttleEnabledCounter--;
     if (this._throttleEnabledCounter === 0) {
-      this._flags &= SchedulerFlags.EnabledThrottling;
+      this._flags &= ~SchedulerFlags.EnabledThrottling;
     }
   }
 
