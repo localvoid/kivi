@@ -7,14 +7,14 @@ const expect = chai.expect;
 
 describe("ContainerManager", () => {
   it("should invoke insertChild", () => {
-    let testManager: ContainerManager<any> | null = null;
+    let testManager: ContainerManager<void, void> | null = null;
     let testContainer: Element | null = null;
     let testNode: VNode | null = null;
     let testNextRef: Node | null = null;
     let testOwner: Component<any, any> | undefined | null = null;
 
-    const CM = new ContainerManagerDescriptor()
-      .insertChild((manager: ContainerManager<any>, container: Element, node: VNode, nextRef: Node,
+    const CM = new ContainerManagerDescriptor<void, void>()
+      .insertChild((manager: ContainerManager<void, void>, container: Element, node: VNode, nextRef: Node,
           renderFlags: number, owner: Component<any, any> | undefined) => {
         testManager = manager;
         testContainer = container;
@@ -41,13 +41,13 @@ describe("ContainerManager", () => {
   });
 
   it("should invoke removeChild", () => {
-    let testManager: ContainerManager<any> | null = null;
+    let testManager: ContainerManager<void, void> | null = null;
     let testContainer: Element | null = null;
     let testNode: VNode | null = null;
     let testOwner: Component<any, any> | undefined | null = null;
 
-    const CM = new ContainerManagerDescriptor()
-      .removeChild((manager: ContainerManager<any>, container: Element, node: VNode,
+    const CM = new ContainerManagerDescriptor<void, void>()
+      .removeChild((manager: ContainerManager<void, void>, container: Element, node: VNode,
           owner: Component<any, any> | undefined) => {
         testManager = manager;
         testContainer = container;
@@ -72,14 +72,14 @@ describe("ContainerManager", () => {
   });
 
   it("should invoke moveChild", () => {
-    let testManager: ContainerManager<any> | null = null;
+    let testManager: ContainerManager<void, void> | null = null;
     let testContainer: Element | null = null;
     let testNode: VNode | null = null;
     let testNextRef: Node | null = null;
     let testOwner: Component<any, any> | undefined | null = null;
 
-    const CM = new ContainerManagerDescriptor()
-      .moveChild((manager: ContainerManager<any>, container: Element, node: VNode, nextRef: Node,
+    const CM = new ContainerManagerDescriptor<void, void>()
+      .moveChild((manager: ContainerManager<void, void>, container: Element, node: VNode, nextRef: Node,
           owner: Component<any, any> | undefined) => {
         testManager = manager;
         testContainer = container;
@@ -109,14 +109,14 @@ describe("ContainerManager", () => {
   });
 
   it("should invoke replaceChild", () => {
-    let testManager: ContainerManager<any> | null = null;
+    let testManager: ContainerManager<void, void> | null = null;
     let testContainer: Element | null = null;
     let testNewNode: VNode | null = null;
     let testRefNode: VNode | null = null;
     let testOwner: Component<any, any> | undefined | null = null;
 
-    const CM = new ContainerManagerDescriptor()
-      .replaceChild((manager: ContainerManager<any>, container: Element, newNode: VNode, refNode: VNode,
+    const CM = new ContainerManagerDescriptor<void, void>()
+      .replaceChild((manager: ContainerManager<void, void>, container: Element, newNode: VNode, refNode: VNode,
           renderFlags: number, owner: Component<any, any> | undefined) => {
         testManager = manager;
         testContainer = container;

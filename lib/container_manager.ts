@@ -2,41 +2,43 @@ import {VNode} from "./vnode";
 import {Component} from "./component";
 import {ContainerManagerDescriptorDebugFlags} from "./misc";
 
-export type InsertChildHandler<S> = (manager: ContainerManager<S>,
-                                     container: Element,
-                                     node: VNode,
-                                     nextRef: Node | null,
-                                     renderFlags: number,
-                                     owner: Component<any, any> | undefined) => void;
+export type InsertChildHandler<P, S> = (manager: ContainerManager<P, S>,
+                                        container: Element,
+                                        node: VNode,
+                                        nextRef: Node | null,
+                                        renderFlags: number,
+                                        owner: Component<any, any> | undefined) => void;
 
-export type ReplaceChildHandler<S> = (manager: ContainerManager<S>,
+export type ReplaceChildHandler<P, S> = (manager: ContainerManager<P, S>,
+                                         container: Element,
+                                         newNode: VNode,
+                                         refNode: VNode,
+                                         renderFlags: number,
+                                         owner: Component<any, any> | undefined) => void;
+
+export type MoveChildHandler<P, S> = (manager: ContainerManager<P, S>,
                                       container: Element,
-                                      newNode: VNode,
-                                      refNode: VNode,
-                                      renderFlags: number,
+                                      node: VNode,
+                                      nextRef: Node | null,
                                       owner: Component<any, any> | undefined) => void;
 
-export type MoveChildHandler<S> = (manager: ContainerManager<S>,
-                                   container: Element,
-                                   node: VNode,
-                                   nextRef: Node | null,
-                                   owner: Component<any, any> | undefined) => void;
-
-export type RemoveChildHandler<S> = (manager: ContainerManager<S>,
-                                     container: Element,
-                                     now: VNode,
-                                     owner: Component<any, any> | undefined) => void;
+export type RemoveChildHandler<P, S> = (manager: ContainerManager<P, S>,
+                                        container: Element,
+                                        now: VNode,
+                                        owner: Component<any, any> | undefined) => void;
 
 /**
- * Container Manager Descriptor.
+ * **EXPERIMENTAL** Container Manager Descriptor.
  *
  * @final
  */
-export class ContainerManagerDescriptor<S> {
-  _insertChild: InsertChildHandler<S> | null;
-  _replaceChild: ReplaceChildHandler<S> | null;
-  _moveChild: MoveChildHandler<S> | null;
-  _removeChild: RemoveChildHandler<S> | null;
+export class ContainerManagerDescriptor<P, S> {
+  _insertChild: InsertChildHandler<P, S> | null;
+  _replaceChild: ReplaceChildHandler<P, S> | null;
+  _moveChild: MoveChildHandler<P, S> | null;
+  _removeChild: RemoveChildHandler<P, S> | null;
+  _createState: ((manager: ContainerManager<P, S>, props: P) => S) | null;
+  _init: ((manager: ContainerManager<P, S>, props: P, state: S) => void) | null;
   _debugFlags: number;
 
   constructor() {
@@ -44,32 +46,51 @@ export class ContainerManagerDescriptor<S> {
     this._replaceChild = null;
     this._moveChild = null;
     this._removeChild = null;
+    this._createState = null;
+    this._init = null;
 
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       this._debugFlags = 0;
     }
   }
 
-  create(state?: S): ContainerManager<S> {
-    return new ContainerManager<S>(this, state);
+  create(props: P | null = null): ContainerManager<P, S> {
+    const m = new ContainerManager<P, S>(this, props!);
+    if (this._createState !== null) {
+      m.state = this._createState(m, m.props!);
+    }
+    if (this._init !== null) {
+      this._init(m, m.props!, m.state!);
+    }
+    return m;
   }
 
-  insertChild(handler: InsertChildHandler<S>): ContainerManagerDescriptor<S> {
+  createState(handler: (manager: ContainerManager<P, S>, props: P) => S): ContainerManagerDescriptor<P, S> {
+    this._createState = handler;
+    return this;
+  }
+
+  init(handler: (manager: ContainerManager<P, S>, props: P, state: S) => void): ContainerManagerDescriptor<P, S> {
+    this._init = handler;
+    return this;
+  }
+
+  insertChild(handler: InsertChildHandler<P, S>): ContainerManagerDescriptor<P, S> {
     this._insertChild = handler;
     return this;
   }
 
-  replaceChild(handler: ReplaceChildHandler<S>): ContainerManagerDescriptor<S> {
+  replaceChild(handler: ReplaceChildHandler<P, S>): ContainerManagerDescriptor<P, S> {
     this._replaceChild = handler;
     return this;
   }
 
-  moveChild(handler: MoveChildHandler<S>): ContainerManagerDescriptor<S> {
+  moveChild(handler: MoveChildHandler<P, S>): ContainerManagerDescriptor<P, S> {
     this._moveChild = handler;
     return this;
   }
 
-  removeChild(handler: RemoveChildHandler<S>): ContainerManagerDescriptor<S> {
+  removeChild(handler: RemoveChildHandler<P, S>): ContainerManagerDescriptor<P, S> {
     this._removeChild = handler;
     return this;
   }
@@ -86,12 +107,14 @@ export class ContainerManagerDescriptor<S> {
  *
  * @final
  */
-export class ContainerManager<S> {
-  descriptor: ContainerManagerDescriptor<S>;
+export class ContainerManager<P, S> {
+  descriptor: ContainerManagerDescriptor<P, S>;
+  props: P | null;
   state: S | null;
 
-  constructor(descriptor: ContainerManagerDescriptor<S>, state?: S) {
+  constructor(descriptor: ContainerManagerDescriptor<P, S>, props?: P) {
     this.descriptor = descriptor;
-    this.state = state === undefined ? null : state;
+    this.props = props === undefined ? null : props;
+    this.state = null;
   }
 }
