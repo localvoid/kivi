@@ -609,7 +609,7 @@ export class Component<P, S> {
   /**
    * Reference to the root element.
    */
-  element: XTagElement<P, S>;
+  readonly element: XTagElement<P, S>;
   /**
    * Depth in the components tree.
    *
