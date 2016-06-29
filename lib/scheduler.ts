@@ -28,7 +28,7 @@ const enum FrameTasksGroupFlags {
 }
 
 const enum ActorExecutorFlags {
-  ExecGlobalMiddleware  = 1,
+  ExecGlobalMiddleware     = 1,
   ExecDescriptorMiddleware = 1 << 1,
   ExecActorMiddleware      = 1 << 2,
 }
@@ -37,15 +37,15 @@ const enum ActorExecutorFlags {
  * Microtask Scheduler based on MutationObserver.
  */
 class MicrotaskScheduler {
-  _observer: MutationObserver;
   _node: Text;
   _toggle: number;
 
   constructor(callback: () => void) {
-    this._observer = new MutationObserver(callback);
     this._node = document.createTextNode("");
     this._toggle = 0;
-    this._observer.observe(this._node, {characterData: true});
+
+    const observer = new MutationObserver(callback);
+    observer.observe(this._node, {characterData: true});
   }
 
   requestNextTick(): void {
