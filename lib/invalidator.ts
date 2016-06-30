@@ -1,5 +1,5 @@
 import {Component} from "./component";
-import {scheduler} from "./scheduler";
+import {clock} from "./scheduler";
 import {InvalidatorSubscriptionFlags} from "./misc";
 
 /**
@@ -104,7 +104,7 @@ export class Invalidator {
   _transientSubscriptions: InvalidatorSubscription | null;
 
   constructor() {
-    this.mtime = scheduler.clock;
+    this.mtime = clock();
     this._subscriptions = null;
     this._transientSubscriptions = null;
   }
@@ -200,7 +200,7 @@ export class Invalidator {
    * Invalidate all subscriptions.
    */
   invalidate(): void {
-    const now = scheduler.clock;
+    const now = clock();
     if (this.mtime < now) {
       this.mtime = now;
 

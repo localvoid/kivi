@@ -1,7 +1,7 @@
 /**
  * **EXPERIMENTAL** actors model implementation.
  */
-import {scheduler} from "./scheduler";
+import {scheduleActorExecution} from "./scheduler";
 
 /**
  * This function doesn't do anything, it just returns the same `groupName` value.
@@ -541,7 +541,7 @@ export class Actor<P, S> {
    * Send a message to an actor.
    */
   send(message: Message<any>): void {
-    scheduler.sendMessage(this, message);
+    sendMessage(this, message);
   }
 
   /**
@@ -600,8 +600,23 @@ export class Actor<P, S> {
 }
 
 /**
+ * Send message to an actor.
+ */
+export function sendMessage(actor: Actor<any, any>, message: Message<any>): void {
+  if ((actor._flags & ActorFlags.Disposed) === 0) {
+    if ((actor._flags & ActorFlags.Active) === 0) {
+      scheduleActorExecution(actor);
+      actor._flags |= ActorFlags.Active;
+    }
+    actor._flags |= ActorFlags.IncomingMessage;
+    actor._inbox.push(message);
+  }
+}
+
+/**
  * Helper function for TypeScript developers to extract payload from messages.
  */
 export function getMessagePayload<P>(descriptor: MessageDescriptor<P>, message: Message<P>): P {
   return message.payload!;
 }
+

@@ -1,26 +1,18 @@
 import {ContainerManager, ContainerManagerDescriptor} from "../lib/container_manager";
 import {VNode, vNodeInstantiate, vNodeAttached, vNodeRender, createVElement} from "../lib/vnode";
-import {Component} from "../lib/component";
-import {reconciler} from "../lib/reconciler";
+import {syncVNodes} from "../lib/reconciler";
 
 const expect = chai.expect;
 
 describe("ContainerManager", () => {
-  it("should invoke insertChild", () => {
+  it("should invoke createNode", () => {
     let testManager: ContainerManager<void, void> | null = null;
-    let testContainer: Element | null = null;
     let testNode: VNode | null = null;
-    let testNextRef: Node | null = null;
-    let testOwner: Component<any, any> | undefined | null = null;
 
     const CM = new ContainerManagerDescriptor<void, void>()
-      .insertChild((manager: ContainerManager<void, void>, container: Element, node: VNode, nextRef: Node,
-          renderFlags: number, owner: Component<any, any> | undefined) => {
+      .createChild((manager: ContainerManager<void, void>, node: VNode) => {
         testManager = manager;
-        testContainer = container;
         testNode = node;
-        testNextRef = nextRef;
-        testOwner = owner;
       });
 
     const manager = CM.create();
@@ -30,29 +22,25 @@ describe("ContainerManager", () => {
 
     vNodeInstantiate(a, undefined);
     vNodeAttached(a);
-    vNodeRender(a, 0, undefined);
-    reconciler.sync(a, b, 0, undefined);
+    vNodeRender(a, undefined);
+    syncVNodes(a, b, undefined);
 
     expect(testManager).to.equal(manager);
-    expect(testContainer).to.equal(b.ref);
     expect(testNode).to.equal(insertedChild);
-    expect(testNextRef).to.be.null;
-    expect(testOwner).to.be.undefined;
   });
 
-  it("should invoke removeChild", () => {
+  it("should invoke removeNode", () => {
     let testManager: ContainerManager<void, void> | null = null;
-    let testContainer: Element | null = null;
     let testNode: VNode | null = null;
-    let testOwner: Component<any, any> | undefined | null = null;
 
     const CM = new ContainerManagerDescriptor<void, void>()
-      .removeChild((manager: ContainerManager<void, void>, container: Element, node: VNode,
-          owner: Component<any, any> | undefined) => {
+      .createChild((manager: ContainerManager<void, void>, node: VNode) => {
+        // noop
+      })
+      .removeChild((manager: ContainerManager<void, void>, node: VNode) => {
         testManager = manager;
-        testContainer = container;
         testNode = node;
-        testOwner = owner;
+        return true;
       });
 
     const manager = CM.create();
@@ -62,30 +50,24 @@ describe("ContainerManager", () => {
 
     vNodeInstantiate(a, undefined);
     vNodeAttached(a);
-    vNodeRender(a, 0, undefined);
-    reconciler.sync(a, b, 0, undefined);
+    vNodeRender(a, undefined);
+    syncVNodes(a, b, undefined);
 
     expect(testManager).to.equal(manager);
-    expect(testContainer).to.equal(b.ref);
     expect(testNode).to.equal(removedChild);
-    expect(testOwner).to.be.undefined;
   });
 
-  it("should invoke moveChild", () => {
+  it("should invoke moveNode", () => {
     let testManager: ContainerManager<void, void> | null = null;
-    let testContainer: Element | null = null;
     let testNode: VNode | null = null;
-    let testNextRef: Node | null = null;
-    let testOwner: Component<any, any> | undefined | null = null;
 
     const CM = new ContainerManagerDescriptor<void, void>()
-      .moveChild((manager: ContainerManager<void, void>, container: Element, node: VNode, nextRef: Node,
-          owner: Component<any, any> | undefined) => {
+      .createChild((manager: ContainerManager<void, void>, node: VNode) => {
+        // noop
+      })
+      .moveChild((manager: ContainerManager<void, void>, node: VNode) => {
         testManager = manager;
-        testContainer = container;
         testNode = node;
-        testNextRef = nextRef;
-        testOwner = owner;
       });
 
     const manager = CM.create();
@@ -98,31 +80,21 @@ describe("ContainerManager", () => {
 
     vNodeInstantiate(a, undefined);
     vNodeAttached(a);
-    vNodeRender(a, 0, undefined);
-    reconciler.sync(a, b, 0, undefined);
+    vNodeRender(a, undefined);
+    syncVNodes(a, b, undefined);
 
     expect(testManager).to.equal(manager);
-    expect(testContainer).to.equal(b.ref);
     expect(testNode).to.equal(movedChildB);
-    expect(testNextRef).to.be.null;
-    expect(testOwner).to.be.undefined;
   });
 
-  it("should invoke replaceChild", () => {
+  it("should invoke createNode when replacing", () => {
     let testManager: ContainerManager<void, void> | null = null;
-    let testContainer: Element | null = null;
-    let testNewNode: VNode | null = null;
-    let testRefNode: VNode | null = null;
-    let testOwner: Component<any, any> | undefined | null = null;
+    let testNode: VNode | null = null;
 
     const CM = new ContainerManagerDescriptor<void, void>()
-      .replaceChild((manager: ContainerManager<void, void>, container: Element, newNode: VNode, refNode: VNode,
-          renderFlags: number, owner: Component<any, any> | undefined) => {
+      .createChild((manager: ContainerManager<void, void>, node: VNode) => {
         testManager = manager;
-        testContainer = container;
-        testNewNode = newNode;
-        testRefNode = refNode;
-        testOwner = owner;
+        testNode = node;
       });
 
     const manager = CM.create();
@@ -133,13 +105,10 @@ describe("ContainerManager", () => {
 
     vNodeInstantiate(a, undefined);
     vNodeAttached(a);
-    vNodeRender(a, 0, undefined);
-    reconciler.sync(a, b, 0, undefined);
+    vNodeRender(a, undefined);
+    syncVNodes(a, b, undefined);
 
     expect(testManager).to.equal(manager);
-    expect(testContainer).to.equal(b.ref);
-    expect(testNewNode).to.equal(replacedChild);
-    expect(testRefNode).to.equal(tmpChild);
-    expect(testOwner).to.be.undefined;
+    expect(testNode).to.equal(replacedChild);
   });
 });

@@ -1,5 +1,16 @@
-export { scheduler } from "./scheduler";
-export { reconciler } from "./reconciler";
+export {
+  SchedulerTask,
+  clock,
+  scheduleMicrotask,
+  scheduleMacrotask,
+  currentFrame,
+  nextFrame,
+  enableThrottling,
+  disableThrottling,
+  isMounting,
+  addGlobalMiddleware,
+} from "./scheduler";
+
 export { VModel } from "./vmodel";
 
 export {
@@ -9,17 +20,6 @@ export {
 
 export {
   VNode,
-  vNodeInstantiate,
-  vNodeRender,
-  vNodeMount,
-  vNodeCreateCommentPlaceholder,
-  vNodeAttach,
-  vNodeDetach,
-  vNodeDispose,
-  insertVNodeBefore,
-  replaceVNode,
-  moveVNode,
-  removeVNode,
   createVText,
   createVElement,
   createVSvgElement,
@@ -66,7 +66,6 @@ export {
   ComponentDescriptorFlags,
   ComponentFlags,
   InvalidatorSubscriptionFlags,
-  RenderFlags,
   filterVNodes,
   getTagName,
   getClassName,

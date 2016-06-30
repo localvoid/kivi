@@ -37,28 +37,6 @@ export const enum InvalidatorSubscriptionFlags {
 }
 
 /**
- * Scheduler flags.
- */
-export const enum SchedulerFlags {
-  /// Running flag indicates that code is executed in scheduler's context.
-  Running                 = 1,
-  /// Microtasks are pending for execution in microtasks queue.
-  MicrotaskPending        = 1 << 1,
-  /// Macrotasks are pending for execution in macrotasks queue.
-  MacrotaskPending        = 1 << 2,
-  /// Frametasks are pending for execution in frametasks queue.
-  FrametaskPending        = 1 << 3,
-  /// Actors are pending for execution.
-  ActorPending            = 1 << 4,
-  /// When throttling is enabled, component updates are switched to incremental mode.
-  EnabledThrottling       = 1 << 5,
-  /// Time frame for executing frame tasks in the current frame is ended.
-  ThrottledFrameExhausted = 1 << 6,
-  /// Mounting on top of existing html is enabled.
-  EnabledMounting         = 1 << 7,
-}
-
-/**
  * Flags shared between VModel, VNode, ComponentDescriptor and Component objects.
  *
  * They can be easily copied with a binary or operator from object with one type to another with different type. For
@@ -133,18 +111,6 @@ export const enum VNodeFlags {
   VModel              = SharedFlags.VModel,
   /// See `SharedFlags.VModelUpdateHandler`.
   VModelUpdateHandler = SharedFlags.VModelUpdateHandler,
-}
-
-/**
- * Rendering flags are used to control Virtual DOM syncing algorithm.
- */
-export const enum RenderFlags {
-  /// Prevents from rendering subcomponents.
-  ShallowRender = 1,
-  /// Prevents from updating subcomponents.
-  ShallowUpdate = 1 << 1,
-  /// Prevents from rendering and updating subcomponents.
-  Shallow       = ShallowRender | ShallowUpdate,
 }
 
 /**

@@ -1,10 +1,12 @@
 import {printError} from "./debug";
-import {SvgNamespace, ComponentDescriptorFlags, ComponentFlags, VNodeFlags, SchedulerFlags, RenderFlags,
-  matchesWithAncestors, SelectorFn} from "./misc";
+import {SvgNamespace, ComponentDescriptorFlags, ComponentFlags, VNodeFlags, matchesWithAncestors,
+  SelectorFn} from "./misc";
 import {VModel} from "./vmodel";
-import {VNode, vNodeAttach, vNodeDetach, vNodeDispose, createVRoot} from "./vnode";
+import {VNode, vNodeAttach, vNodeDetach, vNodeMount, vNodeRender, vNodeDispose, createVRoot} from "./vnode";
 import {InvalidatorSubscription, Invalidator} from "./invalidator";
-import {scheduler, schedulerUpdateComponent, schedulerComponentVSync} from "./scheduler";
+import {clock, nextFrame, enableThrottling, disableThrottling, startUpdateComponentEachFrame, startMounting,
+  finishMounting, isMounting, isThrottled, frameTimeRemaining} from "./scheduler";
+import {syncVNodes} from "./reconciler";
 
 /**
  * Component Descriptor registry used in DEBUG mode.
@@ -691,7 +693,7 @@ export class Component<P, S> {
   startInteraction(): void {
     if ((this.flags & ComponentFlags.EnabledThrottling) === 0) {
       this.flags |= ComponentFlags.HighPriorityUpdate | ComponentFlags.EnabledThrottling;
-      scheduler.enableThrottling();
+      enableThrottling();
     } else {
       this.flags |= ComponentFlags.HighPriorityUpdate;
     }
@@ -707,7 +709,7 @@ export class Component<P, S> {
       this.flags &= ~ComponentFlags.HighPriorityUpdate;
     } else {
       this.flags &= ~(ComponentFlags.HighPriorityUpdate | ComponentFlags.EnabledThrottling);
-      scheduler.disableThrottling();
+      disableThrottling();
     }
   }
 
@@ -720,7 +722,7 @@ export class Component<P, S> {
     this.flags |= ComponentFlags.UpdateEachFrame;
     if ((this.flags & ComponentFlags.InUpdateEachFrameQueue) === 0) {
       this.flags |= ComponentFlags.InUpdateEachFrameQueue;
-      scheduler.startUpdateComponentEachFrame(this);
+      startUpdateComponentEachFrame(this);
     }
   }
 
@@ -738,7 +740,7 @@ export class Component<P, S> {
    * `disableCheckDataIdentity()`.
    */
   update(newProps?: P): void {
-    schedulerUpdateComponent(scheduler, this, newProps);
+    updateComponent(this, newProps);
   }
 
   /**
@@ -763,32 +765,7 @@ export class Component<P, S> {
       }
     }
 
-    schedulerComponentVSync(scheduler, this, this._root as VNode, newRoot, 0);
-  }
-
-  /**
-   * Sync internal representation using Virtual DOM API with custom render options.
-   *
-   * If this method is called during mounting phase, then Virtual DOM will be mounted on top of the existing document
-   * tree.
-   */
-  vSyncAdvanced(renderFlags: RenderFlags, newRoot: VNode): void {
-    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      if ((newRoot._flags & VNodeFlags.Root) === 0) {
-        throw new Error("Failed to sync: sync methods accepts only VNodes representing root node.");
-      }
-      if ((this.flags & ComponentFlags.VModel) !== (newRoot._flags & VNodeFlags.VModel)) {
-        if ((this.flags & ComponentFlags.VModel) === 0) {
-          throw new Error("Failed to sync: vdom root should have the same type as root registered in component " +
-                          "descriptor, component descriptor is using vmodel root.");
-        } else {
-          throw new Error("Failed to sync: vdom root should have the same type as root registered in component " +
-                          "descriptor, component descriptor is using simple tag.");
-        }
-      }
-    }
-
-    schedulerComponentVSync(scheduler, this, this._root as VNode, newRoot, renderFlags);
+    componentVSync(this, this._root as VNode, newRoot);
   }
 
   /**
@@ -804,7 +781,7 @@ export class Component<P, S> {
       if (!preserveTransientSubscriptions) {
         componentCancelTransientSubscriptions(this);
       }
-      scheduler.nextFrame().updateComponent(this);
+      nextFrame().updateComponent(this);
     }
   }
 
@@ -877,6 +854,50 @@ export class Component<P, S> {
   }
 }
 
+export function updateComponent(component: Component<any, any>, newProps?: any): void {
+  const flags = component.flags;
+
+  if (newProps !== undefined && (flags & ComponentFlags.ImmutableProps) === 0) {
+    const oldProps = component.props;
+    const newPropsReceived = component.descriptor._newPropsReceived;
+    if (newPropsReceived !== null) {
+      newPropsReceived(component, oldProps, newProps);
+    } else {
+      component.markDirty();
+    }
+    component.props = newProps;
+  }
+
+  if ((component.flags & (ComponentFlags.Dirty | ComponentFlags.Attached)) ===
+      (ComponentFlags.Dirty | ComponentFlags.Attached)) {
+    if (!isThrottled() ||
+        isMounting() ||
+        ((flags & ComponentFlags.HighPriorityUpdate) !== 0) ||
+        (frameTimeRemaining() > 0)) {
+      component.descriptor._update!(component, component.props, component.state);
+      component.mtime = clock();
+      component.flags &= ~(ComponentFlags.Dirty | ComponentFlags.InUpdateQueue);
+    } else {
+      nextFrame().updateComponent(component);
+    }
+  }
+}
+
+export function componentVSync(component: Component<any, any>, oldRoot: VNode, newRoot: VNode): void {
+  if (oldRoot === null) {
+    newRoot.cref = component;
+    if ("<@KIVI_MOUNTING@>" === "MOUNTING_ENABLED" && isMounting()) {
+      vNodeMount(newRoot, component.element as Node, component);
+    } else {
+      newRoot.ref = component.element as Node;
+      vNodeRender(newRoot, component);
+    }
+  } else {
+    syncVNodes(oldRoot, newRoot, component);
+  }
+  component._root = newRoot;
+}
+
 export function componentAttached(component: Component<any, any>): void {
   if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
     if ((component.flags & ComponentFlags.Attached) !== 0) {
@@ -901,7 +922,7 @@ export function componentDetached(component: Component<any, any>): void {
     }
   }
   if ((component.flags & ComponentFlags.EnabledThrottling) !== 0) {
-    scheduler.disableThrottling();
+    disableThrottling();
   }
   component.flags &= ~(ComponentFlags.Attached | ComponentFlags.UpdateEachFrame | ComponentFlags.EnabledThrottling);
   componentCancelSubscriptions(component);
@@ -915,7 +936,7 @@ export function componentDetached(component: Component<any, any>): void {
 /**
  * Cancel subscriptions.
  */
-export function componentCancelSubscriptions(component: Component<any, any>): void {
+function componentCancelSubscriptions(component: Component<any, any>): void {
   let subscription = component._subscriptions;
   while (subscription !== null) {
     subscription._cancel();
@@ -927,7 +948,7 @@ export function componentCancelSubscriptions(component: Component<any, any>): vo
 /**
  * Cancel transient subscriptions.
  */
-export function componentCancelTransientSubscriptions(component: Component<any, any>): void {
+function componentCancelTransientSubscriptions(component: Component<any, any>): void {
   let subscription = component._transientSubscriptions;
   while (subscription !== null) {
     subscription._cancel();
@@ -945,12 +966,12 @@ export function injectComponent<P, S>(descriptor: ComponentDescriptor<P, S>, con
   if (sync) {
     container.appendChild(c.element as Node);
     componentAttached(c);
-    schedulerUpdateComponent(scheduler, c);
+    updateComponent(c);
   } else {
-    scheduler.nextFrame().write(function() {
+    nextFrame().write(function() {
       container.appendChild(c.element as Node);
       componentAttached(c);
-      schedulerUpdateComponent(scheduler, c);
+      updateComponent(c);
     });
   }
   return c;
@@ -961,17 +982,18 @@ export function injectComponent<P, S>(descriptor: ComponentDescriptor<P, S>, con
  */
 export function mountComponent<P, S>(descriptor: ComponentDescriptor<P, S>, element: Element, props?: P,
     sync?: boolean): Component<P, S> {
-  scheduler._flags |= SchedulerFlags.EnabledMounting;
   const c = descriptor.mountComponent(element, undefined, props);
   if (sync) {
+    startMounting();
     componentAttached(c);
-    schedulerUpdateComponent(scheduler, c);
-    scheduler._flags &= ~SchedulerFlags.EnabledMounting;
+    updateComponent(c);
+    finishMounting();
   } else {
-    scheduler.nextFrame().write(function() {
+    nextFrame().write(function() {
+      startMounting();
       componentAttached(c);
-      schedulerUpdateComponent(scheduler, c);
-      scheduler._flags &= ~SchedulerFlags.EnabledMounting;
+      updateComponent(c);
+      finishMounting();
     });
   }
   return c;

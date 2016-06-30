@@ -1,10 +1,27 @@
-import {Component} from "./component";
-import {SchedulerFlags, ComponentFlags} from "./misc";
-import {VNode, vNodeMount, vNodeRender} from "./vnode";
+import {Component, updateComponent} from "./component";
+import {ComponentFlags} from "./misc";
+import {VNode} from "./vnode";
 import {Actor, ActorFlags, ActorMiddleware, ActorNextMiddleware, Message, MessageFlags} from "./actor";
-import {reconciler} from "./reconciler";
 
-export type SchedulerCallback = () => void;
+export type SchedulerTask = () => void;
+
+/**
+ * Scheduler flags.
+ */
+const enum SchedulerFlags {
+  /// Microtasks are pending for execution in microtasks queue.
+  MicrotaskPending        = 1,
+  /// Macrotasks are pending for execution in macrotasks queue.
+  MacrotaskPending        = 1 << 1,
+  /// Frametasks are pending for execution in frametasks queue.
+  FrametaskPending        = 1 << 2,
+  /// When throttling is enabled, component updates are switched to incremental mode.
+  EnabledThrottling       = 1 << 3,
+  /// Time frame for executing frame tasks in the current frame is ended.
+  ThrottledFrameExhausted = 1 << 4,
+  /// Mounting is enabled.
+  EnabledMounting         = 1 << 5,
+}
 
 /**
  * Minimum time frame duration for throttled tasks.
@@ -34,49 +51,6 @@ const enum ActorExecutorFlags {
 }
 
 /**
- * Microtask Scheduler based on MutationObserver.
- */
-class MicrotaskScheduler {
-  _node: Text;
-  _toggle: number;
-
-  constructor(callback: () => void) {
-    this._node = document.createTextNode("");
-    this._toggle = 0;
-
-    const observer = new MutationObserver(callback);
-    observer.observe(this._node, {characterData: true});
-  }
-
-  requestNextTick(): void {
-    this._toggle ^= 1;
-    this._node.data = this._toggle === 1 ? "1" : "0";
-  }
-}
-
-/**
- * Macrotask Scheduler based on postMessage.
- */
-class MacrotaskScheduler {
-  _message: string;
-
-  constructor(callback: () => void) {
-    this._message = "__kivi" + Math.random();
-
-    const message = this._message;
-    window.addEventListener("message", function(e) {
-      if (e.source === window && e.data === message) {
-        callback();
-      }
-    });
-  }
-
-  requestNextTick(): void {
-    window.postMessage(this._message, "*");
-  }
-}
-
-/**
  * Frame tasks group contains tasks for updating components, read dom and write dom tasks, and tasks that should be
  * executed after all other tasks are finished.
  *
@@ -85,6 +59,8 @@ class MacrotaskScheduler {
  *     scheduler.currentFrame().read(() => {
  *       console.log(element.clientWidth);
  *     });
+ *
+ * @final
  */
 export class FrameTasksGroup {
   /**
@@ -98,15 +74,15 @@ export class FrameTasksGroup {
   /**
    * Write DOM task queue.
    */
-  _writeTasks: SchedulerCallback[] | null;
+  _writeTasks: SchedulerTask[] | null;
   /**
    * Read DOM task queue.
    */
-  _readTasks: SchedulerCallback[] | null;
+  _readTasks: SchedulerTask[] | null;
   /**
    * Tasks that should be executed when all other tasks are finished.
    */
-  _afterTasks: SchedulerCallback[] | null;
+  _afterTasks: SchedulerTask[] | null;
   /**
    * Element that should be focused.
    */
@@ -153,7 +129,7 @@ export class FrameTasksGroup {
   /**
    * Add new task to the write DOM task queue.
    */
-  write(callback: SchedulerCallback): void {
+  write(callback: SchedulerTask): void {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((this._flags & FrameTasksGroupFlags.RWLock) !== 0) {
         throw new Error("Failed to add update component task to the current frame, current frame is locked for read" +
@@ -171,7 +147,7 @@ export class FrameTasksGroup {
   /**
    * Add new task to the read DOM task queue.
    */
-  read(callback: SchedulerCallback): void {
+  read(callback: SchedulerTask): void {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((this._flags & FrameTasksGroupFlags.RWLock) !== 0) {
         throw new Error("Failed to add update component task to the current frame, current frame is locked for read" +
@@ -189,7 +165,7 @@ export class FrameTasksGroup {
   /**
    * Add new task to the task queue that will execute tasks when all DOM tasks are finished.
    */
-  after(callback: SchedulerCallback): void {
+  after(callback: SchedulerTask): void {
     this._flags |= FrameTasksGroupFlags.After;
     if (this._afterTasks === null) {
       this._afterTasks = [];
@@ -230,7 +206,7 @@ export class FrameTasksGroup {
 function createNextMiddlewareHandler(scheduler: Scheduler, actor: Actor<any, any>): ActorNextMiddleware<any, any> {
   let flags = 0;
   let middlewareIndex = 0;
-  let globalMiddleware = scheduler._actorMiddleware;
+  let globalMiddleware = scheduler.actorMiddleware;
   let descriptorMiddleware = actor.descriptor._middleware;
   let actorMiddleware = actor._middleware;
 
@@ -284,9 +260,14 @@ function createNextMiddlewareHandler(scheduler: Scheduler, actor: Actor<any, any
  *
  * Scheduler also have monotonically increasing internal clock, it increments each time scheduler goes
  * from one animation frame to another, or starts executing macrotasks or microtasks.
+ *
+ * @final
  */
-export class Scheduler {
-  _flags: number;
+class Scheduler {
+  /**
+   * See `SchedulerFlags` for details.
+   */
+  flags: number;
   /**
    * Monotonically increasing internal clock.
    */
@@ -295,452 +276,423 @@ export class Scheduler {
    * Cached timestamp. Updates every time when scheduler starts executing new batch of tasks.
    */
   time: number;
-  private _microtasks: SchedulerCallback[];
-  private _macrotasks: SchedulerCallback[];
-  private _currentFrame: FrameTasksGroup;
-  private _nextFrame: FrameTasksGroup;
+  microtasks: SchedulerTask[];
+  macrotasks: SchedulerTask[];
+  currentFrame: FrameTasksGroup;
+  nextFrame: FrameTasksGroup;
   /**
    * Components array that should be updated on each frame.
    */
-  private _updateComponents: Component<any, any>[];
+  updateComponents: Component<any, any>[];
 
-  _actorMiddleware: ActorMiddleware<any, any>[] | null;
-  _activeActors: Actor<any, any>[];
+  actorMiddleware: ActorMiddleware<any, any>[] | null;
+  activeActors: Actor<any, any>[];
 
-  private _microtaskScheduler: MicrotaskScheduler;
-  private _macrotaskScheduler: MacrotaskScheduler;
+  microtaskNode: Text;
+  microtaskToggle: number;
+  macrotaskMessage: string;
 
   /**
    * Usage counter of dependencies that enabled throttling, when it goes to zero, throttling mode is disabled.
    */
-  private _throttleEnabledCounter: number;
-  private _throttledFrameDuration: number;
-  private _throttledFps: number;
-  private _throttledDiffWindow: number;
+  throttleEnabledCounter: number;
+  throttledFrameDuration: number;
+  throttledFps: number;
+  throttledDiffWindow: number;
   /**
    * High Res timestamp of a point in time when low priority components should stop updating in a throttled mode.
    */
-  private _throttledFrameDeadline: number;
+  throttledFrameDeadline: number;
 
   constructor() {
-    this._flags = 0;
+    this.flags = 0;
     this.clock = 1;
     this.time = 0;
-    this._microtasks = [];
-    this._macrotasks = [];
-    this._currentFrame = new FrameTasksGroup();
-    this._nextFrame = new FrameTasksGroup();
-    this._updateComponents = [];
-    this._actorMiddleware = null;
-    this._activeActors = [];
-    this._handleMicrotaskScheduler = this._handleMicrotaskScheduler.bind(this);
-    this._handleMacrotaskScheduler = this._handleMacrotaskScheduler.bind(this);
-    this._handleAnimationFrame = this._handleAnimationFrame.bind(this);
+    this.microtasks = [];
+    this.macrotasks = [];
+    this.currentFrame = new FrameTasksGroup();
+    this.nextFrame = new FrameTasksGroup();
+    this.updateComponents = [];
+    this.actorMiddleware = null;
+    this.activeActors = [];
 
-    this._microtaskScheduler = new MicrotaskScheduler(this._handleMicrotaskScheduler);
-    this._macrotaskScheduler = new MacrotaskScheduler(this._handleMacrotaskScheduler);
+    this.microtaskNode = document.createTextNode("");
+    this.microtaskToggle = 0;
+    this.macrotaskMessage = "__kivi" + Math.random();
 
-    this._throttleEnabledCounter = 0;
-    this._throttledFrameDuration = DefaultThrottleDuration;
-    this._throttledFps = 60;
-    this._throttledDiffWindow = 0;
-    this._throttledFrameDeadline = 0;
+    this.throttleEnabledCounter = 0;
+    this.throttledFrameDuration = DefaultThrottleDuration;
+    this.throttledFps = 60;
+    this.throttledDiffWindow = 0;
+    this.throttledFrameDeadline = 0;
 
-    this._currentFrame._rwLock();
+    // Microtask scheduler based on mutation observer
+    const observer = new MutationObserver(runMicrotasks);
+    observer.observe(this.microtaskNode, {characterData: true});
+
+    // Macrotask scheduler based on postMessage
+    window.addEventListener("message", handleWindowMessage);
+
+    this.currentFrame._rwLock();
   }
+}
 
-  _requestAnimationFrame(): void {
-    if ((this._flags & SchedulerFlags.FrametaskPending) === 0) {
-      this._flags |= SchedulerFlags.FrametaskPending;
-      requestAnimationFrame(this._handleAnimationFrame);
-    }
+/**
+ * Global scheduler instance.
+ */
+const scheduler = new Scheduler();
+
+/**
+ * Returns current monotonically increasing clock.
+ */
+export function clock(): number {
+  return scheduler.clock;
+}
+
+function requestMicrotaskExecution(): void {
+  if ((scheduler.flags & SchedulerFlags.MicrotaskPending) === 0) {
+    scheduler.flags |= SchedulerFlags.MicrotaskPending;
+    scheduler.microtaskToggle ^= 1;
+    scheduler.microtaskNode.nodeValue = scheduler.microtaskToggle ? "1" : "0";
   }
+}
 
-  /**
-   * Get task list for the current frame.
-   */
-  currentFrame(): FrameTasksGroup {
-    return this._currentFrame;
+function requestMacrotaskExecution(): void {
+  if ((scheduler.flags & SchedulerFlags.MacrotaskPending) === 0) {
+    scheduler.flags |= SchedulerFlags.MacrotaskPending;
+    window.postMessage(scheduler.macrotaskMessage, "*");
   }
+}
 
-  /**
-   * Get task list for the next frame.
-   */
-  nextFrame(): FrameTasksGroup {
-    this._requestAnimationFrame();
-    return this._nextFrame;
+function requestNextFrame(): void {
+  if ((scheduler.flags & SchedulerFlags.FrametaskPending) === 0) {
+    scheduler.flags |= SchedulerFlags.FrametaskPending;
+    requestAnimationFrame(handleNextFrame);
   }
+}
 
-  /**
-   * **EXPERIMENTAL** Enable throttling mode.
-   *
-   * In throttling mode, all updates for low priority components will be throttled, all updates will be performed
-   * incrementally each frame.
-   *
-   * Each time throttling is enabled, it increases internal counter that tracks how many times it is enabled, and when
-   * counters goes to zero, throttling mode will be disabled.
-   */
-  enableThrottling(): void {
-    this._throttleEnabledCounter++;
-    this._flags |= SchedulerFlags.EnabledThrottling;
+function handleWindowMessage(e: MessageEvent): void {
+  if (e.source === window && e.data === scheduler.macrotaskMessage) {
+    runMacrotasks();
   }
+}
 
-  /**
-   * **EXPERIMENTAL** Disable throttling mode.
-   *
-   * Throttling mode will be disabled when number of dependencies that enabled throttling mode goes to zero.
-   */
-  disableThrottling(): void {
-    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      if (this._throttleEnabledCounter < 0) {
-        throw new Error("Failed to disable scheduler throttling, it is already disabled.");
+function handleNextFrame(t: number): void {
+  const updateComponents = scheduler.updateComponents;
+  let tasks: SchedulerTask[];
+  let i: number;
+  let j: number;
+
+  scheduler.flags &= ~(SchedulerFlags.FrametaskPending | SchedulerFlags.ThrottledFrameExhausted);
+  scheduler.time = Date.now();
+  if ((scheduler.flags & SchedulerFlags.EnabledThrottling) !== 0) {
+    scheduleMacrotask(() => {
+      const elapsed = (window.performance.now() - t) / 1000;
+      scheduler.throttledFps = Math.round((scheduler.throttledFps + (1 / elapsed)) / 2);
+      scheduler.throttledDiffWindow += (scheduler.throttledFps < 45) ? -1 : 1;
+      if (scheduler.throttledDiffWindow > 5) {
+        scheduler.throttledDiffWindow = 0;
+        scheduler.throttledFrameDuration += 0.1;
+      } else if (scheduler.throttledDiffWindow < -5) {
+        scheduler.throttledDiffWindow = 0;
+        scheduler.throttledFrameDuration *= 0.66;
       }
-    }
-
-    this._throttleEnabledCounter--;
-    if (this._throttleEnabledCounter === 0) {
-      this._flags &= ~SchedulerFlags.EnabledThrottling;
-    }
+      if (scheduler.throttledFrameDuration > MaxThrottleDuration) {
+        scheduler.throttledFrameDuration = MaxThrottleDuration;
+      } else if (scheduler.throttledFrameDuration < MinThrottleDuration) {
+        scheduler.throttledFrameDuration = MinThrottleDuration;
+      }
+    });
+    scheduler.throttledFrameDeadline = t + scheduler.throttledFrameDuration;
   }
 
-  /**
-   * Get remaining time available for tasks in the current frame.
-   */
-  frameTimeRemaining(): number {
-    if ((this._flags & SchedulerFlags.ThrottledFrameExhausted) !== 0) {
-      return 0;
-    } else {
-      const remaining = this._throttledFrameDeadline - performance.now();
-      if (remaining <= 0) {
-        this._flags |= SchedulerFlags.ThrottledFrameExhausted;
-        return 0;
-      } else {
-        return remaining;
-      }
-    }
+  const frame = scheduler.nextFrame;
+  scheduler.nextFrame = scheduler.currentFrame;
+  scheduler.currentFrame = frame;
+
+  scheduler.currentFrame._rwUnlock();
+  scheduler.nextFrame._rwUnlock();
+
+  // Mark all update components as dirty. But don't update until all write tasks are finished. It is possible that we
+  // won't need to update component if it is removed.
+  for (i = 0; i < updateComponents.length; i++) {
+    updateComponents[i].flags |= ComponentFlags.Dirty;
   }
 
-  /**
-   * Add component to the list of components that should be updated each frame.
-   */
-  startUpdateComponentEachFrame(component: Component<any, any>): void {
-    this._requestAnimationFrame();
-    this._updateComponents.push(component);
-  }
+  // Perform read/write batching. Start with executing read DOM tasks, then update components, execute write DOM tasks
+  // and repeat until all read and write tasks are executed.
+  do {
+    while ((frame._flags & FrameTasksGroupFlags.Read) !== 0) {
+      frame._flags &= ~FrameTasksGroupFlags.Read;
+      tasks = frame._readTasks!;
+      frame._readTasks = null;
 
-  /**
-   * Add task to the microtask queue.
-   */
-  scheduleMicrotask(callback: SchedulerCallback): void {
-    if ((this._flags & SchedulerFlags.MicrotaskPending) === 0) {
-      this._flags |= SchedulerFlags.MicrotaskPending;
-      if ((this._flags & SchedulerFlags.ActorPending) === 0) {
-        this._microtaskScheduler.requestNextTick();
-      }
-    }
-    this._microtasks.push(callback);
-  }
-
-  /**
-   * Add task to the macrotask queue.
-   */
-  scheduleMacrotask(callback: SchedulerCallback): void {
-    if ((this._flags & SchedulerFlags.MacrotaskPending) === 0) {
-      this._flags |= SchedulerFlags.MacrotaskPending;
-      this._macrotaskScheduler.requestNextTick();
-    }
-    this._macrotasks.push(callback);
-  }
-
-  /**
-   * Send message to an actor.
-   */
-  sendMessage(actor: Actor<any, any>, message: Message<any>): void {
-    if ((actor._flags & ActorFlags.Disposed) === 0) {
-      if ((actor._flags & ActorFlags.Active) === 0) {
-        if ((this._flags & SchedulerFlags.ActorPending) === 0) {
-          this._flags |= SchedulerFlags.ActorPending;
-          if ((this._flags & SchedulerFlags.MicrotaskPending) === 0) {
-            this._microtaskScheduler.requestNextTick();
-          }
-        }
-        this._activeActors.push(actor);
-        actor._flags |= ActorFlags.Active;
-      }
-      actor._flags |= ActorFlags.IncomingMessage;
-      actor._inbox.push(message);
-    }
-  }
-
-  addActorMiddleware(middleware: ActorMiddleware<any, any>): Scheduler {
-    if (this._actorMiddleware === null) {
-      this._actorMiddleware = [];
-    }
-    this._actorMiddleware.push(middleware);
-    return this;
-  }
-
-  /**
-   * Perform an operation in scheduler context.
-   *
-   * Processing operations inside scheduler context will guarantee that internal monotonically increasing clock is
-   * increased after operation.
-   */
-  start(callback: SchedulerCallback): void {
-    this._flags |= SchedulerFlags.Running;
-    this.time = Date.now();
-    callback();
-    this.clock++;
-    this._flags &= ~SchedulerFlags.Running;
-  }
-
-  private _handleMicrotaskScheduler() {
-    this._flags |= SchedulerFlags.Running;
-    this.time = Date.now();
-
-    do {
-      while (this._microtasks.length > 0) {
-        let tasks = this._microtasks;
-        this._microtasks = [];
-        for (let i = 0; i < tasks.length; i++) {
-          tasks[i]();
-        }
-        this.clock++;
-      }
-
-      if (this._activeActors.length > 0) {
-        const activeActors = this._activeActors;
-        this._activeActors = [];
-        for (let i = 0; i < activeActors.length; i++) {
-          const actor = activeActors[i];
-
-          while ((actor._flags & ActorFlags.IncomingMessage) !== 0) {
-            const inbox = actor._inbox;
-            actor._inbox = [];
-            actor._flags &= ~ActorFlags.IncomingMessage;
-            for (let i = 0; i < inbox.length; i++) {
-              const msg = inbox[i];
-              msg._flags |= MessageFlags.Consumed;
-              createNextMiddlewareHandler(this, actor)(msg);
-            }
-          }
-
-          actor._flags &= ~ActorFlags.Active;
-          this.clock++;
-        }
-      }
-    } while (this._microtasks.length > 0 && this._activeActors.length > 0);
-
-    this._flags &= ~(SchedulerFlags.MicrotaskPending | SchedulerFlags.ActorPending | SchedulerFlags.Running);
-  };
-
-  private _handleMacrotaskScheduler() {
-    this._flags &= ~SchedulerFlags.MacrotaskPending;
-    this._flags |= SchedulerFlags.Running;
-    this.time = Date.now();
-
-    let tasks = this._macrotasks;
-    this._macrotasks = [];
-    for (let i = 0; i < tasks.length; i++) {
-      tasks[i]();
-    }
-
-    this.clock++;
-    this._flags &= ~SchedulerFlags.Running;
-  };
-
-  private _handleAnimationFrame(t: number) {
-    const updateComponents = this._updateComponents;
-    let tasks: SchedulerCallback[];
-    let i: number;
-    let j: number;
-
-    this._flags &= ~(SchedulerFlags.FrametaskPending | SchedulerFlags.ThrottledFrameExhausted);
-    this._flags |= SchedulerFlags.Running;
-    this.time = Date.now();
-    if ((this._flags & SchedulerFlags.EnabledThrottling) !== 0) {
-      this.scheduleMacrotask(() => {
-        const elapsed = (window.performance.now() - t) / 1000;
-        this._throttledFps = Math.round((this._throttledFps + (1 / elapsed)) / 2);
-        this._throttledDiffWindow += (this._throttledFps < 45) ? -1 : 1;
-        if (this._throttledDiffWindow > 5) {
-          this._throttledDiffWindow = 0;
-          this._throttledFrameDuration += 0.1;
-        } else if (this._throttledDiffWindow < -5) {
-          this._throttledDiffWindow = 0;
-          this._throttledFrameDuration *= 0.66;
-        }
-        if (this._throttledFrameDuration > MaxThrottleDuration) {
-          this._throttledFrameDuration = MaxThrottleDuration;
-        } else if (this._throttledFrameDuration < MinThrottleDuration) {
-          this._throttledFrameDuration = MinThrottleDuration;
-        }
-      });
-      this._throttledFrameDeadline = t + this._throttledFrameDuration;
-    }
-
-    const frame = this._nextFrame;
-    this._nextFrame = this._currentFrame;
-    this._currentFrame = frame;
-
-    this._currentFrame._rwUnlock();
-    this._nextFrame._rwUnlock();
-
-    // Mark all update components as dirty. But don't update until all write tasks are finished. It is possible that we
-    // won't need to update component if it is removed.
-    for (i = 0; i < updateComponents.length; i++) {
-      updateComponents[i].flags |= ComponentFlags.Dirty;
-    }
-
-    // Perform read/write batching. Start with executing read DOM tasks, then update components, execute write DOM tasks
-    // and repeat until all read and write tasks are executed.
-    do {
-      while ((frame._flags & FrameTasksGroupFlags.Read) !== 0) {
-        frame._flags &= ~FrameTasksGroupFlags.Read;
-        tasks = frame._readTasks!;
-        frame._readTasks = null;
-
-        for (i = 0; i < tasks.length; i++) {
-          tasks[i]();
-        }
-      }
-
-      while ((frame._flags & (FrameTasksGroupFlags.Component | FrameTasksGroupFlags.Write)) !== 0) {
-        if ((frame._flags & FrameTasksGroupFlags.Component) !== 0) {
-          frame._flags &= ~FrameTasksGroupFlags.Component;
-          const componentGroups = frame._componentTasks;
-
-          for (i = 0; i < componentGroups.length; i++) {
-            const componentGroup = componentGroups[i];
-            if (componentGroup !== null) {
-              componentGroups[i] = null;
-              for (j = 0; j < componentGroup.length; j++) {
-                schedulerUpdateComponent(this, componentGroup[j]);
-              }
-            }
-          }
-        }
-
-        if ((frame._flags & FrameTasksGroupFlags.Write) !== 0) {
-          frame._flags &= ~FrameTasksGroupFlags.Write;
-          tasks = frame._writeTasks!;
-          frame._writeTasks = null;
-          for (i = 0; i < tasks.length; i++) {
-            tasks[i]();
-          }
-        }
-      }
-
-      // Update components registered for updating on each frame.
-      // Remove components that doesn't have UPDATE_EACH_FRAME flag.
-      i = 0;
-      j = updateComponents.length;
-
-      while (i < j) {
-        const component = updateComponents[i++];
-        if ((component.flags & ComponentFlags.UpdateEachFrame) === 0) {
-          component.flags &= ~ComponentFlags.InUpdateEachFrameQueue;
-          if (i === j) {
-            updateComponents.pop();
-          } else {
-            updateComponents[--i] = updateComponents.pop()!;
-          }
-        } else {
-          schedulerUpdateComponent(this, component);
-        }
-      }
-    } while ((frame._flags & (FrameTasksGroupFlags.Component |
-                              FrameTasksGroupFlags.Write |
-                              FrameTasksGroupFlags.Read)) !== 0);
-
-    // Lock current from adding read and write tasks in debug mode.
-    this._currentFrame._rwLock();
-
-    // Perform tasks that should be executed when all DOM ops are finished.
-    while ((frame._flags & FrameTasksGroupFlags.After) !== 0) {
-      frame._flags &= ~FrameTasksGroupFlags.After;
-
-      tasks = frame._afterTasks!;
-      frame._afterTasks = null;
       for (i = 0; i < tasks.length; i++) {
         tasks[i]();
       }
     }
 
-    // Set focus on an element.
-    if (frame._focus !== null) {
-      if (frame._focus.constructor === VNode) {
-        ((frame._focus as VNode).ref as HTMLElement).focus();
-      } else {
-        (frame._focus as HTMLElement).focus();
+    while ((frame._flags & (FrameTasksGroupFlags.Component | FrameTasksGroupFlags.Write)) !== 0) {
+      if ((frame._flags & FrameTasksGroupFlags.Component) !== 0) {
+        frame._flags &= ~FrameTasksGroupFlags.Component;
+        const componentGroups = frame._componentTasks;
+
+        for (i = 0; i < componentGroups.length; i++) {
+          const componentGroup = componentGroups[i];
+          if (componentGroup !== null) {
+            componentGroups[i] = null;
+            for (j = 0; j < componentGroup.length; j++) {
+              updateComponent(componentGroup[j]);
+            }
+          }
+        }
       }
-      frame._focus = null;
+
+      if ((frame._flags & FrameTasksGroupFlags.Write) !== 0) {
+        frame._flags &= ~FrameTasksGroupFlags.Write;
+        tasks = frame._writeTasks!;
+        frame._writeTasks = null;
+        for (i = 0; i < tasks.length; i++) {
+          tasks[i]();
+        }
+      }
     }
 
-    if (updateComponents.length > 0) {
-      this._requestAnimationFrame();
-    }
+    // Update components registered for updating on each frame.
+    // Remove components that doesn't have UPDATE_EACH_FRAME flag.
+    i = 0;
+    j = updateComponents.length;
 
-    this.clock++;
-    this._flags &= ~SchedulerFlags.Running;
+    while (i < j) {
+      const component = updateComponents[i++];
+      if ((component.flags & ComponentFlags.UpdateEachFrame) === 0) {
+        component.flags &= ~ComponentFlags.InUpdateEachFrameQueue;
+        if (i === j) {
+          updateComponents.pop();
+        } else {
+          updateComponents[--i] = updateComponents.pop() !;
+        }
+      } else {
+        updateComponent(component);
+      }
+    }
+  } while ((frame._flags & (FrameTasksGroupFlags.Component |
+    FrameTasksGroupFlags.Write |
+    FrameTasksGroupFlags.Read)) !== 0);
+
+  // Lock current from adding read and write tasks in debug mode.
+  scheduler.currentFrame._rwLock();
+
+  // Perform tasks that should be executed when all DOM ops are finished.
+  while ((frame._flags & FrameTasksGroupFlags.After) !== 0) {
+    frame._flags &= ~FrameTasksGroupFlags.After;
+
+    tasks = frame._afterTasks!;
+    frame._afterTasks = null;
+    for (i = 0; i < tasks.length; i++) {
+      tasks[i]();
+    }
   }
+
+  // Set focus on an element.
+  if (frame._focus !== null) {
+    if (frame._focus.constructor === VNode) {
+      ((frame._focus as VNode).ref as HTMLElement).focus();
+    } else {
+      (frame._focus as HTMLElement).focus();
+    }
+    frame._focus = null;
+  }
+
+  if (updateComponents.length > 0) {
+    requestNextFrame();
+  }
+
+  scheduler.clock++;
+}
+
+function runMicrotasks(): void {
+  scheduler.time = Date.now();
+
+  do {
+    while (scheduler.microtasks.length > 0) {
+      let tasks = scheduler.microtasks;
+      scheduler.microtasks = [];
+      for (let i = 0; i < tasks.length; i++) {
+        tasks[i]();
+      }
+      scheduler.clock++;
+    }
+
+    if (scheduler.activeActors.length > 0) {
+      const activeActors = scheduler.activeActors;
+      scheduler.activeActors = [];
+      for (let i = 0; i < activeActors.length; i++) {
+        const actor = activeActors[i];
+
+        while ((actor._flags & ActorFlags.IncomingMessage) !== 0) {
+          const inbox = actor._inbox;
+          actor._inbox = [];
+          actor._flags &= ~ActorFlags.IncomingMessage;
+          for (let i = 0; i < inbox.length; i++) {
+            const msg = inbox[i];
+            msg._flags |= MessageFlags.Consumed;
+            createNextMiddlewareHandler(scheduler, actor)(msg);
+          }
+        }
+
+        actor._flags &= ~ActorFlags.Active;
+        scheduler.clock++;
+      }
+    }
+  } while (scheduler.microtasks.length > 0 && scheduler.activeActors.length > 0);
+
+  scheduler.flags &= ~SchedulerFlags.MicrotaskPending;
+}
+
+function runMacrotasks(): void {
+  scheduler.flags &= ~SchedulerFlags.MacrotaskPending;
+  scheduler.time = Date.now();
+
+  let tasks = scheduler.macrotasks;
+  scheduler.macrotasks = [];
+  for (let i = 0; i < tasks.length; i++) {
+    tasks[i]();
+  }
+
+  scheduler.clock++;
 }
 
 /**
- * Note: Tried to separate passing new props and move it to component's api, it is worse :)
+ * Add task to the microtask queue.
  */
-export function schedulerUpdateComponent(scheduler: Scheduler, component: Component<any, any>, newProps?: any): void {
-  const flags = component.flags;
-
-  if (newProps !== undefined && (flags & ComponentFlags.ImmutableProps) === 0) {
-    const oldProps = component.props;
-    const newPropsReceived = component.descriptor._newPropsReceived;
-    if (newPropsReceived !== null) {
-      newPropsReceived(component, oldProps, newProps);
-    } else {
-      component.markDirty();
-    }
-    component.props = newProps;
-  }
-
-  if ((component.flags & (ComponentFlags.Dirty | ComponentFlags.Attached)) ===
-      (ComponentFlags.Dirty | ComponentFlags.Attached)) {
-    if (((scheduler._flags & SchedulerFlags.EnabledThrottling) === 0) ||
-        ((scheduler._flags & SchedulerFlags.EnabledMounting) !== 0) ||
-        ((flags & ComponentFlags.HighPriorityUpdate) !== 0) ||
-        (scheduler.frameTimeRemaining() > 0)) {
-      component.descriptor._update!(component, component.props, component.state);
-      component.mtime = scheduler.clock;
-      component.flags &= ~(ComponentFlags.Dirty | ComponentFlags.InUpdateQueue);
-    } else {
-      scheduler.nextFrame().updateComponent(component);
-    }
-  }
+export function scheduleMicrotask(task: () => void): void {
+  requestMicrotaskExecution();
+  scheduler.microtasks.push(task);
 }
 
 /**
- * Note: I am aware that it is ugly, and it may seems that it should be a part of component's api, maybe later I'll
- * revisit this part. My thought was that reconciliation algorithm should be a part of the scheduler.
+ * Add task to the macrotask queue.
  */
-export function schedulerComponentVSync(scheduler: Scheduler, component: Component<any, any>, oldRoot: VNode,
-    newRoot: VNode, renderFlags: number): void {
-  if (oldRoot === null) {
-    newRoot.cref = component;
-    if ((scheduler._flags & SchedulerFlags.EnabledMounting) !== 0) {
-      vNodeMount(newRoot, component.element as Node, component);
-    } else {
-      newRoot.ref = component.element as Node;
-      vNodeRender(newRoot, renderFlags, component);
-    }
-  } else {
-    reconciler.sync(oldRoot, newRoot, renderFlags, component);
-  }
-  component._root = newRoot;
+export function scheduleMacrotask(task: () => void): void {
+  requestMacrotaskExecution();
+  scheduler.macrotasks.push(task);
 }
 
 /**
- * Global scheduler instance.
+ * Get task list for the current frame.
+ */
+export function currentFrame(): FrameTasksGroup {
+  return scheduler.currentFrame;
+}
+
+/**
+ * Get task list for the next frame.
+ */
+export function nextFrame(): FrameTasksGroup {
+  requestNextFrame();
+  return scheduler.nextFrame;
+}
+
+/**
+ * Add actor for an execution.
+ */
+export function scheduleActorExecution(actor: Actor<any, any>): void {
+  requestMicrotaskExecution();
+  scheduler.activeActors.push(actor);
+}
+
+/**
+ * **EXPERIMENTAL** Enable throttling mode.
  *
- * Note: Just move on, don't want to hear how it will break your nice unit tests :)
+ * In throttling mode, all updates for low priority components will be throttled, all updates will be performed
+ * incrementally each frame.
+ *
+ * Each time throttling is enabled, it increases internal counter that tracks how many times it is enabled, and when
+ * counters goes to zero, throttling mode will be disabled.
  */
-export const scheduler = new Scheduler();
+export function enableThrottling(): void {
+  scheduler.throttleEnabledCounter++;
+  scheduler.flags |= SchedulerFlags.EnabledThrottling;
+}
+
+/**
+ * **EXPERIMENTAL** Disable throttling mode.
+ *
+ * Throttling mode will be disabled when number of dependencies that enabled throttling mode goes to zero.
+ */
+export function disableThrottling(): void {
+  if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+    if (scheduler.throttleEnabledCounter < 0) {
+      throw new Error("Failed to disable scheduler throttling, it is already disabled.");
+    }
+  }
+
+  scheduler.throttleEnabledCounter--;
+  if (scheduler.throttleEnabledCounter === 0) {
+    scheduler.flags &= ~SchedulerFlags.EnabledThrottling;
+  }
+}
+
+/**
+ * Get remaining time available for tasks in the current frame.
+ */
+export function frameTimeRemaining(): number {
+  if ((scheduler.flags & SchedulerFlags.ThrottledFrameExhausted) !== 0) {
+    return 0;
+  } else {
+    const remaining = scheduler.throttledFrameDeadline - performance.now();
+    if (remaining <= 0) {
+      scheduler.flags |= SchedulerFlags.ThrottledFrameExhausted;
+      return 0;
+    } else {
+      return remaining;
+    }
+  }
+}
+
+/**
+ * Add component to the list of components that should be updated each frame.
+ */
+export function startUpdateComponentEachFrame(component: Component<any, any>): void {
+  requestNextFrame();
+  scheduler.updateComponents.push(component);
+}
+
+/**
+ * Returns true if UI state is in mounting phase.
+ */
+export function isMounting(): boolean {
+  return ((scheduler.flags & SchedulerFlags.EnabledMounting) !== 0);
+}
+
+/**
+ * Returns true if tasks should be throttled.
+ */
+export function isThrottled(): boolean {
+  return ((scheduler.flags & SchedulerFlags.EnabledThrottling) !== 0);
+}
+
+/**
+ * Start UI mounting phase.
+ */
+export function startMounting(): void {
+  scheduler.flags |= SchedulerFlags.EnabledMounting;
+}
+
+/**
+ * Finish UI mounting phase.
+ */
+export function finishMounting(): void {
+  scheduler.flags &= ~SchedulerFlags.EnabledMounting;
+}
+
+/**
+ * **EXPERIMENTAL** Add global middleware.
+ */
+export function addGlobalMiddleware(middleware: ActorMiddleware<any, any>) {
+  if (scheduler.actorMiddleware === null) {
+    scheduler.actorMiddleware = [];
+  }
+  scheduler.actorMiddleware.push(middleware);
+}

@@ -1,16 +1,16 @@
 import {Invalidator} from "../lib/invalidator";
-import {scheduler} from "../lib/scheduler";
+import {scheduleMicrotask, scheduleMacrotask, clock} from "../lib/scheduler";
 
 const expect = chai.expect;
 
 describe("Invalidator", () => {
   it("should have mtime equal to scheduler clock when created", (done) => {
     const i1 = new Invalidator();
-    expect(i1.mtime).to.equal(scheduler.clock);
-    scheduler.scheduleMicrotask(() => {
-      scheduler.scheduleMacrotask(() => {
+    expect(i1.mtime).to.equal(clock());
+    scheduleMicrotask(() => {
+      scheduleMacrotask(() => {
         const i2 = new Invalidator();
-        expect(i2.mtime).to.equal(scheduler.clock);
+        expect(i2.mtime).to.equal(clock());
         done();
       });
     });
@@ -53,12 +53,12 @@ describe("Invalidator", () => {
 
   it("should update mtime when invalidated", (done) => {
     const i = new Invalidator();
-    expect(i.mtime).to.equal(scheduler.clock);
-    scheduler.scheduleMicrotask(() => {
-      scheduler.scheduleMacrotask(() => {
-        expect(i.mtime).not.to.equal(scheduler.clock);
+    expect(i.mtime).to.equal(clock());
+    scheduleMicrotask(() => {
+      scheduleMacrotask(() => {
+        expect(i.mtime).not.to.equal(clock());
         i.invalidate();
-        expect(i.mtime).to.equal(scheduler.clock);
+        expect(i.mtime).to.equal(clock());
         done();
       });
     });
@@ -70,8 +70,8 @@ describe("Invalidator", () => {
     i.subscribe(() => {
       k++;
     });
-    scheduler.scheduleMicrotask(() => {
-      scheduler.scheduleMacrotask(() => {
+    scheduleMicrotask(() => {
+      scheduleMacrotask(() => {
         i.invalidate();
         i.invalidate();
         expect(k).to.equal(1);
@@ -86,8 +86,8 @@ describe("Invalidator", () => {
     i.transientSubscribe(() => {
       k++;
     });
-    scheduler.scheduleMicrotask(() => {
-      scheduler.scheduleMacrotask(() => {
+    scheduleMicrotask(() => {
+      scheduleMacrotask(() => {
         i.invalidate();
         i.invalidate();
         expect(k).to.equal(1);
@@ -102,8 +102,8 @@ describe("Invalidator", () => {
     i.subscribe(() => {
       k++;
     });
-    scheduler.scheduleMicrotask(() => {
-      scheduler.scheduleMacrotask(() => {
+    scheduleMicrotask(() => {
+      scheduleMacrotask(() => {
         expect(i.hasSubscriptions()).to.be.true;
         i.invalidate();
         expect(i.hasSubscriptions()).to.be.true;
@@ -118,8 +118,8 @@ describe("Invalidator", () => {
     i.transientSubscribe(() => {
       k++;
     });
-    scheduler.scheduleMicrotask(() => {
-      scheduler.scheduleMacrotask(() => {
+    scheduleMicrotask(() => {
+      scheduleMacrotask(() => {
         expect(i.hasSubscriptions()).to.be.true;
         i.invalidate();
         expect(i.hasSubscriptions()).to.be.false;
@@ -137,8 +137,8 @@ describe("Invalidator", () => {
     i.transientSubscribe(() => {
       k++;
     });
-    scheduler.scheduleMicrotask(() => {
-      scheduler.scheduleMacrotask(() => {
+    scheduleMicrotask(() => {
+      scheduleMacrotask(() => {
         expect(i.hasSubscriptions()).to.be.true;
         i.invalidate();
         expect(i.hasSubscriptions()).to.be.false;
@@ -155,8 +155,8 @@ describe("Invalidator", () => {
     });
     s.cancel();
     expect(i.hasSubscriptions()).to.be.false;
-    scheduler.scheduleMicrotask(() => {
-      scheduler.scheduleMacrotask(() => {
+    scheduleMicrotask(() => {
+      scheduleMacrotask(() => {
         i.invalidate();
         expect(k).to.equal(0);
         done();
@@ -172,8 +172,8 @@ describe("Invalidator", () => {
     });
     s.cancel();
     expect(i.hasSubscriptions()).to.be.false;
-    scheduler.scheduleMicrotask(() => {
-      scheduler.scheduleMacrotask(() => {
+    scheduleMicrotask(() => {
+      scheduleMacrotask(() => {
         i.invalidate();
         expect(k).to.equal(0);
         done();
@@ -191,8 +191,8 @@ describe("Invalidator", () => {
     i.subscribe(() => {
       j++;
     });
-    scheduler.scheduleMicrotask(() => {
-      scheduler.scheduleMacrotask(() => {
+    scheduleMicrotask(() => {
+      scheduleMacrotask(() => {
         i.invalidate();
         i.invalidate();
         expect(k).to.equal(1);
@@ -212,8 +212,8 @@ describe("Invalidator", () => {
     i.transientSubscribe(() => {
       j++;
     });
-    scheduler.scheduleMicrotask(() => {
-      scheduler.scheduleMacrotask(() => {
+    scheduleMicrotask(() => {
+      scheduleMacrotask(() => {
         i.invalidate();
         i.invalidate();
         expect(k).to.equal(1);

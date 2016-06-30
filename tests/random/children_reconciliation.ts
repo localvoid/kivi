@@ -1,6 +1,6 @@
 import {VNode, vNodeInstantiate, vNodeRender, createVElement, createVText} from "../../lib/vnode";
-import {reconciler} from "../../lib/reconciler";
-import {scheduler} from "../../lib/scheduler";
+import {syncVNodes} from "../../lib/reconciler";
+import {scheduleMacrotask} from "../../lib/scheduler";
 
 function injectVNode(parent: DocumentFragment, node: VNode, nextRef?: Element): void {
   vNodeInstantiate(node, undefined);
@@ -48,7 +48,7 @@ function checkInnerHtmlEquals(ax: VNode[], bx: VNode[], cx: VNode[], keys: boole
   injectVNode(aDiv, a, undefined);
   injectVNode(bDiv, b, undefined);
 
-  reconciler.sync(a, c, 0, undefined);
+  syncVNodes(a, c, 0, undefined);
 
   if (aDiv.innerHTML !== bDiv.innerHTML) {
     throw Error(`html doesn't match: ${aDiv.innerHTML} => ${bDiv.innerHTML}`);
@@ -95,7 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
       createTestCase(a, b);
     }
     document.body.innerText = (++j).toString();
-    scheduler.scheduleMacrotask(runTests);
+    scheduleMacrotask(runTests);
   }
   runTests();
 });
