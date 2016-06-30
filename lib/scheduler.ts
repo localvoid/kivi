@@ -1,7 +1,7 @@
 import {Component, updateComponent} from "./component";
 import {ComponentFlags} from "./misc";
 import {VNode} from "./vnode";
-import {Actor, ActorFlags, ActorMiddleware, ActorNextMiddleware, Message, MessageFlags} from "./actor";
+import {Actor, ActorFlags, ActorMiddleware, Message, MessageFlags} from "./actor";
 
 export type SchedulerTask = () => void;
 
@@ -10,17 +10,22 @@ export type SchedulerTask = () => void;
  */
 const enum SchedulerFlags {
   /// Microtasks are pending for execution in microtasks queue.
-  MicrotaskPending        = 1,
+  MicrotaskPending         = 1,
   /// Macrotasks are pending for execution in macrotasks queue.
-  MacrotaskPending        = 1 << 1,
+  MacrotaskPending         = 1 << 1,
   /// Frametasks are pending for execution in frametasks queue.
-  FrametaskPending        = 1 << 2,
+  FrametaskPending         = 1 << 2,
   /// When throttling is enabled, component updates are switched to incremental mode.
-  EnabledThrottling       = 1 << 3,
+  EnabledThrottling        = 1 << 3,
   /// Time frame for executing frame tasks in the current frame is ended.
-  ThrottledFrameExhausted = 1 << 4,
+  ThrottledFrameExhausted  = 1 << 4,
   /// Mounting is enabled.
-  EnabledMounting         = 1 << 5,
+  EnabledMounting          = 1 << 5,
+  ExecGlobalMiddleware     = 1 << 6,
+  ExecDescriptorMiddleware = 1 << 7,
+  ExecActorMiddleware      = 1 << 8,
+
+  ExecMiddleware = ExecGlobalMiddleware | ExecDescriptorMiddleware | ExecActorMiddleware,
 }
 
 /**
@@ -44,11 +49,6 @@ const enum FrameTasksGroupFlags {
   RWLock    = 1 << 4,
 }
 
-const enum ActorExecutorFlags {
-  ExecGlobalMiddleware     = 1,
-  ExecDescriptorMiddleware = 1 << 1,
-  ExecActorMiddleware      = 1 << 2,
-}
 
 /**
  * Frame tasks group contains tasks for updating components, read dom and write dom tasks, and tasks that should be
@@ -203,54 +203,6 @@ export class FrameTasksGroup {
   }
 }
 
-function createNextMiddlewareHandler(scheduler: Scheduler, actor: Actor<any, any>): ActorNextMiddleware<any, any> {
-  let flags = 0;
-  let middlewareIndex = 0;
-  let globalMiddleware = scheduler.actorMiddleware;
-  let descriptorMiddleware = actor.descriptor._middleware;
-  let actorMiddleware = actor._middleware;
-
-  if (globalMiddleware !== null) {
-    flags |= ActorExecutorFlags.ExecGlobalMiddleware;
-  }
-  if (descriptorMiddleware !== null) {
-    flags |= ActorExecutorFlags.ExecDescriptorMiddleware;
-  }
-  if (actorMiddleware !== null) {
-    flags |= ActorExecutorFlags.ExecActorMiddleware;
-  }
-
-  function next(message: Message<any>): void {
-    let middleware: ActorMiddleware<any, any>;
-
-    if (flags === 0) {
-      actor.state = actor.descriptor._handleMessage!(actor, message, actor.props, actor.state);
-    } else if ((flags & ActorExecutorFlags.ExecGlobalMiddleware) !== 0) {
-      middleware = globalMiddleware![middlewareIndex++];
-      if (middlewareIndex === globalMiddleware!.length) {
-        middlewareIndex = 0;
-        flags &= ~ActorExecutorFlags.ExecGlobalMiddleware;
-      }
-      middleware(actor, message, next);
-    } else if ((flags & ActorExecutorFlags.ExecDescriptorMiddleware) !== 0) {
-      middleware = descriptorMiddleware![middlewareIndex++];
-      if (middlewareIndex === descriptorMiddleware!.length) {
-        middlewareIndex = 0;
-        flags &= ~ActorExecutorFlags.ExecDescriptorMiddleware;
-      }
-      middleware(actor, message, next);
-    } else if ((flags & ActorExecutorFlags.ExecActorMiddleware) !== 0) {
-      middleware = actorMiddleware![middlewareIndex++];
-      if (middlewareIndex === actorMiddleware!.length) {
-        flags &= ~ActorExecutorFlags.ExecActorMiddleware;
-      }
-      middleware(actor, message, next);
-    }
-  }
-
-  return next;
-}
-
 /**
  * Scheduler supports animation frame tasks, macrotasks and microtasks.
  *
@@ -285,8 +237,11 @@ class Scheduler {
    */
   updateComponents: Component<any, any>[];
 
-  actorMiddleware: ActorMiddleware<any, any>[] | null;
+  globalMiddleware: ActorMiddleware<any, any>[] | null;
   activeActors: Actor<any, any>[];
+
+  currentActor: Actor<any, any> | null;
+  middlewareIndex: number;
 
   microtaskNode: Text;
   microtaskToggle: number;
@@ -313,8 +268,11 @@ class Scheduler {
     this.currentFrame = new FrameTasksGroup();
     this.nextFrame = new FrameTasksGroup();
     this.updateComponents = [];
-    this.actorMiddleware = null;
+    this.globalMiddleware = null;
     this.activeActors = [];
+
+    this.currentActor = null;
+    this.middlewareIndex = 0;
 
     this.microtaskNode = document.createTextNode("");
     this.microtaskToggle = 0;
@@ -347,6 +305,53 @@ const scheduler = new Scheduler();
  */
 export function clock(): number {
   return scheduler.clock;
+}
+
+function nextMiddleware(message: Message<any>): void {
+  const flags = scheduler.flags;
+  const actor = scheduler.currentActor!;
+
+  let middleware: ActorMiddleware<any, any>;
+
+  if ((flags & SchedulerFlags.ExecMiddleware) === 0) {
+    actor.state = actor.descriptor._handleMessage!(actor, message, actor.props, actor.state);
+  } else if ((flags & SchedulerFlags.ExecGlobalMiddleware) !== 0) {
+    middleware = scheduler.globalMiddleware![scheduler.middlewareIndex++];
+    if (scheduler.middlewareIndex === scheduler.globalMiddleware!.length) {
+      scheduler.middlewareIndex = 0;
+      scheduler.flags &= ~SchedulerFlags.ExecGlobalMiddleware;
+    }
+    middleware(actor, message, nextMiddleware);
+  } else if ((flags & SchedulerFlags.ExecDescriptorMiddleware) !== 0) {
+    middleware = actor.descriptor._middleware![scheduler.middlewareIndex++];
+    if (scheduler.middlewareIndex === actor.descriptor._middleware!.length) {
+      scheduler.middlewareIndex = 0;
+      scheduler.flags &= ~SchedulerFlags.ExecDescriptorMiddleware;
+    }
+    middleware(actor, message, nextMiddleware);
+  } else if ((flags & SchedulerFlags.ExecActorMiddleware) !== 0) {
+    middleware = actor._middleware![scheduler.middlewareIndex++];
+    if (scheduler.middlewareIndex === actor._middleware!.length) {
+      scheduler.flags &= ~SchedulerFlags.ExecActorMiddleware;
+    }
+    middleware(actor, message, nextMiddleware);
+  }
+}
+
+function execActor(actor: Actor<any, any>, message: Message<any>): void {
+  scheduler.currentActor = actor;
+  scheduler.middlewareIndex = 0;
+  if (scheduler.globalMiddleware !== null) {
+    scheduler.flags |= SchedulerFlags.ExecGlobalMiddleware;
+  }
+  if (actor.descriptor._middleware !== null) {
+    scheduler.flags |= SchedulerFlags.ExecDescriptorMiddleware;
+  }
+  if (actor._middleware !== null) {
+    scheduler.flags |= SchedulerFlags.ExecActorMiddleware;
+  }
+
+  nextMiddleware(message);
 }
 
 function requestMicrotaskExecution(): void {
@@ -537,7 +542,7 @@ function runMicrotasks(): void {
           for (let i = 0; i < inbox.length; i++) {
             const msg = inbox[i];
             msg._flags |= MessageFlags.Consumed;
-            createNextMiddlewareHandler(scheduler, actor)(msg);
+            execActor(actor, msg);
           }
         }
 
@@ -691,8 +696,8 @@ export function finishMounting(): void {
  * **EXPERIMENTAL** Add global middleware.
  */
 export function addGlobalMiddleware(middleware: ActorMiddleware<any, any>) {
-  if (scheduler.actorMiddleware === null) {
-    scheduler.actorMiddleware = [];
+  if (scheduler.globalMiddleware === null) {
+    scheduler.globalMiddleware = [];
   }
-  scheduler.actorMiddleware.push(middleware);
+  scheduler.globalMiddleware.push(middleware);
 }
