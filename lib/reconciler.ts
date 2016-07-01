@@ -716,7 +716,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
     }
 
     // Move and sync nodes from left to right.
-    while (aStartNode._key === bEndNode._key) {
+    if (aStartNode._key === bEndNode._key) {
       if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
         if (!_canSyncVNodes(aStartNode, bEndNode)) {
           throw new Error("VNode sync children failed: cannot sync two different children with the same key.");
@@ -740,7 +740,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
     }
 
     // Move and sync nodes from right to left.
-    while (aEndNode._key === bStartNode._key) {
+    if (aEndNode._key === bStartNode._key) {
       if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
         if (!_canSyncVNodes(aEndNode, bStartNode)) {
           throw new Error("VNode sync children failed: cannot sync two different children with the same key.");
