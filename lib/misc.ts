@@ -84,26 +84,22 @@ export const enum VNodeFlags {
   Root                = 1 << 3,
   /// Children reconciliation algorithm should use key property to find same nodes in old children list.
   TrackByKeyChildren  = 1 << 4,
-  /// Modification on DOM children list should be performed through ManagedContainer.
-  ManagedContainer    = 1 << 5,
-  /// VNode contains a comment placeholder instead of an actual node.
-  CommentPlaceholder  = 1 << 6,
   /// Attrs property can have a dynamic shape.
-  DynamicShapeAttrs   = 1 << 7,
+  DynamicShapeAttrs   = 1 << 5,
   /// Props property can have a dynamic shape.
-  DynamicShapeProps   = 1 << 8,
+  DynamicShapeProps   = 1 << 6,
   /// VNode represents an input element with text value.
-  TextInputElement    = 1 << 9,
+  TextInputElement    = 1 << 7,
   /// VNode represents an input element with checked value.
-  CheckedInputElement = 1 << 10,
+  CheckedInputElement = 1 << 8,
   /// VNode represents an input element.
   InputElement        = TextInputElement | CheckedInputElement,
   /// Prevent from disposing this virtual node.
-  KeepAlive           = 1 << 11,
+  KeepAlive           = 1 << 9,
   /// Prevent from updating component's props on each update.
-  BindOnce            = 1 << 12,
+  BindOnce            = 1 << 10,
   /// Immutable props.
-  ImmutableProps      = 1 << 13,
+  ImmutableProps      = 1 << 11,
 
   /// See `SharedFlags.Svg`.
   Svg                 = SharedFlags.Svg,
@@ -186,14 +182,6 @@ export const enum ComponentFlags {
   VModel           = SharedFlags.VModel,
   /// See `SharedFlags.EnabledRecycling`.
   EnabledRecycling = SharedFlags.EnabledRecycling,
-}
-
-/**
- * ContainerManager flags used in DEBUG mode.
- */
-export const enum ContainerManagerDescriptorDebugFlags {
-  /// Throw an Error when children doesn't have keys.
-  AcceptKeyedChildrenOnly = 1
 }
 
 export type VNodeRecursiveListValue = VNode | VNodeRecursiveList | null;

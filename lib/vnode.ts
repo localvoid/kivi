@@ -1,10 +1,7 @@
 import {printError} from "./debug";
-import {SvgNamespace, VNodeFlags, VNodeDebugFlags, ContainerManagerDescriptorDebugFlags, ComponentDescriptorFlags,
-  setAttr} from "./misc";
+import {SvgNamespace, VNodeFlags, VNodeDebugFlags, ComponentDescriptorFlags, setAttr} from "./misc";
 import {Component, ComponentDescriptor, updateComponent} from "./component";
 import {VModel} from "./vmodel";
-import {ContainerManager} from "./container_manager";
-import {isMounting} from "./scheduler";
 
 /**
  * Virtual DOM Node.
@@ -89,11 +86,11 @@ export class VNode {
    */
   ref: Node | null;
   /**
-   * cref property can be a reference to a Component or Container Manager. If virtual node is a Component, then cref
-   * will be available after virtual node is created or synced. Each time virtual node is synced, reference to a
-   * Component is transferred from old virtual node to the new one.
+   * Reference to a Component. If virtual node is a Component, then cref will be available after virtual node is
+   * created or synced. Each time virtual node is synced, reference to a Component is transferred from old virtual
+   * node to the new one.
    */
-  cref: Component<any, any> | ContainerManager<any, any> | null;
+  cref: Component<any, any> | null;
 
   /**
    * Debug properties are used because VNode properties are frozen.
@@ -414,17 +411,6 @@ export class VNode {
       if ((this._flags & VNodeFlags.InputElement) !== 0) {
         throw new Error("Failed to set children on VNode: input elements can't have children.");
       }
-      if ((this._flags & VNodeFlags.ManagedContainer) !== 0) {
-        if (typeof children === "string") {
-          throw new Error("Failed to set children on VNode: VNode is using ContainerManager that doesn't accept" +
-                          " children with string type.");
-        }
-        if (((this.cref as ContainerManager<any, any>).descriptor._debugFlags &
-            ContainerManagerDescriptorDebugFlags.AcceptKeyedChildrenOnly) !== 0) {
-          throw new Error("Failed to set children on VNode: VNode is using ContainerManager that accepts only" +
-                          " children with keys.");
-        }
-      }
     }
     this._children = children;
     return this;
@@ -520,31 +506,6 @@ export class VNode {
   }
 
   /**
-   * Set container manager.
-   *
-   * Container Manager will be responsible for inserting, removing, replacing and moving children nodes.
-   */
-  managedContainer(manager: ContainerManager<any, any>): VNode {
-    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
-        throw new Error("Failed to set managedContainer mode on VNode: managedContainer method should be called" +
-                        " on element or component root nodes only.");
-      }
-      if ((this._flags & VNodeFlags.InputElement) !== 0) {
-        throw new Error("Failed to set managedContainer mode on VNode: managed container doesn't work on input" +
-                        " elements.");
-      }
-      if (this._children !== null) {
-        throw new Error("Failed to set managedContainer mode on VNode: managedContainer method should be called" +
-                        " before children assignment.");
-      }
-    }
-    this._flags |= VNodeFlags.ManagedContainer;
-    this.cref = manager;
-    return this;
-  }
-
-  /**
    * Disable children shape errors in DEBUG mode.
    */
   disableChildrenShapeError(): VNode {
@@ -554,20 +515,6 @@ export class VNode {
                         " be called on element or component root nodes only.");
       }
       this._debugProperties.flags |= VNodeDebugFlags.DisabledChildrenShapeError;
-    }
-    return this;
-  }
-
-  /**
-   * Disable freezing all properties in DEBUG mode.
-   *
-   * One use case when it is quite useful, it is for ContentEditable editor We can monitor small changes in DOM, and
-   * apply this changes to VNodes, so that when we rerender text block, we don"t touch anything that is already up to
-   * date (prevents spellchecker flickering).
-   */
-  disableFreeze(): VNode {
-    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      this._debugProperties.flags |= VNodeDebugFlags.DisabledFreeze;
     }
     return this;
   }
@@ -587,11 +534,10 @@ export function vNodeInstantiate(vnode: VNode, owner: Component<any, any> | unde
   const flags = vnode._flags;
 
   if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-    if (vnode.ref !== null && ((flags & VNodeFlags.CommentPlaceholder) === 0)) {
+    if (vnode.ref !== null) {
       throw new Error("Failed to create VNode: VNode already has a reference to the DOM node.");
     }
   }
-  vnode._flags &= ~VNodeFlags.CommentPlaceholder;
 
   if ((flags & VNodeFlags.Text) !== 0) {
     vnode.ref = document.createTextNode(vnode._props);
@@ -624,9 +570,6 @@ export function vNodeRender(vnode: VNode, owner: Component<any, any> | undefined
     }
     if ((vnode._flags & VNodeFlags.Root) !== 0 && owner === undefined) {
       throw new Error("Failed to render VNode: VNode component root should have an owner.");
-    }
-    if ((vnode._flags & VNodeFlags.CommentPlaceholder) !== 0) {
-      throw new Error("Failed to render VNode: VNode comment placeholder cannot be rendered.");
     }
     if ((vnode._debugProperties.flags & VNodeDebugFlags.Rendered) !== 0) {
       throw new Error("Failed to render VNode: VNode cannot be rendered twice.");
@@ -725,8 +668,6 @@ export function vNodeRender(vnode: VNode, owner: Component<any, any> | undefined
 
     updateComponent(vnode.cref as Component<any, any>);
   }
-
-  vNodeFreeze(vnode);
 }
 
 /**
@@ -739,9 +680,6 @@ export function vNodeMount(vnode: VNode, node: Node, owner: Component<any, any> 
     }
     if ((vnode._flags & VNodeFlags.Root) !== 0 && owner === undefined) {
       throw new Error("Failed to render VNode: VNode component root should have an owner.");
-    }
-    if ((vnode._flags & VNodeFlags.CommentPlaceholder) !== 0) {
-      throw new Error("Failed to mount VNode: VNode comment placeholder cannot be mounted.");
     }
     if ((vnode._debugProperties.flags & VNodeDebugFlags.Rendered) !== 0) {
       throw new Error("Failed to mount VNode: VNode cannot be mounted after render.");
@@ -878,23 +816,6 @@ export function vNodeMount(vnode: VNode, node: Node, owner: Component<any, any> 
       }
     }
   }
-
-  vNodeFreeze(vnode);
-}
-
-/**
- * Create Comment placeholder.
- *
- * Comment placeholder can be used to delay element appearance in animations.
- */
-export function vNodeCreateCommentPlaceholder(vnode: VNode): void {
-  if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-    if (vnode.ref !== null) {
-      throw new Error("Failed to create a VNode Comment Placeholder: VNode already has a reference to the DOM node.");
-    }
-  }
-  vnode._flags |= VNodeFlags.CommentPlaceholder;
-  vnode.ref = document.createComment("");
 }
 
 /**
@@ -990,72 +911,7 @@ export function vNodeDispose(vnode: VNode): void {
 }
 
 export function vNodeInsertChild(parent: VNode, node: VNode, nextRef: Node | null, owner?: Component<any, any>): void {
-  if (((parent._flags & VNodeFlags.ManagedContainer) !== 0) &&
-      !("<@KIVI_MOUNTING@>" === "MOUNTING_ENABLED" && isMounting())) {
-    (parent.cref as ContainerManager<any, any>).descriptor._createChild!(
-      parent.cref as ContainerManager<any, any>, node);
-  }
-  insertVNodeBefore(parent.ref as Element, node, nextRef, owner);
-}
-
-export function vNodeReplaceChild(parent: VNode, newNode: VNode, refNode: VNode, owner?: Component<any, any>): void {
-  if ((parent._flags & VNodeFlags.ManagedContainer) !== 0) {
-    (parent.cref as ContainerManager<any, any>).descriptor._createChild!(
-      parent.cref as ContainerManager<any, any>, newNode);
-  }
-  replaceVNode(parent.ref as Element, newNode, refNode, owner);
-}
-
-export function vNodeMoveChild(parent: VNode, node: VNode, nextRef: Node | null, owner?: Component<any, any>): void {
-  if ((parent._flags & VNodeFlags.ManagedContainer) !== 0) {
-    (parent.cref as ContainerManager<any, any>).descriptor._moveChild!(
-      parent.cref as ContainerManager<any, any>, node);
-  }
-  moveVNode(parent.ref as Element, node, nextRef, owner);
-}
-
-export function vNodeRemoveChild(parent: VNode, node: VNode, owner?: Component<any, any>): void {
-  if ((parent._flags & VNodeFlags.ManagedContainer) !== 0) {
-    if ((parent.cref as ContainerManager<any, any>).descriptor._removeChild!(
-          parent.cref as ContainerManager<any, any>, node)) {
-      removeVNode(parent.ref as Element, node, owner);
-    }
-  } else {
-    removeVNode(parent.ref as Element, node, owner);
-  }
-}
-
-/**
- * Freeze VNode properties.
- */
-export function vNodeFreeze(vnode: VNode): void {
-  if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-    if ((vnode._debugProperties.flags & VNodeDebugFlags.DisabledFreeze) === 0) {
-      Object.freeze(vnode);
-      if (vnode._attrs !== null && !Object.isFrozen(vnode._attrs)) {
-        Object.freeze(vnode._attrs);
-      }
-      // Don't freeze props in Components.
-      if (((vnode._flags & VNodeFlags.Component) === 0) &&
-          vnode._props !== null &&
-          typeof vnode._props === "object" &&
-          !Object.isFrozen(vnode._props)) {
-        Object.freeze(vnode._props);
-      }
-      if (vnode._children !== null &&
-          Array.isArray((vnode._children)) &&
-          !Object.isFrozen(vnode._children)) {
-        Object.freeze(vnode._children);
-      }
-    }
-  }
-}
-
-/**
- * Insert VNode before [nextRef] DOM Node.
- */
-function insertVNodeBefore(container: Element, node: VNode, nextRef: Node | null,
-    owner: Component<any, any> | undefined): void {
+  const container = parent.ref as Element;
   if (node.ref === null) {
     vNodeInstantiate(node, owner);
     container.insertBefore(node.ref!, nextRef!);
@@ -1074,11 +930,8 @@ function insertVNodeBefore(container: Element, node: VNode, nextRef: Node | null
   }
 }
 
-/**
- * Replace VNode.
- */
-function replaceVNode(container: Element, newNode: VNode, refNode: VNode,
-    owner: Component<any, any> | undefined): void {
+export function vNodeReplaceChild(parent: VNode, newNode: VNode, refNode: VNode, owner?: Component<any, any>): void {
+  const container = parent.ref as Element;
   if (newNode.ref === null) {
     vNodeInstantiate(newNode, owner);
     container.replaceChild(newNode.ref!, refNode.ref!);
@@ -1098,19 +951,12 @@ function replaceVNode(container: Element, newNode: VNode, refNode: VNode,
   vNodeDispose(refNode);
 }
 
-/**
- * Move VNode in before [nextRef] DOM node.
- */
-function moveVNode(container: Element, node: VNode, nextRef: Node | null,
-    owner: Component<any, any> | undefined): void {
-  container.insertBefore(node.ref!, nextRef!);
+export function vNodeMoveChild(parent: VNode, node: VNode, nextRef: Node | null, owner?: Component<any, any>): void {
+  (parent.ref as Element).insertBefore(node.ref!, nextRef!);
 }
 
-/**
- * Remove VNode.
- */
-function removeVNode(container: Element, node: VNode, owner: Component<any, any> | undefined): void {
-  container.removeChild(node.ref!);
+export function vNodeRemoveChild(parent: VNode, node: VNode, owner?: Component<any, any>): void {
+  (parent.ref as Element).removeChild(node.ref!);
   vNodeDispose(node);
 }
 

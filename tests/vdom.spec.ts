@@ -1,7 +1,7 @@
 import {LifecycleComponent, LifecycleState} from "./lifecycle";
-import {XlinkNamespace, SyncFlags} from "../lib/misc";
+import {XlinkNamespace} from "../lib/misc";
 import {VNode, vNodeInstantiate, vNodeRender, vNodeMount, vNodeAttached, vNodeAttach, vNodeDetach, vNodeDispose,
-        vNodeCreateCommentPlaceholder, createVElement, createVText, createVSvgElement} from "../lib/vnode";
+        createVElement, createVText, createVSvgElement} from "../lib/vnode";
 import {Component} from "../lib/component";
 import {syncVNodes} from "../lib/reconciler";
 
@@ -53,7 +53,7 @@ function checkInnerHtmlEquals(ax: VNode[], bx: VNode[], cx: VNode[], keys: boole
   injectVNode(aDiv, a, undefined);
   injectVNode(bDiv, b, undefined);
 
-  syncVNodes(a, c, 0, undefined);
+  syncVNodes(a, c, undefined);
 
   expect(aDiv.innerHTML).to.equal(bDiv.innerHTML);
 }
@@ -1237,22 +1237,6 @@ describe("VNode", () => {
       expect(state.checkUpdate).to.equal(2);
       expect(state.checkDetached).to.equal(-1);
       expect(state.checkDisposed).to.equal(-1);
-    });
-  });
-
-  describe("comment placeholder", () => {
-    it("should create placeholder", () => {
-      const e = createVElement("div");
-      vNodeCreateCommentPlaceholder(e);
-      expect(e.ref!.nodeType).to.equal(8);
-    });
-
-    it("should create element from placeholder", () => {
-      const e = createVElement("div");
-      vNodeCreateCommentPlaceholder(e);
-      expect(e.ref!.nodeType).to.equal(8);
-      vNodeInstantiate(e, undefined);
-      expect((e.ref as Element).tagName).to.equal("DIV");
     });
   });
 });

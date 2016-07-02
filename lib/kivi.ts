@@ -27,11 +27,6 @@ export {
 } from "./vnode";
 
 export {
-  ContainerManagerDescriptor,
-  ContainerManager,
-} from "./container_manager";
-
-export {
   ComponentDescriptorRegistry,
   XTagElement,
   ComponentDescriptor,

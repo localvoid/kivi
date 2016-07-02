@@ -1,6 +1,6 @@
 import {printError} from "./debug";
 import {VNodeFlags, VNodeDebugFlags, setAttr} from "./misc";
-import {VNode, vNodeInsertChild, vNodeRemoveChild, vNodeReplaceChild, vNodeMoveChild, vNodeFreeze} from "./vnode";
+import {VNode, vNodeInsertChild, vNodeRemoveChild, vNodeReplaceChild, vNodeMoveChild} from "./vnode";
 import {VModel} from "./vmodel";
 import {Component, updateComponent} from "./component";
 
@@ -124,8 +124,6 @@ export function syncVNodes(a: VNode, b: VNode, owner?: Component<any, any>): voi
       updateComponent(component, (flags & VNodeFlags.BindOnce) === 0 ? b._props : undefined);
     }
   }
-
-  vNodeFreeze(b);
 }
 
 

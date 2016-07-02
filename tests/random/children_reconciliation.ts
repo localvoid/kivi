@@ -5,7 +5,7 @@ import {scheduleMacrotask} from "../../lib/scheduler";
 function injectVNode(parent: DocumentFragment, node: VNode, nextRef?: Element): void {
   vNodeInstantiate(node, undefined);
   parent.insertBefore(node.ref!, nextRef!);
-  vNodeRender(node, 0, undefined);
+  vNodeRender(node, undefined);
 }
 
 function gen(item: any, keys: boolean): VNode|VNode[] {
@@ -48,7 +48,7 @@ function checkInnerHtmlEquals(ax: VNode[], bx: VNode[], cx: VNode[], keys: boole
   injectVNode(aDiv, a, undefined);
   injectVNode(bDiv, b, undefined);
 
-  syncVNodes(a, c, 0, undefined);
+  syncVNodes(a, c, undefined);
 
   if (aDiv.innerHTML !== bDiv.innerHTML) {
     throw Error(`html doesn't match: ${aDiv.innerHTML} => ${bDiv.innerHTML}`);
