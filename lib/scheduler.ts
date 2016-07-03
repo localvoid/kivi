@@ -204,6 +204,8 @@ export class FrameTasksGroup {
 }
 
 /**
+ * Global scheduler variables.
+ *
  * Scheduler supports animation frame tasks, macrotasks and microtasks.
  *
  * Animation frame tasks will be executed in batches, switching between write and read tasks until there
@@ -212,93 +214,41 @@ export class FrameTasksGroup {
  *
  * Scheduler also have monotonically increasing internal clock, it increments each time scheduler goes
  * from one animation frame to another, or starts executing macrotasks or microtasks.
- *
- * @final
  */
-class Scheduler {
+const scheduler = {
   /**
    * See `SchedulerFlags` for details.
    */
-  flags: number;
-  /**
-   * Monotonically increasing internal clock.
-   */
-  clock: number;
-  /**
-   * Cached timestamp. Updates every time when scheduler starts executing new batch of tasks.
-   */
-  time: number;
-  microtasks: SchedulerTask[];
-  macrotasks: SchedulerTask[];
-  currentFrame: FrameTasksGroup;
-  nextFrame: FrameTasksGroup;
-  /**
-   * Components array that should be updated on each frame.
-   */
-  updateComponents: Component<any, any>[];
+  flags: 0,
+  clock: 0,
+  time: 0,
+  microtasks: [] as SchedulerTask[],
+  macrotasks: [] as SchedulerTask[],
+  currentFrame: new FrameTasksGroup(),
+  nextFrame: new FrameTasksGroup(),
+  updateComponents: [] as Component<any, any>[],
+  globalMiddleware: [] as ActorMiddleware<any, any>[] | null,
+  activeActors: [] as Actor<any, any>[],
+  currentActor: null as Actor<any, any> | null,
+  middlewareIndex: 0,
+  microtaskNode: document.createTextNode(""),
+  microtaskToggle: 0,
+  macrotaskMessage: "__kivi" + Math.random(),
+  throttleEnabledCounter: 0,
+  throttledFrameDuration: DefaultThrottleDuration,
+  throttledFps: 60,
+  throttledDiffWindow: 0,
+  throttledFrameDeadline: 0,
+};
 
-  globalMiddleware: ActorMiddleware<any, any>[] | null;
-  activeActors: Actor<any, any>[];
+// Microtask scheduler based on mutation observer
+const microtaskObserver = new MutationObserver(runMicrotasks);
+microtaskObserver.observe(scheduler.microtaskNode, {characterData: true});
 
-  currentActor: Actor<any, any> | null;
-  middlewareIndex: number;
+// Macrotask scheduler based on postMessage
+window.addEventListener("message", handleWindowMessage);
 
-  microtaskNode: Text;
-  microtaskToggle: number;
-  macrotaskMessage: string;
-
-  /**
-   * Usage counter of dependencies that enabled throttling, when it goes to zero, throttling mode is disabled.
-   */
-  throttleEnabledCounter: number;
-  throttledFrameDuration: number;
-  throttledFps: number;
-  throttledDiffWindow: number;
-  /**
-   * High Res timestamp of a point in time when low priority components should stop updating in a throttled mode.
-   */
-  throttledFrameDeadline: number;
-
-  constructor() {
-    this.flags = 0;
-    this.clock = 1;
-    this.time = 0;
-    this.microtasks = [];
-    this.macrotasks = [];
-    this.currentFrame = new FrameTasksGroup();
-    this.nextFrame = new FrameTasksGroup();
-    this.updateComponents = [];
-    this.globalMiddleware = null;
-    this.activeActors = [];
-
-    this.currentActor = null;
-    this.middlewareIndex = 0;
-
-    this.microtaskNode = document.createTextNode("");
-    this.microtaskToggle = 0;
-    this.macrotaskMessage = "__kivi" + Math.random();
-
-    this.throttleEnabledCounter = 0;
-    this.throttledFrameDuration = DefaultThrottleDuration;
-    this.throttledFps = 60;
-    this.throttledDiffWindow = 0;
-    this.throttledFrameDeadline = 0;
-
-    // Microtask scheduler based on mutation observer
-    const observer = new MutationObserver(runMicrotasks);
-    observer.observe(this.microtaskNode, {characterData: true});
-
-    // Macrotask scheduler based on postMessage
-    window.addEventListener("message", handleWindowMessage);
-
-    this.currentFrame._rwLock();
-  }
-}
-
-/**
- * Global scheduler instance.
- */
-const scheduler = new Scheduler();
+scheduler.currentFrame._rwLock();
 
 /**
  * Returns current monotonically increasing clock.
