@@ -663,7 +663,6 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
   let i: number;
   let j: number | undefined;
   let k: number | undefined;
-  let stop = false;
   let nextPos: number;
   let next: Node | null;
   let aNode: VNode;
@@ -675,8 +674,6 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
 
   // Step 1
   outer: do {
-    stop = true;
-
     // Sync nodes with the same key at the beginning.
     while (aStartNode._key === bStartNode._key) {
       if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -692,7 +689,6 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
       }
       aStartNode = a[aStart];
       bStartNode = b[bStart];
-      stop = false;
     }
 
     // Sync nodes with the same key at the end.
@@ -710,7 +706,6 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
       }
       aEndNode = a[aEnd];
       bEndNode = b[bEnd];
-      stop = false;
     }
 
     // Move and sync nodes from left to right.
@@ -731,7 +726,6 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
       }
       aStartNode = a[aStart];
       bEndNode = b[bEnd];
-      stop = false;
       // In a real-world scenarios there is a higher chance that next node after the move will be the same, so we
       // immediately jump to the start of this prefix/suffix algo.
       continue outer;
@@ -753,10 +747,9 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
       }
       aEndNode = a[aEnd];
       bStartNode = b[bStart];
-      stop = false;
       continue outer;
     }
-  } while (!stop && aStart <= aEnd && bStart <= bEnd);
+  } while (false);
 
   if (aStart > aEnd) {
     // All nodes from a are synced, insert the rest from b.
