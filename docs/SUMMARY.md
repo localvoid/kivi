@@ -9,4 +9,3 @@
   * [Scheduler](advanced/02_scheduler.md)
   * [Components](advanced/03_components.md)
   * [Virtual DOM](advanced/04_virtual_dom.md)
-  * [Container Manager](advanced/05_container_manager.md)
