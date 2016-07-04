@@ -3,25 +3,22 @@
 Kivi scheduler is responsible for executing frame tasks like updating components, reading from DOM, executing
 microtasks and macrotasks.
 
-When kivi library is loaded, it automatically instantiates a global scheduler instance. To get access to the scheduler
-instance, import it with `import {scheduler} from "kivi"`.
-
 ## Frame tasks
 
 Frame tasks will be executed in batches, starting with updating components sorted by their depth in components tree,
 and then switching between read and write tasks until there are no tasks left.
 
-There are two methods for accesing frame tasks: `scheduler.currentFrame()` to get task group for the current frame, and
-`scheduler.nextFrame()` for the next frame.
+There are two functions for accesing frame tasks: `currentFrame()` to get task group for the current frame, and
+`nextFrame()` for the next frame.
 
 Each frame task group provides different queues for components, DOM read and write tasks, and tasks that will be
 executed after all other tasks are finished:
 
 ```
-scheduler.currentFrame().updateComponent(c: Component<any, any>);
-scheduler.currentFrame().read(cb: () => void);
-scheduler.currentFrame().write(cb: () => void);
-scheduler.currentFrame().after(cb: () => void);
+currentFrame().updateComponent(c: Component<any, any>);
+currentFrame().read(task: () => void);
+currentFrame().write(task: () => void);
+currentFrame().after(task: () => void);
 ```
 
 ## Microtasks and Macrotasks
@@ -29,8 +26,8 @@ scheduler.currentFrame().after(cb: () => void);
 Scheduler also provides interface for adding microtasks and macrotasks into browser event loop.
 
 ```
-scheduler.scheduleMicrotask(cb: () => void)`
-scheduler.scheduleMacrotask(cb: () => void)`
+scheduleMicrotask(cb: () => void)`
+scheduleMacrotask(cb: () => void)`
 ```
 
 ## Monotonically increasing clock
@@ -42,19 +39,21 @@ update.
 For example:
 
 ```ts
+import {clock} from "kivi";
+
 class Data {
   mtime: number;
   value: number;
 
   constructor(value: number) {
-    this.mtime = scheduler.clock;
+    this.mtime = clock();
     this.value = value;
   }
 
   setValue(newValue: number) {
     if (this.value !== newValue) {
       this.value = newValue;
-      this.mtime = scheduler.clock;
+      this.mtime = clock();
     }
   }
 }
@@ -69,7 +68,7 @@ const MyComponent = new ComponentDescriptor<Data, any>()
 
 Here we need to check if component's `mtime` property is older than `mtime` in a data object, and if it is older,
 we are marking component as dirty. When component finishes update, it will automatically set its `mtime` to the current
-`scheduler.clock` value.
+`clock()` value.
 
 ## Incremental rendering
 

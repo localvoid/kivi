@@ -36,24 +36,6 @@ const AnimatedComponent = new ComponentDescriptor()
 
 `stopUpdateEachFrame()` method will remove component from the list of components that should be updated on each frame.
 
-## Shallow update
-
-Shallow updates will perform updates on a subtree of nodes without binding new props and triggering updates for
-subcomponents.
-
-```ts
-const MyComponent = new ComponentDescriptor()
-  .update((c) => {
-    c.vSyncAdvanced(RenderFlags.ShallowUpdate, c.createVRoot().children([
-      ChildComponent.createVRoot(),
-      ChildComponent.createVRoot(),
-    ]));
-  });
-```
-
-`RenderFlags` also has a flag for shallow rendering `ShallowRender` that prevents from rendering subcomponents when they
-are created for the first time.
-
 ## Incremental rendering \*\*EXPERIMENTAL\*\*
 
 Components provide two methods that can trigger incremental rendering: `startInteraction()` and `finishInteraction()`.
