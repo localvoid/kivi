@@ -765,7 +765,18 @@ export class Component<P, S> {
       }
     }
 
-    componentVSync(this, this._root as VNode, newRoot);
+    if (this._root === null) {
+      newRoot.cref = this;
+      if ("<@KIVI_MOUNTING@>" === "MOUNTING_ENABLED" && isMounting()) {
+        vNodeMount(newRoot, this.element, this);
+      } else {
+        newRoot.ref = this.element;
+        vNodeRender(newRoot, this);
+      }
+    } else {
+      syncVNodes(this._root as VNode, newRoot, this);
+    }
+    this._root = newRoot;
   }
 
   /**
@@ -883,22 +894,7 @@ export function updateComponent(component: Component<any, any>, newProps?: any):
   }
 }
 
-export function componentVSync(component: Component<any, any>, oldRoot: VNode, newRoot: VNode): void {
-  if (oldRoot === null) {
-    newRoot.cref = component;
-    if ("<@KIVI_MOUNTING@>" === "MOUNTING_ENABLED" && isMounting()) {
-      vNodeMount(newRoot, component.element as Node, component);
-    } else {
-      newRoot.ref = component.element as Node;
-      vNodeRender(newRoot, component);
-    }
-  } else {
-    syncVNodes(oldRoot, newRoot, component);
-  }
-  component._root = newRoot;
-}
-
-export function componentAttached(component: Component<any, any>): void {
+function componentAttached(component: Component<any, any>): void {
   if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
     if ((component.flags & ComponentFlags.Attached) !== 0) {
       throw new Error("Failed to attach Component: component is already attached.");
@@ -915,7 +911,7 @@ export function componentAttached(component: Component<any, any>): void {
   }
 }
 
-export function componentDetached(component: Component<any, any>): void {
+function componentDetached(component: Component<any, any>): void {
   if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
     if ((component.flags & ComponentFlags.Attached) === 0) {
       throw new Error("Failed to detach Component: component is already detached.");
