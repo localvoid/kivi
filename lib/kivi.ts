@@ -60,12 +60,14 @@ export {
   VModelFlags,
   ComponentDescriptorFlags,
   ComponentFlags,
-  InvalidatorSubscriptionFlags,
-  filterVNodes,
   getTagName,
   getClassName,
   matchesWithAncestors,
 } from "./misc";
+
+export {
+  filterVNodes,
+} from "./utils";
 
 if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
   console.info("KIVI_DEBUG: enabled");

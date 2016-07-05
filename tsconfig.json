@@ -17,6 +17,7 @@
     "lib/misc.ts",
     "lib/reconciler.ts",
     "lib/scheduler.ts",
+    "lib/utils.ts",
     "lib/vmodel.ts",
     "lib/vnode.ts",
     "tests/random/children_reconciliation.ts",

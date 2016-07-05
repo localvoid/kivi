@@ -1,5 +1,3 @@
-import {VNode} from "./vnode";
-
 export const SvgNamespace = "http://www.w3.org/2000/svg";
 export const XlinkNamespace = "http://www.w3.org/1999/xlink";
 export const XmlNamespace = "http://www.w3.org/XML/1998/namespace";
@@ -25,16 +23,6 @@ if (ElementPrototype.matches === undefined) {
  * Selector function should return true if element matches this selector.
  */
 export type SelectorFn = (element: Element) => boolean;
-
-/**
- * InvalidatorSubscription flags.
- */
-export const enum InvalidatorSubscriptionFlags {
-  /// Subscribed to a component.
-  Component = 1,
-  /// Transient subscription. Each time subscription is invalidated, it will be automatically canceled.
-  Transient = 1 << 1,
-}
 
 /**
  * Flags shared between VModel, VNode, ComponentDescriptor and Component objects.
@@ -182,28 +170,6 @@ export const enum ComponentFlags {
   VModel           = SharedFlags.VModel,
   /// See `SharedFlags.EnabledRecycling`.
   EnabledRecycling = SharedFlags.EnabledRecycling,
-}
-
-export type VNodeRecursiveListValue = VNode | VNodeRecursiveList | null;
-export interface VNodeRecursiveList extends Array<VNodeRecursiveListValue> {}
-
-/**
- * Recursively flattens VNode arrays and skips null nodes.
- */
-export function filterVNodes(nodes: VNodeRecursiveList): VNode[] {
-  let copy = nodes.slice(0);
-  const flatten = [] as VNode[];
-  while (copy.length > 0) {
-    const item = copy.shift();
-    if (item !== null) {
-      if (item!.constructor === VNode) {
-        flatten.push(item as any);
-      } else {
-        copy = (item as any).concat(copy);
-      }
-    }
-  }
-  return flatten;
 }
 
 /**

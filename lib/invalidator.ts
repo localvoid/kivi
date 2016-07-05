@@ -1,6 +1,15 @@
 import {Component} from "./component";
 import {clock} from "./scheduler";
-import {InvalidatorSubscriptionFlags} from "./misc";
+
+/**
+ * InvalidatorSubscription flags.
+ */
+const enum InvalidatorSubscriptionFlags {
+  /// Subscribed to a component.
+  Component = 1,
+  /// Transient subscription. Each time subscription is invalidated, it will be automatically canceled.
+  Transient = 1 << 1,
+}
 
 /**
  * Invalidator Subscription.
