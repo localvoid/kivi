@@ -1,19 +1,32 @@
 {
   "compilerOptions": {
     "target": "es6",
+    "lib": ["es6", "dom"],
     "outDir": "build/es6",
     "noImplicitAny": true,
     "strictNullChecks": true,
     "removeComments": false,
     "moduleResolution": "node"
   },
-  "exclude": [
-    "build",
-    "dist",
-    "docs",
-    "examples",
-    "gh-pages",
-    "tools"
+  "files": [
+    "lib/actor.ts",
+    "lib/component.ts",
+    "lib/debug.ts",
+    "lib/invalidator.ts",
+    "lib/kivi.ts",
+    "lib/misc.ts",
+    "lib/reconciler.ts",
+    "lib/scheduler.ts",
+    "lib/vmodel.ts",
+    "lib/vnode.ts",
+    "tests/random/children_reconciliation.ts",
+    "tests/component.spec.ts",
+    "tests/vdom.spec.ts",
+    "tests/invalidator.spec.ts",
+    "tests/lifecycle.ts",
+    "tests/scheduler.spec.ts",
+    "tests/vdom.spec.ts",
+    "tests/vmodel.spec.ts"
   ],
   "compileOnSave": false
 }

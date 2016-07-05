@@ -42,7 +42,7 @@ function dist() {
     entry: "build/es6/kivi.js",
   }).then((bundle) => Promise.all([
     bundle.write({
-      format: "es6",
+      format: "es",
       dest: "dist/es6/kivi.js",
     }),
     bundle.write({
