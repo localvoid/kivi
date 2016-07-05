@@ -619,4 +619,3 @@ export function sendMessage(actor: Actor<any, any>, message: Message<any>): void
 export function getMessagePayload<P>(descriptor: MessageDescriptor<P>, message: Message<P>): P {
   return message.payload!;
 }
-
