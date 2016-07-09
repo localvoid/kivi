@@ -558,7 +558,7 @@ export class ComponentDescriptor<P, S> {
         throw new Error("Failed to create an event handler: component descriptor should have enabled back reference.");
       }
     }
-    return function(event) {
+    return (event) => {
       let matchingTarget = matchesWithAncestors(event.target as Element, selector, event.currentTarget as Element);
       if (matchingTarget !== null) {
         let target: Element | null = matchingTarget;
