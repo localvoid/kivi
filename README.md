@@ -7,6 +7,12 @@
 provides an Actor model for application state, Virtual DOM API for DOM manipulations, UI Components, and Scheduler
 tightly integrated with Actors and UI Components.
 
+This project is open source, but I woudn't recommend to choose it over many other web UI libraries that take more
+responsibility by making their libraries open source, unless you have some specific reasons. There are no guarantees
+that it will be properly maintained in the future if I'll lose interest in this project, there is a little chance that
+I'll work on a problem related to some specific use case that I don't care. So if you are an average web developer, and
+want to create an awesome web application, just use [React](https://facebook.github.io/react/) library.
+
 [Kivi JSFiddle](https://jsfiddle.net/localvoid/42ofn4ud/)
 
 ## Example
@@ -61,3 +67,7 @@ improves readability.
 - Code that is easier to debug is more important than API.
 - Javascript engine optimization priorities: V8, JSC, Chakra, SpiderMonkey.
 - Web browser engine optimization priorities: WebKit/Blink, other.
+
+## Roadmap
+
+- Seamless integration with actors running in web workers.
