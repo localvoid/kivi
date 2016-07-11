@@ -179,54 +179,6 @@ export class VNode {
   }
 
   /**
-   * Set properties with dynamic shape.
-   *
-   * Properties can have different set of keys, when reconciliation algorithm updates property values, it will assign
-   * `undefined` to all missing keys.
-   *
-   *     const a = createVElement("div").props({"id": "Main", "title": "Title"});
-   *     const b = createVElement("div").props({"id": "Main"});
-   *
-   * Props property is used to set properties directly on DOM node:
-   *
-   *     e: HTMLElement;
-   *     e.propertyName = propertyValue;
-   *
-   * When virtual node is mounted on top of existing HTML, all properties will be assigned during mounting phase.
-   *
-   * If virtual node is using `VModel` instance with custom update handler, update data should be assigned with `data`
-   * method.
-   *
-   * This method is available on element and component's root virtual node types.
-   */
-  dynamicShapeProps(props?: {[key: string]: any}): VNode {
-    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
-        throw new Error("Failed to set props on VNode: props method should be called on element or component" +
-                        " root nodes only.");
-      }
-      if ((this._flags & VNodeFlags.VModel) !== 0) {
-        if ((this._flags & VNodeFlags.VModelUpdateHandler) !== 0) {
-          throw new Error("Failed to set props on VNode: VNode is using VModel with custom update handler.");
-        }
-        const model = this._tag as VModel<any>;
-        if (model._props !== null) {
-          const keys = Object.keys(props);
-          for (let i = 0; i < keys.length; i++) {
-            if (model._props.hasOwnProperty(keys[i])) {
-              throw new Error(`Failed to set props on VNode: VNode is using VModel that uses the same` +
-                              ` property "${keys[i]}".`);
-            }
-          }
-        }
-      }
-    }
-    this._flags |= VNodeFlags.DynamicShapeProps;
-    this._props = props === undefined ? null : props;
-    return this;
-  }
-
-  /**
    * Set attributes with static shape.
    *
    * Each time virtual node representing the same DOM node is created, it should have attributes with exactly the same

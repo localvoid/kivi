@@ -74,20 +74,18 @@ export const enum VNodeFlags {
   TrackByKeyChildren  = 1 << 4,
   /// Attrs property can have a dynamic shape.
   DynamicShapeAttrs   = 1 << 5,
-  /// Props property can have a dynamic shape.
-  DynamicShapeProps   = 1 << 6,
   /// VNode represents an input element with text value.
-  TextInputElement    = 1 << 7,
+  TextInputElement    = 1 << 6,
   /// VNode represents an input element with checked value.
-  CheckedInputElement = 1 << 8,
+  CheckedInputElement = 1 << 7,
   /// VNode represents an input element.
   InputElement        = TextInputElement | CheckedInputElement,
   /// Prevent from disposing this virtual node.
-  KeepAlive           = 1 << 9,
+  KeepAlive           = 1 << 8,
   /// Prevent from updating component's props on each update.
-  BindOnce            = 1 << 10,
+  BindOnce            = 1 << 9,
   /// Immutable props.
-  ImmutableProps      = 1 << 11,
+  ImmutableProps      = 1 << 10,
 
   /// See `SharedFlags.Svg`.
   Svg                 = SharedFlags.Svg,

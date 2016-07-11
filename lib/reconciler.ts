@@ -50,11 +50,7 @@ export function syncVNodes(a: VNode, b: VNode, owner?: Component<any, any>): voi
   } else if ((flags & (VNodeFlags.Element | VNodeFlags.Root)) !== 0) {
     if ((flags & VNodeFlags.VModelUpdateHandler) === 0) {
       if (a._props !== b._props) {
-        if ((a._flags & VNodeFlags.DynamicShapeProps) === 0) {
-          syncStaticShapeProps(ref, a._props, b._props);
-        } else {
-          syncDynamicShapeProps(ref, a._props, b._props);
-        }
+        syncStaticShapeProps(ref, a._props, b._props);
       }
       if (a._attrs !== b._attrs) {
         if ((a._flags & VNodeFlags.DynamicShapeAttrs) === 0) {
@@ -947,6 +943,18 @@ function _lis(a: number[]): number[] {
 
 /**
  * Sync HTML attributes with static shape.
+ *
+ * Attributes with static shape should have the same keys.
+ *
+ * Valid:
+ *
+ *   a: { title: "Google", href: "https://www.google.com" }
+ *   b: { title: "Facebook", href: "https://www.facebook.com" }
+ *
+ * Invalid:
+ *
+ *  a: { title: "Google", href: "https://www.google.com" }
+ *  b: { title: "Facebook" }
  */
 function syncStaticShapeAttrs(node: Element, a: {[key: string]: any} | null, b: {[key: string]: any} | null): void {
   if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -984,7 +992,14 @@ function syncStaticShapeAttrs(node: Element, a: {[key: string]: any} | null, b: 
 }
 
 /**
- * Sync attributes with dynamic shape.
+ * Sync HTML attributes with dynamic shape.
+ *
+ * Attributes with dynamic shape can have any keys, missing keys will be removed with `node.removeAttribute` method.
+ *
+ *   a: { title: "Google", href: "https://www.google.com" }
+ *   b: { title: "Google" }
+ *
+ * In this example `href` attribute will be removed.
  */
 function syncDynamicShapeAttrs(node: Element, a: {[key: string]: any} | null, b: {[key: string]: any} | null): void {
   let i: number;
@@ -1033,7 +1048,19 @@ function syncDynamicShapeAttrs(node: Element, a: {[key: string]: any} | null, b:
 }
 
 /**
- * Sync properties with static shape.
+ * Sync HTML properties with static shape.
+ *
+ * Properties with static shape should have the same keys.
+ *
+ * Valid:
+ *
+ *   a: { title: "Google", href: "https://www.google.com" }
+ *   b: { title: "Facebook", href: "https://www.facebook.com" }
+ *
+ * Invalid:
+ *
+ *  a: { title: "Google", href: "https://www.google.com" }
+ *  b: { title: "Facebook" }
  */
 function syncStaticShapeProps(node: Element, a: {[key: string]: any}, b: {[key: string]: any}): void {
   if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -1066,55 +1093,6 @@ function syncStaticShapeProps(node: Element, a: {[key: string]: any}, b: {[key: 
       if (!a.hasOwnProperty(key)) {
         throw new Error("Failed to update attrs with static shape: attrs object have dynamic shape.");
       }
-    }
-  }
-}
-
-/**
- * Sync properties with dynamic shape.
- */
-function syncDynamicShapeProps(node: Element, a: {[key: string]: any}, b: {[key: string]: any}): void {
-  let i: number;
-  let keys: string[];
-  let key: string;
-
-  if (a !== null) {
-    if (b === null) {
-      // b is empty, remove all attributes from a.
-      keys = Object.keys(a);
-      for (i = 0; i < keys.length; i++) {
-        (node as {[key: string]: any})[keys[i]] = null;
-      }
-    } else {
-      // Remove and update attributes.
-      keys = Object.keys(a);
-      for (i = 0; i < keys.length; i++) {
-        key = keys[i];
-        if (b.hasOwnProperty(key)) {
-          const bValue = b[key];
-          if (a[key] !== bValue) {
-            (node as {[key: string]: any})[key] = bValue;
-          }
-        } else {
-          (node as {[key: string]: any})[key] = null;
-        }
-      }
-
-      // Insert new attributes.
-      keys = Object.keys(b);
-      for (i = 0; i < keys.length; i++) {
-        key = keys[i];
-        if (!a.hasOwnProperty(key)) {
-          (node as {[key: string]: any})[key] = b[key];
-        }
-      }
-    }
-  } else if (b !== null) {
-    // a is empty, insert all attributes from b.
-    keys = Object.keys(b);
-    for (i = 0; i < keys.length; i++) {
-      key = keys[i];
-      (node as {[key: string]: any})[key] = b[key];
     }
   }
 }
