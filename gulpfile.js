@@ -21,9 +21,8 @@ function buildES6() {
   const merge = require("merge2");
 
   const result = gulp.src(["lib/**/*.ts"])
-    .pipe(tslint())
-    .pipe(tslint.report("verbose", {
-      emitError: false,
+    .pipe(tslint({
+      formatter: "verbose",
     }))
     .pipe(ts(Object.assign(tsConfig.compilerOptions, {
       typescript: require("typescript"),

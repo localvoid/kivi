@@ -36,15 +36,15 @@
   ],
   "dependencies": {},
   "devDependencies": {
-    "@types/chai": "^3.4.22-alpha",
-    "@types/mocha": "^2.2.21-alpha",
+    "@types/chai": "^3.4.27-alpha",
+    "@types/mocha": "^2.2.26-alpha",
     "chai": "^3.4.1",
     "del": "^2.2.1",
     "gulp": "github:gulpjs/gulp#4.0",
     "gulp-gh-pages": "^0.5.4",
-    "gulp-tslint": "^5.0.0",
+    "gulp-tslint": "^6.0.1",
     "gulp-typescript": "^2.13.6",
-    "karma": "^1.1.0",
+    "karma": "^1.1.1",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^1.0.1",
     "karma-mocha": "^1.1.1",
@@ -53,10 +53,10 @@
     "karma-sourcemap-loader": "^0.3.7",
     "merge2": "^1.0.2",
     "mocha": "^2.2.5",
-    "rollup": "^0.33.0",
+    "rollup": "^0.34.1",
     "rollup-plugin-replace": "^1.1.1",
     "rollup-plugin-typescript": "^0.7.6",
     "tslint": "^3.13.0",
-    "typescript": "^2.0.0-dev.20160704"
+    "typescript": "^2.0.0"
   }
 }

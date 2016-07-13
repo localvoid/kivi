@@ -15,7 +15,7 @@ TypeScript developers can provide types for props and state, ComponentDescriptor
 props type and `S` for state type.
 
 To create component instances, we can use one of the two methods: `createComponent`, or `createRootComponent`. The
-difference between them is that root component doesn't have any parent component. For example:
+difference between them is that root component doesn't have a parent component. For example:
 
 ```ts
 class Props {

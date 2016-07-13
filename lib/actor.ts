@@ -1,5 +1,10 @@
 /**
  * **EXPERIMENTAL** actors model implementation.
+ *
+ * Actor model conventions:
+ * - actors can't observe each other state.
+ * - ui components can observe actors state.
+ * - actor state can be modified only via message handlers.
  */
 import {scheduleActorExecution} from "./scheduler";
 
@@ -42,6 +47,8 @@ let _nextActorId = 0;
 
 /**
  * Highest bit used for a message flag.
+ *
+ * It is used for assigning user flags at runtime.
  */
 let _nextMessageFlag = 1 << 2;
 

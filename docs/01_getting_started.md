@@ -72,11 +72,11 @@ $ npm install --save-dev rollup rollup-plugin-replace rollup-plugin-node-resolve
 import {ComponentDescriptor, injectComponent} from "kivi";
 
 const Main = new ComponentDescriptor()
-  .update((c) => {
-    c.element.textContent = `Hello ${c.props}`;
+  .update((c, props) => {
+    c.element.textContent = `Hello ${props.text}`;
   });
 
-injectComponent(Main, document.body, "World");
+injectComponent(Main, document.body, {text: "World"});
 ```
 
 ## Edit `rollup.config.js` file
