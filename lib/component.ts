@@ -421,6 +421,9 @@ export class ComponentDescriptor<P, S> {
   /**
    * Create a Virtual DOM node with immutable props.
    *
+   * Immutable props will be checked for identity before triggering an update, if props identity is the same, then
+   * component won't be updated.
+   *
    *     const MyComponent = new ComponentDescriptor<number, void>()
    *       .update((c, props) => {
    *         c.vSync(c.createVRoot().children(props.toString()));
