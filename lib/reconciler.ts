@@ -1,6 +1,6 @@
 import {printError} from "./debug";
 import {VNodeFlags, VNodeDebugFlags, setAttr} from "./misc";
-import {VNode, vNodeInsertChild, vNodeRemoveChild, vNodeReplaceChild, vNodeMoveChild} from "./vnode";
+import {VNode, vNodeInsertChild, vNodeRemoveChild, vNodeDispose, vNodeReplaceChild, vNodeMoveChild} from "./vnode";
 import {VModel} from "./vmodel";
 import {Component, updateComponent} from "./component";
 
@@ -162,8 +162,9 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string,
     }
   } else if (typeof b === "string") {
     if (a !== null) {
+      parent.ref!.textContent = "";
       while (i < a.length) {
-        vNodeRemoveChild(parent, a[i++]);
+        vNodeDispose(a[i++]);
       }
     }
     parent.ref!.textContent = b;
@@ -171,8 +172,9 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string,
     if (a !== null && a.length !== 0) {
       if (b === null || b.length === 0) {
         // b is empty, remove all children from a.
+        parent.ref!.textContent = "";
         while (i < a.length) {
-          vNodeRemoveChild(parent, a[i++]);
+          vNodeDispose(a[i++]);
         }
       } else {
         if (a.length === 1 && b.length === 1) {
