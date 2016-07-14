@@ -1,9 +1,8 @@
 import {LifecycleComponent, LifecycleState} from "./lifecycle";
 import {XlinkNamespace} from "../lib/misc";
 import {VNode, vNodeInstantiate, vNodeRender, vNodeMount, vNodeAttached, vNodeAttach, vNodeDetach, vNodeDispose,
-        createVElement, createVText, createVSvgElement} from "../lib/vnode";
+        createVElement, createVText, createVSvgElement, syncVNodes} from "../lib/vnode";
 import {Component} from "../lib/component";
-import {syncVNodes} from "../lib/reconciler";
 
 const expect = chai.expect;
 

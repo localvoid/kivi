@@ -2,11 +2,10 @@ import {printError} from "./debug";
 import {SvgNamespace, ComponentDescriptorFlags, ComponentFlags, VNodeFlags, matchesWithAncestors,
   SelectorFn} from "./misc";
 import {VModel} from "./vmodel";
-import {VNode, vNodeAttach, vNodeDetach, vNodeMount, vNodeRender, vNodeDispose, createVRoot} from "./vnode";
+import {VNode, vNodeAttach, vNodeDetach, vNodeMount, vNodeRender, vNodeDispose, syncVNodes, createVRoot} from "./vnode";
 import {InvalidatorSubscription, Invalidator} from "./invalidator";
 import {clock, nextFrame, enableThrottling, disableThrottling, startUpdateComponentEachFrame, startMounting,
   finishMounting, isMounting, isThrottled, frameTimeRemaining} from "./scheduler";
-import {syncVNodes} from "./reconciler";
 
 /**
  * Component Descriptor registry used in DEBUG mode.
