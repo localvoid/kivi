@@ -903,11 +903,11 @@ export function vNodeReplaceChild(parent: VNode, newNode: VNode, refNode: VNode,
   vNodeDispose(refNode);
 }
 
-export function vNodeMoveChild(parent: VNode, node: VNode, nextRef: Node | null, owner?: Component<any, any>): void {
+export function vNodeMoveChild(parent: VNode, node: VNode, nextRef: Node | null): void {
   (parent.ref as Element).insertBefore(node.ref!, nextRef!);
 }
 
-export function vNodeRemoveChild(parent: VNode, node: VNode, owner?: Component<any, any>): void {
+export function vNodeRemoveChild(parent: VNode, node: VNode): void {
   (parent.ref as Element).removeChild(node.ref!);
   vNodeDispose(node);
 }

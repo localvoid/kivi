@@ -163,7 +163,7 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string,
   } else if (typeof b === "string") {
     if (a !== null) {
       while (i < a.length) {
-        vNodeRemoveChild(parent, a[i++], owner);
+        vNodeRemoveChild(parent, a[i++]);
       }
     }
     parent.ref!.textContent = b;
@@ -172,7 +172,7 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string,
       if (b === null || b.length === 0) {
         // b is empty, remove all children from a.
         while (i < a.length) {
-          vNodeRemoveChild(parent, a[i++], owner);
+          vNodeRemoveChild(parent, a[i++]);
         }
       } else {
         if (a.length === 1 && b.length === 1) {
@@ -229,7 +229,7 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string,
               vNodeInsertChild(parent, b[i++], null, owner);
             }
           } else {
-            vNodeRemoveChild(parent, aNode, owner);
+            vNodeRemoveChild(parent, aNode);
           }
         } else if (b.length === 1) {
           // Fast path when b have 1 child.
@@ -251,7 +251,7 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string,
                 synced = true;
                 break;
               }
-              vNodeRemoveChild(parent, aNode, owner);
+              vNodeRemoveChild(parent, aNode);
             }
           } else {
             while (i < a.length) {
@@ -267,13 +267,13 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string,
                 synced = true;
                 break;
               }
-              vNodeRemoveChild(parent, aNode, owner);
+              vNodeRemoveChild(parent, aNode);
             }
           }
 
           if (synced) {
             while (i < a.length) {
-              vNodeRemoveChild(parent, a[i++], owner);
+              vNodeRemoveChild(parent, a[i++]);
             }
           } else {
             vNodeInsertChild(parent, bNode, null, owner);
@@ -403,7 +403,7 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
   if (aStart <= aEnd) {
     // All nodes from a are synced, remove the rest.
     do {
-      vNodeRemoveChild(parent, a[aStart++], owner);
+      vNodeRemoveChild(parent, a[aStart++]);
     } while (aStart <= aEnd);
   } else if (bStart <= bEnd) {
     // All nodes from b are synced, insert the rest.
@@ -714,7 +714,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
       syncVNodes(aStartNode, bEndNode, owner);
       nextPos = bEnd + 1;
       next = nextPos < b.length ? b[nextPos].ref : null;
-      vNodeMoveChild(parent, bEndNode, next, owner);
+      vNodeMoveChild(parent, bEndNode, next);
       aStart++;
       bEnd--;
       if (aStart > aEnd || bStart > bEnd) {
@@ -735,7 +735,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
         }
       }
       syncVNodes(aEndNode, bStartNode, owner);
-      vNodeMoveChild(parent, bStartNode, aStartNode.ref, owner);
+      vNodeMoveChild(parent, bStartNode, aStartNode.ref);
       aEnd--;
       bStart++;
       if (aStart > aEnd || bStart > bEnd) {
@@ -757,7 +757,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
   } else if (bStart > bEnd) {
     // All nodes from b are synced, remove the rest from a.
     while (aStart <= aEnd) {
-      vNodeRemoveChild(parent, a[aStart++], owner);
+      vNodeRemoveChild(parent, a[aStart++]);
     }
   // Step 2
   } else {
@@ -803,7 +803,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
           }
         }
         if (removed) {
-          vNodeRemoveChild(parent, aNode, owner);
+          vNodeRemoveChild(parent, aNode);
           removeOffset++;
         }
       }
@@ -842,7 +842,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
           }
         }
         if (removed) {
-          vNodeRemoveChild(parent, aNode, owner);
+          vNodeRemoveChild(parent, aNode);
           removeOffset++;
         }
       }
@@ -865,7 +865,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
             node = b[pos];
             nextPos = pos + 1;
             next = nextPos < b.length ? b[nextPos].ref : null;
-            vNodeMoveChild(parent, node, next, owner);
+            vNodeMoveChild(parent, node, next);
           } else {
             j--;
           }
