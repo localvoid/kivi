@@ -97,13 +97,6 @@ export const enum ActorFlags {
 export type ActorMessageHandler<P, S> = (actor: Actor<P, S>, message: Message<any>, props: P, state: S) => S;
 
 /**
- * Middleware handler.
- */
-export type ActorMiddleware<P, S> =
-  (actor: Actor<P, S>, message: Message<any>, next: ActorNextMiddleware<P, S>) => void;
-export type ActorNextMiddleware<P, S> = (message: Message<any>) => void;
-
-/**
  * Message group.
  *
  * Example:
@@ -410,10 +403,6 @@ export class ActorDescriptor<P, S> {
    */
   _handleMessage: ActorMessageHandler<P, S> | null;
   /**
-   * Middleware handlers.
-   */
-  _middleware: ActorMiddleware<P, S>[] | null;
-  /**
    * Disposed handler.
    */
   _disposed: ((actor: Actor<P, S>, props: P, state: S) => void) | null;
@@ -424,7 +413,6 @@ export class ActorDescriptor<P, S> {
     this._createState = null;
     this._init = null;
     this._handleMessage = null;
-    this._middleware = null;
   }
 
   /**
@@ -439,17 +427,6 @@ export class ActorDescriptor<P, S> {
       this._init(actor, actor.props!, actor.state!);
     }
     return actor;
-  }
-
-  /**
-   * Add middleware.
-   */
-  addMiddleware(middleware: ActorMiddleware<any, any>): ActorDescriptor<P, S> {
-    if (this._middleware === null) {
-      this._middleware = [];
-    }
-    this._middleware.push(middleware);
-    return this;
   }
 
   /**
@@ -514,10 +491,6 @@ export class Actor<P, S> {
    */
   _inbox: Message<any>[];
   /**
-   * Middleware handlers.
-   */
-  _middleware: ActorMiddleware<P, S>[] | null;
-  /**
    * Links.
    */
   _links: ActorLink | null;
@@ -529,7 +502,6 @@ export class Actor<P, S> {
     this.props = props === undefined ? null : props;
     this.state = null;
     this._inbox = [];
-    this._middleware = null;
     this._links = null;
 
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -593,17 +565,6 @@ export class Actor<P, S> {
       this.descriptor._disposed(this, this.props!, this.state!);
     }
   }
-
-  /**
-   * Add middleware.
-   */
-  addMiddleware(middleware: ActorMiddleware<any, any>): Actor<P, S> {
-    if (this._middleware === null) {
-      this._middleware = [];
-    }
-    this._middleware.push(middleware);
-    return this;
-  }
 }
 
 /**
@@ -618,6 +579,23 @@ export function sendMessage(actor: Actor<any, any>, message: Message<any>): void
     actor._flags |= ActorFlags.IncomingMessage;
     actor._inbox.push(message);
   }
+}
+
+/**
+ * Execute actor.
+ */
+export function execActor(actor: Actor<any, any>): void {
+  while ((actor._flags & ActorFlags.IncomingMessage) !== 0) {
+    const inbox = actor._inbox;
+    actor._inbox = [];
+    actor._flags &= ~ActorFlags.IncomingMessage;
+    for (let i = 0; i < inbox.length; i++) {
+      const msg = inbox[i];
+      msg._flags |= MessageFlags.Consumed;
+      actor.state = actor.descriptor._handleMessage!(actor, msg, actor.props, actor.state);
+    }
+  }
+  actor._flags &= ~ActorFlags.Active;
 }
 
 /**

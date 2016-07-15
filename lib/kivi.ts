@@ -8,7 +8,6 @@ export {
   enableThrottling,
   disableThrottling,
   isMounting,
-  addGlobalMiddleware,
 } from "./scheduler";
 
 export { VModel } from "./vmodel";

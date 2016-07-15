@@ -1,7 +1,7 @@
 import {Component, updateComponent} from "./component";
 import {ComponentFlags} from "./misc";
 import {VNode} from "./vnode";
-import {Actor, ActorFlags, ActorMiddleware, Message, MessageFlags} from "./actor";
+import {Actor, execActor} from "./actor";
 
 export type SchedulerTask = () => void;
 
@@ -21,11 +21,6 @@ const enum SchedulerFlags {
   ThrottledFrameExhausted  = 1 << 4,
   /// Mounting is enabled.
   EnabledMounting          = 1 << 5,
-  ExecGlobalMiddleware     = 1 << 6,
-  ExecDescriptorMiddleware = 1 << 7,
-  ExecActorMiddleware      = 1 << 8,
-
-  ExecMiddleware = ExecGlobalMiddleware | ExecDescriptorMiddleware | ExecActorMiddleware,
 }
 
 /**
@@ -227,10 +222,7 @@ const scheduler = {
   currentFrame: new FrameTasksGroup(),
   nextFrame: new FrameTasksGroup(),
   updateComponents: [] as Component<any, any>[],
-  globalMiddleware: [] as ActorMiddleware<any, any>[] | null,
   activeActors: [] as Actor<any, any>[],
-  currentActor: null as Actor<any, any> | null,
-  middlewareIndex: 0,
   microtaskNode: document.createTextNode(""),
   microtaskToggle: 0,
   macrotaskMessage: "__kivi" + Math.random(),
@@ -255,53 +247,6 @@ scheduler.currentFrame._rwLock();
  */
 export function clock(): number {
   return scheduler.clock;
-}
-
-function nextMiddleware(message: Message<any>): void {
-  const flags = scheduler.flags;
-  const actor = scheduler.currentActor!;
-
-  let middleware: ActorMiddleware<any, any>;
-
-  if ((flags & SchedulerFlags.ExecMiddleware) === 0) {
-    actor.state = actor.descriptor._handleMessage!(actor, message, actor.props, actor.state);
-  } else if ((flags & SchedulerFlags.ExecGlobalMiddleware) !== 0) {
-    middleware = scheduler.globalMiddleware![scheduler.middlewareIndex++];
-    if (scheduler.middlewareIndex === scheduler.globalMiddleware!.length) {
-      scheduler.middlewareIndex = 0;
-      scheduler.flags &= ~SchedulerFlags.ExecGlobalMiddleware;
-    }
-    middleware(actor, message, nextMiddleware);
-  } else if ((flags & SchedulerFlags.ExecDescriptorMiddleware) !== 0) {
-    middleware = actor.descriptor._middleware![scheduler.middlewareIndex++];
-    if (scheduler.middlewareIndex === actor.descriptor._middleware!.length) {
-      scheduler.middlewareIndex = 0;
-      scheduler.flags &= ~SchedulerFlags.ExecDescriptorMiddleware;
-    }
-    middleware(actor, message, nextMiddleware);
-  } else if ((flags & SchedulerFlags.ExecActorMiddleware) !== 0) {
-    middleware = actor._middleware![scheduler.middlewareIndex++];
-    if (scheduler.middlewareIndex === actor._middleware!.length) {
-      scheduler.flags &= ~SchedulerFlags.ExecActorMiddleware;
-    }
-    middleware(actor, message, nextMiddleware);
-  }
-}
-
-function execActor(actor: Actor<any, any>, message: Message<any>): void {
-  scheduler.currentActor = actor;
-  scheduler.middlewareIndex = 0;
-  if (scheduler.globalMiddleware !== null) {
-    scheduler.flags |= SchedulerFlags.ExecGlobalMiddleware;
-  }
-  if (actor.descriptor._middleware !== null) {
-    scheduler.flags |= SchedulerFlags.ExecDescriptorMiddleware;
-  }
-  if (actor._middleware !== null) {
-    scheduler.flags |= SchedulerFlags.ExecActorMiddleware;
-  }
-
-  nextMiddleware(message);
 }
 
 function requestMicrotaskExecution(): void {
@@ -483,20 +428,7 @@ function runMicrotasks(): void {
       const activeActors = scheduler.activeActors;
       scheduler.activeActors = [];
       for (let i = 0; i < activeActors.length; i++) {
-        const actor = activeActors[i];
-
-        while ((actor._flags & ActorFlags.IncomingMessage) !== 0) {
-          const inbox = actor._inbox;
-          actor._inbox = [];
-          actor._flags &= ~ActorFlags.IncomingMessage;
-          for (let i = 0; i < inbox.length; i++) {
-            const msg = inbox[i];
-            msg._flags |= MessageFlags.Consumed;
-            execActor(actor, msg);
-          }
-        }
-
-        actor._flags &= ~ActorFlags.Active;
+        execActor(activeActors[i]);
         scheduler.clock++;
       }
     }
@@ -640,14 +572,4 @@ export function startMounting(): void {
  */
 export function finishMounting(): void {
   scheduler.flags &= ~SchedulerFlags.EnabledMounting;
-}
-
-/**
- * **EXPERIMENTAL** Add global middleware.
- */
-export function addGlobalMiddleware(middleware: ActorMiddleware<any, any>) {
-  if (scheduler.globalMiddleware === null) {
-    scheduler.globalMiddleware = [];
-  }
-  scheduler.globalMiddleware.push(middleware);
 }
