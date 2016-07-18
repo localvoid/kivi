@@ -1568,15 +1568,11 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
   let bEndNode = b[bEnd];
   let i: number;
   let j: number | undefined;
-  let k: number | undefined;
   let nextPos: number;
   let next: Node | null;
   let aNode: VNode;
   let bNode: VNode;
-  let lastTarget = 0;
-  let pos: number;
   let node: VNode;
-  let removed: boolean;
 
   // Step 1
   outer: do {
@@ -1681,24 +1677,26 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
     }
 
     let moved = false;
+    let removed: boolean;
+    let pos = 0;
     let removeOffset = 0;
+    let synced = 0;
 
     // When children lists are small, we are using naive O(N) algorithm to find if child is removed.
     if ((bLength <= 4) || ((aLength * bLength) <= 16)) {
-      k = 0; // visited
       for (i = aStart; i <= aEnd; i++) {
         removed = true;
         aNode = a[i];
-        if (k < bLength) {
+        if (synced < bLength) {
           for (j = bStart; j <= bEnd; j++) {
             bNode = b[j];
             if (aNode._key === bNode._key) {
               sources[j - bStart] = i;
 
-              if (lastTarget > j) {
+              if (pos > j) {
                 moved = true;
               } else {
-                lastTarget = j;
+                pos = j;
               }
               if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
                 if (!_canSyncVNodes(aNode, bNode)) {
@@ -1706,7 +1704,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
                 }
               }
               syncVNodes(aNode, bNode, owner);
-              k++;
+              synced++;
               removed = false;
               break;
             }
@@ -1719,7 +1717,6 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
       }
     } else {
       const keyIndex = new Map<any, number>();
-      k = 0; // visited
 
       for (i = bStart; i <= bEnd; i++) {
         node = b[i];
@@ -1730,16 +1727,16 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
         removed = true;
         aNode = a[i];
 
-        if (k < bLength) {
+        if (synced < bLength) {
           j = keyIndex.get(aNode._key);
 
           if (j !== undefined) {
             bNode = b[j];
             sources[j - bStart] = i;
-            if (lastTarget > j) {
+            if (pos > j) {
               moved = true;
             } else {
-              lastTarget = j;
+              pos = j;
             }
             if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
               if (!_canSyncVNodes(aNode, bNode)) {
@@ -1747,7 +1744,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
               }
             }
             syncVNodes(aNode, bNode, owner);
-            k++;
+            synced++;
             removed = false;
           }
         }
