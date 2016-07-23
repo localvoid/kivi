@@ -32,4 +32,4 @@ Benchmarks:
 - [uibench](https://localvoid.github.io/uibench/)
 - [dbmonster](https://localvoid.github.io/kivi-dbmonster/)
 - [dbmonster (incremental)](https://localvoid.github.io/kivi-dbmonster/incremental.html)
-- [10k spans](https://localvoid.github.io/kivi-dbmonster/10k.html)
+- [10k components](https://localvoid.github.io/kivi-dbmonster/10k.html)
