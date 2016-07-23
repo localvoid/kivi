@@ -30,11 +30,11 @@ const MinThrottleDuration = 2;
 /**
  * Maximum time frame duration for throttled tasks.
  */
-const MaxThrottleDuration = 12;
+const MaxThrottleDuration = 6;
 /**
  * Default time frame duration for throttled tasks.
  */
-const DefaultThrottleDuration = 10;
+const DefaultThrottleDuration = 6;
 
 const enum FrameTasksGroupFlags {
   Component = 1,

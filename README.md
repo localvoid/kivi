@@ -71,4 +71,5 @@ improves readability.
 
 ## Roadmap
 
+- Scheduling actors in [idle callback](https://developers.google.com/web/updates/2015/08/using-requestidlecallback).
 - Seamless integration with actors running in web workers.
