@@ -412,16 +412,14 @@ function handleNextFrame(t: number): void {
 function runMicrotasks(): void {
   scheduler.time = Date.now();
 
-  do {
-    while (scheduler.microtasks.length > 0) {
-      const tasks = scheduler.microtasks;
-      scheduler.microtasks = [];
-      for (let i = 0; i < tasks.length; i++) {
-        tasks[i]();
-      }
-      scheduler.clock++;
+  while (scheduler.microtasks.length > 0) {
+    const tasks = scheduler.microtasks;
+    scheduler.microtasks = [];
+    for (let i = 0; i < tasks.length; i++) {
+      tasks[i]();
     }
-  } while (scheduler.microtasks.length > 0);
+    scheduler.clock++;
+  }
 
   scheduler.flags &= ~SchedulerFlags.MicrotaskPending;
 }
