@@ -4,8 +4,7 @@
 [![License](https://img.shields.io/npm/l/kivi.svg?style=flat-square)](https://www.npmjs.com/package/kivi)
 
 [Kivi](http://github.com/localvoid/kivi) is a javascript (TypeScript) library for building web user interfaces. It
-provides an Actor model for application state, Virtual DOM API for DOM manipulations, UI Components, and Scheduler
-tightly integrated with Actors and UI Components.
+provides Virtual DOM API for DOM manipulations, UI Components, and Scheduler tightly integrated with UI Components.
 
 This project is open source, but I woudn't recommend to choose it over many other web UI libraries that take more
 responsibility by making their libraries open source, unless you have some specific reasons. There are no guarantees
@@ -68,8 +67,3 @@ improves readability.
 - Code that is easier to debug is more important than API.
 - Javascript engine optimization priorities: V8, JSC, Chakra, SpiderMonkey.
 - Web browser engine optimization priorities: WebKit/Blink, other.
-
-## Roadmap
-
-- Scheduling actors in [idle callback](https://developers.google.com/web/updates/2015/08/using-requestidlecallback).
-- Seamless integration with actors running in web workers.

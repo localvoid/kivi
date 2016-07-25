@@ -35,25 +35,6 @@ export {
 } from "./component";
 
 export {
-  MessageGroupRegistry,
-  ActorRegistry,
-  MessageFlags,
-  ActorFlags,
-  getMessageGroupName,
-  getMessageName,
-  getMessagePayload,
-  acquireMessageFlag,
-  MessageGroup,
-  MessageDescriptor,
-  Message,
-  ActorDescriptor,
-  Actor,
-  ActorLink,
-  SystemMessageGroup,
-  ActorDisposedMessage,
-} from "./actor";
-
-export {
   SelectorFn,
   VNodeFlags,
   VModelFlags,

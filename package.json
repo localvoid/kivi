@@ -3,7 +3,7 @@
   "main": "dist/umd/kivi.js",
   "jsnext:main": "dist/es6/kivi.js",
   "typings": "dist/typings/kivi.d.ts",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Javascript (TypeScript) library for building web user interfaces.",
   "license": "Apache-2.0",
   "author": {

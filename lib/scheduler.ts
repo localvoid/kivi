@@ -1,7 +1,6 @@
 import {Component, updateComponent} from "./component";
 import {ComponentFlags} from "./misc";
 import {VNode} from "./vnode";
-import {Actor, execActor} from "./actor";
 
 export type SchedulerTask = () => void;
 
@@ -222,7 +221,6 @@ const scheduler = {
   currentFrame: new FrameTasksGroup(),
   nextFrame: new FrameTasksGroup(),
   updateComponents: [] as Component<any, any>[],
-  activeActors: [] as Actor<any, any>[],
   microtaskNode: document.createTextNode(""),
   microtaskToggle: 0,
   macrotaskMessage: "__kivi" + Math.random(),
@@ -416,23 +414,14 @@ function runMicrotasks(): void {
 
   do {
     while (scheduler.microtasks.length > 0) {
-      let tasks = scheduler.microtasks;
+      const tasks = scheduler.microtasks;
       scheduler.microtasks = [];
       for (let i = 0; i < tasks.length; i++) {
         tasks[i]();
       }
       scheduler.clock++;
     }
-
-    if (scheduler.activeActors.length > 0) {
-      const activeActors = scheduler.activeActors;
-      scheduler.activeActors = [];
-      for (let i = 0; i < activeActors.length; i++) {
-        execActor(activeActors[i]);
-        scheduler.clock++;
-      }
-    }
-  } while (scheduler.microtasks.length > 0 && scheduler.activeActors.length > 0);
+  } while (scheduler.microtasks.length > 0);
 
   scheduler.flags &= ~SchedulerFlags.MicrotaskPending;
 }
@@ -479,14 +468,6 @@ export function currentFrame(): FrameTasksGroup {
 export function nextFrame(): FrameTasksGroup {
   requestNextFrame();
   return scheduler.nextFrame;
-}
-
-/**
- * Add actor for an execution.
- */
-export function scheduleActorExecution(actor: Actor<any, any>): void {
-  requestMicrotaskExecution();
-  scheduler.activeActors.push(actor);
 }
 
 /**
