@@ -6,7 +6,7 @@ export interface VNodeRecursiveList extends Array<VNodeRecursiveListValue> {}
 /**
  * Recursively flattens VNode arrays and skips null nodes.
  */
-export function filterVNodes(nodes: VNodeRecursiveList): VNode[] {
+export function normalizeVNodes(nodes: VNodeRecursiveList): VNode[] {
   let copy = nodes.slice(0);
   const flatten = [] as VNode[];
   while (copy.length > 0) {

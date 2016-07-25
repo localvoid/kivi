@@ -46,7 +46,7 @@ export {
 } from "./misc";
 
 export {
-  filterVNodes,
+  normalizeVNodes,
 } from "./utils";
 
 if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
