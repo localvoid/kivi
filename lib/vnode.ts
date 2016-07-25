@@ -890,9 +890,9 @@ function vNodeInsertChild(parent: VNode, node: VNode, nextRef: Node | null, owne
   const container = parent.ref as Element;
   if (node.ref === null) {
     vNodeInstantiate(node, owner);
-    container.insertBefore(node.ref!, nextRef!);
     vNodeAttached(node);
     vNodeRender(node, owner);
+    container.insertBefore(node.ref!, nextRef!);
   } else {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((node._flags & VNodeFlags.KeepAlive) === 0) {
@@ -910,9 +910,9 @@ function vNodeReplaceChild(parent: VNode, newNode: VNode, refNode: VNode, owner?
   const container = parent.ref as Element;
   if (newNode.ref === null) {
     vNodeInstantiate(newNode, owner);
-    container.replaceChild(newNode.ref!, refNode.ref!);
     vNodeAttached(newNode);
     vNodeRender(newNode, owner);
+    container.replaceChild(newNode.ref!, refNode.ref!);
   } else {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((newNode._flags & VNodeFlags.KeepAlive) === 0) {
