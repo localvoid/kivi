@@ -369,6 +369,26 @@ export class VNode {
   }
 
   /**
+   * Set children as an innerHTML string. It is potentially vulnerable to XSS attacks.
+   *
+   * This method is available on element and component's root virtual node types.
+   */
+  unsafeHTML(html: string): VNode {
+    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+      if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
+        throw new Error("Failed to set unsafeHTML on VNode: unsafeHTML method should be called on element or" +
+                        " component root nodes only.");
+      }
+      if ((this._flags & VNodeFlags.InputElement) !== 0) {
+        throw new Error("Failed to set unsafeHTML on VNode: input elements can't have children.");
+      }
+    }
+    this._flags |= VNodeFlags.UnsafeHTML;
+    this._children = html;
+    return this;
+  }
+
+  /**
    * Set children and enable track by key reconciliation algorithm. Children parameter should be a flat array of
    * virtual nodes with assigned key properties.
    *
@@ -683,20 +703,24 @@ export function vNodeRender(vnode: VNode, owner: Component<any, any> | undefined
 
     const children = vnode._children;
     if (children !== null) {
-      if ((vnode._flags & VNodeFlags.InputElement) === 0) {
-        if (typeof children === "string") {
-          ref.textContent = children;
+      if ((vnode._flags & VNodeFlags.UnsafeHTML) === 0) {
+        if ((vnode._flags & VNodeFlags.InputElement) === 0) {
+          if (typeof children === "string") {
+            ref.textContent = children;
+          } else {
+            for (i = 0, il = (children as VNode[]).length; i < il; i++) {
+              vNodeInsertChild(vnode, (children as VNode[])[i], null, owner);
+            }
+          }
         } else {
-          for (i = 0, il = (children as VNode[]).length; i < il; i++) {
-            vNodeInsertChild(vnode, (children as VNode[])[i], null, owner);
+          if ((vnode._flags & VNodeFlags.TextInputElement) !== 0) {
+            (vnode.ref as HTMLInputElement).value = vnode._children as string;
+          } else { // ((vnode.flags & VNodeFlags.CheckedInputElement) !== 0)
+            (vnode.ref as HTMLInputElement).checked = vnode._children as boolean;
           }
         }
       } else {
-        if ((vnode._flags & VNodeFlags.TextInputElement) !== 0) {
-          (vnode.ref as HTMLInputElement).value = vnode._children as string;
-        } else { // ((vnode.flags & VNodeFlags.CheckedInputElement) !== 0)
-          (vnode.ref as HTMLInputElement).checked = vnode._children as boolean;
-        }
+        ref.innerHTML = children as string;
       }
     }
   } else if ((flags & VNodeFlags.Component) !== 0) {
@@ -995,11 +1019,15 @@ export function syncVNodes(a: VNode, b: VNode, owner?: Component<any, any>): voi
 
     if ((a._flags & VNodeFlags.InputElement) === 0) {
       if (a._children !== b._children) {
-        _syncChildren(
-          a,
-          a._children as VNode[] | string,
-          b._children as VNode[] | string,
-          owner);
+        if ((a._flags & VNodeFlags.UnsafeHTML) === 0) {
+          _syncChildren(
+            a,
+            a._children as VNode[] | string,
+            b._children as VNode[] | string,
+            owner);
+        } else {
+          ref.innerHTML = b._children as string;
+        }
       }
     } else {
       if ((flags & VNodeFlags.TextInputElement) !== 0) {

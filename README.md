@@ -6,6 +6,9 @@
 [Kivi](http://github.com/localvoid/kivi) is a javascript (TypeScript) library for building web user interfaces. It
 provides Virtual DOM API for DOM manipulations, UI Components, and Scheduler tightly integrated with UI Components.
 
+Kivi API is designed specifically to provide fast bootstrap time (cold start) and fast hot updates, good debugging
+and profiling experience (preserving stack traces).
+
 This project is open source, but I woudn't recommend to choose it over many other web UI libraries that take more
 responsibility by making their libraries open source, unless you have some specific reasons. There are no guarantees
 that it will be properly maintained in the future if I'll lose interest in this project, there is a little chance that

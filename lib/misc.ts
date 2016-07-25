@@ -86,6 +86,8 @@ export const enum VNodeFlags {
   BindOnce            = 1 << 9,
   /// Immutable props.
   ImmutableProps      = 1 << 10,
+  /// Children contains unsafe HTML.
+  UnsafeHTML          = 1 << 11,
 
   /// See `SharedFlags.Svg`.
   Svg                 = SharedFlags.Svg,
