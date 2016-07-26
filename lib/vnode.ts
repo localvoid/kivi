@@ -1598,7 +1598,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
   let j: number | undefined;
   let nextPos: number;
   let next: Node | null;
-  let aNode: VNode;
+  let aNode: VNode | null;
   let bNode: VNode;
   let node: VNode;
 
@@ -1697,6 +1697,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
   } else {
     let aLength = aEnd - aStart + 1;
     let bLength = bEnd - bStart + 1;
+    const aNullable = a as Array<VNode | null>; // will be removed by js optimizing compilers.
     const sources = new Array<number>(bLength);
 
     // Mark all nodes as inserted.
@@ -1705,15 +1706,12 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
     }
 
     let moved = false;
-    let removed: boolean;
     let pos = 0;
-    let removeOffset = 0;
     let synced = 0;
 
     // When children lists are small, we are using naive O(N) algorithm to find if child is removed.
     if ((bLength <= 4) || ((aLength * bLength) <= 16)) {
       for (i = aStart; i <= aEnd; i++) {
-        removed = true;
         aNode = a[i];
         if (synced < bLength) {
           for (j = bStart; j <= bEnd; j++) {
@@ -1733,14 +1731,10 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
               }
               syncVNodes(aNode, bNode, owner);
               synced++;
-              removed = false;
+              aNullable[i] = null;
               break;
             }
           }
-        }
-        if (removed) {
-          vNodeRemoveChild(parent, aNode);
-          removeOffset++;
         }
       }
     } else {
@@ -1752,7 +1746,6 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
       }
 
       for (i = aStart; i <= aEnd; i++) {
-        removed = true;
         aNode = a[i];
 
         if (synced < bLength) {
@@ -1773,12 +1766,23 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
             }
             syncVNodes(aNode, bNode, owner);
             synced++;
-            removed = false;
+            aNullable[i] = null;
           }
         }
-        if (removed) {
+      }
+    }
+
+    // Batch remove operations.
+    if (aLength === a.length && synced === 0) {
+      parent.ref!.textContent = "";
+      for (i = 0; i <= aEnd; i++) {
+        vNodeDispose(a[i]);
+      }
+    } else if (synced < aLength) {
+      for (i = aStart; i <= aEnd; i++) {
+        aNode = aNullable[i];
+        if (aNode !== null) {
           vNodeRemoveChild(parent, aNode);
-          removeOffset++;
         }
       }
     }
@@ -1806,7 +1810,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
           }
         }
       }
-    } else if (aLength - removeOffset !== bLength) {
+    } else if (synced !== bLength) {
       for (i = bLength - 1; i >= 0; i--) {
         if (sources[i] === -1) {
           pos = i + bStart;
