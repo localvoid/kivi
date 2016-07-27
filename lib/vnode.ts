@@ -302,7 +302,7 @@ export class VNode {
    *
    * This method is available on element and component's root virtual node types.
    */
-  style(style: string): VNode {
+  style(style: string | null): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error("Failed to set style on VNode: style method should be called on element or component" +
@@ -329,7 +329,7 @@ export class VNode {
    *
    * This method is available on element, component and component's root virtual node types.
    */
-  className(className: string): VNode {
+  className(className: string | null): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((this._flags & (VNodeFlags.Element | VNodeFlags.Component | VNodeFlags.Root)) === 0) {
         throw new Error("Failed to set classes on VNode: classes method should be called on element or component" +
@@ -354,7 +354,7 @@ export class VNode {
    *
    * This method is available on element and component's root virtual node types.
    */
-  children(children: VNode[]|string): VNode {
+  children(children: VNode[] | string | null): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error("Failed to set children on VNode: children method should be called on element or component" +
@@ -394,7 +394,7 @@ export class VNode {
    *
    * This method is available on element and component's root virtual node types.
    */
-  trackByKeyChildren(children: VNode[]): VNode {
+  trackByKeyChildren(children: VNode[] | null): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error("Failed to set children on VNode: children method should be called on element or component" +
