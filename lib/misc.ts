@@ -231,16 +231,21 @@ export function getClassName(className: string): string {
 export function matchesWithAncestors(element: Element, selector: string | SelectorFn, sentinel: Element | null = null):
     Element | null {
   let e = element;
-  do {
-    if (typeof selector === "string") {
+  if (typeof selector === "string") {
+    while (e !== sentinel) {
       if (e.matches(selector)) {
         return e;
       }
-    } else if (selector(e)) {
-      return e;
+      e = e.parentElement;
     }
-    e = e.parentElement;
-  } while (e !== sentinel);
+  } else {
+    while (e !== sentinel) {
+      if (selector(e)) {
+        return e;
+      }
+      e = e.parentElement;
+    }
+  }
 
   return null;
 }
