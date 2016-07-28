@@ -1098,7 +1098,6 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string,
     }
   } else if (typeof b === "string") {
     if (a !== null) {
-      parent.ref!.textContent = "";
       while (i < a.length) {
         vNodeDispose(a[i++]);
       }
