@@ -936,6 +936,13 @@ function vNodeRemoveChild(parent: VNode, node: VNode): void {
   vNodeDispose(node);
 }
 
+function vNodeRemoveAllChildren(parent: VNode, nodes: VNode[]): void {
+  parent.ref!.textContent = "";
+  for (let i = 0; i < nodes.length; i++) {
+    vNodeDispose(nodes[i]);
+  }
+}
+
 /**
  * Sync two VNodes
  *
@@ -1107,10 +1114,7 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string,
     if (a !== null && a.length !== 0) {
       if (b === null || b.length === 0) {
         // b is empty, remove all children from a.
-        parent.ref!.textContent = "";
-        while (i < a.length) {
-          vNodeDispose(a[i++]);
-        }
+        vNodeRemoveAllChildren(parent, a);
       } else {
         if (a.length === 1 && b.length === 1) {
           // Fast path when a and b have only one child.
@@ -1188,7 +1192,6 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string,
                 synced = true;
                 break;
               }
-              vNodeRemoveChild(parent, aNode);
             }
           } else {
             while (i < a.length) {
@@ -1204,15 +1207,21 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string,
                 synced = true;
                 break;
               }
-              vNodeRemoveChild(parent, aNode);
             }
           }
 
           if (synced) {
+            let j = 0;
+            i--;
+            while (j < i) {
+              vNodeRemoveChild(parent, a[j++]);
+            }
+            i++;
             while (i < a.length) {
               vNodeRemoveChild(parent, a[i++]);
             }
           } else {
+            vNodeRemoveAllChildren(parent, a);
             vNodeInsertChild(parent, bNode, null, owner);
           }
         } else {
@@ -1778,10 +1787,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
 
     // Batch remove operations.
     if (aLength === a.length && synced === 0) {
-      parent.ref!.textContent = "";
-      for (i = 0; i <= aEnd; i++) {
-        vNodeDispose(a[i]);
-      }
+      vNodeRemoveAllChildren(parent, a);
     } else if (synced < aLength) {
       for (i = aStart; i <= aEnd; i++) {
         aNode = aNullable[i];
