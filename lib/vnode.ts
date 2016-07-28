@@ -724,16 +724,6 @@ export function vNodeRender(vnode: VNode, owner: Component<any, any> | undefined
       }
     }
   } else if ((flags & VNodeFlags.Component) !== 0) {
-    ref = vnode.ref as Element;
-
-    if (vnode._className !== null) {
-      if ((flags & VNodeFlags.Svg) === 0) {
-        (ref as HTMLElement).className = vnode._className;
-      } else {
-        ref.setAttribute("class", vnode._className);
-      }
-    }
-
     updateComponent(vnode.cref as Component<any, any>);
   }
 }
@@ -792,13 +782,6 @@ export function vNodeMount(vnode: VNode, node: Node, owner: Component<any, any> 
         if (cTagName !== eTagName) {
           throw new Error(`Failed to mount VNode: invalid tagName, component expects tagName "${cTagName}", but` +
             ` found "${eTagName}".`);
-        }
-        if (vnode._className !== null) {
-          const eClassName = (node as Element).getAttribute("class");
-          if (vnode._className !== eClassName) {
-            throw new Error(`Failed to mount VNode: invalid className, component expects className` +
-              ` "${vnode._className}", but found "${eClassName}".`);
-          }
         }
       }
     }
@@ -1049,15 +1032,6 @@ export function syncVNodes(a: VNode, b: VNode, owner?: Component<any, any>): voi
     }
   } else { // if ((flags & VNodeFlags.Component) !== 0)
     component = b.cref = a.cref as Component<any, any>;
-
-    if (a._className !== b._className) {
-      className = (b._className === null) ? "" : b._className;
-      if ((flags & VNodeFlags.Svg) === 0) {
-        (ref as HTMLElement).className = className;
-      } else {
-        ref.setAttribute("class", className);
-      }
-    }
 
     if (((flags & VNodeFlags.ImmutableProps) === 0) || a._props !== b._props) {
       updateComponent(component, (flags & VNodeFlags.BindOnce) === 0 ? b._props : undefined);
