@@ -1356,7 +1356,7 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
 /**
  * Sync children with track by keys algorithm.
  *
- * This algorithm finds a minimum number of DOM operations. It works in several steps:
+ * This algorithm finds a minimum[1] number of DOM operations. It works in several steps:
  *
  * 1. Find common suffix and prefix, and perform simple moves on the edges.
  *
@@ -1584,6 +1584,11 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
  * current position in the positions array, if it is `-1`, then we insert new node.
  *
  * That is how children reconciliation algorithm is working in one of the fastest virtual dom libraries :)
+ *
+ * [1] Actually it is almost minimum number of dom ops, when node is removed and another one is inserted at the same
+ * place, instead of insert and remove dom ops, we can use one replace op. It will make everything even more
+ * complicated, and other use cases will be slower, so I don't think that it is worth to use replace here. Naive algo
+ * and simple 1/N, N/1 cases are using replace op.
  */
 function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: Component<any, any> | undefined): void {
   let aStart = 0;
