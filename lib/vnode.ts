@@ -1785,49 +1785,54 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
       }
     }
 
-    // Batch remove operations.
     if (aLength === a.length && synced === 0) {
+      i = 0;
       vNodeRemoveAllChildren(parent, a);
-    } else if (synced < aLength) {
-      for (i = aStart; i <= aEnd; i++) {
-        aNode = aNullable[i];
-        if (aNode !== null) {
-          vNodeRemoveChild(parent, aNode);
+      while (i < bLength) {
+        vNodeInsertChild(parent, b[i++], null, owner);
+      }
+    } else {
+      if (synced < aLength) {
+        for (i = aStart; i <= aEnd; i++) {
+          aNode = aNullable[i];
+          if (aNode !== null) {
+            vNodeRemoveChild(parent, aNode);
+          }
         }
       }
-    }
 
-    // Step 3
-    if (moved) {
-      const seq = _lis(sources);
-      j = seq.length - 1;
-      for (i = bLength - 1; i >= 0; i--) {
-        if (sources[i] === -1) {
-          pos = i + bStart;
-          node = b[pos];
-          nextPos = pos + 1;
-          next = nextPos < b.length ? b[nextPos].ref : null;
-          vNodeInsertChild(parent, node, next, owner);
-        } else {
-          if (j < 0 || i !== seq[j]) {
+      // Step 3
+      if (moved) {
+        const seq = _lis(sources);
+        j = seq.length - 1;
+        for (i = bLength - 1; i >= 0; i--) {
+          if (sources[i] === -1) {
             pos = i + bStart;
             node = b[pos];
             nextPos = pos + 1;
             next = nextPos < b.length ? b[nextPos].ref : null;
-            vNodeMoveChild(parent, node, next);
+            vNodeInsertChild(parent, node, next, owner);
           } else {
-            j--;
+            if (j < 0 || i !== seq[j]) {
+              pos = i + bStart;
+              node = b[pos];
+              nextPos = pos + 1;
+              next = nextPos < b.length ? b[nextPos].ref : null;
+              vNodeMoveChild(parent, node, next);
+            } else {
+              j--;
+            }
           }
         }
-      }
-    } else if (synced !== bLength) {
-      for (i = bLength - 1; i >= 0; i--) {
-        if (sources[i] === -1) {
-          pos = i + bStart;
-          node = b[pos];
-          nextPos = pos + 1;
-          next = nextPos < b.length ? b[nextPos].ref : null;
-          vNodeInsertChild(parent, node, next, owner);
+      } else if (synced !== bLength) {
+        for (i = bLength - 1; i >= 0; i--) {
+          if (sources[i] === -1) {
+            pos = i + bStart;
+            node = b[pos];
+            nextPos = pos + 1;
+            next = nextPos < b.length ? b[nextPos].ref : null;
+            vNodeInsertChild(parent, node, next, owner);
+          }
         }
       }
     }
