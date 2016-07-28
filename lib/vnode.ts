@@ -1786,10 +1786,9 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
     }
 
     if (aLength === a.length && synced === 0) {
-      i = 0;
       vNodeRemoveAllChildren(parent, a);
-      while (i < bLength) {
-        vNodeInsertChild(parent, b[i++], null, owner);
+      for (i = 0; i < bLength; i++) {
+        vNodeInsertChild(parent, b[i], null, owner);
       }
     } else {
       if (synced < aLength) {
