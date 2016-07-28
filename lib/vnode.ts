@@ -680,13 +680,6 @@ export function vNodeRender(vnode: VNode, owner: Component<any, any> | undefined
       }
 
       if (vnode._className !== null) {
-        if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-          const className = ref.getAttribute("class");
-          if ((flags & VNodeFlags.Root) !== 0 && className) {
-            printError(`VNode render: Component root node overwrited className property` +
-              ` "${className}" with "${vnode._className}".`);
-          }
-        }
         if ((flags & VNodeFlags.Svg) === 0) {
           (ref as HTMLElement).className = vnode._className;
         } else {
