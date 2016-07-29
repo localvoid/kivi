@@ -229,6 +229,7 @@ const scheduler = {
   throttledFps: 60,
   throttledDiffWindow: 0,
   throttledFrameDeadline: 0,
+  throttledPrevTimestamp: 0,
 };
 
 // Microtask scheduler based on mutation observer
@@ -282,12 +283,11 @@ function handleNextFrame(t: number): void {
   let j: number;
 
   scheduler.flags &= ~(SchedulerFlags.FrametaskPending | SchedulerFlags.ThrottledFrameExhausted);
-  scheduler.time = Date.now();
+
   if ((scheduler.flags & SchedulerFlags.EnabledThrottling) !== 0) {
-    scheduleMacrotask(() => {
-      const elapsed = (window.performance.now() - t) / 1000;
-      scheduler.throttledFps = Math.round((scheduler.throttledFps + (1 / elapsed)) / 2);
-      scheduler.throttledDiffWindow += (scheduler.throttledFps < 45) ? -1 : 1;
+    if (scheduler.throttledPrevTimestamp > 0) {
+      scheduler.throttledFps += 0.0165 * ((1000 / (t - scheduler.throttledPrevTimestamp)) - scheduler.throttledFps);
+      scheduler.throttledDiffWindow += (scheduler.throttledFps < 55) ? -1 : 1;
       if (scheduler.throttledDiffWindow > 5) {
         scheduler.throttledDiffWindow = 0;
         scheduler.throttledFrameDuration += 0.1;
@@ -300,9 +300,13 @@ function handleNextFrame(t: number): void {
       } else if (scheduler.throttledFrameDuration < MinThrottleDuration) {
         scheduler.throttledFrameDuration = MinThrottleDuration;
       }
-    });
+    }
+    scheduler.throttledPrevTimestamp = t;
     scheduler.throttledFrameDeadline = t + scheduler.throttledFrameDuration;
+    requestNextFrame();
   }
+
+  scheduler.time = Date.now();
 
   const frame = scheduler.nextFrame;
   scheduler.nextFrame = scheduler.currentFrame;
@@ -497,6 +501,7 @@ export function disableThrottling(): void {
   scheduler.throttleEnabledCounter--;
   if (scheduler.throttleEnabledCounter === 0) {
     scheduler.flags &= ~SchedulerFlags.EnabledThrottling;
+    scheduler.throttledPrevTimestamp = 0;
   }
 }
 
