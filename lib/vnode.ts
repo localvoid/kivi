@@ -93,11 +93,11 @@ export class VNode {
   cref: Component<any, any> | null;
 
   /**
-   * Debug properties are used because VNode properties are frozen.
+   * Flags used in DEBUG mode.
    *
    * See `VNodeDebugFlags` for details.
    */
-  _debugProperties: {flags: number};
+  _debugFlags: number;
 
   constructor(flags: number, tag: string | VModel<any> | ComponentDescriptor<any, any> | null, props: any) {
     this._flags = flags;
@@ -112,9 +112,7 @@ export class VNode {
     this.cref = null;
 
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      this._debugProperties = {
-        flags: 0,
-      };
+      this._debugFlags = 0;
     }
   }
 
@@ -486,7 +484,7 @@ export class VNode {
         throw new Error("Failed to disable children shape error on VNode: disableChildrenShapeError method should" +
                         " be called on element or component root nodes only.");
       }
-      this._debugProperties.flags |= VNodeDebugFlags.DisabledChildrenShapeError;
+      this._debugFlags |= VNodeDebugFlags.DisabledChildrenShapeError;
     }
     return this;
   }
@@ -501,11 +499,11 @@ export class VNode {
  */
 export function vNodeAttach(vnode: VNode): void {
   if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-    if ((vnode._debugProperties.flags & VNodeDebugFlags.Attached) !== 0) {
+    if ((vnode._debugFlags & VNodeDebugFlags.Attached) !== 0) {
       throw new Error("Failed to attach VNode: VNode is already attached.");
     }
-    vnode._debugProperties.flags |= VNodeDebugFlags.Attached;
-    vnode._debugProperties.flags &= ~VNodeDebugFlags.Detached;
+    vnode._debugFlags |= VNodeDebugFlags.Attached;
+    vnode._debugFlags &= ~VNodeDebugFlags.Detached;
   }
   if ((vnode._flags & VNodeFlags.Component) === 0) {
     const children = vnode._children;
@@ -525,11 +523,11 @@ export function vNodeAttach(vnode: VNode): void {
  */
 export function vNodeAttached(vnode: VNode): void {
   if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-    if ((vnode._debugProperties.flags & VNodeDebugFlags.Attached) !== 0) {
+    if ((vnode._debugFlags & VNodeDebugFlags.Attached) !== 0) {
       throw new Error("Failed to attach VNode: VNode is already attached.");
     }
-    vnode._debugProperties.flags |= VNodeDebugFlags.Attached;
-    vnode._debugProperties.flags &= ~VNodeDebugFlags.Detached;
+    vnode._debugFlags |= VNodeDebugFlags.Attached;
+    vnode._debugFlags &= ~VNodeDebugFlags.Detached;
   }
   if ((vnode._flags & VNodeFlags.Component) !== 0) {
     (vnode.cref as Component<any, any>).attach();
@@ -541,11 +539,11 @@ export function vNodeAttached(vnode: VNode): void {
  */
 export function vNodeDetach(vnode: VNode): void {
   if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-    if ((vnode._debugProperties.flags & VNodeDebugFlags.Detached) !== 0) {
+    if ((vnode._debugFlags & VNodeDebugFlags.Detached) !== 0) {
       throw new Error("Failed to detach VNode: VNode is already detached.");
     }
-    vnode._debugProperties.flags |= VNodeDebugFlags.Detached;
-    vnode._debugProperties.flags &= ~VNodeDebugFlags.Attached;
+    vnode._debugFlags |= VNodeDebugFlags.Detached;
+    vnode._debugFlags &= ~VNodeDebugFlags.Attached;
   }
   if ((vnode._flags & VNodeFlags.Component) === 0) {
     const children = vnode._children;
@@ -564,13 +562,13 @@ export function vNodeDetach(vnode: VNode): void {
  */
 export function vNodeDispose(vnode: VNode): void {
   if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-    if ((vnode._debugProperties.flags & VNodeDebugFlags.Disposed) !== 0) {
+    if ((vnode._debugFlags & VNodeDebugFlags.Disposed) !== 0) {
       throw new Error("Failed to dispose VNode: VNode is already disposed.");
     }
-    if ((vnode._debugProperties.flags & (VNodeDebugFlags.Rendered | VNodeDebugFlags.Mounted)) === 0) {
+    if ((vnode._debugFlags & (VNodeDebugFlags.Rendered | VNodeDebugFlags.Mounted)) === 0) {
       throw new Error("Failed to dispose VNode: VNode should be rendered or mounted before disposing.");
     }
-    vnode._debugProperties.flags |= VNodeDebugFlags.Disposed;
+    vnode._debugFlags |= VNodeDebugFlags.Disposed;
   }
   if ((vnode._flags & VNodeFlags.KeepAlive) === 0) {
     if ((vnode._flags & VNodeFlags.Component) !== 0) {
@@ -635,13 +633,13 @@ export function vNodeRender(vnode: VNode, owner: Component<any, any> | undefined
     if ((vnode._flags & VNodeFlags.Root) !== 0 && owner === undefined) {
       throw new Error("Failed to render VNode: VNode component root should have an owner.");
     }
-    if ((vnode._debugProperties.flags & VNodeDebugFlags.Rendered) !== 0) {
+    if ((vnode._debugFlags & VNodeDebugFlags.Rendered) !== 0) {
       throw new Error("Failed to render VNode: VNode cannot be rendered twice.");
     }
-    if ((vnode._debugProperties.flags & VNodeDebugFlags.Mounted) !== 0) {
+    if ((vnode._debugFlags & VNodeDebugFlags.Mounted) !== 0) {
       throw new Error("Failed to render VNode: VNode cannot be rendered after mount.");
     }
-    vnode._debugProperties.flags |= VNodeDebugFlags.Mounted;
+    vnode._debugFlags |= VNodeDebugFlags.Mounted;
   }
 
   let il: number;
@@ -732,13 +730,13 @@ export function vNodeMount(vnode: VNode, node: Node, owner: Component<any, any> 
     if ((vnode._flags & VNodeFlags.Root) !== 0 && owner === undefined) {
       throw new Error("Failed to render VNode: VNode component root should have an owner.");
     }
-    if ((vnode._debugProperties.flags & VNodeDebugFlags.Rendered) !== 0) {
+    if ((vnode._debugFlags & VNodeDebugFlags.Rendered) !== 0) {
       throw new Error("Failed to mount VNode: VNode cannot be mounted after render.");
     }
-    if ((vnode._debugProperties.flags & VNodeDebugFlags.Mounted) !== 0) {
+    if ((vnode._debugFlags & VNodeDebugFlags.Mounted) !== 0) {
       throw new Error("Failed to mount VNode: VNode cannot be mounted twice.");
     }
-    vnode._debugProperties.flags |= VNodeDebugFlags.Mounted;
+    vnode._debugFlags |= VNodeDebugFlags.Mounted;
   }
 
   const flags = vnode._flags;
@@ -927,10 +925,10 @@ function vNodeRemoveAllChildren(parent: VNode, nodes: VNode[]): void {
  */
 export function syncVNodes(a: VNode, b: VNode, owner?: Component<any, any>): void {
   if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-    if ((a._debugProperties.flags & (VNodeDebugFlags.Rendered | VNodeDebugFlags.Mounted)) === 0) {
+    if ((a._debugFlags & (VNodeDebugFlags.Rendered | VNodeDebugFlags.Mounted)) === 0) {
       throw new Error("Failed to sync VNode: VNode should be rendered or mounted before sync.");
     }
-    b._debugProperties.flags |= a._debugProperties.flags &
+    b._debugFlags |= a._debugFlags &
       (VNodeDebugFlags.Rendered | VNodeDebugFlags.Mounted |
         VNodeDebugFlags.Attached | VNodeDebugFlags.Detached);
   }
@@ -1098,7 +1096,7 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string,
           aNode = a[0];
           if ((parent._flags & VNodeFlags.TrackByKeyChildren) === 0) {
             if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-              if ((parent._debugProperties.flags & VNodeDebugFlags.DisabledChildrenShapeError) === 0) {
+              if ((parent._debugFlags & VNodeDebugFlags.DisabledChildrenShapeError) === 0) {
                 printError(
                   "VNode sync children: children shape is changing, you should enable tracking by key with " +
                   "VNode method trackByKeyChildren(children).\n" +
@@ -1144,7 +1142,7 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string,
           bNode = b[0];
           if ((parent._flags & VNodeFlags.TrackByKeyChildren) === 0) {
             if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-              if ((parent._debugProperties.flags & VNodeDebugFlags.DisabledChildrenShapeError) === 0) {
+              if ((parent._debugFlags & VNodeDebugFlags.DisabledChildrenShapeError) === 0) {
                 printError(
                   "VNode sync children: children shape is changing, you should enable tracking by key with " +
                   "VNode method trackByKeyChildren(children).\n" +
@@ -1292,7 +1290,7 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
 
   if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
     if ((aStart <= aEnd || bStart <= bEnd) &&
-      ((parent._debugProperties.flags & VNodeDebugFlags.DisabledChildrenShapeError) === 0)) {
+      ((parent._debugFlags & VNodeDebugFlags.DisabledChildrenShapeError) === 0)) {
       printError(
         "VNode sync children: children shape is changing, you should enable tracking by key with " +
         "VNode method trackByKeyChildren(children).\n" +
