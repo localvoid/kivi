@@ -327,11 +327,11 @@ export class VNode {
    * Class name is assigned to DOM nodes with `className` property, if virtual node represents an element from svg
    * namespace, class name will be assigned with `setAttribute("class", "className")` method.
    *
-   * This method is available on element, component and component's root virtual node types.
+   * This method is available on element and component's root virtual node types.
    */
   className(className: string | null): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      if ((this._flags & (VNodeFlags.Element | VNodeFlags.Component | VNodeFlags.Root)) === 0) {
+      if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error("Failed to set classes on VNode: classes method should be called on element or component" +
                         " root nodes only.");
       }
