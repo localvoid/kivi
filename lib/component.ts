@@ -750,6 +750,9 @@ export class Component<P, S> {
    *
    * If this method is called during mounting phase, then Virtual DOM will be mounted on top of the existing document
    * tree.
+   *
+   * When virtual dom is passed to vSync method, its ownership is transfered. Mutating and reading from virtual dom
+   * after it is passed to vSync is an undefined behavior.
    */
   vSync(newRoot: VNode): void {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
