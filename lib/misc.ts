@@ -228,6 +228,9 @@ export function getClassName(className: string): string {
   return className;
 }
 
+/**
+ * Find closest element that matches [selector].
+ */
 export function matchesWithAncestors(element: Element, selector: string | SelectorFn, sentinel: Element | null = null):
     Element | null {
   let e = element;
@@ -236,14 +239,14 @@ export function matchesWithAncestors(element: Element, selector: string | Select
       if (e.matches(selector)) {
         return e;
       }
-      e = e.parentElement;
+      e = e.parentNode as Element;
     }
   } else {
     while (e !== sentinel) {
       if (selector(e)) {
         return e;
       }
-      e = e.parentElement;
+      e = e.parentNode as Element;
     }
   }
 
