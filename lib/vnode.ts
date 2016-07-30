@@ -1753,8 +1753,8 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
     if (aLength === a.length && synced === 0) {
       // Noone is synced, remove all children with one dom op.
       vNodeRemoveAllChildren(parent, a);
-      for (i = 0; i < bLength; i++) {
-        vNodeInsertChild(parent, b[i], null, owner);
+      while (bStart < bLength) {
+        vNodeInsertChild(parent, b[bStart++], null, owner);
       }
     } else {
       i = aLength - synced;
