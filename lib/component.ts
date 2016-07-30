@@ -871,9 +871,7 @@ export class Component<P, S> {
 }
 
 export function updateComponent(component: Component<any, any>, newProps?: any): void {
-  const flags = component.flags;
-
-  if (newProps !== undefined && (flags & ComponentFlags.ImmutableProps) === 0) {
+  if (newProps !== undefined && (component.flags & ComponentFlags.ImmutableProps) === 0) {
     const oldProps = component.props;
     const newPropsReceived = component.descriptor._newPropsReceived;
     if (newPropsReceived !== null) {
@@ -888,7 +886,7 @@ export function updateComponent(component: Component<any, any>, newProps?: any):
       (ComponentFlags.Dirty | ComponentFlags.Attached)) {
     if (!isThrottled() ||
         isMounting() ||
-        ((flags & ComponentFlags.HighPriorityUpdate) !== 0) ||
+        ((component.flags & ComponentFlags.HighPriorityUpdate) !== 0) ||
         (frameTimeRemaining() > 0)) {
       component.descriptor._update!(component, component.props, component.state);
       component.mtime = clock();
