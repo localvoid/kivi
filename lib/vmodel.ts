@@ -81,7 +81,7 @@ export class VModel<D> {
   /**
    * Update handler is used to override default reconciliation algorithm.
    */
-  private _updateHandler: VModelUpdateHandler<D> | null;
+  _update: ((element: Element, oldProps: D | undefined, newProps: D) => void) | null;
   /**
    * Reference to an element that will be cloned when DOM node cloning is enabled.
    */
@@ -95,7 +95,7 @@ export class VModel<D> {
     this._attrs = null;
     this._style = null;
     this._className = null;
-    this._updateHandler = null;
+    this._update = null;
     this._ref = null;
   }
 
@@ -177,9 +177,9 @@ export class VModel<D> {
    *
    * Update handler is used to override default reconciliation algorithm.
    */
-  updateHandler(handler: VModelUpdateHandler<D>): VModel<D> {
+  update(handler: (element: Element, oldProps: D | undefined, newProps: D) => void): VModel<D> {
     this._markFlags |= VNodeFlags.VModelUpdateHandler;
-    this._updateHandler = handler;
+    this._update = handler;
     return this;
   }
 
@@ -255,19 +255,4 @@ export class VModel<D> {
       return ref.cloneNode(false) as Element;
     }
   }
-
-  /**
-   * Update DOM Node with an update handler.
-   */
-  update(element: Element, oldProps: D | undefined, newProps: D): void {
-    this._updateHandler!(element, oldProps, newProps);
-  }
 }
-
-/**
- * VModel update handler is used to override default reconciliation algorithm.
- *
- * When `oldProps` is `undefined`, it means that element is created.
- */
-export type VModelUpdateHandler<D> = (element: Element, oldProps: D | undefined, newProps: D) => void;
-

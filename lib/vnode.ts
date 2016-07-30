@@ -686,9 +686,9 @@ export function vNodeRender(vnode: VNode, owner: Component<any, any> | undefined
       }
     } else {
       if ((flags & VNodeFlags.Root) === 0) {
-        (vnode._tag as VModel<any>).update(ref, undefined, vnode._props);
+        (vnode._tag as VModel<any>)._update!(ref, undefined, vnode._props);
       } else {
-        (owner!.descriptor._tag as VModel<any>).update(ref, undefined, vnode._props);
+        (owner!.descriptor._tag as VModel<any>)._update!(ref, undefined, vnode._props);
       }
     }
 
@@ -992,9 +992,9 @@ export function syncVNodes(a: VNode, b: VNode, owner?: Component<any, any>): voi
 
     } else if (a._props !== b._props) {
       if ((flags & VNodeFlags.Root) === 0) {
-        (a._tag as VModel<any>).update(ref, a._props, b._props);
+        (a._tag as VModel<any>)._update!(ref, a._props, b._props);
       } else {
-        (owner!.descriptor._tag as VModel<any>).update(ref, a._props, b._props);
+        (owner!.descriptor._tag as VModel<any>)._update!(ref, a._props, b._props);
       }
     }
 
