@@ -47,7 +47,7 @@ For example:
 
 ```ts
 const Header = new VModel<number>("section")
-  .updateHandler((element, oldProps, newProps) => {
+  .update((element, oldProps, newProps) => {
     if (oldProps === undefined || oldProps !== newProps) {
       element.style.top = newProps.toString() + "px";
     }
