@@ -10,7 +10,7 @@ export {
   isMounting,
 } from "./scheduler";
 
-export { VModel } from "./vmodel";
+export { ElementDescriptor } from "./element_descriptor";
 
 export {
   InvalidatorSubscription,
@@ -37,7 +37,7 @@ export {
 export {
   SelectorFn,
   VNodeFlags,
-  VModelFlags,
+  ElementDescriptorFlags,
   ComponentDescriptorFlags,
   ComponentFlags,
   getTagName,

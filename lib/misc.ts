@@ -25,33 +25,34 @@ if (ElementPrototype.matches === undefined) {
 export type SelectorFn = (element: Element) => boolean;
 
 /**
- * Flags shared between VModel, VNode, ComponentDescriptor and Component objects.
+ * Flags shared between ElementDescriptor, VNode, ComponentDescriptor and Component objects.
  *
  * They can be easily copied with a binary or operator from object with one type to another with different type. For
- * example, when creating VNode from VModel, we are marking flags like `VModel` directly on a VModel object.
+ * example, when creating VNode from ElementDesciptor, we are marking flags like `ElementDesciptor` directly on a
+ * VNode object.
  *
  * 16-24 bits are reserved for shared flags.
  */
 const enum SharedFlags {
   /// DOM Element is in SVG namespace.
-  Svg                 = 1 << 15,
+  Svg                            = 1 << 15,
   /// Component is using 2d canvas to render its contents.
-  Canvas2D            = 1 << 16,
-  /// Element is created from VModel.
-  VModel              = 1 << 17,
+  Canvas2D                       = 1 << 16,
+  /// Element is created from ElementDescriptor.
+  ElementDescriptor              = 1 << 17,
   /// Element is using custom reconciliation algorithm to update.
-  VModelUpdateHandler = 1 << 18,
+  ElementDescriptorUpdateHandler = 1 << 18,
   /// Recycling is enabled, items should be allocated from recycled pool.
-  EnabledRecycling    = 1 << 19,
+  EnabledRecycling               = 1 << 19,
 }
 
 /**
- * VModel flags.
+ * Element Descriptor flags.
  */
-export const enum VModelFlags {
+export const enum ElementDescriptorFlags {
   /// DOM Node cloning is enabled.
   ///
-  /// Instead of creating DOM nodes, model will clone nodes from a base node with `Node.cloneNode(false)` method.
+  /// Instead of creating DOM nodes, it will clone nodes from a base node with `Node.cloneNode(false)` method.
   EnabledCloning = 1,
 
   /// See `SharedFlags.Svg`.
@@ -90,11 +91,11 @@ export const enum VNodeFlags {
   UnsafeHTML          = 1 << 11,
 
   /// See `SharedFlags.Svg`.
-  Svg                 = SharedFlags.Svg,
-  /// See `SharedFlags.VModel`.
-  VModel              = SharedFlags.VModel,
-  /// See `SharedFlags.VModelUpdateHandler`.
-  VModelUpdateHandler = SharedFlags.VModelUpdateHandler,
+  Svg                            = SharedFlags.Svg,
+  /// See `SharedFlags.ElementDescriptor`.
+  ElementDescriptor              = SharedFlags.ElementDescriptor,
+  /// See `SharedFlags.ElementDescriptorUpdateHandler`.
+  ElementDescriptorUpdateHandler = SharedFlags.ElementDescriptorUpdateHandler,
 }
 
 /**
@@ -125,13 +126,13 @@ export const enum ComponentDescriptorFlags {
   EnabledBackRef = 1,
 
   /// See `SharedFlags.Svg`.
-  Svg              = SharedFlags.Svg,
+  Svg               = SharedFlags.Svg,
   /// See `SharedFlags.Canvas2D`.
-  Canvas2D         = SharedFlags.Canvas2D,
-  /// See `SharedFlags.VModel`.
-  VModel           = SharedFlags.VModel,
+  Canvas2D          = SharedFlags.Canvas2D,
+  /// See `SharedFlags.ElementDescriptor`.
+  ElementDescriptor = SharedFlags.ElementDescriptor,
   /// See `SharedFlags.EnabledRecycling`.
-  EnabledRecycling = SharedFlags.EnabledRecycling,
+  EnabledRecycling  = SharedFlags.EnabledRecycling,
 }
 
 /**
@@ -163,13 +164,13 @@ export const enum ComponentFlags {
   ImmutableProps             = 1 << 10,
 
   /// See `SharedFlags.Svg`.
-  Svg              = SharedFlags.Svg,
+  Svg               = SharedFlags.Svg,
   /// See `SharedFlags.Canvas2D`.
-  Canvas2D         = SharedFlags.Canvas2D,
-  /// See `SharedFlags.VModel`.
-  VModel           = SharedFlags.VModel,
+  Canvas2D          = SharedFlags.Canvas2D,
+  /// See `SharedFlags.ElementDescriptor`.
+  ElementDescriptor = SharedFlags.ElementDescriptor,
   /// See `SharedFlags.EnabledRecycling`.
-  EnabledRecycling = SharedFlags.EnabledRecycling,
+  EnabledRecycling  = SharedFlags.EnabledRecycling,
 }
 
 /**

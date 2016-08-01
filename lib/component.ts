@@ -1,7 +1,7 @@
 import {printError} from "./debug";
 import {SvgNamespace, ComponentDescriptorFlags, ComponentFlags, VNodeFlags, matchesWithAncestors,
   SelectorFn} from "./misc";
-import {VModel} from "./vmodel";
+import {ElementDescriptor} from "./element_descriptor";
 import {VNode, vNodeAttach, vNodeDetach, vNodeMount, vNodeRender, vNodeDispose, syncVNodes, createVRoot} from "./vnode";
 import {InvalidatorSubscription, Invalidator} from "./invalidator";
 import {clock, nextFrame, enableThrottling, disableThrottling, startUpdateComponentEachFrame, startMounting,
@@ -72,9 +72,9 @@ export class ComponentDescriptor<P, S> {
    */
   _flags: number;
   /**
-   * Tag name of the root element or reference to a model.
+   * Tag name of the root element or reference to an ElementDescriptor.
    */
-  _tag: string | VModel<any>;
+  _tag: string | ElementDescriptor<any>;
   /**
    * New props received handler overrides default props received behavior and it should mark component as dirty if new
    * received props will cause change in component's representation.
@@ -153,8 +153,12 @@ export class ComponentDescriptor<P, S> {
    *     const MyComponent = new ComponentDescriptor()
    *       .tagName("table");
    */
-  tagName(tagName: string): ComponentDescriptor<P, S> {
+  tagName(tagName: string | ElementDescriptor<any>): ComponentDescriptor<P, S> {
     this._tag = tagName;
+    if (typeof tagName !== "string") {
+      this._markFlags |= tagName._markFlags;
+      this._flags |= tagName._markFlags;
+    }
     return this;
   }
 
@@ -168,20 +172,6 @@ export class ComponentDescriptor<P, S> {
   svg(): ComponentDescriptor<P, S> {
     this._markFlags |= ComponentFlags.Svg;
     this._flags |= ComponentDescriptorFlags.Svg;
-    return this;
-  }
-
-  /**
-   * Set VModel for the root element.
-   *
-   *     const MyComponent = new ComponentDescriptor()
-   *       .vModel(new VModel("div").attrs({"id": "model"}))
-   *       .update((c) => { c.vSync(c.createVRoot().children("content")); });
-   */
-  vModel(model: VModel<any>): ComponentDescriptor<P, S> {
-    this._markFlags |= model._markFlags;
-    this._flags |= model._markFlags;
-    this._tag = model;
     return this;
   }
 
@@ -474,12 +464,12 @@ export class ComponentDescriptor<P, S> {
         ((this._flags & ComponentDescriptorFlags.EnabledRecycling) === 0) ||
         (this._recycledPool!.length === 0)) {
 
-      if ((this._flags & ComponentDescriptorFlags.VModel) === 0) {
+      if ((this._flags & ComponentDescriptorFlags.ElementDescriptor) === 0) {
         element = ((this._flags & ComponentDescriptorFlags.Svg) === 0) ?
             document.createElement(this._tag as string) :
             document.createElementNS(SvgNamespace, this._tag as string);
       } else {
-        element = (this._tag as VModel<any>).createElement();
+        element = (this._tag as ElementDescriptor<any>).createElement();
       }
 
       component = new Component<P, S>(this._markFlags, this, element, parent, props);
@@ -681,9 +671,9 @@ export class Component<P, S> {
    * Creates a virtual dom root node.
    */
   createVRoot(): VNode {
-    return ((this.flags & ComponentFlags.VModel) === 0) ?
+    return ((this.flags & ComponentFlags.ElementDescriptor) === 0) ?
       createVRoot() :
-      (this.descriptor._tag as VModel<any>).createVRoot();
+      (this.descriptor._tag as ElementDescriptor<any>).createVRoot();
   }
 
   /**
@@ -759,13 +749,13 @@ export class Component<P, S> {
       if ((newRoot._flags & VNodeFlags.Root) === 0) {
         throw new Error("Failed to sync: sync methods accepts only VNodes representing root node.");
       }
-      if ((this.flags & ComponentFlags.VModel) !== (newRoot._flags & VNodeFlags.VModel)) {
-        if ((this.flags & ComponentFlags.VModel) === 0) {
+      if ((this.flags & ComponentFlags.ElementDescriptor) !== (newRoot._flags & VNodeFlags.ElementDescriptor)) {
+        if ((this.flags & ComponentFlags.ElementDescriptor) === 0) {
           throw new Error("Failed to sync: vdom root should have the same type as root registered in component " +
-                          "descriptor, component descriptor is using vmodel root.");
+                          "descriptor, component descriptor is using ElementDescriptor.");
         } else {
           throw new Error("Failed to sync: vdom root should have the same type as root registered in component " +
-                          "descriptor, component descriptor is using simple tag.");
+                          "descriptor, component descriptor is using a simple element.");
         }
       }
     }

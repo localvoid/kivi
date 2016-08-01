@@ -1,7 +1,7 @@
 import {printError} from "./debug";
 import {SvgNamespace, VNodeFlags, VNodeDebugFlags, ComponentDescriptorFlags, setAttr} from "./misc";
 import {Component, ComponentDescriptor, updateComponent} from "./component";
-import {VModel} from "./vmodel";
+import {ElementDescriptor} from "./element_descriptor";
 
 /**
  * Virtual DOM Node.
@@ -29,10 +29,10 @@ export class VNode {
    */
   _flags: VNodeFlags;
   /**
-   * Tag name of the element, or reference to VModel if virtual node represents an element, or ComponentDescriptor
-   * if it represents a component.
+   * Tag name of the element, reference to an ElementDescriptor, or ComponentDescriptor if this node represents a
+   * component.
    */
-  _tag: string | VModel<any> | ComponentDescriptor<any, any> | null;
+  _tag: string | ElementDescriptor<any> | ComponentDescriptor<any, any> | null;
   /**
    * Children reconciliation algorithm is using key property to find the same node in the previous children array. Key
    * should be unique among its siblings.
@@ -99,7 +99,7 @@ export class VNode {
    */
   _debugFlags: number;
 
-  constructor(flags: number, tag: string | VModel<any> | ComponentDescriptor<any, any> | null, props: any) {
+  constructor(flags: number, tag: string | ElementDescriptor<any> | ComponentDescriptor<any, any> | null, props: any) {
     this._flags = flags;
     this._tag = tag;
     this._key = null;
@@ -145,8 +145,8 @@ export class VNode {
    *
    * When virtual node is mounted on top of existing HTML, all properties will be assigned during mounting phase.
    *
-   * If virtual node is using `VModel` instance with custom update handler, update data should be assigned with `data`
-   * method.
+   * If virtual node is using `ElementDescriptor` instance with custom update handler, update data should be assigned
+   * with `data` method.
    *
    * This method is available on element and component's root virtual node types.
    */
@@ -156,16 +156,16 @@ export class VNode {
         throw new Error("Failed to set props on VNode: props method should be called on element or component" +
                         " root nodes only.");
       }
-      if ((this._flags & VNodeFlags.VModel) !== 0) {
-        if ((this._flags & VNodeFlags.VModelUpdateHandler) !== 0) {
-          throw new Error("Failed to set props on VNode: VNode is using VModel with custom update handler.");
+      if ((this._flags & VNodeFlags.ElementDescriptor) !== 0) {
+        if ((this._flags & VNodeFlags.ElementDescriptorUpdateHandler) !== 0) {
+          throw new Error("Failed to set props on VNode: VNode is using ElementDescriptor with custom update handler.");
         }
-        const model = this._tag as VModel<any>;
-        if (model._props !== null) {
+        const eDescriptor = this._tag as ElementDescriptor<any>;
+        if (eDescriptor._props !== null) {
           const keys = Object.keys(props);
           for (let i = 0; i < keys.length; i++) {
-            if (model._props.hasOwnProperty(keys[i])) {
-              throw new Error(`Failed to set props on VNode: VNode is using VModel that uses the same` +
+            if (eDescriptor._props.hasOwnProperty(keys[i])) {
+              throw new Error(`Failed to set props on VNode: VNode is using ElementDescriptor that uses the same` +
                               ` property "${keys[i]}".`);
             }
           }
@@ -193,8 +193,8 @@ export class VNode {
    * If attribute is prefixed with "xlink:", or "xml:" namespace, it will assign attributes with `setAttributeNS`
    * method and use appropriate namespaces.
    *
-   * If virtual node is using `VModel` instance with custom update handler, update data should be assigned with `data`
-   * method.
+   * If virtual node is using `ElementDescriptor` instance with custom update handler, update data should be assigned
+   * with `data` method.
    *
    * This method is available on element and component's root virtual node types.
    */
@@ -204,16 +204,16 @@ export class VNode {
         throw new Error("Failed to set attrs on VNode: attrs method should be called on element or component" +
                         " root nodes only.");
       }
-      if ((this._flags & VNodeFlags.VModel) !== 0) {
-        if ((this._flags & VNodeFlags.VModelUpdateHandler) !== 0) {
-          throw new Error("Failed to set attrs on VNode: VNode is using VModel with custom update handler.");
+      if ((this._flags & VNodeFlags.ElementDescriptor) !== 0) {
+        if ((this._flags & VNodeFlags.ElementDescriptorUpdateHandler) !== 0) {
+          throw new Error("Failed to set attrs on VNode: VNode is using ElementDescriptor with custom update handler.");
         }
-        const model = this._tag as VModel<any>;
-        if (model._attrs !== null) {
+        const eDescriptor = this._tag as ElementDescriptor<any>;
+        if (eDescriptor._attrs !== null) {
           const keys = Object.keys(attrs);
           for (let i = 0; i < keys.length; i++) {
-            if (model._attrs.hasOwnProperty(keys[i])) {
-              throw new Error(`Failed to set attrs on VNode: VNode is using VModel that uses the same` +
+            if (eDescriptor._attrs.hasOwnProperty(keys[i])) {
+              throw new Error(`Failed to set attrs on VNode: VNode is using ElementDescriptor that uses the same` +
                               ` attribute "${keys[i]}".`);
             }
           }
@@ -241,8 +241,8 @@ export class VNode {
    * If attribute is prefixed with "xlink:", or "xml:" namespace, it will assign attributes with `setAttributeNS`
    * method and use appropriate namespaces.
    *
-   * If virtual node is using `VModel` instance with custom update handler, update data should be assigned with `data`
-   * method.
+   * If virtual node is using `ElementDescriptor` instance with custom update handler, update data should be assigned
+   * with `data` method.
    *
    * This method is available on element and component's root virtual node types.
    */
@@ -252,16 +252,16 @@ export class VNode {
         throw new Error("Failed to set attrs on VNode: attrs method should be called on element or component" +
                         " root nodes only.");
       }
-      if ((this._flags & VNodeFlags.VModel) !== 0) {
-        if ((this._flags & VNodeFlags.VModelUpdateHandler) !== 0) {
-          throw new Error("Failed to set attrs on VNode: VNode is using VModel with custom update handler.");
+      if ((this._flags & VNodeFlags.ElementDescriptor) !== 0) {
+        if ((this._flags & VNodeFlags.ElementDescriptorUpdateHandler) !== 0) {
+          throw new Error("Failed to set attrs on VNode: VNode is using ElementDescriptor with custom update handler.");
         }
-        const model = this._tag as VModel<any>;
-        if (model._attrs !== null) {
+        const eDescriptor = this._tag as ElementDescriptor<any>;
+        if (eDescriptor._attrs !== null) {
           const keys = Object.keys(attrs);
           for (let i = 0; i < keys.length; i++) {
-            if (model._attrs.hasOwnProperty(keys[i])) {
-              throw new Error(`Failed to set attrs on VNode: VNode is using VModel that uses the same` +
+            if (eDescriptor._attrs.hasOwnProperty(keys[i])) {
+              throw new Error(`Failed to set attrs on VNode: VNode is using ElementDescriptor that uses the same` +
                               ` attribute "${keys[i]}".`);
             }
           }
@@ -274,18 +274,18 @@ export class VNode {
   }
 
   /**
-   * Set update data for VModel custom update handler.
+   * Set data for ElementDescriptor update handler.
    *
    * This method is available on element and component's root virtual node types.
    */
   data(data: any): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root | VNodeFlags.VModel)) === 0) {
+      if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root | VNodeFlags.ElementDescriptor)) === 0) {
         throw new Error("Failed to set data on VNode: data method should be called on element or component" +
-                        " root nodes represented by VModel only.");
+                        " root nodes represented by ElementDescriptors only.");
       }
-      if ((this._flags & VNodeFlags.VModelUpdateHandler) === 0) {
-        throw new Error("Failed to set data on VNode: VNode should be using VModel with custom update handler.");
+      if ((this._flags & VNodeFlags.ElementDescriptorUpdateHandler) === 0) {
+        throw new Error("Failed to set data on VNode: VNode should be using ElementDescriptor with update handler.");
       }
     }
     this._props = data;
@@ -306,12 +306,12 @@ export class VNode {
         throw new Error("Failed to set style on VNode: style method should be called on element or component" +
                         " root nodes only.");
       }
-      if ((this._flags & VNodeFlags.VModel) !== 0) {
-        if ((this._flags & VNodeFlags.VModelUpdateHandler) !== 0) {
-          throw new Error("Failed to set style on VNode: VNode is using VModel with custom update handler.");
+      if ((this._flags & VNodeFlags.ElementDescriptor) !== 0) {
+        if ((this._flags & VNodeFlags.ElementDescriptorUpdateHandler) !== 0) {
+          throw new Error("Failed to set style on VNode: VNode is using ElementDescriptor with custom update handler.");
         }
-        if (((this._tag as VModel<any>)._style) !== null) {
-          throw new Error("Failed to set style on VNode: VNode is using VModel with assigned style.");
+        if (((this._tag as ElementDescriptor<any>)._style) !== null) {
+          throw new Error("Failed to set style on VNode: VNode is using ElementDescriptor with assigned style.");
         }
       }
     }
@@ -330,15 +330,15 @@ export class VNode {
   className(className: string | null): VNode {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
-        throw new Error("Failed to set classes on VNode: classes method should be called on element or component" +
+        throw new Error("Failed to set className on VNode: className method should be called on element or component" +
                         " root nodes only.");
       }
-      if ((this._flags & VNodeFlags.VModel) !== 0) {
-        if ((this._flags & VNodeFlags.VModelUpdateHandler) !== 0) {
-          throw new Error("Failed to set style on VNode: vnode is using vmodel with custom update handler.");
+      if ((this._flags & VNodeFlags.ElementDescriptor) !== 0) {
+        if ((this._flags & VNodeFlags.ElementDescriptorUpdateHandler) !== 0) {
+          throw new Error("Failed to set style on VNode: VNode is using ElementDescriptor with update handler.");
         }
-        if (((this._tag as VModel<any>)._className) !== null) {
-          throw new Error("Failed to set style on VNode: vnode is using vmodel with assigned className.");
+        if (((this._tag as ElementDescriptor<any>)._className) !== null) {
+          throw new Error("Failed to set style on VNode: VNode is using ElementDescriptor with assigned className.");
         }
       }
     }
@@ -604,14 +604,14 @@ export function vNodeInstantiate(vnode: VNode, owner: Component<any, any> | unde
   if ((flags & VNodeFlags.Text) !== 0) {
     vnode.ref = document.createTextNode(vnode._props);
   } else if ((flags & VNodeFlags.Element) !== 0) {
-    if ((flags & VNodeFlags.VModel) === 0) {
+    if ((flags & VNodeFlags.ElementDescriptor) === 0) {
       if ((flags & VNodeFlags.Svg) === 0) {
         vnode.ref = document.createElement(vnode._tag as string) as Node;
       } else {
         vnode.ref = document.createElementNS(SvgNamespace, vnode._tag as string) as Node;
       }
     } else {
-      vnode.ref = (vnode._tag as VModel<any>).createElement() as Node;
+      vnode.ref = (vnode._tag as ElementDescriptor<any>).createElement() as Node;
     }
   } else if ((flags & VNodeFlags.KeepAlive) === 0) {
     const c = (vnode._tag as ComponentDescriptor<any, any>).createComponent(owner, vnode._props);
@@ -651,7 +651,7 @@ export function vNodeRender(vnode: VNode, owner: Component<any, any> | undefined
 
   if ((flags & (VNodeFlags.Element | VNodeFlags.Root)) !== 0) {
     ref = vnode.ref as Element;
-    if ((flags & VNodeFlags.VModelUpdateHandler) === 0) {
+    if ((flags & VNodeFlags.ElementDescriptorUpdateHandler) === 0) {
       const props = vnode._props;
       if (props !== null) {
         keys = Object.keys(props);
@@ -686,9 +686,9 @@ export function vNodeRender(vnode: VNode, owner: Component<any, any> | undefined
       }
     } else {
       if ((flags & VNodeFlags.Root) === 0) {
-        (vnode._tag as VModel<any>)._update!(ref, undefined, vnode._props);
+        (vnode._tag as ElementDescriptor<any>)._update!(ref, undefined, vnode._props);
       } else {
-        (owner!.descriptor._tag as VModel<any>)._update!(ref, undefined, vnode._props);
+        (owner!.descriptor._tag as ElementDescriptor<any>)._update!(ref, undefined, vnode._props);
       }
     }
 
@@ -757,8 +757,8 @@ export function vNodeMount(vnode: VNode, node: Node, owner: Component<any, any> 
       }
       const eTagName = ((node as Element).tagName).toLowerCase();
       let cTagName: string;
-      if ((dflags & ComponentDescriptorFlags.VModel) !== 0) {
-        cTagName = (cref.descriptor._tag as VModel<any>)._tagName.toLowerCase();
+      if ((dflags & ComponentDescriptorFlags.ElementDescriptor) !== 0) {
+        cTagName = (cref.descriptor._tag as ElementDescriptor<any>)._tagName.toLowerCase();
         if (cTagName !== eTagName) {
           throw new Error(`Failed to mount VNode: invalid tagName, component expects tagName "${cTagName}", but` +
             ` found "${eTagName}".`);
@@ -812,13 +812,13 @@ export function vNodeMount(vnode: VNode, node: Node, owner: Component<any, any> 
 
     if ((vnode._flags & (VNodeFlags.Element | VNodeFlags.Root)) !== 0) {
       // Assign properties on mount, because they don't exist in html markup.
-      if ((flags & VNodeFlags.VModel) !== 0) {
-        const model = vnode._tag as VModel<any>;
-        if (model._props !== null) {
-          keys = Object.keys(model._props);
+      if ((flags & VNodeFlags.ElementDescriptor) !== 0) {
+        const eDescriptor = vnode._tag as ElementDescriptor<any>;
+        if (eDescriptor._props !== null) {
+          keys = Object.keys(eDescriptor._props);
           for (i = 0; i < keys.length; i++) {
             key = keys[i];
-            (node as any)[key] = model._props[key];
+            (node as any)[key] = eDescriptor._props[key];
           }
         }
       }
@@ -961,7 +961,7 @@ export function syncVNodes(a: VNode, b: VNode, owner?: Component<any, any>): voi
       a.ref!.nodeValue = b._props as string;
     }
   } else if ((flags & (VNodeFlags.Element | VNodeFlags.Root)) !== 0) {
-    if ((flags & VNodeFlags.VModelUpdateHandler) === 0) {
+    if ((flags & VNodeFlags.ElementDescriptorUpdateHandler) === 0) {
       if (a._props !== b._props) {
         syncStaticShapeProps(ref, a._props, b._props);
       }
@@ -992,9 +992,9 @@ export function syncVNodes(a: VNode, b: VNode, owner?: Component<any, any>): voi
 
     } else if (a._props !== b._props) {
       if ((flags & VNodeFlags.Root) === 0) {
-        (a._tag as VModel<any>)._update!(ref, a._props, b._props);
+        (a._tag as ElementDescriptor<any>)._update!(ref, a._props, b._props);
       } else {
-        (owner!.descriptor._tag as VModel<any>)._update!(ref, a._props, b._props);
+        (owner!.descriptor._tag as ElementDescriptor<any>)._update!(ref, a._props, b._props);
       }
     }
 

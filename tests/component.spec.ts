@@ -1,6 +1,6 @@
 import {ComponentDescriptor} from "../lib/component";
 import {LifecycleComponent} from "./lifecycle";
-import {VModel} from "../lib/vmodel";
+import {ElementDescriptor} from "../lib/element_descriptor";
 
 const expect = chai.expect;
 
@@ -38,10 +38,9 @@ describe("Component", () => {
       expect(c.get2DContext() instanceof CanvasRenderingContext2D).to.be.true;
     });
 
-    it("should create element from vmodel", () => {
-      const m = new VModel("span");
+    it("should create element from ElementDescriptor", () => {
       const d = new ComponentDescriptor<any, any>()
-        .vModel(m);
+        .tagName(new ElementDescriptor("span"));
       const c = d.createRootComponent();
       expect(c.element.tagName).to.equal("SPAN");
       expect(c.element instanceof HTMLElement).to.be.true;

@@ -1,5 +1,5 @@
 import {VNode, vNodeInstantiate, vNodeRender, createVElement, createVText} from "../../lib/vnode";
-import {syncVNodes} from "../../lib/reconciler";
+import {syncVNodes} from "../../lib/vnode";
 import {scheduleMacrotask} from "../../lib/scheduler";
 
 function injectVNode(parent: DocumentFragment, node: VNode, nextRef?: Element): void {

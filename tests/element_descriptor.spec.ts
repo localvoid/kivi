@@ -1,25 +1,25 @@
-import {VModel} from "../lib/vmodel";
+import {ElementDescriptor} from "../lib/element_descriptor";
 import {XlinkNamespace} from "../lib/misc";
 
 const expect = chai.expect;
 
-describe("VModel", () => {
+describe("ElementDescriptor", () => {
   it("should create div element", () => {
-    const m = new VModel("div");
+    const m = new ElementDescriptor("div");
     const e = m.createElement();
     expect(e.tagName).to.equal("DIV");
     expect(e).isPrototypeOf(HTMLElement);
   });
 
   it("should create svg element", () => {
-    const m = new VModel("a")
+    const m = new ElementDescriptor("a")
       .svg();
     const e = m.createElement();
     expect(e).isPrototypeOf(SVGElement);
   });
 
   it("should assign props", () => {
-    const m = new VModel("div")
+    const m = new ElementDescriptor("div")
       .props({
         prop1: "value1",
         prop2: "value2",
@@ -30,7 +30,7 @@ describe("VModel", () => {
   });
 
   it("should assign attrs", () => {
-    const m = new VModel("div")
+    const m = new ElementDescriptor("div")
       .attrs({
         attr1: "value1",
         attr2: "value2",
@@ -41,7 +41,7 @@ describe("VModel", () => {
   });
 
   it("should assign svg attrs", () => {
-    const m = new VModel("a")
+    const m = new ElementDescriptor("a")
       .svg()
       .attrs({
         "xlink:href": "value"
@@ -51,14 +51,14 @@ describe("VModel", () => {
   });
 
   it("should assign style", () => {
-    const m = new VModel("div")
+    const m = new ElementDescriptor("div")
       .style("background: red");
     const e = m.createElement();
     expect((e as HTMLElement).style.background).to.have.string("red");
   });
 
   it("should assign svg style", () => {
-    const m = new VModel("a")
+    const m = new ElementDescriptor("a")
       .svg()
       .style("background: red");
     const e = m.createElement();
@@ -66,14 +66,14 @@ describe("VModel", () => {
   });
 
   it("should assign className", () => {
-    const m = new VModel("div")
+    const m = new ElementDescriptor("div")
       .className("box");
     const e = m.createElement();
     expect((e as HTMLElement).className).to.equal("box");
   });
 
   it("should assign svg className", () => {
-    const m = new VModel("a")
+    const m = new ElementDescriptor("a")
       .svg()
       .className("box");
     const e = m.createElement();
@@ -81,7 +81,7 @@ describe("VModel", () => {
   });
 
   it("should update using custom update handler", () => {
-    const m = new VModel<string>("div")
+    const m = new ElementDescriptor<string>("div")
       .update((element: HTMLElement, oldData: string | undefined, newData: string) => {
         if (oldData === undefined) {
           element.className = newData;

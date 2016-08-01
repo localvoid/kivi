@@ -1,38 +1,38 @@
-import {SvgNamespace, VNodeFlags, VModelFlags, setAttr} from "./misc";
+import {SvgNamespace, VNodeFlags, ElementDescriptorFlags, setAttr} from "./misc";
 import {VNode} from "./vnode";
 
 /**
- * Model for DOM Elements.
+ * Element Descriptor.
  *
- * Models are used as an advanced optimization technique. When creating virtual nodes, or declaring root node for a
- * component, it is possible to link them to a model instead of simple HTML tagName. Model will contain all static
- * properties for the HTML Element, so there is no need to declare them each time virtual node is created. It also
- * reduces diff overhead, because there is no need to diff static model properties.
+ * ElementDescriptors are used as an advanced optimization technique. When creating virtual nodes, or declaring root
+ * node for a component, it is possible to link them to an element descriptor instead of simple HTML tagName.
+ * Element Descriptor  will contain all static properties for the HTML Element, so there is no need to declare them
+ * each time virtual node is created. It also reduces diff overhead, because there is no need to diff static properties.
  *
- * Creating a virtual dom node from VModel:
+ * Creating a virtual dom node from ElementDescriptor:
  *
- *     const model = new VModel("div").attrs({"id": "model"});
+ *     const d = new ElementDescriptor("div").attrs({"id": "element"});
  *     // Element node
- *     const node = mode.createVNode();
+ *     const node = d.createVNode();
  *     // Component's root node
- *     const root = mode.createVRoot();
+ *     const root = d.createVRoot();
  *
- * Creating a DOM node from VModel:
+ * Creating a DOM Element from ElementDescriptor:
  *
- *     const model = new VModel("div").attrs({"id": "model"});
- *     const div = model.createElement();
+ *     const d = new ElementDescriptor("div").attrs({"id": "element"});
+ *     const div = d.createElement();
  *
  * @final
  */
-export class VModel<D> {
+export class ElementDescriptor<D> {
   /**
-   * Flags that should be marked on VNode and ComponentDescriptor when they are associated with VModel.
+   * Flags that should be marked on VNode and ComponentDescriptor when they are associated with ElementDescriptor.
    *
    * See `SharedFlags` for details.
    */
   _markFlags: number;
   /**
-   * Flags, see `VModelFlags` for details.
+   * Flags, see `ElementDescriptorFlags` for details.
    */
   _flags: number;
   /**
@@ -47,8 +47,8 @@ export class VModel<D> {
    *     e: HTMLElement;
    *     e.propertyName = propertyValue;
    *
-   * When virtual node is mounted on top of existing HTML, all properties from model will be assigned during mounting
-   * phase.
+   * When virtual node is mounted on top of existing HTML, all properties from descriptor will be assigned during
+   * mounting phase.
    */
   _props: {[key: string]: any} | null;
   /**
@@ -88,7 +88,7 @@ export class VModel<D> {
   private _ref: Element | null;
 
   constructor(tagName: string) {
-    this._markFlags = VNodeFlags.VModel;
+    this._markFlags = VNodeFlags.ElementDescriptor;
     this._flags = 0;
     this._tagName = tagName;
     this._props = null;
@@ -102,9 +102,9 @@ export class VModel<D> {
   /**
    * Use svg namespace for the DOM element.
    */
-  svg(): VModel<D> {
+  svg(): ElementDescriptor<D> {
     this._markFlags |= VNodeFlags.Svg;
-    this._flags |= VModelFlags.Svg;
+    this._flags |= ElementDescriptorFlags.Svg;
     return this;
   }
 
@@ -116,10 +116,10 @@ export class VModel<D> {
    *     e: HTMLElement;
    *     e.propertyName = propertyValue;
    *
-   * When virtual node is mounted on top of existing HTML, all properties from model will be assigned during mounting
-   * phase.
+   * When virtual node is mounted on top of existing HTML, all properties from descritpro will be assigned during
+   * mounting phase.
    */
-  props(props: {[key: string]: any}): VModel<D> {
+  props(props: {[key: string]: any}): ElementDescriptor<D> {
     this._props = props;
     return this;
   }
@@ -135,7 +135,7 @@ export class VModel<D> {
    * If attribute is prefixed with "xlink:", or "xml:" namespace, it will assign attributes with `setAttributeNS`
    * method and use appropriate namespaces.
    */
-  attrs(attrs: {[key: string]: any}): VModel<D> {
+  attrs(attrs: {[key: string]: any}): ElementDescriptor<D> {
     this._attrs = attrs;
     return this;
   }
@@ -146,7 +146,7 @@ export class VModel<D> {
    * Style is assigned to DOM nodes with `style.cssText` property, if virtual node represents an element from svg
    * namespace, style will be assigned with `setAttribute("style", "cssText")` method.
    */
-  style(style: string): VModel<D> {
+  style(style: string): ElementDescriptor<D> {
     this._style = style;
     return this;
   }
@@ -157,7 +157,7 @@ export class VModel<D> {
    * Class name is assigned to DOM nodes with `className` property, if virtual node represents an element from svg
    * namespace, class name will be assigned with `setAttribute("class", "className")` method.
    */
-  className(classes: string): VModel<D> {
+  className(classes: string): ElementDescriptor<D> {
     this._className = classes;
     return this;
   }
@@ -165,10 +165,10 @@ export class VModel<D> {
   /**
    * Enable node cloning.
    *
-   * Instead of creating DOM nodes, model will clone nodes from a base node with `Node.cloneNode(false)` method.
+   * Instead of creating DOM nodes, descriptor will clone nodes from a base node with `Node.cloneNode(false)` method.
    */
-  enableCloning(): VModel<D> {
-    this._flags |= VModelFlags.EnabledCloning;
+  enableCloning(): ElementDescriptor<D> {
+    this._flags |= ElementDescriptorFlags.EnabledCloning;
     return this;
   }
 
@@ -177,8 +177,8 @@ export class VModel<D> {
    *
    * Update handler is used to override default reconciliation algorithm.
    */
-  update(handler: (element: Element, oldProps: D | undefined, newProps: D) => void): VModel<D> {
-    this._markFlags |= VNodeFlags.VModelUpdateHandler;
+  update(handler: (element: Element, oldProps: D | undefined, newProps: D) => void): ElementDescriptor<D> {
+    this._markFlags |= VNodeFlags.ElementDescriptorUpdateHandler;
     this._update = handler;
     return this;
   }
@@ -207,7 +207,7 @@ export class VModel<D> {
     let ref = this._ref;
 
     if (ref === null) {
-      if ((this._flags & VModelFlags.Svg) === 0) {
+      if ((this._flags & ElementDescriptorFlags.Svg) === 0) {
         ref = document.createElement(this._tagName);
       } else {
         ref = document.createElementNS(SvgNamespace, this._tagName);
@@ -230,7 +230,7 @@ export class VModel<D> {
       }
 
       if (this._style !== null) {
-        if ((this._flags & VModelFlags.Svg) === 0) {
+        if ((this._flags & ElementDescriptorFlags.Svg) === 0) {
           (ref as HTMLElement).style.cssText = this._style;
         } else {
           (ref as SVGElement).setAttribute("style", this._style);
@@ -238,14 +238,14 @@ export class VModel<D> {
       }
 
       if (this._className !== null) {
-        if ((this._flags & VModelFlags.Svg) === 0) {
+        if ((this._flags & ElementDescriptorFlags.Svg) === 0) {
           (ref as HTMLElement).className = this._className;
         } else {
           (ref as SVGElement).setAttribute("class", this._className);
         }
       }
 
-      if ((this._flags & VModelFlags.EnabledCloning) !== 0) {
+      if ((this._flags & ElementDescriptorFlags.EnabledCloning) !== 0) {
         this._ref = ref;
         return ref.cloneNode(false) as Element;
       }
