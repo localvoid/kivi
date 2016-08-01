@@ -4,8 +4,7 @@ import {SvgNamespace, ComponentDescriptorFlags, ComponentFlags, VNodeFlags, matc
 import {ElementDescriptor} from "./element_descriptor";
 import {VNode, vNodeAttach, vNodeDetach, vNodeMount, vNodeRender, vNodeDispose, syncVNodes, createVRoot} from "./vnode";
 import {InvalidatorSubscription, Invalidator} from "./invalidator";
-import {clock, nextFrame, enableThrottling, disableThrottling, startUpdateComponentEachFrame, startMounting,
-  finishMounting, isMounting, isThrottled, frameTimeRemaining} from "./scheduler";
+import {clock, nextFrame, startUpdateComponentEachFrame, startMounting, finishMounting, isMounting} from "./scheduler";
 
 /**
  * Component Descriptor registry used in DEBUG mode.
@@ -677,35 +676,6 @@ export class Component<P, S> {
   }
 
   /**
-   * **EXPERIMENTAL** Start interaction.
-   *
-   * When interaction is started, component becomes a high priority target for a scheduler, and scheduler goes into
-   * throttled mode.
-   */
-  startInteraction(): void {
-    if ((this.flags & ComponentFlags.EnabledThrottling) === 0) {
-      this.flags |= ComponentFlags.HighPriorityUpdate | ComponentFlags.EnabledThrottling;
-      enableThrottling();
-    } else {
-      this.flags |= ComponentFlags.HighPriorityUpdate;
-    }
-  }
-
-  /**
-   * **EXPERIMENTAL** Finish interaction.
-   *
-   * Removes high priority flag from component and disables scheduler throttling.
-   */
-  finishInteraction(): void {
-    if ((this.flags & ComponentFlags.EnabledThrottling) === 0) {
-      this.flags &= ~ComponentFlags.HighPriorityUpdate;
-    } else {
-      this.flags &= ~(ComponentFlags.HighPriorityUpdate | ComponentFlags.EnabledThrottling);
-      disableThrottling();
-    }
-  }
-
-  /**
    * Adds component to a scheduler queue that will update component each animation frame.
    *
    * Component will be updated always, even when scheduler is in throttled mode.
@@ -874,16 +844,9 @@ export function updateComponent(component: Component<any, any>, newProps?: any):
 
   if ((component.flags & (ComponentFlags.Dirty | ComponentFlags.Attached)) ===
       (ComponentFlags.Dirty | ComponentFlags.Attached)) {
-    if (!isThrottled() ||
-        isMounting() ||
-        ((component.flags & ComponentFlags.HighPriorityUpdate) !== 0) ||
-        (frameTimeRemaining() > 0)) {
-      component.descriptor._update!(component, component.props, component.state);
-      component.mtime = clock();
-      component.flags &= ~(ComponentFlags.Dirty | ComponentFlags.InUpdateQueue);
-    } else {
-      nextFrame().updateComponent(component);
-    }
+    component.descriptor._update!(component, component.props, component.state);
+    component.mtime = clock();
+    component.flags &= ~(ComponentFlags.Dirty | ComponentFlags.InUpdateQueue);
   }
 }
 
@@ -910,10 +873,7 @@ function componentDetached(component: Component<any, any>): void {
       throw new Error("Failed to detach Component: component is already detached.");
     }
   }
-  if ((component.flags & ComponentFlags.EnabledThrottling) !== 0) {
-    disableThrottling();
-  }
-  component.flags &= ~(ComponentFlags.Attached | ComponentFlags.UpdateEachFrame | ComponentFlags.EnabledThrottling);
+  component.flags &= ~(ComponentFlags.Attached | ComponentFlags.UpdateEachFrame);
   componentCancelSubscriptions(component);
   componentCancelTransientSubscriptions(component);
   const detached = component.descriptor._detached;

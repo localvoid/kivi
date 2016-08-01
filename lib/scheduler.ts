@@ -14,26 +14,9 @@ const enum SchedulerFlags {
   MacrotaskPending         = 1 << 1,
   /// Frametasks are pending for execution in frametasks queue.
   FrametaskPending         = 1 << 2,
-  /// When throttling is enabled, component updates are switched to incremental mode.
-  EnabledThrottling        = 1 << 3,
-  /// Time frame for executing frame tasks in the current frame is ended.
-  ThrottledFrameExhausted  = 1 << 4,
   /// Mounting is enabled.
-  EnabledMounting          = 1 << 5,
+  EnabledMounting          = 1 << 3,
 }
-
-/**
- * Minimum time frame duration for throttled tasks.
- */
-const MinThrottleDuration = 2;
-/**
- * Maximum time frame duration for throttled tasks.
- */
-const MaxThrottleDuration = 6;
-/**
- * Default time frame duration for throttled tasks.
- */
-const DefaultThrottleDuration = 6;
 
 const enum FrameTasksGroupFlags {
   Component = 1,
@@ -42,7 +25,6 @@ const enum FrameTasksGroupFlags {
   After     = 1 << 3,
   RWLock    = 1 << 4,
 }
-
 
 /**
  * Frame tasks group contains tasks for updating components, read dom and write dom tasks, and tasks that should be
@@ -224,12 +206,6 @@ const scheduler = {
   microtaskNode: document.createTextNode(""),
   microtaskToggle: 0,
   macrotaskMessage: "__kivi" + Math.random(),
-  throttleEnabledCounter: 0,
-  throttledFrameDuration: DefaultThrottleDuration,
-  throttledFps: 60,
-  throttledDiffWindow: 0,
-  throttledFrameDeadline: 0,
-  throttledPrevTimestamp: 0,
 };
 
 // Microtask scheduler based on mutation observer
@@ -282,29 +258,7 @@ function handleNextFrame(t: number): void {
   let i: number;
   let j: number;
 
-  scheduler.flags &= ~(SchedulerFlags.FrametaskPending | SchedulerFlags.ThrottledFrameExhausted);
-
-  if ((scheduler.flags & SchedulerFlags.EnabledThrottling) !== 0) {
-    if (scheduler.throttledPrevTimestamp > 0) {
-      scheduler.throttledFps += 0.0165 * ((1000 / (t - scheduler.throttledPrevTimestamp)) - scheduler.throttledFps);
-      scheduler.throttledDiffWindow += (scheduler.throttledFps < 55) ? -1 : 1;
-      if (scheduler.throttledDiffWindow > 5) {
-        scheduler.throttledDiffWindow = 0;
-        scheduler.throttledFrameDuration += 0.1;
-      } else if (scheduler.throttledDiffWindow < -5) {
-        scheduler.throttledDiffWindow = 0;
-        scheduler.throttledFrameDuration *= 0.66;
-      }
-      if (scheduler.throttledFrameDuration > MaxThrottleDuration) {
-        scheduler.throttledFrameDuration = MaxThrottleDuration;
-      } else if (scheduler.throttledFrameDuration < MinThrottleDuration) {
-        scheduler.throttledFrameDuration = MinThrottleDuration;
-      }
-    }
-    scheduler.throttledPrevTimestamp = t;
-    scheduler.throttledFrameDeadline = t + scheduler.throttledFrameDuration;
-    requestNextFrame();
-  }
+  scheduler.flags &= ~SchedulerFlags.FrametaskPending;
 
   scheduler.time = Date.now();
 
@@ -473,56 +427,6 @@ export function nextFrame(): FrameTasksGroup {
 }
 
 /**
- * **EXPERIMENTAL** Enable throttling mode.
- *
- * In throttling mode, all updates for low priority components will be throttled, all updates will be performed
- * incrementally each frame.
- *
- * Each time throttling is enabled, it increases internal counter that tracks how many times it is enabled, and when
- * counters goes to zero, throttling mode will be disabled.
- */
-export function enableThrottling(): void {
-  scheduler.throttleEnabledCounter++;
-  scheduler.flags |= SchedulerFlags.EnabledThrottling;
-}
-
-/**
- * **EXPERIMENTAL** Disable throttling mode.
- *
- * Throttling mode will be disabled when number of dependencies that enabled throttling mode goes to zero.
- */
-export function disableThrottling(): void {
-  if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-    if (scheduler.throttleEnabledCounter < 0) {
-      throw new Error("Failed to disable scheduler throttling, it is already disabled.");
-    }
-  }
-
-  scheduler.throttleEnabledCounter--;
-  if (scheduler.throttleEnabledCounter === 0) {
-    scheduler.flags &= ~SchedulerFlags.EnabledThrottling;
-    scheduler.throttledPrevTimestamp = 0;
-  }
-}
-
-/**
- * Get remaining time available for tasks in the current frame.
- */
-export function frameTimeRemaining(): number {
-  if ((scheduler.flags & SchedulerFlags.ThrottledFrameExhausted) !== 0) {
-    return 0;
-  } else {
-    const remaining = scheduler.throttledFrameDeadline - performance.now();
-    if (remaining <= 0) {
-      scheduler.flags |= SchedulerFlags.ThrottledFrameExhausted;
-      return 0;
-    } else {
-      return remaining;
-    }
-  }
-}
-
-/**
  * Add component to the list of components that should be updated each frame.
  */
 export function startUpdateComponentEachFrame(component: Component<any, any>): void {
@@ -535,13 +439,6 @@ export function startUpdateComponentEachFrame(component: Component<any, any>): v
  */
 export function isMounting(): boolean {
   return ((scheduler.flags & SchedulerFlags.EnabledMounting) !== 0);
-}
-
-/**
- * Returns true if tasks should be throttled.
- */
-export function isThrottled(): boolean {
-  return ((scheduler.flags & SchedulerFlags.EnabledThrottling) !== 0);
 }
 
 /**

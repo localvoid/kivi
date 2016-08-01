@@ -5,8 +5,6 @@ export {
   scheduleMacrotask,
   currentFrame,
   nextFrame,
-  enableThrottling,
-  disableThrottling,
   isMounting,
 } from "./scheduler";
 

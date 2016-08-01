@@ -35,13 +35,3 @@ const AnimatedComponent = new ComponentDescriptor()
 ```
 
 `stopUpdateEachFrame()` method will remove component from the list of components that should be updated on each frame.
-
-## Incremental rendering \*\*EXPERIMENTAL\*\*
-
-Components provide two methods that can trigger incremental rendering: `startInteraction()` and `finishInteraction()`.
-
-`startInteraction()` will enable throttling mode in the scheduler, increment its dependency counter, and mark component
-as a high priority component. High priority components will be updated even if timeframe for a throttled frame is over.
-
-`finishInteraction()` will decrease throttling mode dependency counter, and when this counter gets to zero, it will
-disable throttling mode. It also removes flag indicating that component should be a high priority for updates.

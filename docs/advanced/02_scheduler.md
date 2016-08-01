@@ -69,12 +69,3 @@ const MyComponent = new ComponentDescriptor<Data, any>()
 Here we need to check if component's `mtime` property is older than `mtime` in a data object, and if it is older,
 we are marking component as dirty. When component finishes update, it will automatically set its `mtime` to the current
 `clock()` value.
-
-## Incremental rendering
-
-Incremental rendering is a technique to throttle frame tasks. Scheduler will have a small timeframe to perform frame
-tasks on each frame. When timeframe ends, it stops updating and waits for the next frame, scheduler will incrementally
-update all components until each one is updated.
-
-This technique is useful to make jank-free interactions, for example when user performs an action on an interactive
-component, this component gets a high-priority for updates and scheduler starts updating incrementally.

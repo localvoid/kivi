@@ -158,10 +158,8 @@ export const enum ComponentFlags {
   InUpdateQueue              = 1 << 7,
   /// Component has a high priority and should be updated even when time frame for incremental rendering is exhausted.
   HighPriorityUpdate         = 1 << 8,
-  /// Component is enabled scheduler throttling.
-  EnabledThrottling          = 1 << 9,
   /// Component has immutable props.
-  ImmutableProps             = 1 << 10,
+  ImmutableProps             = 1 << 9,
 
   /// See `SharedFlags.Svg`.
   Svg               = SharedFlags.Svg,
