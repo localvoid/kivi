@@ -488,10 +488,6 @@ export class VNode {
     }
     return this;
   }
-
-  getComponentRef<P, S>(): Component<P, S> {
-    return this.cref as Component<P, S>;
-  }
 }
 
 /**

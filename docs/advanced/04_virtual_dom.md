@@ -19,7 +19,9 @@ diffing it by reusing the same virtual node on each render. For example:
 
 ```ts
 const MyComponent = new ComponentDescriptor<void, {node: VNode}>()
-  .createState((c) => ({node: createVElement("div").children("pretend that there is some heavy content...")}))
+  .init((c) => {
+    c.state = {node: createVElement("div").children("pretend that there is some heavy content...")};
+  })
   .update((c, props, state) => {
     c.vSync(c.createVRoot()
       .children([
@@ -37,7 +39,9 @@ instead of disposing them, they are detached.
 
 ```ts
 const MyComponent = new ComponentDescriptor<{showChild: boolean}, {aliveComponent: Component}>()
-  .createState((c) => ({aliveComponent: ChildComponent.createComponent()}))
+  .init((c) => {
+    c.state = {aliveComponent: ChildComponent.createComponent()};
+  })
   .update((c, props, state) => {
     const root = c.createVRoot();
     if (props.showChild) {

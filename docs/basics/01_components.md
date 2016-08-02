@@ -38,14 +38,16 @@ class State {
 
 const MyComponent = new ComponentDescriptor<Props, State>()
   .canvas()
-  .createState((c, props) => new State(props))
+  .init((c, props) => {
+    c.state = new State(props);
+  })
   .update((c, props, state) => {
     const ctx = c.get2DContext();
     ctx.fillStyle = 'rgba(0, 0, 0, 1)';
     ctx.fillRect(props.x, props.y, state.xy, state.xy);
   });
 
-const componentInstance = MyComponent.createRootComponent(new Data(10, 20));
+const componentInstance = MyComponent.createRootComponent(new Props(10, 20));
 ```
 
 ### Setting component properties
@@ -108,19 +110,6 @@ const MyCanvasComponent = new ComponentDescriptor<void, void>()
 
 ## Lifecycle methods
 
-### createState
-
-Create state handler will be invoked immediately after component is instantiated and it should return initial state.
-
-```ts
-const MyComponent = new ComponentDescriptor<number, number>()
-  .createState((c, props) => props * props)
-  .update((c, props, state) => {
-    c.vSync(c.createVRoot().children(state.toString()));
-  });
-```
-
-
 ### init
 
 Init handler will be invoked after component state is created, `element` and `props` properties will be
@@ -180,7 +169,9 @@ Detached handler will be invoked when component is detached from the document.
 
 ```ts
 const MyComponent = new ComponentDescriptor<void, {onResize: (e: Event) => void}>()
-  .createState((c) => ({onResize: (e) => { console.log("window resized"); }}))
+  .init((c) => {
+    c.state = {onResize: (e) => { console.log("window resized"); }};
+  })
   .attached((c, props, state) => {
     window.addEventListener("resize", state.onResize);
   })

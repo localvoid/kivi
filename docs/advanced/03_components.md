@@ -13,7 +13,9 @@ Component descriptor method `enableComponentRecycling(maxRecycled: number)` will
 ```ts
 const Button = new ComponentDescriptor()
   .enableComponentRecycling(100)
-  .vRender((c, root) => { root.className("button"); });
+  .update((c) => {
+    c.vSync(c.createVRoot().className("button"));
+  });
 ```
 
 Note: kivi library should be compiled with enabled component recycling. To enable recycling, replace all string

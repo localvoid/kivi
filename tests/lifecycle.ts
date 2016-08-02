@@ -11,11 +11,11 @@ export class LifecycleState {
 }
 
 export const LifecycleComponent = new ComponentDescriptor<number, LifecycleState>()
-  .createState((c) => new LifecycleState())
-  .init((c, props, state) => {
-    state.checkInit = state.lifecycleCounter++;
+  .init((c) => {
+    c.state = new LifecycleState();
+    c.state.checkInit = c.state.lifecycleCounter++;
   })
-  .update((c, props, state) => { state.checkUpdate = state.lifecycleCounter++; })
-  .attached((c, props, state) => { state.checkAttached = state.lifecycleCounter++; })
-  .detached((c, props, state) => { state.checkDetached = state.lifecycleCounter++; })
-  .disposed((c, props, state) => { state.checkDisposed = state.lifecycleCounter++; });
+  .update((c) =>   { c.state!.checkUpdate   = c.state!.lifecycleCounter++; })
+  .attached((c) => { c.state!.checkAttached = c.state!.lifecycleCounter++; })
+  .detached((c) => { c.state!.checkDetached = c.state!.lifecycleCounter++; })
+  .disposed((c) => { c.state!.checkDisposed = c.state!.lifecycleCounter++; });

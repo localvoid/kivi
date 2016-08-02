@@ -1,9 +1,9 @@
 const Main = new kivi.ComponentDescriptor()
-  .createState((c) => ({elapsedSeconds: 0}))
-  .init((c, props, state) => {
+  .init((c) => {
+    c.state = {elapsedSeconds: 0};
     const startTime = Date.now();
     setInterval(() => {
-      state.elapsedSeconds = Date.now() - startTime;
+      c.state.elapsedSeconds = Date.now() - startTime;
       c.invalidate();
     }, 50);
   })

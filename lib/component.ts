@@ -50,7 +50,9 @@ export interface XTagElement<P, S> extends Element {
  *
  *     const MyComponent = new ComponentDescriptor<number, State>()
  *       .canvas()
- *       .createState((c, props) => new State(props))
+ *       .init((c) => {
+ *         c.state = new State(props);
+ *       })
  *       .update((c, props, state) => {
  *         const ctx = c.get2DContext();
  *         ctx.fillStyle = 'rgba(0, 0, 0, 1)';
@@ -84,13 +86,9 @@ export class ComponentDescriptor<P, S> {
    */
   _update: ((component: Component<P, S>, props: P, state: S) => void) | null;
   /**
-   * Lifecycle handler createState should create a new state.
-   */
-  _createState: ((component: Component<P, S>, props: P) => S) | null;
-  /**
    * Lifecycle handler init.
    */
-  _init: ((component: Component<P, S>, props: P, state: S) => void) | null;
+  _init: ((component: Component<P, S>, props: P) => void) | null;
   /**
    * Lifecycle handler attached.
    */
@@ -123,7 +121,6 @@ export class ComponentDescriptor<P, S> {
     this._tag = "div";
     this._newPropsReceived = null;
     this._update = null;
-    this._createState = null;
     this._init = null;
     this._attached = null;
     this._detached = null;
@@ -193,22 +190,6 @@ export class ComponentDescriptor<P, S> {
   }
 
   /**
-   * Set lifecycle handler createState.
-   *
-   * Create state handler should return a new state. It is invoked immediately after component instantiation.
-   *
-   *     const MyComponent = new ComponentDescriptor<number, number>()
-   *       .createState((c, props) => props * props)
-   *       .update((c, props, state) => {
-   *         c.vSync(c.createVRoot().children(state.toString()));
-   *       });
-   */
-  createState(createState: (component: Component<P, S>, props: P) => S): ComponentDescriptor<P, S> {
-    this._createState = createState;
-    return this;
-  }
-
-  /**
    * Set lifecycle handler init.
    *
    * `element` and `props` properties will be initialized before init handler is invoked.
@@ -226,7 +207,7 @@ export class ComponentDescriptor<P, S> {
    *         c.vSync(c.createVRoot().children("click me"));
    *       });
    */
-  init(init: (component: Component<P, S>, props: P, state: S) => void): ComponentDescriptor<P, S> {
+  init(init: (component: Component<P, S>, props: P) => void): ComponentDescriptor<P, S> {
     this._init = init;
     return this;
   }
@@ -295,7 +276,9 @@ export class ComponentDescriptor<P, S> {
    * Detached handler will be invoked when component is detached from the document.
    *
    *     const MyComponent = new ComponentDescriptor<any, {onResize: (e: Event) => void}>()
-   *       .createState((c) => ({onResize: (e) => { console.log("window resized"); }})
+   *       .init((c) => {
+   *         c.state = {onResize: (e) => { console.log("window resized"); }};
+   *       })
    *       .attached((c, props, state) => {
    *         window.addEventListener("resize", state.onResize);
    *       })
@@ -475,11 +458,8 @@ export class ComponentDescriptor<P, S> {
       if ((this._flags & ComponentDescriptorFlags.EnabledBackRef) !== 0) {
         (element as XTagElement<P, S>).xtag = component;
       }
-      if (this._createState !== null) {
-        component.state = this._createState(component, component.props!);
-      }
       if (this._init !== null) {
-        this._init(component, component.props!, component.state!);
+        this._init(component, component.props!);
       }
     } else {
       component = this._recycledPool!.pop()!;
@@ -506,11 +486,8 @@ export class ComponentDescriptor<P, S> {
    */
   mountComponent(element: Element, parent?: Component<any, any>, props?: P): Component<P, S> {
     const component = new Component<P, S>(this._markFlags , this, element, parent, props);
-    if (this._createState !== null) {
-      component.state = this._createState(component, component.props!);
-    }
     if (this._init !== null) {
-      this._init(component, component.props!, component.state!);
+      this._init(component, component.props!);
     }
     componentAttached(component);
     return component;

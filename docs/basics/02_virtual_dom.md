@@ -21,9 +21,6 @@ function createVSvgElement(tagName: string): VNode;
 
 // Creates a virtual node representing a Text Node.
 function createVText(content: string): VNode;
-
-// Creates a virtual node representing a Component's root element.
-function createVRoot(): VNode;
 ```
 
 ### Setting VNode properties

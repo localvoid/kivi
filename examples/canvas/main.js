@@ -1,16 +1,16 @@
 const Main = new kivi.ComponentDescriptor()
   .canvas()
-  .createState((c) => ({
-    x: 0,
-    y: 0,
-  }))
-  .init((c, props, state) => {
+  .init((c, props) => {
+    c.state = {
+      x: 0,
+      y: 0,
+    }
     c.element.width = props.width;
     c.element.height = props.height;
 
     c.element.addEventListener("mousemove", (e) => {
-      state.x = e.offsetX;
-      state.y = e.offsetY;
+      c.state.x = e.offsetX;
+      c.state.y = e.offsetY;
       c.invalidate();
     });
   })
