@@ -9,3 +9,5 @@
   * [Scheduler](advanced/02_scheduler.md)
   * [Components](advanced/03_components.md)
   * [Virtual DOM](advanced/04_virtual_dom.md)
+* Experimental
+  * [Incremental Rendering](experimental/01_incremental_rendering.md)

@@ -44,8 +44,8 @@ application. But it works perfectly fine with [jspm](http://jspm.io/), [browseri
 [Google Closure Compiler](https://github.com/google/closure-compiler) es6 compilers.
 
 ```sh
-$ npm install --save-dev rollup rollup-plugin-replace rollup-plugin-node-resolve \
-                         rollup-plugin-babel babel babel-preset-es2015-rollup
+$ npm install --save-dev rollup rollup-plugin-{replace,node-resolve,babel}
+                         babel babel-preset-es2015-rollup
 ```
 
 ## Edit `web/index.html` file
@@ -92,9 +92,7 @@ export default {
   entry: "src/main.js",
   format: "umd",
   plugins: [
-    npm({
-      jsnext: true
-    }),
+    npm(),
     babel({
       presets: ["es2015-rollup"]
     }),
@@ -123,9 +121,7 @@ export default {
   entry: "src/main.js",
   format: "umd",
   plugins: [
-    npm({
-      jsnext: true
-    }),
+    npm(),
     babel({
       presets: ["es2015-rollup"],
     }),
