@@ -24,7 +24,7 @@ import {ComponentDescriptor, injectComponent} from "kivi";
 
 const Main = new ComponentDescriptor()
   .update((c, props) => {
-     c.vSync(c.createVRoot().children(`Hello ${props.name}`));
+     c.sync(c.createVRoot().children(`Hello ${props.name}`));
   });
 
 injectComponent(Main, document.body, {name: "World"});

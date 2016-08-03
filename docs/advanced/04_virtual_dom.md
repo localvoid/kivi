@@ -23,7 +23,7 @@ const MyComponent = new ComponentDescriptor<void, {node: VNode}>()
     c.state = {node: createVElement("div").children("pretend that there is some heavy content...")};
   })
   .update((c, props, state) => {
-    c.vSync(c.createVRoot()
+    c.sync(c.createVRoot()
       .children([
         createVElement("section").className("header"),
         state.node,
@@ -47,6 +47,6 @@ const MyComponent = new ComponentDescriptor<{showChild: boolean}, {aliveComponen
     if (props.showChild) {
       root.children([ChildComponent.createVNode().keepAlive(state.aliveComponent)]);
     }
-    c.vSync(root);
+    c.sync(root);
   });
 ```

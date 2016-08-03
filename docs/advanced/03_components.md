@@ -14,7 +14,7 @@ Component descriptor method `enableComponentRecycling(maxRecycled: number)` will
 const Button = new ComponentDescriptor()
   .enableComponentRecycling(100)
   .update((c) => {
-    c.vSync(c.createVRoot().className("button"));
+    c.sync(c.createVRoot().className("button"));
   });
 ```
 

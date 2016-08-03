@@ -7,25 +7,34 @@ import {InvalidatorSubscription, Invalidator} from "./invalidator";
 import {clock, nextFrame, startUpdateComponentEachFrame, startMounting, finishMounting, isMounting} from "./scheduler";
 
 /**
- * Component Descriptor registry used in DEBUG mode.
+ * Component Descriptor registry is used in DEBUG mode for developer tools.
+ *
+ * All ComponentDescriptor instances that have a `name` property will be registered in this registry.
+ *
+ * NOTE: It will be automatically removed in RELEASE mode, so there is no overhead.
  */
 export const ComponentDescriptorRegistry = ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") ?
   new Map<string, ComponentDescriptor<any, any>>() :
   undefined;
 
 /**
- * Back reference to Component.
+ * Component's root element.
+ *
+ * When back reference is enabled in Component Descriptor, element will have `kiviComponent` property with a reference
+ * to Component instance.
+ *
+ * In DEBUG mode all elements have `kiviDebugComponent` reference to Component instance.
  */
-export interface XTagElement<P, S> extends Element {
+export interface ComponentRootElement<P, S> extends Element {
   /**
-   * Back reference from Element to Component that is always present in DEBUG mode.
+   * Back reference from an Element to Component that is always present in DEBUG mode.
    */
-  dxtag?: Component<P, S>;
+  kiviDebugComponent?: Component<P, S>;
   /**
-   * Back reference from Element to Component. There are two references so we can check in DEBUG mode if we are missing
-   * this backref in delegated event handlers.
+   * Back reference from an Element to Component. There are two references so we can check in DEBUG mode if we are
+   * missing this back reference in delegated event handlers.
    */
-  xtag?: Component<P, S>;
+  kiviComponent?: Component<P, S>;
 }
 
 /**
@@ -61,6 +70,11 @@ export interface XTagElement<P, S> extends Element {
  *
  *       const componentInstance = MyComponent.createRootComponent(10);
  *
+ * NOTE: It may seem unnecessary to pass `props` and `state` to lifecycle methods, but it is implemented this way
+ * to slightly improve "cold" rendering. This functions won't be optimized by JIT compiler until they have enough
+ * information about types, so instead of performing two generic lookups on component objects, we are taking references
+ * in "hot" functions and passing them as parameters.
+ *
  * @final
  */
 export class ComponentDescriptor<P, S> {
@@ -77,28 +91,39 @@ export class ComponentDescriptor<P, S> {
    */
   _tag: string | ElementDescriptor<any>;
   /**
-   * New props received handler overrides default props received behavior and it should mark component as dirty if new
-   * received props will cause change in component's representation.
+   * New props received handler overrides default props received behavior. If new props will cause a change in
+   * component's representation, it should mark component as dirty with `markDirty` method.
    */
   _newPropsReceived: ((component: Component<P, S>, oldProps: P, newProps: P) => void) | null;
   /**
    * Lifecycle handler update.
+   *
+   * Update will be invoked when component is created and when it gets invalidated.
    */
   _update: ((component: Component<P, S>, props: P, state: S) => void) | null;
   /**
    * Lifecycle handler init.
+   *
+   * Initialize Component, if component has internal state, it should be created in this lifecycle method. Internal
+   * event handlers should begistereed in this lifecycle method.
    */
   _init: ((component: Component<P, S>, props: P) => void) | null;
   /**
-   * Lifecycle handler attached.
+   * Lifecycle handler attached is invoked when Component is attached to the document.
+   *
+   * All subscriptions should be created in this lifecycle method.
    */
   _attached: ((component: Component<P, S>, props: P, state: S) => void) | null;
   /**
-   * Lifecycle handler detached.
+   * Lifecycle handler detached is invoked when Component is detached from the document.
+   *
+   * When component is detached, all invalidation subscriptions are automatically canceled.
    */
   _detached: ((component: Component<P, S>, props: P, state: S) => void) | null;
   /**
-   * Lifecycle hdnaler disposed.
+   * Lifecycle handler disposed.
+   *
+   * Disposed method is invoked when component is completely destroyed and noone will access it anymore.
    */
   _disposed: ((component: Component<P, S>, props: P, state: S) => void) | null;
 
@@ -112,6 +137,8 @@ export class ComponentDescriptor<P, S> {
   _maxRecycled: number;
   /**
    * Name that is used in DEBUG mode.
+   *
+   * NOTE: It will be automatically removed in RELEASE builds, so there is no overhead.
    */
   name: string;
 
@@ -144,7 +171,7 @@ export class ComponentDescriptor<P, S> {
   }
 
   /**
-   * Set tag name for the root element.
+   * Set tag name or an Element Descriptor for a root element.
    *
    *     const MyComponent = new ComponentDescriptor()
    *       .tagName("table");
@@ -172,7 +199,9 @@ export class ComponentDescriptor<P, S> {
   }
 
   /**
-   * Turn component into a canvas.
+   * Turn component into a canvas object.
+   *
+   * Tag name of a root element will be automatically set to `canvas`.
    *
    *     const MyCanvasComponent = new ComponentDescriptor()
    *       .canvas()
@@ -190,7 +219,10 @@ export class ComponentDescriptor<P, S> {
   }
 
   /**
-   * Set lifecycle handler init.
+   * Set init lifecycle handler.
+   *
+   * Initialize Component, if component has internal state, it should be created in this lifecycle method. Internal
+   * event handlers should begistereed in this lifecycle method.
    *
    * `element` and `props` properties will be initialized before init handler is invoked.
    *
@@ -204,7 +236,7 @@ export class ComponentDescriptor<P, S> {
    *         });
    *       })
    *       .update((c) => {
-   *         c.vSync(c.createVRoot().children("click me"));
+   *         c.sync(c.createVRoot().children("click me"));
    *       });
    */
   init(init: (component: Component<P, S>, props: P) => void): ComponentDescriptor<P, S> {
@@ -215,8 +247,8 @@ export class ComponentDescriptor<P, S> {
   /**
    * Set newPropsReceived handler.
    *
-   * New props received handler overrides default props received behavior and it should mark component as dirty if new
-   * received props will cause change in component's representation.
+   * New props received handler overrides default props received behavior. If new props will cause a change in
+   * component's representation, it should mark component as dirty with `markDirty` method.
    *
    *     const MyComponent = new ComponentDescriptor<{a: number}, void>()
    *       .newPropsReceived((c, oldProps, newProps) => {
@@ -225,7 +257,7 @@ export class ComponentDescriptor<P, S> {
    *         }
    *       })
    *       .update((c, props) => {
-   *         c.vSync(c.createVRoot().children(c.props.toString()));
+   *         c.sync(c.createVRoot().children(c.props.toString()));
    *       });
    */
   newPropsReceived(newPropsReceived: (component: Component<P, S>, oldProps: P, newProps: P) => void):
@@ -235,13 +267,13 @@ export class ComponentDescriptor<P, S> {
   }
 
   /**
-   * Set lifecycle handler update.
+   * Set update lifecycle handler.
    *
-   * Update handler overrides default update behavior.
+   * Update will be invoked when component is created and when it gets invalidated.
    *
    *     const MyComponent = new ComponentDescriptor<{a: number}, void>()
    *       .update((c) => {
-   *         c.vSync(c.createVRoot().children("content"));
+   *         c.sync(c.createVRoot().children("content"));
    *       });
    */
   update(update: (component: Component<P, S>, props: P, state: S) => void): ComponentDescriptor<P, S> {
@@ -250,9 +282,11 @@ export class ComponentDescriptor<P, S> {
   }
 
   /**
-   * Set lifecycle handler attached.
+   * Set attached lifecycle handler.
    *
-   * Attached handler will be invoked when component is attached to the document.
+   * Attached handler is invoked when Component is attached to the document.
+   *
+   * All subscriptions should be created in this lifecycle method.
    *
    *     const onChange = new Invalidator();
    *
@@ -261,7 +295,7 @@ export class ComponentDescriptor<P, S> {
    *         c.subscribe(onChange);
    *       })
    *       .update((c) => {
-   *         c.vSync(c.createVRoot().children("content"));
+   *         c.sync(c.createVRoot().children("content"));
    *       });
    */
   attached(attached: (component: Component<P, S>, props: P, state: S) => void):
@@ -271,9 +305,11 @@ export class ComponentDescriptor<P, S> {
   }
 
   /**
-   * Set lifecycle handler detached.
+   * Lifecycle detached lifecycle handler.
    *
-   * Detached handler will be invoked when component is detached from the document.
+   * Detached handler is invoked when Component is detached from the document.
+   *
+   * When component is detached, all invalidation subscriptions are automatically canceled.
    *
    *     const MyComponent = new ComponentDescriptor<any, {onResize: (e: Event) => void}>()
    *       .init((c) => {
@@ -286,7 +322,7 @@ export class ComponentDescriptor<P, S> {
    *         window.removeEventListener(state.onResize);
    *       })
    *       .update((c) => {
-   *         c.vSync(c.createVRoot().children("content"));
+   *         c.sync(c.createVRoot().children("content"));
    *       });
    */
   detached(detached: (component: Component<P, S>, props: P, state: S) => void):
@@ -296,9 +332,9 @@ export class ComponentDescriptor<P, S> {
   }
 
   /**
-   * Set lifecycle handler disposed.
+   * Set disposed lifecycle handler.
    *
-   * Disposed handler will be invoked when component is disposed.
+   * Disposed handler is invoked when component is completely destroyed and noone will access it anymore.
    *
    *     let allocatedComponents = 0;
    *
@@ -310,7 +346,7 @@ export class ComponentDescriptor<P, S> {
    *         allocatedComponents--;
    *       })
    *       .update((c) => {
-   *         c.vSync(c.createVRoot().children("content"));
+   *         c.sync(c.createVRoot().children("content"));
    *       });
    */
   disposed(disposed: (component: Component<P, S>, props: P, state: S) => void):
@@ -320,9 +356,10 @@ export class ComponentDescriptor<P, S> {
   }
 
   /**
-   * Enable back reference from DOM element to component instance.
+   * Enable back reference from root element to component instance. Back references are used to find component instances
+   * in delegated event handlers.
    *
-   * Back reference will be assigned to `xtag` property.
+   * Back reference will be assigned to `kiviComponent` property.
    *
    *     const MyComponent = new ComponentDescriptor()
    *       .enableBackRef()
@@ -332,7 +369,7 @@ export class ComponentDescriptor<P, S> {
    *         });
    *       })
    *       .update((c) => {
-   *         c.vSync(c.createVRoot().children("content"));
+   *         c.sync(c.createVRoot().children("content"));
    *       });
    */
   enableBackRef(): ComponentDescriptor<P, S> {
@@ -345,10 +382,13 @@ export class ComponentDescriptor<P, S> {
    *
    * When component recycling is enabled, components will be instantiated from recycled pool.
    *
+   * Component recycling is disabled by default and should be enabled by replacing all `<@KIVI_COMPONENT_RECYCLING@>`
+   * with `COMPONENT_RECYCLING_ENABLED` strings.
+   *
    *     const MyComponent = new ComponentDescriptor()
    *       .enableRecycling(100)
    *       .update((c) => {
-   *         c.vSync(c.createVRoot().children("content"));
+   *         c.sync(c.createVRoot().children("content"));
    *       });
    */
   enableRecycling(maxRecycled: number): ComponentDescriptor<P, S> {
@@ -363,6 +403,9 @@ export class ComponentDescriptor<P, S> {
 
   /**
    * Component has immutable props.
+   *
+   * When Component has accepts only immutable props, it will always check them for identity before marking component
+   * as dirty.
    */
   immutableProps(): ComponentDescriptor<P, S> {
     this._markFlags |= ComponentFlags.ImmutableProps;
@@ -370,11 +413,11 @@ export class ComponentDescriptor<P, S> {
   }
 
   /**
-   * Create a Virtual DOM node.
+   * Create a Virtual DOM node representing component.
    *
    *     const MyComponent = new ComponentDescriptor<number, void>()
    *       .update((c, props) => {
-   *         c.vSync(c.createVRoot().children(props.toString()));
+   *         c.sync(c.createVRoot().children(props.toString()));
    *       });
    *
    *     const vnode = MyComponent.createVNode(10);
@@ -390,14 +433,14 @@ export class ComponentDescriptor<P, S> {
   }
 
   /**
-   * Create a Virtual DOM node with immutable props.
+   * Create a Virtual DOM node with immutable props representing component.
    *
    * Immutable props will be checked for identity before triggering an update, if props identity is the same, then
-   * component won't be updated.
+   * component won't be marked as dirty.
    *
    *     const MyComponent = new ComponentDescriptor<number, void>()
    *       .update((c, props) => {
-   *         c.vSync(c.createVRoot().children(props.toString()));
+   *         c.sync(c.createVRoot().children(props.toString()));
    *       });
    *
    *     const vnode = MyComponent.createImmutableVNode(10);
@@ -407,11 +450,11 @@ export class ComponentDescriptor<P, S> {
   }
 
   /**
-   * Creates a component instance without parent.
+   * Creates a root component instance that doesn't have any parents.
    *
    *     const MyComponent = new ComponentDescriptor<number, void>()
    *       .update((c, props) => {
-   *         c.vSync(c.createVRoot().children(props.toString()));
+   *         c.sync(c.createVRoot().children(props.toString()));
    *       });
    *
    *     const component = MyComponent.createRootComponent(10);
@@ -421,11 +464,11 @@ export class ComponentDescriptor<P, S> {
   }
 
   /**
-   * Create a Component.
+   * Create a component.
    *
    *     const ChildComponent = new ComponentDescriptor()
    *       .update((c) => {
-   *         c.vSync(c.createVRoot().children("child"));
+   *         c.sync(c.createVRoot().children("child"));
    *       });
    *
    *     const ParentComponent = new ComponentDescriptor()
@@ -456,7 +499,7 @@ export class ComponentDescriptor<P, S> {
 
       component = new Component<P, S>(this._markFlags, this, element, parent, props);
       if ((this._flags & ComponentDescriptorFlags.EnabledBackRef) !== 0) {
-        (element as XTagElement<P, S>).xtag = component;
+        (element as ComponentRootElement<P, S>).kiviComponent = component;
       }
       if (this._init !== null) {
         this._init(component, component.props!);
@@ -478,7 +521,7 @@ export class ComponentDescriptor<P, S> {
    *
    *     const MyComponent = new ComponentDescriptor()
    *       .update((c) => {
-   *         c.vSync(c.createVRoot.children([createVElement("span").children("content")]));
+   *         c.sync(c.createVRoot.children([createVElement("span").children("content")]));
    *       });
    *
    *     const component = MyComponent.mountComponent(element);
@@ -504,7 +547,7 @@ export class ComponentDescriptor<P, S> {
       }
     }
     return function(event) {
-      const component = (event.currentTarget as XTagElement<P, S>).xtag;
+      const component = (event.currentTarget as ComponentRootElement<P, S>).kiviComponent;
       if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
         if (component === undefined) {
           throw new Error(`Failed to dispatch event to event handler: event currentTarget doesn't have back ` +
@@ -517,6 +560,10 @@ export class ComponentDescriptor<P, S> {
 
   /**
    * Create delegated event handler.
+   *
+   * `selector` selector that should match an event `target` with its ancestors.
+   * `componentSelector` selector that should match component instance. If it is `false`, then it will look for
+   * component instance in an event `currentTarget`.
    */
   createDelegatedEventHandler(selector: string | SelectorFn, componentSelector: string | SelectorFn | boolean,
       handler: (event: Event, component: Component<P, S>, props: P, state: S, matchingTarget: Element) => void):
@@ -543,7 +590,7 @@ export class ComponentDescriptor<P, S> {
             }
           }
         }
-        const component = (target as XTagElement<P, S>).xtag;
+        const component = (target as ComponentRootElement<P, S>).kiviComponent;
         if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
           if (component === undefined) {
             throw new Error(`Failed to dispatch event to event handler: event component target doesn't have back ` +
@@ -579,7 +626,7 @@ export class Component<P, S> {
   /**
    * Reference to the root element.
    */
-  readonly element: XTagElement<P, S>;
+  readonly element: ComponentRootElement<P, S>;
   /**
    * Depth in the components tree.
    *
@@ -608,7 +655,7 @@ export class Component<P, S> {
     this.flags = flags;
     this.mtime = 0;
     this.descriptor = descriptor;
-    this.element = element as XTagElement<P, S>;
+    this.element = element as ComponentRootElement<P, S>;
     this.depth = parent === undefined ? 0 : parent.depth + 1;
     this.props = props === undefined ? null : props;
     this.state = null;
@@ -617,7 +664,7 @@ export class Component<P, S> {
     this._transientSubscriptions = null;
 
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      this.element.dxtag = this;
+      this.element.kiviDebugComponent = this;
     }
   }
 
@@ -688,10 +735,10 @@ export class Component<P, S> {
    * If this method is called during mounting phase, then Virtual DOM will be mounted on top of the existing document
    * tree.
    *
-   * When virtual dom is passed to vSync method, its ownership is transfered. Mutating and reading from virtual dom
-   * after it is passed to vSync is an undefined behavior.
+   * When virtual dom is passed to sync method, its ownership is transfered. Mutating and reading from virtual dom
+   * after it is passed to sync is an undefined behavior.
    */
-  vSync(newRoot: VNode): void {
+  sync(newRoot: VNode): void {
     if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
       if ((newRoot._flags & VNodeFlags.Root) === 0) {
         throw new Error("Failed to sync: sync methods accepts only VNodes representing root node.");

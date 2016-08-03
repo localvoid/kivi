@@ -71,13 +71,13 @@ ComponentDescriptor<P, S>.svg(): ComponentDescriptor<P, S>;
 
 ## Using Virtual DOM
 
-To use virtual dom in components, we need to call a `vSync` method that will sync component's representation with a
+To use virtual dom in components, we need to call a `sync` method that will sync component's representation with a
 virtual dom. For example:
 
 ```ts
 const MyComponent = new ComponentDescriptor<{title: string, content: string}, void>()
   .update((c, props) => {
-    c.vSync(c.createVRoot()
+    c.sync(c.createVRoot()
       .children([
         createVElement("h1").children(props.title),
         createVElement("p").children(props.content),
@@ -126,7 +126,7 @@ const MyComponent = new ComponentDescriptor<void, void>()
     });
   })
   .update((c) => {
-    c.vSync(c.createVRoot().children("click me"));
+    c.sync(c.createVRoot().children("click me"));
   });
 ```
 
@@ -136,12 +136,12 @@ Update handler will be invoked when component gets updated either by binding new
 one of the scheduler component queues.
 
 Update handler completely overrides default update behavior, so to continue using virtual dom for updates, we can
-use `vSync` method.
+use `sync` method.
 
 ```ts
 const MyComponent = new ComponentDescriptor<{a: number}, void>()
   .update((c, props, state) => {
-     c.vSync(c.createVRoot().children(props.a.toString()));
+     c.sync(c.createVRoot().children(props.a.toString()));
   });
 ```
 
@@ -157,7 +157,7 @@ const MyComponent = new ComponentDescriptor<void, void>()
     c.subscribe(onChange);
   })
   .update((c) => {
-     c.vSync(c.createVRoot().children("content"));
+     c.sync(c.createVRoot().children("content"));
   });
 
 onChange.invalidate();
@@ -179,7 +179,7 @@ const MyComponent = new ComponentDescriptor<void, {onResize: (e: Event) => void}
     window.removeEventListener(state.onResize);
   })
   .update((c) => {
-     c.vSync(c.createVRoot().children("content"));
+     c.sync(c.createVRoot().children("content"));
   });
 ```
 
@@ -198,7 +198,7 @@ const MyComponent = new ComponentDescriptor<void, void>()
     allocatedComponents--;
   })
   .update((c) => {
-     c.vSync(c.createVRoot().children("content"));
+     c.sync(c.createVRoot().children("content"));
   });
 ```
 
@@ -215,6 +215,6 @@ const MyComponent = new ComponentDescriptor<{a: number}, void>()
     }
   })
   .update((c) => {
-     c.vSync(c.createVRoot().children(props.a.toString()));
+     c.sync(c.createVRoot().children(props.a.toString()));
   });
 ```

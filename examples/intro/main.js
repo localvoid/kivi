@@ -1,6 +1,6 @@
 const Main = new kivi.ComponentDescriptor()
   .update((c, props) => {
-    c.vSync(c.createVRoot().children(`Hello ${props}`));
+    c.sync(c.createVRoot().children(`Hello ${props}`));
   });
 
 document.addEventListener("DOMContentLoaded", () => {

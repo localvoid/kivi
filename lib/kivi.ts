@@ -25,7 +25,7 @@ export {
 
 export {
   ComponentDescriptorRegistry,
-  XTagElement,
+  ComponentRootElement,
   ComponentDescriptor,
   Component,
   injectComponent,

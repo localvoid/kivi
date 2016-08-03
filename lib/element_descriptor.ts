@@ -6,7 +6,8 @@ import {VNode} from "./vnode";
  *
  * ElementDescriptors are used as an advanced optimization technique. When creating virtual nodes, or declaring root
  * node for a component, it is possible to link them to an element descriptor instead of simple HTML tagName.
- * Element Descriptor  will contain all static properties for the HTML Element, so there is no need to declare them
+ *
+ * Element Descriptor will contain all static properties for the HTML Element, so there is no need to declare them
  * each time virtual node is created. It also reduces diff overhead, because there is no need to diff static properties.
  *
  * Creating a virtual dom node from ElementDescriptor:
