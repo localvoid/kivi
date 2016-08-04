@@ -37,6 +37,7 @@ injectComponent(Main, document.body, {name: "World"});
   * [Scheduler](https://localvoid.github.io/kivi/advanced/02_scheduler.html)
   * [Components](https://localvoid.github.io/kivi/advanced/03_components.html)
   * [Virtual DOM](https://localvoid.github.io/kivi/advanced/04_virtual_dom.html)
+  * [Events](https://localvoid.github.io/kivi/advanced/05_events.html)
 * Experimental
   * [Incremental Rendering](https://localvoid.github.io/kivi/experimental/01_incremental_rendering.html)
 
