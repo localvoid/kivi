@@ -14,6 +14,9 @@ const enum InvalidatorSubscriptionFlags {
 /**
  * Invalidator Subscription.
  *
+ * Subscriptions are returned from Invalidator objects after making a subscription, they are used for canceling
+ * subscriptions. Subscriptions that were made in UI Components will be automatically canceled.
+ *
  * @final
  */
 export class InvalidatorSubscription {
@@ -98,14 +101,71 @@ export class InvalidatorSubscription {
 }
 
 /**
- * Invalidator object is a low level object for implementing reactive bindings.
+ * Invalidator object is used to subscribe for data changes.
+ *
+ * It is way much simpler than composable streams, or implicit graphs of data dependencies, it doesn't passes any
+ * information except the signal that something is changed. Because all subscriptions are explicit it also has a
+ * predictable performance and it is easier to review code.
+ *
+ * It was designed to get rid of data changes over time in as much places as possible, so instead of pushing/pulling
+ * data from streams, we just reevaluate everything and using caches to prevent from unnecessary computations. This
+ * programming model is significantly simpler and provides a better debugging experience, especially when investigating
+ * bugs from stack traces in production builds.
+ *
+ *
+ *     const mode: "a" | "b" = "a";
+ *     const a = 0;
+ *     const b = 0;
+ *     const modeInvalidator = new Invalidator();
+ *     const aInvalidator = new Invalidator();
+ *     const bInvalidator = new Invalidator();
+ *
+ *     const Main = new ComponentDescriptor<void, void>()
+ *       .attached((c) => {
+ *         c.subscribe(modeInvalidator);
+ *       })
+ *       .update((c) => {
+ *         let value: number;
+ *         if (mode === "a") {
+ *           value = a;
+ *           c.transientSubscribe(aInvalidator);
+ *         } else {
+ *           value = b;
+ *           c.transientSubscribe(bInvalidator);
+ *         }
+ *         c.sync(c.createVRoot().children(value.toString()));
+ *       });
+ *
+ *     function update() {
+ *       if (mode === "a") {
+ *         a++;
+ *         aInvalidator.invalidate();
+ *         if (a === 10) {
+ *           a = 0;
+ *           mode = "b";
+ *           modeInvalidator.invalidate();
+ *         }
+ *       } else {
+ *         b++;
+ *         bInvalidator.invalidate();
+ *         if (b === 10) {
+ *           b = 0;
+ *           mode = "a";
+ *           modeInvalidator.invalidate();
+ *         }
+ *       }
+ *
+ *       setTimeout(1000, update);
+ *     }
+ *     setTimeout(1000, update);
+ *
+ *     injectComponent(Main, document.body);
  *
  * @final
  */
 export class Invalidator {
   /**
-   * Updates each time when invalidator is invalidated, uses scheduler
-   * monotonically increasing clock.
+   * Updates each time when invalidator is invalidated, uses scheduler monotonically increasing clock.
    */
   mtime: number;
 
@@ -120,6 +180,8 @@ export class Invalidator {
 
   /**
    * Create a subscription with a callback handler.
+   *
+   * Callback handlers will be invoked synchronously.
    */
   subscribe(callback: Function): InvalidatorSubscription {
     const s = new InvalidatorSubscription(0, this, null, callback);
@@ -136,6 +198,8 @@ export class Invalidator {
 
   /**
    * Create a transient subscription with a callback handler.
+   *
+   * Callback handlers will be invoked synchronously.
    */
   transientSubscribe(callback: Function): InvalidatorSubscription {
     const s = new InvalidatorSubscription(InvalidatorSubscriptionFlags.Transient, this, null, callback);
@@ -151,7 +215,7 @@ export class Invalidator {
   }
 
   /**
-   * Create a subscription that will invalidate component.
+   * Create a subscription that invalidates UI Component.
    */
   subscribeComponent(component: Component<any, any>): InvalidatorSubscription {
     const s = new InvalidatorSubscription(InvalidatorSubscriptionFlags.Component, this, component, null);
@@ -174,7 +238,7 @@ export class Invalidator {
   }
 
   /**
-   * Create a transient subscription that will invalidate component.
+   * Create a transient subscription that invalidates UI Component.
    */
   transientSubscribeComponent(component: Component<any, any>): InvalidatorSubscription {
     const s = new InvalidatorSubscription(
@@ -199,7 +263,7 @@ export class Invalidator {
   }
 
   /**
-   * Returns true if invalidator object has subscriptions.
+   * Returns `true` if invalidator object has subscriptions.
    */
   hasSubscriptions(): boolean {
     return (this._subscriptions !== null || this._transientSubscriptions !== null);
@@ -207,6 +271,8 @@ export class Invalidator {
 
   /**
    * Invalidate all subscriptions.
+   *
+   * Automatically cancels all transient subscriptions.
    */
   invalidate(): void {
     const now = clock();
