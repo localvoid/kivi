@@ -33,7 +33,6 @@ export {
 } from "./component";
 
 export {
-  SelectorFn,
   VNodeFlags,
   ElementDescriptorFlags,
   ComponentDescriptorFlags,

@@ -1,6 +1,5 @@
 import {printError} from "./debug";
-import {SvgNamespace, ComponentDescriptorFlags, ComponentFlags, VNodeFlags, matchesWithAncestors,
-  SelectorFn} from "./misc";
+import {SvgNamespace, ComponentDescriptorFlags, ComponentFlags, VNodeFlags, matchesWithAncestors} from "./misc";
 import {ElementDescriptor} from "./element_descriptor";
 import {VNode, vNodeAttach, vNodeDetach, vNodeMount, vNodeRender, vNodeDispose, syncVNodes, createVRoot} from "./vnode";
 import {InvalidatorSubscription, Invalidator} from "./invalidator";
@@ -541,17 +540,13 @@ export class ComponentDescriptor<P, S> {
    */
   createEventHandler(handler: (event: Event, component: Component<P, S>, props: P, state: S) => void):
       (event: Event) => void {
-    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      if ((this._flags & ComponentDescriptorFlags.EnabledBackRef) === 0) {
-        throw new Error("Failed to create an event handler: component descriptor should have enabled back reference.");
-      }
-    }
+    this._flags |= ComponentDescriptorFlags.EnabledBackRef;
     return function(event) {
       const component = (event.currentTarget as ComponentRootElement<P, S>).kiviComponent;
       if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
         if (component === undefined) {
-          throw new Error(`Failed to dispatch event to event handler: event currentTarget doesn't have back ` +
-                          `reference to component.`);
+          throw new Error(`Failed to dispatch event to event handler: cannot find reference to component on a DOM` +
+                          `element.`);
         }
       }
       handler(event, component!, component!.props!, component!.state!);
@@ -565,15 +560,11 @@ export class ComponentDescriptor<P, S> {
    * `componentSelector` selector that should match component instance. If it is `false`, then it will look for
    * component instance in an event `currentTarget`.
    */
-  createDelegatedEventHandler(selector: string | SelectorFn, componentSelector: string | SelectorFn | boolean,
+  createDelegatedEventHandler(selector: string, componentSelector: string | boolean,
       handler: (event: Event, component: Component<P, S>, props: P, state: S, matchingTarget: Element) => void):
       (event: Event) => void {
-    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-      if ((this._flags & ComponentDescriptorFlags.EnabledBackRef) === 0) {
-        throw new Error("Failed to create an event handler: component descriptor should have enabled back reference.");
-      }
-    }
-    return (event) => {
+    this._flags |= ComponentDescriptorFlags.EnabledBackRef;
+    return function(event) {
       let matchingTarget = matchesWithAncestors(event.target as Element, selector, event.currentTarget as Element);
       if (matchingTarget !== null) {
         let target: Element | null = matchingTarget;
@@ -583,18 +574,12 @@ export class ComponentDescriptor<P, S> {
           }
         } else {
           target = matchesWithAncestors(matchingTarget, componentSelector, event.currentTarget as Element);
-          if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-            if ((this._flags & ComponentDescriptorFlags.EnabledBackRef) === 0) {
-              throw new Error(`Failed to dispatch event to event handler: cannot find closest component with ` +
-                              `selector "${componentSelector}".`);
-            }
-          }
         }
         const component = (target as ComponentRootElement<P, S>).kiviComponent;
         if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
           if (component === undefined) {
-            throw new Error(`Failed to dispatch event to event handler: event component target doesn't have back ` +
-                            `reference to component.`);
+            throw new Error(`Failed to dispatch event to event handler: cannot find reference to component on a DOM` +
+                            `element.`);
           }
         }
         handler(event, component!, component!.props!, component!.state!, matchingTarget);

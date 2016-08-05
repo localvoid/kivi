@@ -20,11 +20,6 @@ if (ElementPrototype.matches === undefined) {
 }
 
 /**
- * Selector function should return true if element matches this selector.
- */
-export type SelectorFn = (element: Element) => boolean;
-
-/**
  * Flags shared between ElementDescriptor, VNode, ComponentDescriptor and Component objects.
  *
  * They can be easily copied with a binary or operator from object with one type to another with different type. For
@@ -230,23 +225,13 @@ export function getClassName(className: string): string {
 /**
  * Find closest element that matches [selector].
  */
-export function matchesWithAncestors(element: Element, selector: string | SelectorFn, sentinel: Element | null = null):
+export function matchesWithAncestors(element: Element, selector: string, sentinel: Element | null = null):
     Element | null {
-  let e = element;
-  if (typeof selector === "string") {
-    while (e !== sentinel) {
-      if (e.matches(selector)) {
-        return e;
-      }
-      e = e.parentNode as Element;
+  while (element !== sentinel) {
+    if (element.matches(selector)) {
+      return element;
     }
-  } else {
-    while (e !== sentinel) {
-      if (selector(e)) {
-        return e;
-      }
-      e = e.parentNode as Element;
-    }
+    element = element.parentNode as Element;
   }
 
   return null;

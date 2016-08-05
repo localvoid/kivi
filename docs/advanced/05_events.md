@@ -14,13 +14,8 @@ component's root element, it can be a string or a boolean value, if it is a bool
 matching target will be used as a root element, if it is `false` then `currentTarget` element will be used as a root.
 Third parameter is an event handler that receives event, component, props and state params.
 
-Component's root element is required because we need to find reference to a component instance from this element, by
-default component instances aren't associated with root elements. To enable back references, component descriptors has
-a method `enableBackRef()`.
-
 ```ts
 const ClickableComponent = new ComponentDescriptor<string, void>()
-  .enableBackRef()
   .update((c, text) => {
     c.sync(c.createVRoot().className("clickable").children(text));
   });
