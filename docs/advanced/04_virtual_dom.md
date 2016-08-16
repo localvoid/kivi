@@ -42,11 +42,11 @@ const MyComponent = new ComponentDescriptor<{showChild: boolean}, {aliveComponen
   .init((c) => {
     c.state = {aliveComponent: ChildComponent.createComponent()};
   })
+  .disposed((c) => {
+    c.state.aliveComponent.dispose();
+  })
   .update((c, props, state) => {
-    const root = c.createVRoot();
-    if (props.showChild) {
-      root.children([ChildComponent.createVNode().keepAlive(state.aliveComponent)]);
-    }
-    c.sync(root);
+    c.sync(c.createVRoot().children(
+      props.showChild ? [ChildComponent.createVNode().keepAlive(state.aliveComponent)] : null));
   });
 ```

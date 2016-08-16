@@ -2,7 +2,7 @@
 
 ## Component recycling
 
-When there are many instances of a component and they are quite frequently removed and inserted into the documented, it
+When there are many instances of a component and they are frequently removed and inserted into the document, it
 is a good practice to enable recycling, so instead of disposing component instances when they are removed from the
 document, they will be placed into recycled pool, and when component instance is created it will always check if
 recycled pool has any available instance and just reuse it.
@@ -37,3 +37,20 @@ const AnimatedComponent = new ComponentDescriptor()
 ```
 
 `stopUpdateEachFrame()` method will remove component from the list of components that should be updated on each frame.
+
+## Immutable Component VNodes
+
+Immutable VNodes should contain props that are deeply immutable, reconciliation algorithm will check props object for
+identity before triggering an update. If props identity is the same, then component won't be updated.
+
+```ts
+const Button = new ComponentDescriptor<{text: string}, void>()
+  .update((c, props) => {
+    c.sync(c.createVRoot().className(props.text));
+  });
+
+Button.createImmutableVNode({text: "click me"});
+```
+
+Parents are usually know better when they are passing mutable or immutable props to the children, so instead of checking
+props for identity in `newPropsReceived`, it is a good practice to use immutable vnodes.

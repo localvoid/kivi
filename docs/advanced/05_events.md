@@ -20,7 +20,7 @@ const ClickableComponent = new ComponentDescriptor<string, void>()
     c.sync(c.createVRoot().className("clickable").children(text));
   });
 
-ClickableComponent.createDelegatedEventHandler(".clickable", true, (e, c, text) => {
+const onClick = ClickableComponent.createDelegatedEventHandler(".clickable", true, (e, c, text) => {
   e.stopPropagation();
   console.log(`Clicked on ${text}`);
 });
