@@ -1577,7 +1577,7 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
   let node: VNode;
 
   // Step 1
-  outer: do {
+  outer: while (true) {
     // Sync nodes with the same key at the beginning.
     while (aStartNode._key === bStartNode._key) {
       if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -1626,13 +1626,13 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
       aStart++;
       bEnd--;
       if (aStart > aEnd || bStart > bEnd) {
-        break outer;
+        break;
       }
       aStartNode = a[aStart];
       bEndNode = b[bEnd];
       // In a real-world scenarios there is a higher chance that next node after the move will be the same, so we
       // immediately jump to the start of this prefix/suffix algo.
-      continue outer;
+      continue;
     }
 
     // Move and sync nodes from right to left.
@@ -1647,13 +1647,15 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
       aEnd--;
       bStart++;
       if (aStart > aEnd || bStart > bEnd) {
-        break outer;
+        break;
       }
       aEndNode = a[aEnd];
       bStartNode = b[bStart];
-      continue outer;
+      continue;
     }
-  } while (false);
+
+    break;
+  }
 
   if (aStart > aEnd) {
     // All nodes from a are synced, insert the rest from b.
