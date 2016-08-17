@@ -1612,6 +1612,27 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
       bEndNode = b[bEnd];
     }
 
+    // Move and sync nodes from right to left.
+    if (aEndNode._key === bStartNode._key) {
+      if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+        if (!_canSyncVNodes(aEndNode, bStartNode)) {
+          throw new Error("VNode sync children failed: cannot sync two different children with the same key.");
+        }
+      }
+      syncVNodes(aEndNode, bStartNode, owner);
+      vNodeMoveChild(parent, bStartNode, aStartNode.ref);
+      aEnd--;
+      bStart++;
+      if (aStart > aEnd || bStart > bEnd) {
+        break;
+      }
+      aEndNode = a[aEnd];
+      bStartNode = b[bStart];
+      // In a real-world scenarios there is a higher chance that next node after the move will be the same, so we
+      // immediately jump to the start of this prefix/suffix algo.
+      continue;
+    }
+
     // Move and sync nodes from left to right.
     if (aStartNode._key === bEndNode._key) {
       if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
@@ -1630,27 +1651,6 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
       }
       aStartNode = a[aStart];
       bEndNode = b[bEnd];
-      // In a real-world scenarios there is a higher chance that next node after the move will be the same, so we
-      // immediately jump to the start of this prefix/suffix algo.
-      continue;
-    }
-
-    // Move and sync nodes from right to left.
-    if (aEndNode._key === bStartNode._key) {
-      if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-        if (!_canSyncVNodes(aEndNode, bStartNode)) {
-          throw new Error("VNode sync children failed: cannot sync two different children with the same key.");
-        }
-      }
-      syncVNodes(aEndNode, bStartNode, owner);
-      vNodeMoveChild(parent, bStartNode, aStartNode.ref);
-      aEnd--;
-      bStart++;
-      if (aStart > aEnd || bStart > bEnd) {
-        break;
-      }
-      aEndNode = a[aEnd];
-      bStartNode = b[bStart];
       continue;
     }
 
