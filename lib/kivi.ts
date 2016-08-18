@@ -36,8 +36,6 @@ export {
   ElementDescriptorFlags,
   ComponentDescriptorFlags,
   ComponentFlags,
-  getTagName,
-  getClassName,
   matchesWithAncestors,
 } from "./misc";
 
