@@ -1043,10 +1043,7 @@ function _canSyncVNodes(a: VNode, b: VNode): boolean {
  */
 function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string,
     owner: Component<any, any> | undefined): void {
-  let aNode: VNode;
-  let bNode: VNode;
   let i = 0;
-  let synced = false;
 
   if (typeof a === "string") {
     if (b === null) {
@@ -1079,111 +1076,13 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string,
       } else {
         if (a.length === 1 && b.length === 1) {
           // Fast path when a and b have only one child.
-          aNode = a[0];
-          bNode = b[0];
+          const aNode = a[0];
+          const bNode = b[0];
 
           if (_canSyncVNodes(aNode, bNode)) {
             syncVNodes(aNode, bNode, owner);
           } else {
             vNodeReplaceChild(parent, bNode, aNode, owner);
-          }
-        } else if (a.length === 1) {
-          // Fast path when a have 1 child.
-          aNode = a[0];
-          if ((parent._flags & VNodeFlags.TrackByKeyChildren) === 0) {
-            if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-              if ((parent._debugFlags & VNodeDebugFlags.DisabledChildrenShapeError) === 0) {
-                printError(
-                  "VNode sync children: children shape is changing, you should enable tracking by key with " +
-                  "VNode method trackByKeyChildren(children).\n" +
-                  "If you certain that children shape changes won't cause any problems with losing " +
-                  "state, you can remove this error message with VNode method disableChildrenShapeError().");
-              }
-            }
-            while (i < b.length) {
-              bNode = b[i++];
-              if (_canSyncVNodes(aNode, bNode)) {
-                syncVNodes(aNode, bNode, owner);
-                synced = true;
-                break;
-              }
-              vNodeInsertChild(parent, bNode, aNode.ref, owner);
-            }
-          } else {
-            while (i < b.length) {
-              bNode = b[i++];
-              if (aNode._key === bNode._key) {
-                if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-                  if (!_canSyncVNodes(aNode, bNode)) {
-                    throw new Error("VNode sync children failed: cannot sync two different children with the" +
-                                    " same key.");
-                  }
-                }
-                syncVNodes(aNode, bNode, owner);
-                synced = true;
-                break;
-              }
-              vNodeInsertChild(parent, bNode, aNode.ref, owner);
-            }
-          }
-          if (synced) {
-            while (i < b.length) {
-              vNodeInsertChild(parent, b[i++], null, owner);
-            }
-          } else {
-            vNodeRemoveChild(parent, aNode);
-          }
-        } else if (b.length === 1) {
-          // Fast path when b have 1 child.
-          bNode = b[0];
-          if ((parent._flags & VNodeFlags.TrackByKeyChildren) === 0) {
-            if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-              if ((parent._debugFlags & VNodeDebugFlags.DisabledChildrenShapeError) === 0) {
-                printError(
-                  "VNode sync children: children shape is changing, you should enable tracking by key with " +
-                  "VNode method trackByKeyChildren(children).\n" +
-                  "If you certain that children shape changes won't cause any problems with losing " +
-                  "state, you can remove this error message with VNode method disableChildrenShapeError().");
-              }
-            }
-            while (i < a.length) {
-              aNode = a[i++];
-              if (_canSyncVNodes(aNode, bNode)) {
-                syncVNodes(aNode, bNode, owner);
-                synced = true;
-                break;
-              }
-            }
-          } else {
-            while (i < a.length) {
-              aNode = a[i++];
-              if (aNode._key === bNode._key) {
-                if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
-                  if (!_canSyncVNodes(aNode, bNode)) {
-                    throw new Error("VNode sync children failed: cannot sync two different children with the" +
-                                    " same key.");
-                  }
-                }
-                syncVNodes(aNode, bNode, owner);
-                synced = true;
-                break;
-              }
-            }
-          }
-
-          if (synced) {
-            let j = 0;
-            i--;
-            while (j < i) {
-              vNodeRemoveChild(parent, a[j++]);
-            }
-            i++;
-            while (i < a.length) {
-              vNodeRemoveChild(parent, a[i++]);
-            }
-          } else {
-            vNodeRemoveAllChildren(parent, a);
-            vNodeInsertChild(parent, bNode, null, owner);
           }
         } else {
           // a and b have more than 1 child.
@@ -1194,7 +1093,7 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string,
           }
         }
       }
-    } else if (b !== null && b.length > 0) {
+    } else if (b !== null) {
       // a is empty, insert all children from b.
       for (i = 0; i < b.length; i++) {
         vNodeInsertChild(parent, b[i], null, owner);
