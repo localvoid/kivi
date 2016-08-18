@@ -762,7 +762,7 @@ export class Component<P, S> {
    * Invalidate component and schedule component to update on the next frame.
    *
    * Dirty flags parameter can be used to add hints that describe what has been changed.
-   * This metho will automatically cancel all transient subscriptions if preserve transient subscriptions is false.
+   * This method will automatically cancel all transient subscriptions if preserve transient subscriptions is false.
    */
   invalidate(dirtyFlags: number = ComponentFlags.DirtyView, preserveTransientSubscriptions = false): void {
     this.flags |= dirtyFlags;

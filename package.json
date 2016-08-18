@@ -52,9 +52,9 @@
     "karma-sourcemap-loader": "^0.3.7",
     "merge2": "^1.0.2",
     "mocha": "^2.2.5",
-    "rollup": "^0.34.1",
+    "rollup": "^0.34.10",
     "rollup-plugin-replace": "^1.1.1",
-    "rollup-plugin-typescript": "^0.7.7",
+    "rollup-plugin-typescript": "^0.8.1",
     "tslint": "^3.14.0",
     "typescript": "^2.0.0"
   }
