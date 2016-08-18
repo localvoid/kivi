@@ -24,7 +24,7 @@ function buildES6() {
     .pipe(tslint({
       formatter: "verbose",
     }))
-    .pipe(ts(Object.assign(tsConfig.compilerOptions, {
+    .pipe(ts(Object.assign({}, tsConfig.compilerOptions, {
       typescript: require("typescript"),
       target: "es6",
       declaration: true,
@@ -56,7 +56,7 @@ function buildTests() {
   return rollup.rollup({
     entry: "tests/index.spec.ts",
     plugins: [
-      rollupTypeScript(Object.assign(tsConfig.compilerOptions, {
+      rollupTypeScript(Object.assign({}, tsConfig.compilerOptions, {
         typescript: require("typescript"),
         target: "es5",
         module: "es6",
@@ -85,7 +85,7 @@ function buildFuzzyTestsJS() {
   return rollup.rollup({
     entry: "tests/random/children_reconciliation.ts",
     plugins: [
-      rollupTypeScript(Object.assign(tsConfig.compilerOptions, {
+      rollupTypeScript(Object.assign({}, tsConfig.compilerOptions, {
         typescript: require("typescript"),
         target: "es5",
         module: "es6",
@@ -130,9 +130,9 @@ function runTestsSauce(done) {
 function buildDocs() {
   const gitbook = require("gitbook");
 
-  const book = new gitbook.Book("docs", {
+  const book = new gitbook.Book("gitbook", {
     config: {
-      output: "gh-pages",
+      output: "docs",
       title: "kivi",
       plugins: ["edit-link", "github", "anker-enable", "ga"],
       pluginsConfig: {
@@ -153,17 +153,9 @@ function buildDocs() {
   return book.parse().then(() => book.generate("website"));
 }
 
-function deployDocs() {
-  const ghPages = require("gulp-gh-pages");
-
-  return gulp.src("gh-pages/**/*")
-    .pipe(ghPages());
-}
-
 exports.clean = clean;
 exports.dist = series(clean, buildES6, dist);
 exports.test = series(cleanTests, buildTests, runTests);
 exports.testSauce = series(cleanTests, buildTests, runTestsSauce);
 exports.docs = buildDocs;
-exports.deployDocs = series(buildDocs, deployDocs);
 exports.buildFuzzyTests = parallel(buildFuzzyTestsHtml, buildFuzzyTestsJS);

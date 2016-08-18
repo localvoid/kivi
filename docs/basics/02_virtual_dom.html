@@ -1,0 +1,421 @@
+<!DOCTYPE HTML>
+<html lang="en" >
+    
+    <head>
+        
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <title>Virtual DOM | kivi</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 2.6.7">
+        
+        
+        <meta name="HandheldFriendly" content="true"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../gitbook/images/apple-touch-icon-precomposed-152.png">
+        <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
+        
+    <link rel="stylesheet" href="../gitbook/style.css">
+    
+        
+        <link rel="stylesheet" href="../gitbook/plugins/gitbook-plugin-highlight/website.css">
+        
+    
+        
+        <link rel="stylesheet" href="../gitbook/plugins/gitbook-plugin-search/search.css">
+        
+    
+        
+        <link rel="stylesheet" href="../gitbook/plugins/gitbook-plugin-fontsettings/website.css">
+        
+    
+    
+
+        
+    
+    
+    <link rel="next" href="../advanced/01_element_descriptor.html" />
+    
+    
+    <link rel="prev" href="../basics/01_components.html" />
+    
+
+        
+    </head>
+    <body>
+        
+        
+    <div class="book"
+        data-level="2.2"
+        data-chapter-title="Virtual DOM"
+        data-filepath="basics/02_virtual_dom.md"
+        data-basepath=".."
+        data-revision="Thu Aug 18 2016 13:52:07 GMT+0700 (+07)"
+        data-innerlanguage="">
+    
+
+<div class="book-summary">
+    <nav role="navigation">
+        <ul class="summary">
+            
+            
+            
+            
+
+            
+
+            
+    
+        <li class="chapter " data-level="0" data-path="index.html">
+            
+                
+                    <a href="../index.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                        Introduction
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1" data-path="01_getting_started.html">
+            
+                
+                    <a href="../01_getting_started.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.</b>
+                        
+                        Getting Started
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="2" >
+            
+            <span><b>2.</b> Basics</span>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="2.1" data-path="basics/01_components.html">
+            
+                
+                    <a href="../basics/01_components.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.1.</b>
+                        
+                        Components
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter active" data-level="2.2" data-path="basics/02_virtual_dom.html">
+            
+                
+                    <a href="../basics/02_virtual_dom.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.2.</b>
+                        
+                        Virtual DOM
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="3" >
+            
+            <span><b>3.</b> Advanced</span>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="3.1" data-path="advanced/01_element_descriptor.html">
+            
+                
+                    <a href="../advanced/01_element_descriptor.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.1.</b>
+                        
+                        Element Descriptor
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="3.2" data-path="advanced/02_scheduler.html">
+            
+                
+                    <a href="../advanced/02_scheduler.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.2.</b>
+                        
+                        Scheduler
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="3.3" data-path="advanced/03_components.html">
+            
+                
+                    <a href="../advanced/03_components.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.3.</b>
+                        
+                        Components
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="3.4" data-path="advanced/04_virtual_dom.html">
+            
+                
+                    <a href="../advanced/04_virtual_dom.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.4.</b>
+                        
+                        Virtual DOM
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="3.5" data-path="advanced/05_events.html">
+            
+                
+                    <a href="../advanced/05_events.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.5.</b>
+                        
+                        Events
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="3.6" data-path="advanced/06_reactive_bindings.html">
+            
+                
+                    <a href="../advanced/06_reactive_bindings.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.6.</b>
+                        
+                        Reactive Bindings
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="4" >
+            
+            <span><b>4.</b> Experimental</span>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="4.1" data-path="experimental/01_incremental_rendering.html">
+            
+                
+                    <a href="../experimental/01_incremental_rendering.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>4.1.</b>
+                        
+                        Incremental Rendering
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+
+
+            
+            <li class="divider"></li>
+            <li>
+                <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+                    Published with GitBook
+                </a>
+            </li>
+            
+        </ul>
+    </nav>
+</div>
+
+    <div class="book-body">
+        <div class="body-inner">
+            <div class="book-header" role="navigation">
+    <!-- Actions Left -->
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href="../" >kivi</a>
+    </h1>
+</div>
+
+            <div class="page-wrapper" tabindex="-1" role="main">
+                <div class="page-inner">
+                
+                
+                    <section class="normal" id="section-">
+                    
+                        <h1 id="virtual-dom">Virtual DOM</h1>
+<p>Virtual DOM simplifies the way to manage DOM mutations, just describe how your component should look at any point in
+time and Virtual DOM reconciliation algorithm will make all necessary DOM operations to update component representation
+in a most efficient way.</p>
+<p>The basic Virtual DOM API that kivi provides is enough for most use cases. But when it isn&apos;t enough, kivi has many
+advanced tools that can reduce Virtual DOM diffing overhead, and it will be quite hard to beat its performance without
+reimplementing similar algorithms.</p>
+<h3 id="creating-virtual-dom-nodes">Creating Virtual DOM Nodes</h3>
+<p>Kivi has several simple functions to create virtual nodes:</p>
+<pre><code>// Creates a virtual node representing a HTML Element.
+function createVElement(tagName: string): VNode;
+
+// Creates a virtual node representing a SVG Element.
+function createVSvgElement(tagName: string): VNode;
+
+// Creates a virtual node representing a Text Node.
+function createVText(content: string): VNode;
+</code></pre><h3 id="setting-vnode-properties">Setting VNode properties</h3>
+<p>Virtual node instance has many different methods to set properties, all property methods support method chaining. For
+example:</p>
+<pre><code class="lang-ts"><span class="hljs-keyword">const</span> e = createVElement(<span class="hljs-string">&quot;a&quot;</span>)
+  .attrs({
+    <span class="hljs-string">&quot;href&quot;</span>: <span class="hljs-string">&quot;localhost&quot;</span>,
+    <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Link to localhost&quot;</span>,
+  })
+  .children(<span class="hljs-string">&quot;Link to localhost&quot;</span>);
+</code></pre>
+<p>List of basic properties:</p>
+<pre><code>VNode.attrs(attrs: {[key: string]: any}): VNode;
+VNode.props(props: {[key: string]: any}): VNode;
+VNode.style(style: string): VNode;
+VNode.className(className: string): VNode;
+VNode.children(children: VNode[]|string): VNode;
+</code></pre><h3 id="using-keys-to-preserve-identity">Using keys to preserve identity</h3>
+<p>To prevent from losing internal state of DOM elements and components, we should track nodes by some property. Virtual
+DOM reconciliation algorithm is using <code>key</code> property to find virtual nodes representing the same DOM node from
+the previous render.</p>
+<p>To enable tracking by keys, children property should be assigned with <code>VNode.trackByKeyChildren(children)</code> method. Each
+child should have a <code>key</code> property and it should be unique among its siblings. For example:</p>
+<pre><code class="lang-ts"><span class="hljs-keyword">const</span> container = createVElement(<span class="hljs-string">&quot;div&quot;</span>)
+  .trackByKeyChildren([
+    createVElement(<span class="hljs-string">&quot;span&quot;</span>).key(<span class="hljs-number">1</span>).children(<span class="hljs-string">&quot;1&quot;</span>),
+    createVElement(<span class="hljs-string">&quot;span&quot;</span>).key(<span class="hljs-number">2</span>).children(<span class="hljs-string">&quot;2&quot;</span>),
+    createVElement(<span class="hljs-string">&quot;span&quot;</span>).key(<span class="hljs-number">3</span>).children(<span class="hljs-string">&quot;3&quot;</span>),
+  ]);
+</code></pre>
+<p>To learn more about kivi children reconciliation algorithm, read
+<a href="https://github.com/localvoid/kivi/blob/569ba49acd7d5c8809cfc621eb02ec6206f0d3c9/lib/reconciler.ts#L410-L641" target="_blank">the comment</a>
+in the source code, it explains how kivi is able to find minimum number of DOM operations. This algorithm is highly
+optimized and runs really fast in most real world use cases, see <a href="https://localvoid.github.io/uibench/" target="_blank">uibench</a>
+benchmark to find out how kivi handles different use cases.</p>
+
+                    
+                    </section>
+                
+                
+                </div>
+            </div>
+        </div>
+
+        
+        <a href="../basics/01_components.html" class="navigation navigation-prev " aria-label="Previous page: Components"><i class="fa fa-angle-left"></i></a>
+        
+        
+        <a href="../advanced/01_element_descriptor.html" class="navigation navigation-next " aria-label="Next page: Element Descriptor"><i class="fa fa-angle-right"></i></a>
+        
+    </div>
+</div>
+
+        
+<script src="../gitbook/app.js"></script>
+
+    
+    <script src="../gitbook/plugins/gitbook-plugin-edit-link/plugin.js"></script>
+    
+
+    
+    <script src="../gitbook/plugins/gitbook-plugin-github/plugin.js"></script>
+    
+
+    
+    <script src="../gitbook/plugins/gitbook-plugin-anker-enable/anker.js"></script>
+    
+
+    
+    <script src="../gitbook/plugins/gitbook-plugin-ga/plugin.js"></script>
+    
+
+    
+    <script src="../gitbook/plugins/gitbook-plugin-search/lunr.min.js"></script>
+    
+
+    
+    <script src="../gitbook/plugins/gitbook-plugin-search/search.js"></script>
+    
+
+    
+    <script src="../gitbook/plugins/gitbook-plugin-sharing/buttons.js"></script>
+    
+
+    
+    <script src="../gitbook/plugins/gitbook-plugin-fontsettings/buttons.js"></script>
+    
+
+<script>
+require(["gitbook"], function(gitbook) {
+    var config = {"edit-link":{"base":"https://github.com/localvoid/kivi/tree/master/docs","label":"Edit This Page"},"github":{"url":"https://github.com/localvoid/kivi/"},"ga":{"token":"UA-39594570-5","configuration":"auto"},"anker-enable":{},"highlight":{},"search":{"maxIndexSize":1000000},"sharing":{"all":["facebook","google","twitter","weibo","instapaper"],"facebook":true,"google":false,"instapaper":false,"twitter":true,"vk":false,"weibo":false},"fontsettings":{"family":"sans","size":2,"theme":"white"}};
+    gitbook.start(config);
+});
+</script>
+
+        
+    </body>
+    
+</html>

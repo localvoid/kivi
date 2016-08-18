@@ -12,7 +12,6 @@
     "moduleResolution": "node"
   },
   "files": [
-    "lib/actor.ts",
     "lib/component.ts",
     "lib/debug.ts",
     "lib/element_descriptor.ts",

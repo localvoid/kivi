@@ -1,7 +1,5 @@
 build
 dist
-gh-pages
-.publish
 
 node_modules
 typings
