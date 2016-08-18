@@ -20,7 +20,6 @@ export {
   createVText,
   createVElement,
   createVSvgElement,
-  createVRoot,
 } from "./vnode";
 
 export {

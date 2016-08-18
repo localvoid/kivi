@@ -2034,10 +2034,3 @@ export function createVElement(tagName: string): VNode {
 export function createVSvgElement(tagName: string): VNode {
   return new VNode(VNodeFlags.Element | VNodeFlags.Svg, tagName, null);
 }
-
-/**
- * Create a VNode representing a Component root node.
- */
-export function createVRoot(): VNode {
-  return new VNode(VNodeFlags.Root, null, null);
-}

@@ -192,13 +192,6 @@ export class ElementDescriptor<D> {
   }
 
   /**
-   * Create a Virtual DOM Node for component's root.
-   */
-  createVRoot(data?: D): VNode {
-    return new VNode(VNodeFlags.Root | this._markFlags, this, data === undefined ? null : data);
-  }
-
-  /**
    * Create a DOM Element.
    */
   createElement(): Element {

@@ -1,7 +1,7 @@
 import {printError} from "./debug";
 import {SvgNamespace, ComponentDescriptorFlags, ComponentFlags, VNodeFlags, matchesWithAncestors} from "./misc";
 import {ElementDescriptor} from "./element_descriptor";
-import {VNode, vNodeAttach, vNodeDetach, vNodeMount, vNodeRender, vNodeDispose, syncVNodes, createVRoot} from "./vnode";
+import {VNode, vNodeAttach, vNodeDetach, vNodeMount, vNodeRender, vNodeDispose, syncVNodes} from "./vnode";
 import {InvalidatorSubscription, Invalidator} from "./invalidator";
 import {clock, nextFrame, startUpdateComponentEachFrame, startMounting, finishMounting, isMounting} from "./scheduler";
 
@@ -82,6 +82,10 @@ export class ComponentDescriptor<P, S> {
    */
   _markFlags: number;
   /**
+   * Flags marked on component root vnode when vnode is instantiated. See `VNodeFlags` for details.
+   */
+  _markRootFlags: number;
+  /**
    * Flags, see `ComponentDescriptorFlags` for details.
    */
   _flags: number;
@@ -143,6 +147,7 @@ export class ComponentDescriptor<P, S> {
 
   constructor(name?: string) {
     this._markFlags = ComponentFlags.Dirty;
+    this._markRootFlags = VNodeFlags.Root;
     this._flags = 0;
     this._tag = "div";
     this._newPropsReceived = null;
@@ -179,6 +184,7 @@ export class ComponentDescriptor<P, S> {
     this._tag = tagName;
     if (typeof tagName !== "string") {
       this._markFlags |= tagName._markFlags;
+      this._markRootFlags |= tagName._markFlags;
       this._flags |= tagName._markFlags;
     }
     return this;
@@ -193,6 +199,7 @@ export class ComponentDescriptor<P, S> {
    */
   svg(): ComponentDescriptor<P, S> {
     this._markFlags |= ComponentFlags.Svg;
+    this._markRootFlags |= VNodeFlags.Svg;
     this._flags |= ComponentDescriptorFlags.Svg;
     return this;
   }
@@ -679,9 +686,7 @@ export class Component<P, S> {
    * Creates a virtual dom root node.
    */
   createVRoot(): VNode {
-    return ((this.flags & ComponentFlags.ElementDescriptor) === 0) ?
-      createVRoot() :
-      (this.descriptor._tag as ElementDescriptor<any>).createVRoot();
+    return new VNode(this.descriptor._markRootFlags, this.descriptor._tag, null);
   }
 
   /**
