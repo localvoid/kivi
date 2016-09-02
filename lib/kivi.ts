@@ -43,9 +43,9 @@ export {
   normalizeVNodes,
 } from "./utils";
 
-if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
   console.info("KIVI_DEBUG: enabled");
-  if ("<@KIVI_COMPONENT_RECYCLING@>" === "COMPONENT_RECYCLING_ENABLED") {
+  if ("<@KIVI_COMPONENT_RECYCLING@>" as string === "COMPONENT_RECYCLING_ENABLED") {
     console.info("KIVI_COMPONENT_RECYCLING: enabled");
   } else {
     console.info("KIVI_COMPONENT_RECYCLING: disabled");

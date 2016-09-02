@@ -173,7 +173,7 @@ export function setAttr(node: Element, key: string, value: string): void {
   if (key.charCodeAt(0) !== 120) { // x
     node.setAttribute(key, value);
   } else {
-    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+    if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       if (key.length <= 3) {
         throw new Error(`Failed to set attr: invalid attribute "${key}", attributes starting with letter "x" should` +
                         ` have length 4 or more.`);
@@ -181,7 +181,7 @@ export function setAttr(node: Element, key: string, value: string): void {
     }
 
     if (key.charCodeAt(1) === 109 && key.charCodeAt(2) === 108) { // ml
-      if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+      if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
         if (key.charCodeAt(3) !== 58) { // :
           throw new Error(`Failed to set attr: invalid attribute "${key}", attributes with "xml" prefix should be in` +
                           ` the form "xml:attr".`);
@@ -189,7 +189,7 @@ export function setAttr(node: Element, key: string, value: string): void {
       }
       node.setAttributeNS(XmlNamespace, key, value);
     } else if (key.charCodeAt(1) === 108 && key.charCodeAt(2) === 105) { // li
-      if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+      if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
         if (key.charCodeAt(3) !== 110 || key.charCodeAt(4) !== 107 || key.charCodeAt(5) !== 58) { // nk:
           throw new Error(`Failed to set attr: invalid attribute "${key}", attributes with "xli" prefix should be in` +
                           ` the form "xlink:attr".`);

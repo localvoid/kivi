@@ -11,25 +11,9 @@
     "removeComments": false,
     "moduleResolution": "node"
   },
-  "files": [
-    "lib/component.ts",
-    "lib/debug.ts",
-    "lib/element_descriptor.ts",
-    "lib/invalidator.ts",
-    "lib/kivi.ts",
-    "lib/misc.ts",
-    "lib/reconciler.ts",
-    "lib/scheduler.ts",
-    "lib/utils.ts",
-    "lib/vnode.ts",
-    "tests/random/children_reconciliation.ts",
-    "tests/component.spec.ts",
-    "tests/element_descriptor.spec.ts",
-    "tests/vdom.spec.ts",
-    "tests/invalidator.spec.ts",
-    "tests/lifecycle.ts",
-    "tests/scheduler.spec.ts",
-    "tests/vdom.spec.ts"
+  "include": [
+    "lib/**/*.ts",
+    "tests/**/*.ts"
   ],
   "compileOnSave": false
 }

@@ -77,7 +77,7 @@ export class FrameTasksGroup {
    * Add Component to the components queue.
    */
   updateComponent(component: Component<any, any>): void {
-    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+    if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       if ((this._flags & FrameTasksGroupFlags.RWLock) !== 0) {
         throw new Error("Failed to add update component task to the current frame, current frame is locked for read" +
                         " and write tasks.");
@@ -106,7 +106,7 @@ export class FrameTasksGroup {
    * Add new task to the write DOM task queue.
    */
   write(callback: SchedulerTask): void {
-    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+    if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       if ((this._flags & FrameTasksGroupFlags.RWLock) !== 0) {
         throw new Error("Failed to add update component task to the current frame, current frame is locked for read" +
                         " and write tasks.");
@@ -124,7 +124,7 @@ export class FrameTasksGroup {
    * Add new task to the read DOM task queue.
    */
   read(callback: SchedulerTask): void {
-    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+    if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       if ((this._flags & FrameTasksGroupFlags.RWLock) !== 0) {
         throw new Error("Failed to add update component task to the current frame, current frame is locked for read" +
                         " and write tasks.");
@@ -162,7 +162,7 @@ export class FrameTasksGroup {
    * Works in DEBUG mode only.
    */
   _rwLock(): void {
-    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+    if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       this._flags |= FrameTasksGroupFlags.RWLock;
     }
   }
@@ -173,7 +173,7 @@ export class FrameTasksGroup {
    * Works in DEBUG mode only.
    */
   _rwUnlock(): void {
-    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+    if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       this._flags &= ~FrameTasksGroupFlags.RWLock;
     }
   }

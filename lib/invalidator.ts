@@ -42,7 +42,7 @@ export class InvalidatorSubscription {
     this._componentPrev = null;
     this._componentNext = null;
 
-    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+    if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       this._isCanceled = false;
     }
   }
@@ -66,7 +66,7 @@ export class InvalidatorSubscription {
    * Cancel subscription.
    */
   cancel(): void {
-    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+    if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       if (this._isCanceled) {
         throw new Error("Failed to cancel InvalidatorSubscription: subscription cannot be canceled twice.");
       }

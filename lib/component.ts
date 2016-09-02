@@ -12,7 +12,7 @@ import {clock, nextFrame, startUpdateComponentEachFrame, startMounting, finishMo
  *
  * NOTE: It will be automatically removed in RELEASE mode, so there is no overhead.
  */
-export const ComponentDescriptorRegistry = ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") ?
+export const ComponentDescriptorRegistry = ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") ?
   new Map<string, ComponentDescriptor<any, any>>() :
   undefined;
 
@@ -156,7 +156,7 @@ export class ComponentDescriptor<P, S> {
     this._attached = null;
     this._detached = null;
     this._disposed = null;
-    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+    if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       if (name === undefined) {
         this.name = "unnamed";
       } else {
@@ -168,7 +168,7 @@ export class ComponentDescriptor<P, S> {
         }
       }
     }
-    if ("<@KIVI_COMPONENT_RECYCLING@>" === "COMPONENT_RECYCLING_ENABLED") {
+    if ("<@KIVI_COMPONENT_RECYCLING@>" as string === "COMPONENT_RECYCLING_ENABLED") {
       this._recycledPool = null;
       this._maxRecycled = 0;
     }
@@ -398,7 +398,7 @@ export class ComponentDescriptor<P, S> {
    *       });
    */
   enableRecycling(maxRecycled: number): ComponentDescriptor<P, S> {
-    if ("<@KIVI_COMPONENT_RECYCLING@>" === "COMPONENT_RECYCLING_ENABLED") {
+    if ("<@KIVI_COMPONENT_RECYCLING@>" as string === "COMPONENT_RECYCLING_ENABLED") {
       this._markFlags |= ComponentFlags.EnabledRecycling;
       this._flags |= ComponentDescriptorFlags.EnabledRecycling;
       this._recycledPool = [];
@@ -429,7 +429,7 @@ export class ComponentDescriptor<P, S> {
    *     const vnode = MyComponent.createVNode(10);
    */
   createVNode(props?: P): VNode {
-    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+    if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       if ((this._markFlags & ComponentFlags.ImmutableProps) !== 0) {
         throw new Error("Failed to create VNode: VNodes for components with immutable props should be created with " +
                         "createImmutableVNode method.");
@@ -491,7 +491,7 @@ export class ComponentDescriptor<P, S> {
     let element: Element;
     let component: Component<P, S>;
 
-    if ("<@KIVI_COMPONENT_RECYCLING@>" !== "COMPONENT_RECYCLING_ENABLED" ||
+    if ("<@KIVI_COMPONENT_RECYCLING@>" as string !== "COMPONENT_RECYCLING_ENABLED" ||
         ((this._flags & ComponentDescriptorFlags.EnabledRecycling) === 0) ||
         (this._recycledPool!.length === 0)) {
 
@@ -550,7 +550,7 @@ export class ComponentDescriptor<P, S> {
     this._flags |= ComponentDescriptorFlags.EnabledBackRef;
     return function(event) {
       const component = (event.currentTarget as ComponentRootElement<P, S>).kiviComponent;
-      if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+      if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
         if (component === undefined) {
           throw new Error(`Failed to dispatch event to event handler: cannot find reference to component on a DOM` +
                           `element.`);
@@ -583,7 +583,7 @@ export class ComponentDescriptor<P, S> {
           target = matchesWithAncestors(matchingTarget, componentSelector, event.currentTarget as Element);
         }
         const component = (target as ComponentRootElement<P, S>).kiviComponent;
-        if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+        if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
           if (component === undefined) {
             throw new Error(`Failed to dispatch event to event handler: cannot find reference to component on a DOM` +
                             `element.`);
@@ -655,7 +655,7 @@ export class Component<P, S> {
     this._subscriptions = null;
     this._transientSubscriptions = null;
 
-    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+    if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       this.element.kiviDebugComponent = this;
     }
   }
@@ -664,7 +664,7 @@ export class Component<P, S> {
    * Get canvas 2d rendering context.
    */
   get2DContext(): CanvasRenderingContext2D {
-    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+    if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       if ((this.flags & ComponentFlags.Canvas2D) === 0) {
         throw new Error("Failed to get 2d context: component isn't a canvas.");
       }
@@ -729,7 +729,7 @@ export class Component<P, S> {
    * after it is passed to sync is an undefined behavior.
    */
   sync(newRoot: VNode): void {
-    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+    if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       if ((newRoot._flags & VNodeFlags.Root) === 0) {
         throw new Error("Failed to sync: sync methods accepts only VNodes representing root node.");
       }
@@ -746,7 +746,7 @@ export class Component<P, S> {
 
     if (this._root === null) {
       newRoot.cref = this;
-      if ("<@KIVI_MOUNTING@>" === "MOUNTING_ENABLED" && isMounting()) {
+      if ("<@KIVI_MOUNTING@>" as string === "MOUNTING_ENABLED" && isMounting()) {
         vNodeMount(newRoot, this.element, this);
       } else {
         newRoot.ref = this.element;
@@ -799,13 +799,13 @@ export class Component<P, S> {
    * Dispose method should be invoked when component is destroyed.
    */
   dispose(): void {
-    if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+    if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       if ((this.flags & ComponentFlags.Disposed) !== 0) {
         throw new Error("Failed to dispose Component: component is already disposed.");
       }
     }
 
-    if ("<@KIVI_COMPONENT_RECYCLING@>" !== "COMPONENT_RECYCLING_ENABLED" ||
+    if ("<@KIVI_COMPONENT_RECYCLING@>" as string !== "COMPONENT_RECYCLING_ENABLED" ||
         ((this.flags & ComponentFlags.EnabledRecycling) === 0) ||
         (this.descriptor._recycledPool!.length >= this.descriptor._maxRecycled)) {
       this.flags |= ComponentFlags.Disposed;
@@ -865,13 +865,13 @@ export function updateComponent(component: Component<any, any>, newProps?: any):
 }
 
 function componentAttached(component: Component<any, any>): void {
-  if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+  if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
     if ((component.flags & ComponentFlags.Attached) !== 0) {
       throw new Error("Failed to attach Component: component is already attached.");
     }
   }
   component.flags |= ComponentFlags.Attached;
-  if ("<@KIVI_COMPONENT_RECYCLING@>" === "COMPONENT_RECYCLING_ENABLED") {
+  if ("<@KIVI_COMPONENT_RECYCLING@>" as string === "COMPONENT_RECYCLING_ENABLED") {
     component.flags &= ~ComponentFlags.Recycled;
   }
 
@@ -882,7 +882,7 @@ function componentAttached(component: Component<any, any>): void {
 }
 
 function componentDetached(component: Component<any, any>): void {
-  if ("<@KIVI_DEBUG@>" !== "DEBUG_DISABLED") {
+  if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
     if ((component.flags & ComponentFlags.Attached) === 0) {
       throw new Error("Failed to detach Component: component is already detached.");
     }
