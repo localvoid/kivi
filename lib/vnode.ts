@@ -79,7 +79,7 @@ export class VNode {
    * Children property can contain flat array of children virtual nodes, or text if it contains a single text node
    * child. If virtual node represents an input field, children property will contain input value.
    */
-  _children: VNode[] | string | boolean | null;
+  _children: VNode[] | VNode | string | boolean | null;
   /**
    * Reference to HTML Node. It will be available after virtual node is created or synced. Each time VNode is synced,
    * reference to the HTML Node is transferred from old virtual node to the new one.
@@ -347,12 +347,31 @@ export class VNode {
   }
 
   /**
-   * Set children. Children parameter should be either a flat array of virtual nodes, or text if node contains a single
-   * text node.
+   * Set single child.
    *
    * This method is available on element and component's root virtual node types.
    */
-  children(children: VNode[] | string | null): VNode {
+  child(child: VNode | string | null): VNode {
+    if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
+      if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
+        throw new Error("Failed to set child on VNode: child method should be called on element or component" +
+                        " root nodes only.");
+      }
+      if ((this._flags & VNodeFlags.InputElement) !== 0) {
+        throw new Error("Failed to set child on VNode: input elements can't have children.");
+      }
+    }
+
+    this._children = child;
+    return this;
+  }
+
+  /**
+   * Set children.
+   *
+   * This method is available on element and component's root virtual node types.
+   */
+  children(children: VNode[] | null): VNode {
     if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error("Failed to set children on VNode: children method should be called on element or component" +
@@ -362,6 +381,7 @@ export class VNode {
         throw new Error("Failed to set children on VNode: input elements can't have children.");
       }
     }
+    this._flags |= VNodeFlags.ArrayChildren;
     this._children = children;
     return this;
   }
@@ -410,7 +430,7 @@ export class VNode {
         }
       }
     }
-    this._flags |= VNodeFlags.TrackByKeyChildren;
+    this._flags |= VNodeFlags.ArrayChildren | VNodeFlags.TrackByKeyChildren;
     this._children = children;
     return this;
   }
@@ -690,10 +710,14 @@ export function vNodeRender(vnode: VNode, owner: Component<any, any> | undefined
 
     const children = vnode._children;
     if (children !== null) {
-      if ((vnode._flags & VNodeFlags.UnsafeHTML) === 0) {
-        if ((vnode._flags & VNodeFlags.InputElement) === 0) {
-          if (typeof children === "string") {
-            ref.textContent = children;
+      if ((flags & VNodeFlags.UnsafeHTML) === 0) {
+        if ((flags & VNodeFlags.InputElement) === 0) {
+          if ((flags & VNodeFlags.ArrayChildren) === 0) {
+            if (typeof children === "string") {
+              ref.textContent = children;
+            } else {
+              vNodeInsertChild(vnode, children as VNode, null, owner);
+            }
           } else {
             for (i = 0, il = (children as VNode[]).length; i < il; i++) {
               vNodeInsertChild(vnode, (children as VNode[])[i], null, owner);
@@ -806,7 +830,7 @@ export function vNodeMount(vnode: VNode, node: Node, owner: Component<any, any> 
       }
     }
 
-    if ((vnode._flags & (VNodeFlags.Element | VNodeFlags.Root)) !== 0) {
+    if ((flags & (VNodeFlags.Element | VNodeFlags.Root)) !== 0) {
       // Assign properties on mount, because they don't exist in html markup.
       if ((flags & VNodeFlags.ElementDescriptor) !== 0) {
         const eDescriptor = vnode._tag as ElementDescriptor<any>;
@@ -827,28 +851,44 @@ export function vNodeMount(vnode: VNode, node: Node, owner: Component<any, any> 
         }
       }
 
-      if (children !== null && typeof children !== "string" && (children as VNode[]).length > 0) {
-        let child = node.firstChild;
+      if (children !== null) {
+        if ((flags & VNodeFlags.ArrayChildren) === 0) {
+          if (typeof children !== "string") {
+            let child = node.firstChild;
 
-        // Adjacent text nodes should be separated by Comment node "<!---->", so we can properly mount them.
-        let commentNode: Node;
-        while (child.nodeType === 8) {
-          commentNode = child;
-          child = child.nextSibling;
-          node.removeChild(commentNode);
-        }
-        for (i = 0; i < (children as VNode[]).length; i++) {
-          if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
-            if (!child) {
-              throw new Error("Failed to mount VNode: cannot find matching node.");
+            // Adjacent text nodes should be separated by Comment node "<!---->", so we can properly mount them.
+            let commentNode: Node;
+            while (child.nodeType === 8) {
+              commentNode = child;
+              child = child.nextSibling;
+              node.removeChild(commentNode);
             }
+
+            vNodeMount(children as VNode, child, owner);
           }
-          vNodeMount((children as VNode[])[i], child, owner);
-          child = child.nextSibling;
-          while (child !== null && child.nodeType === 8) {
+        } else if ((children as VNode[]).length > 0) {
+          let child = node.firstChild;
+
+          // Adjacent text nodes should be separated by Comment node "<!---->", so we can properly mount them.
+          let commentNode: Node;
+          while (child.nodeType === 8) {
             commentNode = child;
             child = child.nextSibling;
             node.removeChild(commentNode);
+          }
+          for (i = 0; i < (children as VNode[]).length; i++) {
+            if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
+              if (!child) {
+                throw new Error("Failed to mount VNode: cannot find matching node.");
+              }
+            }
+            vNodeMount((children as VNode[])[i], child, owner);
+            child = child.nextSibling;
+            while (child !== null && child.nodeType === 8) {
+              commentNode = child;
+              child = child.nextSibling;
+              node.removeChild(commentNode);
+            }
           }
         }
       }
@@ -1026,7 +1066,6 @@ export function syncVNodes(a: VNode, b: VNode, owner?: Component<any, any>): voi
   }
 }
 
-
 /**
  * Check if two nodes can be synced.
  *
@@ -1041,43 +1080,64 @@ function _canSyncVNodes(a: VNode, b: VNode): boolean {
 /**
  * Sync old children list with the new one.
  */
-function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string,
+function _syncChildren(parent: VNode, a: VNode[] | VNode | string, b: VNode[] | VNode | string,
     owner: Component<any, any> | undefined): void {
   let i = 0;
 
-  if (typeof a === "string") {
-    if (b === null) {
-      parent.ref!.removeChild(parent.ref!.firstChild);
-    } else if (typeof b === "string") {
-      const c = parent.ref!.firstChild;
-      if (c) {
-        c.nodeValue = b;
+  if ((parent._flags & VNodeFlags.ArrayChildren) === 0) {
+    if (a === null) {
+      if (typeof b === "string") {
+        parent.ref!.textContent = b as string;
       } else {
-        parent.ref!.textContent = b;
+        vNodeInsertChild(parent, b as VNode, null, owner);
+      }
+    } else if (b === null) {
+      if (typeof a === "string") {
+        parent.ref!.textContent = "";
+      } else {
+        vNodeRemoveChild(parent, a as VNode);
       }
     } else {
-      parent.ref!.removeChild(parent.ref!.firstChild);
-      while (i < b.length) {
-        vNodeInsertChild(parent, b[i++], null, owner);
+      if (typeof a === "string") {
+        if (typeof b === "string") {
+          const c = parent.ref!.firstChild;
+          if (c) {
+            c.nodeValue = b as string;
+          } else {
+            parent.ref!.textContent = b as string;
+          }
+        } else {
+          parent.ref!.textContent = "";
+          vNodeInsertChild(parent, b as VNode, null, owner);
+        }
+      } else {
+        if (typeof b === "string") {
+          parent.ref!.textContent = b;
+          vNodeDispose(a as VNode);
+        } else {
+          a = a as VNode;
+          b = b as VNode;
+          if (_canSyncVNodes(a, b)) {
+            syncVNodes(a, b, owner);
+          } else {
+            vNodeReplaceChild(parent, b, a, owner);
+          }
+        }
       }
     }
-  } else if (typeof b === "string") {
-    if (a !== null) {
-      while (i < a.length) {
-        vNodeDispose(a[i++]);
-      }
-    }
-    parent.ref!.textContent = b;
   } else {
+    a = a as VNode[];
+    b = b as VNode[];
+
     if (a !== null && a.length !== 0) {
       if (b === null || b.length === 0) {
         // b is empty, remove all children from a.
-        vNodeRemoveAllChildren(parent, a);
+        vNodeRemoveAllChildren(parent, a as VNode[]);
       } else {
         if (a.length === 1 && b.length === 1) {
           // Fast path when a and b have only one child.
-          const aNode = a[0];
-          const bNode = b[0];
+          const aNode = a[0] as VNode;
+          const bNode = b[0] as VNode;
 
           if (_canSyncVNodes(aNode, bNode)) {
             syncVNodes(aNode, bNode, owner);
@@ -1087,16 +1147,16 @@ function _syncChildren(parent: VNode, a: VNode[]|string, b: VNode[]|string,
         } else {
           // a and b have more than 1 child.
           if ((parent._flags & VNodeFlags.TrackByKeyChildren) === 0) {
-            _syncChildrenNaive(parent, a, b, owner);
+            _syncChildrenNaive(parent, a as VNode[], b as VNode[], owner);
           } else {
-            _syncChildrenTrackByKeys(parent, a, b, owner);
+            _syncChildrenTrackByKeys(parent, a as VNode[], b as VNode[], owner);
           }
         }
       }
     } else if (b !== null) {
       // a is empty, insert all children from b.
       for (i = 0; i < b.length; i++) {
-        vNodeInsertChild(parent, b[i], null, owner);
+        vNodeInsertChild(parent, b[i] as VNode, null, owner);
       }
     }
   }

@@ -201,7 +201,7 @@ describe("VNode", () => {
 
     it("should create div with child 'abc'", () => {
       const f = document.createDocumentFragment();
-      const a = createVElement("div").children("abc");
+      const a = createVElement("div").child("abc");
       injectVNode(f, a, undefined);
       expect((f.firstChild as Element).childNodes.length).to.equal(1);
       expect((f.firstChild as Element).firstChild.nodeValue).to.equal("abc");
@@ -802,7 +802,7 @@ describe("VNode", () => {
         it("null => 'abc'", () => {
           const f = document.createDocumentFragment();
           const a = createVElement("div");
-          const b = createVElement("div").children("abc");
+          const b = createVElement("div").child("abc");
           injectVNode(f, a, undefined);
           syncVNodes(a, b, undefined);
           expect((f.firstChild as Element).childNodes.length).to.equal(1);
@@ -811,7 +811,7 @@ describe("VNode", () => {
 
         it("'abc' => null", () => {
           const f = document.createDocumentFragment();
-          const a = createVElement("div").children("abc");
+          const a = createVElement("div").child("abc");
           const b = createVElement("div");
           injectVNode(f, a, undefined);
           syncVNodes(a, b, undefined);
@@ -820,8 +820,8 @@ describe("VNode", () => {
 
         it("'abc' => 'cde'", () => {
           const f = document.createDocumentFragment();
-          const a = createVElement("div").children("abc");
-          const b = createVElement("div").children("cde");
+          const a = createVElement("div").child("abc");
+          const b = createVElement("div").child("cde");
           injectVNode(f, a, undefined);
           syncVNodes(a, b, undefined);
           expect((f.firstChild as Element).childNodes.length).to.equal(1);
@@ -830,18 +830,8 @@ describe("VNode", () => {
 
         it("[div] => 'cde'", () => {
           const f = document.createDocumentFragment();
-          const a = createVElement("div").children([createVElement("div")]);
-          const b = createVElement("div").children("cde");
-          injectVNode(f, a, undefined);
-          syncVNodes(a, b, undefined);
-          expect((f.firstChild as Element).childNodes.length).to.equal(1);
-          expect((f.firstChild as Element).firstChild.nodeValue).to.equal("cde");
-        });
-
-        it("[div, div] => 'cde'", () => {
-          const f = document.createDocumentFragment();
-          const a = createVElement("div").children([createVElement("div"), createVElement("div")]);
-          const b = createVElement("div").children("cde");
+          const a = createVElement("div").child(createVElement("div"));
+          const b = createVElement("div").child("cde");
           injectVNode(f, a, undefined);
           syncVNodes(a, b, undefined);
           expect((f.firstChild as Element).childNodes.length).to.equal(1);
@@ -850,23 +840,12 @@ describe("VNode", () => {
 
         it("'cde' => [div]", () => {
           const f = document.createDocumentFragment();
-          const a = createVElement("div").children("cde");
-          const b = createVElement("div").children([createVElement("div")]);
+          const a = createVElement("div").child("cde");
+          const b = createVElement("div").child(createVElement("div"));
           injectVNode(f, a, undefined);
           syncVNodes(a, b, undefined);
           expect((f.firstChild as Element).childNodes.length).to.equal(1);
           expect((f.firstChild.firstChild as Element).tagName).to.equal("DIV");
-        });
-
-        it("'cde' => [div, span]", () => {
-          const f = document.createDocumentFragment();
-          const a = createVElement("div").children("cde");
-          const b = createVElement("div").children([createVElement("div"), createVElement("span")]);
-          injectVNode(f, a, undefined);
-          syncVNodes(a, b, undefined);
-          expect((f.firstChild as Element).childNodes.length).to.equal(2);
-          expect((f.firstChild.firstChild as Element).tagName).to.equal("DIV");
-          expect((f.firstChild.lastChild as Element).tagName).to.equal("SPAN");
         });
       });
 
@@ -1009,7 +988,7 @@ describe("VNode", () => {
       const e = document.createElement("div");
       e.textContent = "abc";
 
-      const v = createVElement("div").children("abc");
+      const v = createVElement("div").child("abc");
       vNodeMount(v, e, undefined);
       expect(v.ref).to.equal(e);
     });

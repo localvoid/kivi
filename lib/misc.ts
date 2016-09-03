@@ -66,24 +66,26 @@ export const enum VNodeFlags {
   Component           = 1 << 2,
   /// VNode is representing a component's root.
   Root                = 1 << 3,
+  /// VNode contains children array.
+  ArrayChildren       = 1 << 4,
   /// Children reconciliation algorithm should use key property to find same nodes in old children list.
-  TrackByKeyChildren  = 1 << 4,
+  TrackByKeyChildren  = 1 << 5,
   /// Attrs property can have a dynamic shape.
-  DynamicShapeAttrs   = 1 << 5,
+  DynamicShapeAttrs   = 1 << 6,
   /// VNode represents an input element with text value.
-  TextInputElement    = 1 << 6,
+  TextInputElement    = 1 << 7,
   /// VNode represents an input element with checked value.
-  CheckedInputElement = 1 << 7,
+  CheckedInputElement = 1 << 8,
   /// VNode represents an input element.
   InputElement        = TextInputElement | CheckedInputElement,
   /// Prevent from disposing this virtual node.
-  KeepAlive           = 1 << 8,
+  KeepAlive           = 1 << 9,
   /// Prevent from updating component's props on each update.
-  BindOnce            = 1 << 9,
+  BindOnce            = 1 << 10,
   /// Immutable props.
-  ImmutableProps      = 1 << 10,
+  ImmutableProps      = 1 << 11,
   /// Children contains unsafe HTML.
-  UnsafeHTML          = 1 << 11,
+  UnsafeHTML          = 1 << 12,
 
   /// See `SharedFlags.Svg`.
   Svg                            = SharedFlags.Svg,
