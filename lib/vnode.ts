@@ -1069,12 +1069,11 @@ export function syncVNodes(a: VNode, b: VNode, owner?: Component<any, any>): voi
 /**
  * Check if two nodes can be synced.
  *
- * Two nodes can be synced when their flags, tags and keys are identical.
+ * Two nodes can be synced when their flags and tags are identical.
  */
 function _canSyncVNodes(a: VNode, b: VNode): boolean {
   return (a._flags === b._flags &&
-          a._tag === b._tag &&
-          a._key === b._key);
+          a._tag === b._tag);
 }
 
 /**
@@ -1117,7 +1116,7 @@ function _syncChildren(parent: VNode, a: VNode[] | VNode | string, b: VNode[] | 
         } else {
           a = a as VNode;
           b = b as VNode;
-          if (_canSyncVNodes(a, b)) {
+          if (_canSyncVNodes(a, b) && a._key === b._key) {
             syncVNodes(a, b, owner);
           } else {
             vNodeReplaceChild(parent, b, a, owner);
@@ -1139,7 +1138,7 @@ function _syncChildren(parent: VNode, a: VNode[] | VNode | string, b: VNode[] | 
           const aNode = a[0] as VNode;
           const bNode = b[0] as VNode;
 
-          if (_canSyncVNodes(aNode, bNode)) {
+          if (_canSyncVNodes(aNode, bNode) && aNode._key === bNode._key) {
             syncVNodes(aNode, bNode, owner);
           } else {
             vNodeReplaceChild(parent, bNode, aNode, owner);
@@ -1218,7 +1217,7 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
     aNode = a[aStart];
     bNode = b[bStart];
 
-    if (!_canSyncVNodes(aNode, bNode)) {
+    if (!_canSyncVNodes(aNode, bNode) || aNode._key !== bNode._key) {
       break;
     }
 
@@ -1233,7 +1232,7 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
     aNode = a[aEnd];
     bNode = b[bEnd];
 
-    if (!_canSyncVNodes(aNode, bNode)) {
+    if (!_canSyncVNodes(aNode, bNode) || aNode._key !== bNode._key) {
       break;
     }
 
@@ -1259,7 +1258,7 @@ function _syncChildrenNaive(parent: VNode, a: VNode[], b: VNode[], owner: Compon
   while (aStart <= aEnd && bStart <= bEnd) {
     aNode = a[aStart++];
     bNode = b[bStart++];
-    if (_canSyncVNodes(aNode, bNode)) {
+    if (_canSyncVNodes(aNode, bNode) && aNode._key === bNode._key) {
       syncVNodes(aNode, bNode, owner);
     } else {
       vNodeReplaceChild(parent, bNode, aNode, owner);
@@ -1539,12 +1538,11 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
   outer: while (true) {
     // Sync nodes with the same key at the beginning.
     while (aStartNode._key === bStartNode._key) {
-      if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
-        if (!_canSyncVNodes(aStartNode, bStartNode)) {
-          throw new Error("VNode sync children failed: cannot sync two different children with the same key.");
-        }
+      if (_canSyncVNodes(aStartNode, bStartNode)) {
+        syncVNodes(aStartNode, bStartNode, owner);
+      } else {
+        vNodeReplaceChild(parent, bStartNode, aStartNode, owner);
       }
-      syncVNodes(aStartNode, bStartNode, owner);
       aStart++;
       bStart++;
       if (aStart > aEnd || bStart > bEnd) {
@@ -1556,12 +1554,11 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
 
     // Sync nodes with the same key at the end.
     while (aEndNode._key === bEndNode._key) {
-      if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
-        if (!_canSyncVNodes(aEndNode, bEndNode)) {
-          throw new Error("VNode sync children failed: cannot sync two different children with the same key.");
-        }
+      if (_canSyncVNodes(aEndNode, bEndNode)) {
+        syncVNodes(aEndNode, bEndNode, owner);
+      } else {
+        vNodeReplaceChild(parent, bEndNode, aEndNode, owner);
       }
-      syncVNodes(aEndNode, bEndNode, owner);
       aEnd--;
       bEnd--;
       if (aStart > aEnd || bStart > bEnd) {
@@ -1573,12 +1570,11 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
 
     // Move and sync nodes from right to left.
     if (aEndNode._key === bStartNode._key) {
-      if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
-        if (!_canSyncVNodes(aEndNode, bStartNode)) {
-          throw new Error("VNode sync children failed: cannot sync two different children with the same key.");
-        }
+      if (_canSyncVNodes(aEndNode, bStartNode)) {
+        syncVNodes(aEndNode, bStartNode, owner);
+      } else {
+        vNodeReplaceChild(parent, bStartNode, aEndNode, owner);
       }
-      syncVNodes(aEndNode, bStartNode, owner);
       vNodeMoveChild(parent, bStartNode, aStartNode.ref);
       aEnd--;
       bStart++;
@@ -1594,12 +1590,11 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
 
     // Move and sync nodes from left to right.
     if (aStartNode._key === bEndNode._key) {
-      if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
-        if (!_canSyncVNodes(aStartNode, bEndNode)) {
-          throw new Error("VNode sync children failed: cannot sync two different children with the same key.");
-        }
+      if (_canSyncVNodes(aStartNode, bEndNode)) {
+        syncVNodes(aStartNode, bEndNode, owner);
+      } else {
+        vNodeReplaceChild(parent, bEndNode, aStartNode, owner);
       }
-      syncVNodes(aStartNode, bEndNode, owner);
       nextPos = bEnd + 1;
       next = nextPos < b.length ? b[nextPos].ref : null;
       vNodeMoveChild(parent, bEndNode, next);
@@ -1659,12 +1654,11 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
               } else {
                 pos = j;
               }
-              if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
-                if (!_canSyncVNodes(aNode, bNode)) {
-                  throw new Error("VNode sync children failed: cannot sync two different children with the same key.");
-                }
+              if (_canSyncVNodes(aNode, bNode)) {
+                syncVNodes(aNode, bNode, owner);
+              } else {
+                vNodeReplaceChild(parent, bNode, aNode, owner);
               }
-              syncVNodes(aNode, bNode, owner);
               synced++;
               aNullable[i] = null;
               break;
@@ -1694,12 +1688,11 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
             } else {
               pos = j;
             }
-            if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
-              if (!_canSyncVNodes(aNode, bNode)) {
-                throw new Error("VNode sync children failed: cannot sync two different children with the same key.");
-              }
+            if (_canSyncVNodes(aNode, bNode)) {
+              syncVNodes(aNode, bNode, owner);
+            } else {
+              vNodeReplaceChild(parent, bNode, aNode, owner);
             }
-            syncVNodes(aNode, bNode, owner);
             synced++;
             aNullable[i] = null;
           }
