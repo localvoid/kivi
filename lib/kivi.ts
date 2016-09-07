@@ -25,6 +25,7 @@ export {
 export {
   ComponentDescriptorRegistry,
   ComponentRootElement,
+  DelegatedEventController,
   ComponentDescriptor,
   Component,
   injectComponent,

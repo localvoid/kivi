@@ -37,6 +37,25 @@ export interface ComponentRootElement<P, S> extends Element {
 }
 
 /**
+ * Delegated Event Controller.
+ */
+export class DelegatedEventController {
+  private _stop: boolean;
+
+  constructor() {
+    this._stop = false;
+  }
+
+  stop(): void {
+    this._stop = true;
+  }
+
+  isStopped(): boolean {
+    return this._stop;
+  }
+}
+
+/**
  * Component Descriptor.
  *
  * Each component should declare its properties and behavior in `ComponentDescriptor` object.
@@ -545,8 +564,8 @@ export class ComponentDescriptor<P, S> {
   /**
    * Create event handler.
    */
-  createEventHandler(handler: (event: Event, component: Component<P, S>, props: P, state: S) => void):
-      (event: Event) => void {
+  createEventHandler<E extends Event>(handler: (event: E, component: Component<P, S>, props: P, state: S) => void):
+      (event: E) => void {
     this._flags |= ComponentDescriptorFlags.EnabledBackRef;
     return function(event) {
       const component = (event.currentTarget as ComponentRootElement<P, S>).kiviComponent;
@@ -567,29 +586,32 @@ export class ComponentDescriptor<P, S> {
    * `componentSelector` selector that should match component instance. If it is `false`, then it will look for
    * component instance in an event `currentTarget`.
    */
-  createDelegatedEventHandler(selector: string, componentSelector: string | boolean,
-      handler: (event: Event, component: Component<P, S>, props: P, state: S, matchingTarget: Element) => void):
-      (event: Event) => void {
+  createDelegatedEventHandler<E extends Event>(selector: string, componentSelector: string | boolean,
+      handler: (event: E, component: Component<P, S>, props: P, state: S, matchingTarget: Element,
+      controller?: DelegatedEventController) => void):
+      (event: E, controller?: DelegatedEventController) => void {
     this._flags |= ComponentDescriptorFlags.EnabledBackRef;
-    return function(event) {
-      let matchingTarget = matchesWithAncestors(event.target as Element, selector, event.currentTarget as Element);
-      if (matchingTarget !== null) {
-        let target: Element | null = matchingTarget;
-        if (typeof componentSelector === "boolean") {
-          if (!componentSelector) {
-            target = event.currentTarget as Element;
+    return function(event, controller) {
+      if (controller === undefined || !controller.isStopped()) {
+        let matchingTarget = matchesWithAncestors(event.target as Element, selector, event.currentTarget as Element);
+        if (matchingTarget !== null) {
+          let target: Element | null = matchingTarget;
+          if (typeof componentSelector === "boolean") {
+            if (!componentSelector) {
+              target = event.currentTarget as Element;
+            }
+          } else {
+            target = matchesWithAncestors(matchingTarget, componentSelector, event.currentTarget as Element);
           }
-        } else {
-          target = matchesWithAncestors(matchingTarget, componentSelector, event.currentTarget as Element);
-        }
-        const component = (target as ComponentRootElement<P, S>).kiviComponent;
-        if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
-          if (component === undefined) {
-            throw new Error(`Failed to dispatch event to event handler: cannot find reference to component on a DOM` +
-                            `element.`);
+          const component = (target as ComponentRootElement<P, S>).kiviComponent;
+          if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
+            if (component === undefined) {
+              throw new Error(`Failed to dispatch event to event handler: cannot find reference to component on a DOM` +
+                `element.`);
+            }
           }
+          handler(event, component!, component!.props!, component!.state!, matchingTarget, controller);
         }
-        handler(event, component!, component!.props!, component!.state!, matchingTarget);
       }
     };
   }
