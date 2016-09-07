@@ -51,7 +51,7 @@
         data-chapter-title="Introduction"
         data-filepath="README.md"
         data-basepath="."
-        data-revision="Thu Aug 18 2016 13:52:07 GMT+0700 (+07)"
+        data-revision="Wed Sep 07 2016 14:55:59 GMT+0700 (+07)"
         data-innerlanguage="">
     
 
@@ -314,7 +314,7 @@ manipulations.</p>
 
 <span class="hljs-keyword">const</span> Main = <span class="hljs-keyword">new</span> ComponentDescriptor()
   .update((c, props) =&gt; {
-    c.sync(c.createVRoot().children(<span class="hljs-string">`Hello <span class="hljs-subst">${props.name}</span>`</span>));
+    c.sync(c.createVRoot().child(<span class="hljs-string">`Hello <span class="hljs-subst">${props.name}</span>`</span>));
   });
 
 injectComponent(Main, <span class="hljs-built_in">document</span>.body, {name: <span class="hljs-string">&quot;World&quot;</span>});

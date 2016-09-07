@@ -20,7 +20,7 @@ diffing it by reusing the same virtual node on each render. For example:
 ```ts
 const MyComponent = new ComponentDescriptor<void, {node: VNode}>()
   .init((c) => {
-    c.state = {node: createVElement("div").children("pretend that there is some heavy content...")};
+    c.state = {node: createVElement("div").child("pretend that there is some heavy content...")};
   })
   .update((c, props, state) => {
     c.sync(c.createVRoot()
@@ -46,7 +46,7 @@ const MyComponent = new ComponentDescriptor<{showChild: boolean}, {aliveComponen
     c.state.aliveComponent.dispose();
   })
   .update((c, props, state) => {
-    c.sync(c.createVRoot().children(
-      props.showChild ? [ChildComponent.createVNode().keepAlive(state.aliveComponent)] : null));
+    c.sync(c.createVRoot().child(
+      props.showChild ? ChildComponent.createVNode().keepAlive(state.aliveComponent) : null));
   });
 ```

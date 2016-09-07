@@ -53,7 +53,7 @@
         data-chapter-title="Components"
         data-filepath="basics/01_components.md"
         data-basepath=".."
-        data-revision="Thu Aug 18 2016 13:52:07 GMT+0700 (+07)"
+        data-revision="Wed Sep 07 2016 14:55:59 GMT+0700 (+07)"
         data-innerlanguage="">
     
 
@@ -366,8 +366,8 @@ virtual dom. For example:</p>
   .update((c, props) =&gt; {
     c.sync(c.createVRoot()
       .children([
-        createVElement(<span class="hljs-string">&quot;h1&quot;</span>).children(props.title),
-        createVElement(<span class="hljs-string">&quot;p&quot;</span>).children(props.content),
+        createVElement(<span class="hljs-string">&quot;h1&quot;</span>).child(props.title),
+        createVElement(<span class="hljs-string">&quot;p&quot;</span>).child(props.content),
       ]));
   });
 </code></pre>
@@ -402,7 +402,7 @@ initialized before init handler is invoked.</p>
     });
   })
   .update((c) =&gt; {
-    c.sync(c.createVRoot().children(<span class="hljs-string">&quot;click me&quot;</span>));
+    c.sync(c.createVRoot().child(<span class="hljs-string">&quot;click me&quot;</span>));
   });
 </code></pre>
 <h3 id="update">update</h3>
@@ -412,7 +412,7 @@ one of the scheduler component queues.</p>
 use <code>sync</code> method.</p>
 <pre><code class="lang-ts"><span class="hljs-keyword">const</span> MyComponent = <span class="hljs-keyword">new</span> ComponentDescriptor&lt;{a: <span class="hljs-built_in">number</span>}, <span class="hljs-built_in">void</span>&gt;()
   .update((c, props, state) =&gt; {
-     c.sync(c.createVRoot().children(props.a.toString()));
+     c.sync(c.createVRoot().child(props.a.toString()));
   });
 </code></pre>
 <h3 id="attached">attached</h3>
@@ -424,7 +424,7 @@ use <code>sync</code> method.</p>
     c.subscribe(onChange);
   })
   .update((c) =&gt; {
-     c.sync(c.createVRoot().children(<span class="hljs-string">&quot;content&quot;</span>));
+     c.sync(c.createVRoot().child(<span class="hljs-string">&quot;content&quot;</span>));
   });
 
 onChange.invalidate();
@@ -442,7 +442,7 @@ onChange.invalidate();
     <span class="hljs-built_in">window</span>.removeEventListener(state.onResize);
   })
   .update((c) =&gt; {
-     c.sync(c.createVRoot().children(<span class="hljs-string">&quot;content&quot;</span>));
+     c.sync(c.createVRoot().child(<span class="hljs-string">&quot;content&quot;</span>));
   });
 </code></pre>
 <h3 id="disposed">disposed</h3>
@@ -457,7 +457,7 @@ onChange.invalidate();
     allocatedComponents--;
   })
   .update((c) =&gt; {
-     c.sync(c.createVRoot().children(<span class="hljs-string">&quot;content&quot;</span>));
+     c.sync(c.createVRoot().child(<span class="hljs-string">&quot;content&quot;</span>));
   });
 </code></pre>
 <h3 id="newpropsreceived">newPropsReceived</h3>
@@ -470,7 +470,7 @@ received props will cause change in component&apos;s representation.</p>
     }
   })
   .update((c) =&gt; {
-     c.sync(c.createVRoot().children(props.a.toString()));
+     c.sync(c.createVRoot().child(props.a.toString()));
   });
 </code></pre>
 

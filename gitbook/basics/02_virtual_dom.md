@@ -34,7 +34,7 @@ const e = createVElement("a")
     "href": "localhost",
     "title": "Link to localhost",
   })
-  .children("Link to localhost");
+  .child("Link to localhost");
 ```
 
 List of basic properties:
@@ -44,7 +44,8 @@ VNode.attrs(attrs: {[key: string]: any}): VNode;
 VNode.props(props: {[key: string]: any}): VNode;
 VNode.style(style: string): VNode;
 VNode.className(className: string): VNode;
-VNode.children(children: VNode[]|string): VNode;
+VNode.children(children: VNode[] | null): VNode;
+VNode.child(child: VNode | string | null): VNode;
 ```
 
 ### Using keys to preserve identity

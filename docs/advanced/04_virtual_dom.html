@@ -53,7 +53,7 @@
         data-chapter-title="Virtual DOM"
         data-filepath="advanced/04_virtual_dom.md"
         data-basepath=".."
-        data-revision="Thu Aug 18 2016 13:52:07 GMT+0700 (+07)"
+        data-revision="Wed Sep 07 2016 14:55:59 GMT+0700 (+07)"
         data-innerlanguage="">
     
 
@@ -318,7 +318,7 @@
 diffing it by reusing the same virtual node on each render. For example:</p>
 <pre><code class="lang-ts"><span class="hljs-keyword">const</span> MyComponent = <span class="hljs-keyword">new</span> ComponentDescriptor&lt;<span class="hljs-built_in">void</span>, {node: VNode}&gt;()
   .init((c) =&gt; {
-    c.state = {node: createVElement(<span class="hljs-string">&quot;div&quot;</span>).children(<span class="hljs-string">&quot;pretend that there is some heavy content...&quot;</span>)};
+    c.state = {node: createVElement(<span class="hljs-string">&quot;div&quot;</span>).child(<span class="hljs-string">&quot;pretend that there is some heavy content...&quot;</span>)};
   })
   .update((c, props, state) =&gt; {
     c.sync(c.createVRoot()
@@ -340,8 +340,8 @@ instead of disposing them, they are detached.</p>
     c.state.aliveComponent.dispose();
   })
   .update((c, props, state) =&gt; {
-    c.sync(c.createVRoot().children(
-      props.showChild ? [ChildComponent.createVNode().keepAlive(state.aliveComponent)] : <span class="hljs-literal">null</span>));
+    c.sync(c.createVRoot().child(
+      props.showChild ? ChildComponent.createVNode().keepAlive(state.aliveComponent) : <span class="hljs-literal">null</span>));
   });
 </code></pre>
 

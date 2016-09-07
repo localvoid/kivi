@@ -79,8 +79,8 @@ const MyComponent = new ComponentDescriptor<{title: string, content: string}, vo
   .update((c, props) => {
     c.sync(c.createVRoot()
       .children([
-        createVElement("h1").children(props.title),
-        createVElement("p").children(props.content),
+        createVElement("h1").child(props.title),
+        createVElement("p").child(props.content),
       ]));
   });
 ```
@@ -126,7 +126,7 @@ const MyComponent = new ComponentDescriptor<void, void>()
     });
   })
   .update((c) => {
-    c.sync(c.createVRoot().children("click me"));
+    c.sync(c.createVRoot().child("click me"));
   });
 ```
 
@@ -141,7 +141,7 @@ use `sync` method.
 ```ts
 const MyComponent = new ComponentDescriptor<{a: number}, void>()
   .update((c, props, state) => {
-     c.sync(c.createVRoot().children(props.a.toString()));
+     c.sync(c.createVRoot().child(props.a.toString()));
   });
 ```
 
@@ -157,7 +157,7 @@ const MyComponent = new ComponentDescriptor<void, void>()
     c.subscribe(onChange);
   })
   .update((c) => {
-     c.sync(c.createVRoot().children("content"));
+     c.sync(c.createVRoot().child("content"));
   });
 
 onChange.invalidate();
@@ -179,7 +179,7 @@ const MyComponent = new ComponentDescriptor<void, {onResize: (e: Event) => void}
     window.removeEventListener(state.onResize);
   })
   .update((c) => {
-     c.sync(c.createVRoot().children("content"));
+     c.sync(c.createVRoot().child("content"));
   });
 ```
 
@@ -198,7 +198,7 @@ const MyComponent = new ComponentDescriptor<void, void>()
     allocatedComponents--;
   })
   .update((c) => {
-     c.sync(c.createVRoot().children("content"));
+     c.sync(c.createVRoot().child("content"));
   });
 ```
 
@@ -215,6 +215,6 @@ const MyComponent = new ComponentDescriptor<{a: number}, void>()
     }
   })
   .update((c) => {
-     c.sync(c.createVRoot().children(props.a.toString()));
+     c.sync(c.createVRoot().child(props.a.toString()));
   });
 ```

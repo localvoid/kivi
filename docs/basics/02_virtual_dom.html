@@ -53,7 +53,7 @@
         data-chapter-title="Virtual DOM"
         data-filepath="basics/02_virtual_dom.md"
         data-basepath=".."
-        data-revision="Thu Aug 18 2016 13:52:07 GMT+0700 (+07)"
+        data-revision="Wed Sep 07 2016 14:55:59 GMT+0700 (+07)"
         data-innerlanguage="">
     
 
@@ -329,14 +329,15 @@ example:</p>
     <span class="hljs-string">&quot;href&quot;</span>: <span class="hljs-string">&quot;localhost&quot;</span>,
     <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Link to localhost&quot;</span>,
   })
-  .children(<span class="hljs-string">&quot;Link to localhost&quot;</span>);
+  .child(<span class="hljs-string">&quot;Link to localhost&quot;</span>);
 </code></pre>
 <p>List of basic properties:</p>
 <pre><code>VNode.attrs(attrs: {[key: string]: any}): VNode;
 VNode.props(props: {[key: string]: any}): VNode;
 VNode.style(style: string): VNode;
 VNode.className(className: string): VNode;
-VNode.children(children: VNode[]|string): VNode;
+VNode.children(children: VNode[] | null): VNode;
+VNode.child(child: VNode | string | null): VNode;
 </code></pre><h3 id="using-keys-to-preserve-identity">Using keys to preserve identity</h3>
 <p>To prevent from losing internal state of DOM elements and components, we should track nodes by some property. Virtual
 DOM reconciliation algorithm is using <code>key</code> property to find virtual nodes representing the same DOM node from
