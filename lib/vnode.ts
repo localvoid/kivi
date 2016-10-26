@@ -1,7 +1,7 @@
-import {printError} from "./debug";
-import {SvgNamespace, VNodeFlags, VNodeDebugFlags, ComponentDescriptorFlags, setAttr} from "./misc";
-import {Component, ComponentDescriptor, updateComponent} from "./component";
-import {ElementDescriptor} from "./element_descriptor";
+import { printError } from "./debug";
+import { SvgNamespace, VNodeFlags, VNodeDebugFlags, ComponentDescriptorFlags, setAttr } from "./misc";
+import { Component, ComponentDescriptor, updateComponent } from "./component";
+import { ElementDescriptor } from "./element_descriptor";
 
 /**
  * Virtual DOM Node.
@@ -60,7 +60,7 @@ export class VNode {
    * If attribute is prefixed with "xlink:", or "xml:" namespace, it will assign attributes with `setAttributeNS`
    * method and use appropriate namespaces.
    */
-  _attrs: {[key: string]: any} | null;
+  _attrs: { [key: string]: any } | null;
   /**
    * Style in css string format.
    *
@@ -150,11 +150,11 @@ export class VNode {
    *
    * This method is available on element and component's root virtual node types.
    */
-  props(props: {[key: string]: any}): VNode {
+  props(props: { [key: string]: any }): VNode {
     if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error("Failed to set props on VNode: props method should be called on element or component" +
-                        " root nodes only.");
+          " root nodes only.");
       }
       if ((this._flags & VNodeFlags.ElementDescriptor) !== 0) {
         if ((this._flags & VNodeFlags.ElementDescriptorUpdateHandler) !== 0) {
@@ -166,7 +166,7 @@ export class VNode {
           for (let i = 0; i < keys.length; i++) {
             if (eDescriptor._props.hasOwnProperty(keys[i])) {
               throw new Error(`Failed to set props on VNode: VNode is using ElementDescriptor that uses the same` +
-                              ` property "${keys[i]}".`);
+                ` property "${keys[i]}".`);
             }
           }
         }
@@ -198,11 +198,11 @@ export class VNode {
    *
    * This method is available on element and component's root virtual node types.
    */
-  attrs(attrs: {[key: string]: any}): VNode {
+  attrs(attrs: { [key: string]: any }): VNode {
     if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error("Failed to set attrs on VNode: attrs method should be called on element or component" +
-                        " root nodes only.");
+          " root nodes only.");
       }
       if ((this._flags & VNodeFlags.ElementDescriptor) !== 0) {
         if ((this._flags & VNodeFlags.ElementDescriptorUpdateHandler) !== 0) {
@@ -214,7 +214,7 @@ export class VNode {
           for (let i = 0; i < keys.length; i++) {
             if (eDescriptor._attrs.hasOwnProperty(keys[i])) {
               throw new Error(`Failed to set attrs on VNode: VNode is using ElementDescriptor that uses the same` +
-                              ` attribute "${keys[i]}".`);
+                ` attribute "${keys[i]}".`);
             }
           }
         }
@@ -246,11 +246,11 @@ export class VNode {
    *
    * This method is available on element and component's root virtual node types.
    */
-  dynamicShapeAttrs(attrs?: {[key: string]: any}): VNode {
+  dynamicShapeAttrs(attrs?: { [key: string]: any }): VNode {
     if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error("Failed to set attrs on VNode: attrs method should be called on element or component" +
-                        " root nodes only.");
+          " root nodes only.");
       }
       if ((this._flags & VNodeFlags.ElementDescriptor) !== 0) {
         if ((this._flags & VNodeFlags.ElementDescriptorUpdateHandler) !== 0) {
@@ -262,7 +262,7 @@ export class VNode {
           for (let i = 0; i < keys.length; i++) {
             if (eDescriptor._attrs.hasOwnProperty(keys[i])) {
               throw new Error(`Failed to set attrs on VNode: VNode is using ElementDescriptor that uses the same` +
-                              ` attribute "${keys[i]}".`);
+                ` attribute "${keys[i]}".`);
             }
           }
         }
@@ -282,7 +282,7 @@ export class VNode {
     if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root | VNodeFlags.ElementDescriptor)) === 0) {
         throw new Error("Failed to set data on VNode: data method should be called on element or component" +
-                        " root nodes represented by ElementDescriptors only.");
+          " root nodes represented by ElementDescriptors only.");
       }
       if ((this._flags & VNodeFlags.ElementDescriptorUpdateHandler) === 0) {
         throw new Error("Failed to set data on VNode: VNode should be using ElementDescriptor with update handler.");
@@ -304,7 +304,7 @@ export class VNode {
     if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error("Failed to set style on VNode: style method should be called on element or component" +
-                        " root nodes only.");
+          " root nodes only.");
       }
       if ((this._flags & VNodeFlags.ElementDescriptor) !== 0) {
         if ((this._flags & VNodeFlags.ElementDescriptorUpdateHandler) !== 0) {
@@ -331,7 +331,7 @@ export class VNode {
     if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error("Failed to set className on VNode: className method should be called on element or component" +
-                        " root nodes only.");
+          " root nodes only.");
       }
       if ((this._flags & VNodeFlags.ElementDescriptor) !== 0) {
         if ((this._flags & VNodeFlags.ElementDescriptorUpdateHandler) !== 0) {
@@ -355,7 +355,7 @@ export class VNode {
     if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error("Failed to set child on VNode: child method should be called on element or component" +
-                        " root nodes only.");
+          " root nodes only.");
       }
       if ((this._flags & VNodeFlags.InputElement) !== 0) {
         throw new Error("Failed to set child on VNode: input elements can't have children.");
@@ -375,7 +375,7 @@ export class VNode {
     if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error("Failed to set children on VNode: children method should be called on element or component" +
-                        " root nodes only.");
+          " root nodes only.");
       }
       if ((this._flags & VNodeFlags.InputElement) !== 0) {
         throw new Error("Failed to set children on VNode: input elements can't have children.");
@@ -395,7 +395,7 @@ export class VNode {
     if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error("Failed to set unsafeHTML on VNode: unsafeHTML method should be called on element or" +
-                        " component root nodes only.");
+          " component root nodes only.");
       }
       if ((this._flags & VNodeFlags.InputElement) !== 0) {
         throw new Error("Failed to set unsafeHTML on VNode: input elements can't have children.");
@@ -416,7 +416,7 @@ export class VNode {
     if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error("Failed to set children on VNode: children method should be called on element or component" +
-                        " root nodes only.");
+          " root nodes only.");
       }
       if ((this._flags & VNodeFlags.InputElement) !== 0) {
         throw new Error("Failed to set children on VNode: input elements can't have children.");
@@ -425,7 +425,7 @@ export class VNode {
         for (let i = 0; i < children.length; i++) {
           if (children[i]._key === null) {
             throw new Error("Failed to set children on VNode: trackByKeyChildren method expects all children to" +
-                            " have a key.");
+              " have a key.");
           }
         }
       }
@@ -502,7 +502,7 @@ export class VNode {
     if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       if ((this._flags & (VNodeFlags.Element | VNodeFlags.Root)) === 0) {
         throw new Error("Failed to disable children shape error on VNode: disableChildrenShapeError method should" +
-                        " be called on element or component root nodes only.");
+          " be called on element or component root nodes only.");
       }
       this._debugFlags |= VNodeDebugFlags.DisabledChildrenShapeError;
     }
@@ -1073,14 +1073,14 @@ export function syncVNodes(a: VNode, b: VNode, owner?: Component<any, any>): voi
  */
 function _canSyncVNodes(a: VNode, b: VNode): boolean {
   return (a._flags === b._flags &&
-          a._tag === b._tag);
+    a._tag === b._tag);
 }
 
 /**
  * Sync old children list with the new one.
  */
 function _syncChildren(parent: VNode, a: VNode[] | VNode | string, b: VNode[] | VNode | string,
-    owner: Component<any, any> | undefined): void {
+  owner: Component<any, any> | undefined): void {
   let i = 0;
 
   if ((parent._flags & VNodeFlags.ArrayChildren) === 0) {
@@ -1623,17 +1623,13 @@ function _syncChildrenTrackByKeys(parent: VNode, a: VNode[], b: VNode[], owner: 
     while (aStart <= aEnd) {
       vNodeRemoveChild(parent, a[aStart++]);
     }
-  // Step 2
+    // Step 2
   } else {
     let aLength = aEnd - aStart + 1;
     let bLength = bEnd - bStart + 1;
     const aNullable = a as Array<VNode | null>; // will be removed by js optimizing compilers.
-    const sources = new Array<number>(bLength);
-
     // Mark all nodes as inserted.
-    for (i = 0; i < bLength; i++) {
-      sources[i] = -1;
-    }
+    const sources = new Array<number>(bLength).fill(-1);
 
     let moved = false;
     let pos = 0;
@@ -1825,7 +1821,7 @@ function _lis(a: number[]): number[] {
  *  a: { title: "Google", href: "https://www.google.com" }
  *  b: { title: "Facebook" }
  */
-function syncStaticShapeAttrs(node: Element, a: {[key: string]: any} | null, b: {[key: string]: any} | null): void {
+function syncStaticShapeAttrs(node: Element, a: { [key: string]: any } | null, b: { [key: string]: any } | null): void {
   if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
     if (a === null || b === null) {
       throw new Error("Failed to update attrs with static shape: attrs object have dynamic shape.");
@@ -1870,7 +1866,7 @@ function syncStaticShapeAttrs(node: Element, a: {[key: string]: any} | null, b: 
  *
  * In this example `href` attribute will be removed.
  */
-function syncDynamicShapeAttrs(node: Element, a: {[key: string]: any} | null, b: {[key: string]: any} | null): void {
+function syncDynamicShapeAttrs(node: Element, a: { [key: string]: any } | null, b: { [key: string]: any } | null): void {
   let i: number;
   let keys: string[];
   let key: string;
@@ -1931,7 +1927,7 @@ function syncDynamicShapeAttrs(node: Element, a: {[key: string]: any} | null, b:
  *  a: { title: "Google", href: "https://www.google.com" }
  *  b: { title: "Facebook" }
  */
-function syncStaticShapeProps(node: Element, a: {[key: string]: any}, b: {[key: string]: any}): void {
+function syncStaticShapeProps(node: Element, a: { [key: string]: any }, b: { [key: string]: any }): void {
   if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
     if (a === null || b === null) {
       throw new Error("Failed to update props with static shape: props object have dynamic shape.");
@@ -1951,7 +1947,7 @@ function syncStaticShapeProps(node: Element, a: {[key: string]: any}, b: {[key: 
     }
     const bValue = b[key];
     if (a[key] !== bValue) {
-      (node as {[key: string]: any})[key] = bValue;
+      (node as { [key: string]: any })[key] = bValue;
     }
   }
 

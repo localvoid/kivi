@@ -1,6 +1,6 @@
-import {ComponentDescriptor} from "../lib/component";
-import {LifecycleComponent} from "./lifecycle";
-import {ElementDescriptor} from "../lib/element_descriptor";
+import { ComponentDescriptor } from "../lib/component";
+import { LifecycleComponent } from "./lifecycle";
+import { ElementDescriptor } from "../lib/element_descriptor";
 
 const expect = chai.expect;
 

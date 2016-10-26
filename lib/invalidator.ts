@@ -1,5 +1,5 @@
-import {Component} from "./component";
-import {clock} from "./scheduler";
+import { Component } from "./component";
+import { clock } from "./scheduler";
 
 /**
  * InvalidatorSubscription flags.
@@ -32,7 +32,7 @@ export class InvalidatorSubscription {
   private _isCanceled: boolean;
 
   constructor(flags: number, invalidator: Invalidator, component: Component<any, any> | null,
-      callback: Function | null) {
+    callback: Function | null) {
     this._flags = flags;
     this.invalidator = invalidator;
     this._component = component;

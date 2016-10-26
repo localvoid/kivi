@@ -3,9 +3,10 @@ const series = gulp.series;
 const parallel = gulp.parallel;
 const del = require("del");
 const tsConfig = require("./tsconfig.json");
+const ts = require("gulp-typescript");
 const rollup = require("rollup");
-const rollupTypeScript = require("rollup-plugin-typescript");
 const rollupReplace = require("rollup-plugin-replace");
+const merge = require("merge2");
 
 function clean() {
   return del(["dist", "build"]);
@@ -16,29 +17,37 @@ function cleanTests() {
 }
 
 function buildES6() {
-  const ts = require("gulp-typescript");
-  const tslint = require("gulp-tslint");
-  const merge = require("merge2");
+  const tsProject = ts.createProject("tsconfig.json", {
+    typescript: require("typescript"),
+    target: "es6",
+    declaration: true,
+  });
 
-  const result = gulp.src(["lib/**/*.ts"])
-    .pipe(tslint({
-      formatter: "verbose",
-    }))
-    .pipe(ts(Object.assign({}, tsConfig.compilerOptions, {
-      typescript: require("typescript"),
-      target: "es6",
-      declaration: true,
-    })));
+  const tsResult = tsProject.src()
+    .pipe(tsProject());
 
   return merge([
-    result.dts.pipe(gulp.dest("dist/typings")),
-    result.js.pipe(gulp.dest("build/es6")),
+    tsResult.dts.pipe(gulp.dest("build/typings")),
+    tsResult.js.pipe(gulp.dest("build/es6"))
   ]);
+}
+
+function buildES5() {
+  const tsProject = ts.createProject("tsconfig.json", {
+    typescript: require("typescript"),
+    target: "es5",
+    module: "es6",
+  });
+
+  const tsResult = tsProject.src()
+    .pipe(tsProject());
+
+  return tsResult.js.pipe(gulp.dest("build/es5"));
 }
 
 function dist() {
   return rollup.rollup({
-    entry: "build/es6/kivi.js",
+    entry: "build/es6/lib/kivi.js",
   }).then((bundle) => Promise.all([
     bundle.write({
       format: "es",
@@ -52,16 +61,15 @@ function dist() {
   ]));
 }
 
+function typings() {
+  return gulp.src("build/typings/lib/**/*.ts")
+    .pipe(gulp.dest("dist/typings"));
+}
+
 function buildTests() {
   return rollup.rollup({
-    entry: "tests/index.spec.ts",
+    entry: "build/es5/tests/index.spec.js",
     plugins: [
-      rollupTypeScript(Object.assign({}, tsConfig.compilerOptions, {
-        typescript: require("typescript"),
-        target: "es5",
-        module: "es6",
-        declaration: false,
-      })),
       rollupReplace({
         delimiters: ["<@", "@>"],
         values: {
@@ -154,8 +162,8 @@ function buildDocs() {
 }
 
 exports.clean = clean;
-exports.dist = series(clean, buildES6, dist);
-exports.test = series(cleanTests, buildTests, runTests);
-exports.testSauce = series(cleanTests, buildTests, runTestsSauce);
+exports.dist = series(clean, buildES6, dist, typings);
+exports.test = series(clean, buildES5, buildTests, runTests);
+exports.testSauce = series(clean, buildES5, buildTests, runTestsSauce);
 exports.docs = buildDocs;
 exports.buildFuzzyTests = parallel(buildFuzzyTestsHtml, buildFuzzyTestsJS);

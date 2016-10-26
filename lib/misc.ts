@@ -30,15 +30,15 @@ if (ElementPrototype.matches === undefined) {
  */
 const enum SharedFlags {
   /// DOM Element is in SVG namespace.
-  Svg                            = 1 << 15,
+  Svg = 1 << 15,
   /// Component is using 2d canvas to render its contents.
-  Canvas2D                       = 1 << 16,
+  Canvas2D = 1 << 16,
   /// Element is created from ElementDescriptor.
-  ElementDescriptor              = 1 << 17,
+  ElementDescriptor = 1 << 17,
   /// Element is using custom reconciliation algorithm to update.
   ElementDescriptorUpdateHandler = 1 << 18,
   /// Recycling is enabled, items should be allocated from recycled pool.
-  EnabledRecycling               = 1 << 19,
+  EnabledRecycling = 1 << 19,
 }
 
 /**
@@ -59,38 +59,38 @@ export const enum ElementDescriptorFlags {
  */
 export const enum VNodeFlags {
   /// VNode is representing a Text node.
-  Text                = 1,
+  Text = 1,
   /// VNode is representing an Element node. When Svg flag is off, it represents HTMLElement.
-  Element             = 1 << 1,
+  Element = 1 << 1,
   /// VNode is representing a component.
-  Component           = 1 << 2,
+  Component = 1 << 2,
   /// VNode is representing a component's root.
-  Root                = 1 << 3,
+  Root = 1 << 3,
   /// VNode contains children array.
-  ArrayChildren       = 1 << 4,
+  ArrayChildren = 1 << 4,
   /// Children reconciliation algorithm should use key property to find same nodes in old children list.
-  TrackByKeyChildren  = 1 << 5,
+  TrackByKeyChildren = 1 << 5,
   /// Attrs property can have a dynamic shape.
-  DynamicShapeAttrs   = 1 << 6,
+  DynamicShapeAttrs = 1 << 6,
   /// VNode represents an input element with text value.
-  TextInputElement    = 1 << 7,
+  TextInputElement = 1 << 7,
   /// VNode represents an input element with checked value.
   CheckedInputElement = 1 << 8,
   /// VNode represents an input element.
-  InputElement        = TextInputElement | CheckedInputElement,
+  InputElement = TextInputElement | CheckedInputElement,
   /// Prevent from disposing this virtual node.
-  KeepAlive           = 1 << 9,
+  KeepAlive = 1 << 9,
   /// Prevent from updating component's props on each update.
-  BindOnce            = 1 << 10,
+  BindOnce = 1 << 10,
   /// Immutable props.
-  ImmutableProps      = 1 << 11,
+  ImmutableProps = 1 << 11,
   /// Children contains unsafe HTML.
-  UnsafeHTML          = 1 << 12,
+  UnsafeHTML = 1 << 12,
 
   /// See `SharedFlags.Svg`.
-  Svg                            = SharedFlags.Svg,
+  Svg = SharedFlags.Svg,
   /// See `SharedFlags.ElementDescriptor`.
-  ElementDescriptor              = SharedFlags.ElementDescriptor,
+  ElementDescriptor = SharedFlags.ElementDescriptor,
   /// See `SharedFlags.ElementDescriptorUpdateHandler`.
   ElementDescriptorUpdateHandler = SharedFlags.ElementDescriptorUpdateHandler,
 }
@@ -100,19 +100,19 @@ export const enum VNodeFlags {
  */
 export const enum VNodeDebugFlags {
   /// VNode has been rendered.
-  Rendered                   = 1,
+  Rendered = 1,
   /// VNode has been mounted.
-  Mounted                    = 1 << 1,
+  Mounted = 1 << 1,
   /// VNode is in attached state.
-  Attached                   = 1 << 2,
+  Attached = 1 << 2,
   /// VNode is in detached state.
-  Detached                   = 1 << 3,
+  Detached = 1 << 3,
   /// VNode is in disposed state.
-  Disposed                   = 1 << 4,
+  Disposed = 1 << 4,
   /// Disable children shape error.
   DisabledChildrenShapeError = 1 << 5,
   /// Disable freezing VNode properties.
-  DisabledFreeze             = 1 << 6,
+  DisabledFreeze = 1 << 6,
 }
 
 /**
@@ -123,13 +123,13 @@ export const enum ComponentDescriptorFlags {
   EnabledBackRef = 1,
 
   /// See `SharedFlags.Svg`.
-  Svg               = SharedFlags.Svg,
+  Svg = SharedFlags.Svg,
   /// See `SharedFlags.Canvas2D`.
-  Canvas2D          = SharedFlags.Canvas2D,
+  Canvas2D = SharedFlags.Canvas2D,
   /// See `SharedFlags.ElementDescriptor`.
   ElementDescriptor = SharedFlags.ElementDescriptor,
   /// See `SharedFlags.EnabledRecycling`.
-  EnabledRecycling  = SharedFlags.EnabledRecycling,
+  EnabledRecycling = SharedFlags.EnabledRecycling,
 }
 
 /**
@@ -137,35 +137,35 @@ export const enum ComponentDescriptorFlags {
  */
 export const enum ComponentFlags {
   /// Component is in disposed state.
-  Disposed                   = 1,
+  Disposed = 1,
   /// Component is in attached state.
-  Attached                   = 1 << 1,
+  Attached = 1 << 1,
   /// Component is dirty and should be updated.
-  Dirty                      = 1 << 2,
+  Dirty = 1 << 2,
   /// Default dirty flag. Component doesn't have any tips that describe which part is dirty.
-  DirtyView                  = 1 << 3,
+  DirtyView = 1 << 3,
   /// Component should be updated on each frame with high priority.
-  UpdateEachFrame            = 1 << 4,
+  UpdateEachFrame = 1 << 4,
   /// Component is registered in update each frame queue, when this flag is off, it will be removed from queue on next
   /// frame.
-  InUpdateEachFrameQueue     = 1 << 5,
+  InUpdateEachFrameQueue = 1 << 5,
   /// Component is in recycled pool.
-  Recycled                   = 1 << 6,
+  Recycled = 1 << 6,
   /// Component is registered in scheduler frame task queue for updates.
-  InUpdateQueue              = 1 << 7,
+  InUpdateQueue = 1 << 7,
   /// Component has a high priority and should be updated even when time frame for incremental rendering is exhausted.
-  HighPriorityUpdate         = 1 << 8,
+  HighPriorityUpdate = 1 << 8,
   /// Component has immutable props.
-  ImmutableProps             = 1 << 9,
+  ImmutableProps = 1 << 9,
 
   /// See `SharedFlags.Svg`.
-  Svg               = SharedFlags.Svg,
+  Svg = SharedFlags.Svg,
   /// See `SharedFlags.Canvas2D`.
-  Canvas2D          = SharedFlags.Canvas2D,
+  Canvas2D = SharedFlags.Canvas2D,
   /// See `SharedFlags.ElementDescriptor`.
   ElementDescriptor = SharedFlags.ElementDescriptor,
   /// See `SharedFlags.EnabledRecycling`.
-  EnabledRecycling  = SharedFlags.EnabledRecycling,
+  EnabledRecycling = SharedFlags.EnabledRecycling,
 }
 
 /**
@@ -178,7 +178,7 @@ export function setAttr(node: Element, key: string, value: string): void {
     if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       if (key.length <= 3) {
         throw new Error(`Failed to set attr: invalid attribute "${key}", attributes starting with letter "x" should` +
-                        ` have length 4 or more.`);
+          ` have length 4 or more.`);
       }
     }
 
@@ -186,7 +186,7 @@ export function setAttr(node: Element, key: string, value: string): void {
       if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
         if (key.charCodeAt(3) !== 58) { // :
           throw new Error(`Failed to set attr: invalid attribute "${key}", attributes with "xml" prefix should be in` +
-                          ` the form "xml:attr".`);
+            ` the form "xml:attr".`);
         }
       }
       node.setAttributeNS(XmlNamespace, key, value);
@@ -194,7 +194,7 @@ export function setAttr(node: Element, key: string, value: string): void {
       if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
         if (key.charCodeAt(3) !== 110 || key.charCodeAt(4) !== 107 || key.charCodeAt(5) !== 58) { // nk:
           throw new Error(`Failed to set attr: invalid attribute "${key}", attributes with "xli" prefix should be in` +
-                          ` the form "xlink:attr".`);
+            ` the form "xlink:attr".`);
         }
       }
       node.setAttributeNS(XlinkNamespace, key, value);
@@ -208,7 +208,7 @@ export function setAttr(node: Element, key: string, value: string): void {
  * Find closest element that matches [selector].
  */
 export function matchesWithAncestors(element: Element, selector: string, sentinel: Element | null = null):
-    Element | null {
+  Element | null {
   while (element !== sentinel) {
     if (element.matches(selector)) {
       return element;

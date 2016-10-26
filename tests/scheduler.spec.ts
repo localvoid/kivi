@@ -1,4 +1,4 @@
-import {scheduleMicrotask, scheduleMacrotask, currentFrame, nextFrame, clock} from "../lib/scheduler";
+import { scheduleMicrotask, scheduleMacrotask, currentFrame, nextFrame, clock } from "../lib/scheduler";
 
 const expect = chai.expect;
 

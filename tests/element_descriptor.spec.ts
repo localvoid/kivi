@@ -1,5 +1,5 @@
-import {ElementDescriptor} from "../lib/element_descriptor";
-import {XlinkNamespace} from "../lib/misc";
+import { ElementDescriptor } from "../lib/element_descriptor";
+import { XlinkNamespace } from "../lib/misc";
 
 const expect = chai.expect;
 

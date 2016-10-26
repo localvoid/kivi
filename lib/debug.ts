@@ -7,7 +7,7 @@ export function printError(message: string): void {
   try {
     throw new Error(message);
   } catch (_) {
-  /* tslint:disable:no-empty */
-  /* tslint:enable:no-empty */
+    /* tslint:disable:no-empty */
+    /* tslint:enable:no-empty */
   }
 }

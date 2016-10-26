@@ -1,9 +1,11 @@
-import {printError} from "./debug";
-import {SvgNamespace, ComponentDescriptorFlags, ComponentFlags, VNodeFlags, matchesWithAncestors} from "./misc";
-import {ElementDescriptor} from "./element_descriptor";
-import {VNode, vNodeAttach, vNodeDetach, vNodeMount, vNodeRender, vNodeDispose, syncVNodes} from "./vnode";
-import {InvalidatorSubscription, Invalidator} from "./invalidator";
-import {clock, nextFrame, startUpdateComponentEachFrame, startMounting, finishMounting, isMounting} from "./scheduler";
+import { printError } from "./debug";
+import { SvgNamespace, ComponentDescriptorFlags, ComponentFlags, VNodeFlags, matchesWithAncestors } from "./misc";
+import { ElementDescriptor } from "./element_descriptor";
+import { VNode, vNodeAttach, vNodeDetach, vNodeMount, vNodeRender, vNodeDispose, syncVNodes } from "./vnode";
+import { InvalidatorSubscription, Invalidator } from "./invalidator";
+import {
+  clock, nextFrame, startUpdateComponentEachFrame, startMounting, finishMounting, isMounting
+} from "./scheduler";
 
 /**
  * Component Descriptor registry is used in DEBUG mode for developer tools.
@@ -286,7 +288,7 @@ export class ComponentDescriptor<P, S> {
    *       });
    */
   newPropsReceived(newPropsReceived: (component: Component<P, S>, oldProps: P, newProps: P) => void):
-      ComponentDescriptor<P, S> {
+    ComponentDescriptor<P, S> {
     this._newPropsReceived = newPropsReceived;
     return this;
   }
@@ -324,7 +326,7 @@ export class ComponentDescriptor<P, S> {
    *       });
    */
   attached(attached: (component: Component<P, S>, props: P, state: S) => void):
-      ComponentDescriptor<P, S> {
+    ComponentDescriptor<P, S> {
     this._attached = attached;
     return this;
   }
@@ -351,7 +353,7 @@ export class ComponentDescriptor<P, S> {
    *       });
    */
   detached(detached: (component: Component<P, S>, props: P, state: S) => void):
-      ComponentDescriptor<P, S> {
+    ComponentDescriptor<P, S> {
     this._detached = detached;
     return this;
   }
@@ -375,7 +377,7 @@ export class ComponentDescriptor<P, S> {
    *       });
    */
   disposed(disposed: (component: Component<P, S>, props: P, state: S) => void):
-      ComponentDescriptor<P, S> {
+    ComponentDescriptor<P, S> {
     this._disposed = disposed;
     return this;
   }
@@ -451,7 +453,7 @@ export class ComponentDescriptor<P, S> {
     if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       if ((this._markFlags & ComponentFlags.ImmutableProps) !== 0) {
         throw new Error("Failed to create VNode: VNodes for components with immutable props should be created with " +
-                        "createImmutableVNode method.");
+          "createImmutableVNode method.");
       }
     }
     return new VNode(VNodeFlags.Component, this, props === undefined ? null : props);
@@ -511,13 +513,13 @@ export class ComponentDescriptor<P, S> {
     let component: Component<P, S>;
 
     if ("<@KIVI_COMPONENT_RECYCLING@>" as string !== "COMPONENT_RECYCLING_ENABLED" ||
-        ((this._flags & ComponentDescriptorFlags.EnabledRecycling) === 0) ||
-        (this._recycledPool!.length === 0)) {
+      ((this._flags & ComponentDescriptorFlags.EnabledRecycling) === 0) ||
+      (this._recycledPool!.length === 0)) {
 
       if ((this._flags & ComponentDescriptorFlags.ElementDescriptor) === 0) {
         element = ((this._flags & ComponentDescriptorFlags.Svg) === 0) ?
-            document.createElement(this._tag as string) :
-            document.createElementNS(SvgNamespace, this._tag as string);
+          document.createElement(this._tag as string) :
+          document.createElementNS(SvgNamespace, this._tag as string);
       } else {
         element = (this._tag as ElementDescriptor<any>).createElement();
       }
@@ -530,7 +532,7 @@ export class ComponentDescriptor<P, S> {
         this._init(component, component.props!);
       }
     } else {
-      component = this._recycledPool!.pop()!;
+      component = this._recycledPool!.pop() !;
       component.depth = parent === undefined ? 0 : parent.depth + 1;
     }
 
@@ -553,7 +555,7 @@ export class ComponentDescriptor<P, S> {
    *     component.update();
    */
   mountComponent(element: Element, parent?: Component<any, any>, props?: P): Component<P, S> {
-    const component = new Component<P, S>(this._markFlags , this, element, parent, props);
+    const component = new Component<P, S>(this._markFlags, this, element, parent, props);
     if (this._init !== null) {
       this._init(component, component.props!);
     }
@@ -565,14 +567,14 @@ export class ComponentDescriptor<P, S> {
    * Create event handler.
    */
   createEventHandler<E extends Event>(handler: (event: E, component: Component<P, S>, props: P, state: S) => void):
-      (event: E) => void {
+    (event: E) => void {
     this._flags |= ComponentDescriptorFlags.EnabledBackRef;
-    return function(event) {
+    return function (event) {
       const component = (event.currentTarget as ComponentRootElement<P, S>).kiviComponent;
       if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
         if (component === undefined) {
           throw new Error(`Failed to dispatch event to event handler: cannot find reference to component on a DOM` +
-                          `element.`);
+            `element.`);
         }
       }
       handler(event, component!, component!.props!, component!.state!);
@@ -587,11 +589,11 @@ export class ComponentDescriptor<P, S> {
    * component instance in an event `currentTarget`.
    */
   createDelegatedEventHandler<E extends Event>(selector: string, componentSelector: string | boolean,
-      handler: (event: E, component: Component<P, S>, props: P, state: S, matchingTarget: Element,
+    handler: (event: E, component: Component<P, S>, props: P, state: S, matchingTarget: Element,
       controller?: DelegatedEventController) => void):
-      (event: E, controller?: DelegatedEventController) => void {
+    (event: E, controller?: DelegatedEventController) => void {
     this._flags |= ComponentDescriptorFlags.EnabledBackRef;
-    return function(event, controller) {
+    return function (event, controller) {
       if (controller === undefined || !controller.isStopped()) {
         let matchingTarget = matchesWithAncestors(event.target as Element, selector, event.currentTarget as Element);
         if (matchingTarget !== null) {
@@ -665,7 +667,7 @@ export class Component<P, S> {
   _transientSubscriptions: InvalidatorSubscription | null;
 
   constructor(flags: number, descriptor: ComponentDescriptor<P, S>, element: Element, parent?: Component<any, any>,
-      props?: P) {
+    props?: P) {
     this.flags = flags;
     this.mtime = 0;
     this.descriptor = descriptor;
@@ -758,10 +760,10 @@ export class Component<P, S> {
       if ((this.flags & ComponentFlags.ElementDescriptor) !== (newRoot._flags & VNodeFlags.ElementDescriptor)) {
         if ((this.flags & ComponentFlags.ElementDescriptor) === 0) {
           throw new Error("Failed to sync: vdom root should have the same type as root registered in component " +
-                          "descriptor, component descriptor is using ElementDescriptor.");
+            "descriptor, component descriptor is using ElementDescriptor.");
         } else {
           throw new Error("Failed to sync: vdom root should have the same type as root registered in component " +
-                          "descriptor, component descriptor is using a simple element.");
+            "descriptor, component descriptor is using a simple element.");
         }
       }
     }
@@ -828,8 +830,8 @@ export class Component<P, S> {
     }
 
     if ("<@KIVI_COMPONENT_RECYCLING@>" as string !== "COMPONENT_RECYCLING_ENABLED" ||
-        ((this.flags & ComponentFlags.EnabledRecycling) === 0) ||
-        (this.descriptor._recycledPool!.length >= this.descriptor._maxRecycled)) {
+      ((this.flags & ComponentFlags.EnabledRecycling) === 0) ||
+      (this.descriptor._recycledPool!.length >= this.descriptor._maxRecycled)) {
       this.flags |= ComponentFlags.Disposed;
 
       if (this._root !== null && ((this.flags & ComponentFlags.Canvas2D) === 0)) {
@@ -879,7 +881,7 @@ export function updateComponent(component: Component<any, any>, newProps?: any):
   }
 
   if ((component.flags & (ComponentFlags.Dirty | ComponentFlags.Attached)) ===
-      (ComponentFlags.Dirty | ComponentFlags.Attached)) {
+    (ComponentFlags.Dirty | ComponentFlags.Attached)) {
     component.descriptor._update!(component, component.props, component.state);
     component.mtime = clock();
     component.flags &= ~(ComponentFlags.Dirty | ComponentFlags.InUpdateQueue);
@@ -946,14 +948,14 @@ function componentCancelTransientSubscriptions(component: Component<any, any>): 
  * Inject component into DOM.
  */
 export function injectComponent<P, S>(descriptor: ComponentDescriptor<P, S>, container: Element, props?: P,
-    sync?: boolean): Component<P, S> {
+  sync?: boolean): Component<P, S> {
   const c = descriptor.createComponent(undefined, props);
   if (sync) {
     container.appendChild(c.element as Node);
     componentAttached(c);
     updateComponent(c);
   } else {
-    nextFrame().write(function() {
+    nextFrame().write(function () {
       container.appendChild(c.element as Node);
       componentAttached(c);
       updateComponent(c);
@@ -966,7 +968,7 @@ export function injectComponent<P, S>(descriptor: ComponentDescriptor<P, S>, con
  * Mount component on top of existing DOM.
  */
 export function mountComponent<P, S>(descriptor: ComponentDescriptor<P, S>, element: Element, props?: P,
-    sync?: boolean): Component<P, S> {
+  sync?: boolean): Component<P, S> {
   const c = descriptor.mountComponent(element, undefined, props);
   if (sync) {
     startMounting();
@@ -974,7 +976,7 @@ export function mountComponent<P, S>(descriptor: ComponentDescriptor<P, S>, elem
     updateComponent(c);
     finishMounting();
   } else {
-    nextFrame().write(function() {
+    nextFrame().write(function () {
       startMounting();
       componentAttached(c);
       updateComponent(c);

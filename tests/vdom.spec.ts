@@ -1,8 +1,10 @@
-import {LifecycleComponent, LifecycleState} from "./lifecycle";
-import {XlinkNamespace} from "../lib/misc";
-import {VNode, vNodeInstantiate, vNodeRender, vNodeMount, vNodeAttached, vNodeAttach, vNodeDetach, vNodeDispose,
-        createVElement, createVText, createVSvgElement, syncVNodes} from "../lib/vnode";
-import {Component} from "../lib/component";
+import { LifecycleComponent, LifecycleState } from "./lifecycle";
+import { XlinkNamespace } from "../lib/misc";
+import {
+  VNode, vNodeInstantiate, vNodeRender, vNodeMount, vNodeAttached, vNodeAttach, vNodeDetach, vNodeDispose,
+  createVElement, createVText, createVSvgElement, syncVNodes
+} from "../lib/vnode";
+import { Component } from "../lib/component";
 
 const expect = chai.expect;
 
@@ -12,7 +14,7 @@ function injectVNode(parent: DocumentFragment, node: VNode, nextRef?: Element): 
   vNodeRender(node, undefined);
 }
 
-function gen(item: any, keys: boolean): VNode|VNode[] {
+function gen(item: any, keys: boolean): VNode | VNode[] {
   if (typeof item === "number") {
     return keys ? createVText(item.toString()).key(item.toString()) : createVText(item.toString());
   } else if (Array.isArray(item)) {
@@ -131,7 +133,7 @@ describe("VNode", () => {
         xtag: "1",
       });
       injectVNode(f, a, undefined);
-      expect(((f.firstChild as any) as {xtag: string}).xtag).to.equal("1");
+      expect(((f.firstChild as any) as { xtag: string }).xtag).to.equal("1");
     });
 
     it("should create div with 2 static shape properties", () => {
@@ -142,8 +144,8 @@ describe("VNode", () => {
         xtag2: "2",
       });
       injectVNode(f, a, undefined);
-      expect(((f.firstChild as any) as {xtag1: string}).xtag1).to.equal("1");
-      expect(((f.firstChild as any) as {xtag2: string}).xtag2).to.equal("2");
+      expect(((f.firstChild as any) as { xtag1: string }).xtag1).to.equal("1");
+      expect(((f.firstChild as any) as { xtag2: string }).xtag2).to.equal("2");
     });
 
     it("should create div with style", () => {
@@ -177,7 +179,7 @@ describe("VNode", () => {
 
     it("should create svg element with xlink:href attribute", () => {
       const f = document.createDocumentFragment();
-      const a = createVSvgElement("circle").attrs({"xlink:href": "a"});
+      const a = createVSvgElement("circle").attrs({ "xlink:href": "a" });
       injectVNode(f, a, undefined);
       expect((f.firstChild as SVGElement).getAttributeNS(XlinkNamespace, "href")).to.equal("a");
     });
@@ -553,7 +555,7 @@ describe("VNode", () => {
         const b = createVElement("div").props({ a: "10" });
         injectVNode(f, a, undefined);
         syncVNodes(a, b, undefined);
-        expect(((f.firstChild as any) as {a: string}).a).to.equal("10");
+        expect(((f.firstChild as any) as { a: string }).a).to.equal("10");
       });
 
       it("{a: 1, b: 2} => {a: 10, b: 20}", () => {
@@ -562,8 +564,8 @@ describe("VNode", () => {
         const b = createVElement("div").props({ a: "10", b: "20" });
         injectVNode(f, a, undefined);
         syncVNodes(a, b, undefined);
-        expect(((f.firstChild as any) as {a: string}).a).to.equal("10");
-        expect(((f.firstChild as any) as {b: string}).b).to.equal("20");
+        expect(((f.firstChild as any) as { a: string }).a).to.equal("10");
+        expect(((f.firstChild as any) as { b: string }).b).to.equal("20");
       });
     });
 
@@ -767,35 +769,35 @@ describe("VNode", () => {
         [[0, 2, 3, 4, 5], [6, 1, 7, 3, 2, 4]],
 
         [[{ key: 0, children: [0] }],
-          [{ key: 0, children: [] }]],
+        [{ key: 0, children: [] }]],
 
         [[0, 1, { children: [0], key: 2 }],
-          [{ key: 2, children: [] }]],
+        [{ key: 2, children: [] }]],
 
         [[{ key: 0, children: [] }],
-          [1, 2, { key: 0, children: [0] }]],
+        [1, 2, { key: 0, children: [0] }]],
 
         [[0, { key: 1, children: [0, 1] }, 2],
-          [3, 2, { key: 1, children: [1, 0] }]],
+        [3, 2, { key: 1, children: [1, 0] }]],
 
         [[0, { key: 1, children: [0, 1] }, 2],
-          [2, { key: 1, children: [1, 0] }, 3]],
+        [2, { key: 1, children: [1, 0] }, 3]],
 
         [[{ key: 1, children: [0, 1] }, { key: 2, children: [0, 1] }, 0],
-          [{ key: 2, children: [1, 0] }, { key: 1, children: [1, 0] }, 3]],
+        [{ key: 2, children: [1, 0] }, { key: 1, children: [1, 0] }, 3]],
 
         [[{ key: 1, children: [0, 1] }, { key: 2, children: [] }, 0],
-          [3, { key: 2, children: [1, 0] }, { key: 1, children: [] }]],
+        [3, { key: 2, children: [1, 0] }, { key: 1, children: [] }]],
 
         [[0, { key: 1, children: [] }, 2, { key: 3, children: [1, 0] }, 4, 5],
-          [6, { key: 1, children: [0, 1] }, { key: 3, children: [] }, 2, 4, 7]],
+        [6, { key: 1, children: [0, 1] }, { key: 3, children: [] }, 2, 4, 7]],
 
         [[0, { key: 1, children: [] }, { key: 2, children: [] }, { key: 3, children: [] }, { key: 4, children: [] }, 5],
-          [{ key: 6, children: [{ key: 1, children: [1] }] }, 7, { key: 3, children: [1] }, { key: 2, children: [1] },
-           { key: 4, children: [1] }]],
+        [{ key: 6, children: [{ key: 1, children: [1] }] }, 7, { key: 3, children: [1] }, { key: 2, children: [1] },
+        { key: 4, children: [1] }]],
 
         [[0, 1, { key: 2, children: [0] }, 3, { key: 4, children: [0] }, 5],
-          [6, 7, 3, { key: 2, children: [] }, { key: 4, children: [] }]],
+        [6, 7, 3, { key: 2, children: [] }, { key: 4, children: [] }]],
       ];
 
       describe("syncChildren string children", () => {

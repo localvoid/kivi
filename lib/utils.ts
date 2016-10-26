@@ -1,7 +1,7 @@
-import {VNode} from "./vnode";
+import { VNode } from "./vnode";
 
 export type VNodeRecursiveListValue = VNode | VNodeRecursiveList | null;
-export interface VNodeRecursiveList extends Array<VNodeRecursiveListValue> {}
+export interface VNodeRecursiveList extends Array<VNodeRecursiveListValue> { }
 
 /**
  * Recursively flattens VNode arrays and skips null nodes.

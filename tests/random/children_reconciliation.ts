@@ -1,6 +1,6 @@
-import {VNode, vNodeInstantiate, vNodeRender, createVElement, createVText} from "../../lib/vnode";
-import {syncVNodes} from "../../lib/vnode";
-import {scheduleMacrotask} from "../../lib/scheduler";
+import { VNode, vNodeInstantiate, vNodeRender, createVElement, createVText } from "../../lib/vnode";
+import { syncVNodes } from "../../lib/vnode";
+import { scheduleMacrotask } from "../../lib/scheduler";
 
 function injectVNode(parent: DocumentFragment, node: VNode, nextRef?: Element): void {
   vNodeInstantiate(node, undefined);
@@ -8,7 +8,7 @@ function injectVNode(parent: DocumentFragment, node: VNode, nextRef?: Element): 
   vNodeRender(node, undefined);
 }
 
-function gen(item: any, keys: boolean): VNode|VNode[] {
+function gen(item: any, keys: boolean): VNode | VNode[] {
   if (typeof item === "number") {
     return keys ? createVText(item.toString()).key(item.toString()) : createVText(item.toString());
   } else if (Array.isArray(item)) {

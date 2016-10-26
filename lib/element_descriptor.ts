@@ -1,5 +1,5 @@
-import {SvgNamespace, VNodeFlags, ElementDescriptorFlags, setAttr} from "./misc";
-import {VNode} from "./vnode";
+import { SvgNamespace, VNodeFlags, ElementDescriptorFlags, setAttr } from "./misc";
+import { VNode } from "./vnode";
 
 /**
  * Element Descriptor.
@@ -51,7 +51,7 @@ export class ElementDescriptor<D> {
    * When virtual node is mounted on top of existing HTML, all properties from descriptor will be assigned during
    * mounting phase.
    */
-  _props: {[key: string]: any} | null;
+  _props: { [key: string]: any } | null;
   /**
    * Attributes.
    *
@@ -63,7 +63,7 @@ export class ElementDescriptor<D> {
    * If attribute is prefixed with "xlink:", or "xml:" namespace, it will assign attributes with `setAttributeNS`
    * method and use appropriate namespaces.
    */
-  _attrs: {[key: string]: any} | null;
+  _attrs: { [key: string]: any } | null;
   /**
    * Style in css string format.
    *
@@ -120,7 +120,7 @@ export class ElementDescriptor<D> {
    * When virtual node is mounted on top of existing HTML, all properties from descritpro will be assigned during
    * mounting phase.
    */
-  props(props: {[key: string]: any}): ElementDescriptor<D> {
+  props(props: { [key: string]: any }): ElementDescriptor<D> {
     this._props = props;
     return this;
   }
@@ -136,7 +136,7 @@ export class ElementDescriptor<D> {
    * If attribute is prefixed with "xlink:", or "xml:" namespace, it will assign attributes with `setAttributeNS`
    * method and use appropriate namespaces.
    */
-  attrs(attrs: {[key: string]: any}): ElementDescriptor<D> {
+  attrs(attrs: { [key: string]: any }): ElementDescriptor<D> {
     this._attrs = attrs;
     return this;
   }
@@ -211,7 +211,7 @@ export class ElementDescriptor<D> {
         keys = Object.keys(this._props);
         for (i = 0; i < keys.length; i++) {
           key = keys[i];
-          (ref as {[key: string]: any})[key] = this._props[key];
+          (ref as { [key: string]: any })[key] = this._props[key];
         }
       }
 

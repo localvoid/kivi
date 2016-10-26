@@ -1,5 +1,5 @@
-import {Invalidator} from "../lib/invalidator";
-import {scheduleMicrotask, scheduleMacrotask, clock} from "../lib/scheduler";
+import { Invalidator } from "../lib/invalidator";
+import { scheduleMicrotask, scheduleMacrotask, clock } from "../lib/scheduler";
 
 const expect = chai.expect;
 

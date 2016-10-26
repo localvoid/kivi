@@ -1,6 +1,6 @@
-import {Component, updateComponent} from "./component";
-import {ComponentFlags} from "./misc";
-import {VNode} from "./vnode";
+import { Component, updateComponent } from "./component";
+import { ComponentFlags } from "./misc";
+import { VNode } from "./vnode";
 
 export type SchedulerTask = () => void;
 
@@ -9,21 +9,21 @@ export type SchedulerTask = () => void;
  */
 const enum SchedulerFlags {
   /// Microtasks are pending for execution in microtasks queue.
-  MicrotaskPending         = 1,
+  MicrotaskPending = 1,
   /// Macrotasks are pending for execution in macrotasks queue.
-  MacrotaskPending         = 1 << 1,
+  MacrotaskPending = 1 << 1,
   /// Frametasks are pending for execution in frametasks queue.
-  FrametaskPending         = 1 << 2,
+  FrametaskPending = 1 << 2,
   /// Mounting is enabled.
-  EnabledMounting          = 1 << 3,
+  EnabledMounting = 1 << 3,
 }
 
 const enum FrameTasksGroupFlags {
   Component = 1,
-  Write     = 1 << 1,
-  Read      = 1 << 2,
-  After     = 1 << 3,
-  RWLock    = 1 << 4,
+  Write = 1 << 1,
+  Read = 1 << 2,
+  After = 1 << 3,
+  RWLock = 1 << 4,
 }
 
 /**
@@ -80,7 +80,7 @@ export class FrameTasksGroup {
     if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       if ((this._flags & FrameTasksGroupFlags.RWLock) !== 0) {
         throw new Error("Failed to add update component task to the current frame, current frame is locked for read" +
-                        " and write tasks.");
+          " and write tasks.");
       }
     }
 
@@ -109,7 +109,7 @@ export class FrameTasksGroup {
     if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       if ((this._flags & FrameTasksGroupFlags.RWLock) !== 0) {
         throw new Error("Failed to add update component task to the current frame, current frame is locked for read" +
-                        " and write tasks.");
+          " and write tasks.");
       }
     }
 
@@ -127,7 +127,7 @@ export class FrameTasksGroup {
     if ("<@KIVI_DEBUG@>" as string !== "DEBUG_DISABLED") {
       if ((this._flags & FrameTasksGroupFlags.RWLock) !== 0) {
         throw new Error("Failed to add update component task to the current frame, current frame is locked for read" +
-                        " and write tasks.");
+          " and write tasks.");
       }
     }
 
@@ -152,7 +152,7 @@ export class FrameTasksGroup {
   /**
    * Set a focus on an element when all DOM tasks are finished.
    */
-  focus(node: Element|VNode): void {
+  focus(node: Element | VNode): void {
     this._focus = node;
   }
 
@@ -210,7 +210,7 @@ const scheduler = {
 
 // Microtask scheduler based on mutation observer
 const microtaskObserver = new MutationObserver(runMicrotasks);
-microtaskObserver.observe(scheduler.microtaskNode, {characterData: true});
+microtaskObserver.observe(scheduler.microtaskNode, { characterData: true });
 
 // Macrotask scheduler based on postMessage
 window.addEventListener("message", handleWindowMessage);
