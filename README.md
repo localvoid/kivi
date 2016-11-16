@@ -10,7 +10,7 @@ library, take a look at its source code. Code base are quite ugly, but most of t
 benchmarks.
 
 I don't think that tradeoffs that were made to win benchmarks are worth it, so I've created
-[ivi](https://ivijs.github.io/ivi) library, it is using all the good parts of the kivi library, and is all about
+[ivi](https://github.com/ivijs/ivi) library, it is using all the good parts of the kivi library, and is all about
 developer productivity without any benchmark specific optimizations, it won't be able to win all benchmarks, but it
 really doesn't matter, because winning benchmarks is not just optimizations in a library, benchmark implementations
 for the fastest libraries are implemented in non-idiomatic ways, and libraries are mostly optimized for this
@@ -18,7 +18,7 @@ non-idiomatic code that nobody would ever write. Some benchmark specific optimiz
 real applications, I've tried to stay away from them in kivi, but I've noticed that other developers are okay with
 that and just want to get better numbers in benchmarks.
 
-[ivi](https://ivijs.github.io/ivi) library is optimized for idiomatic code. It also fixes some long-standing issues
+[ivi](https://github.com/ivijs/ivi) library is optimized for idiomatic code. It also fixes some long-standing issues
 that are common to all React-like libraries, like completely broken Contexts.
 
 ## Example
