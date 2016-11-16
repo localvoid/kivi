@@ -1,17 +1,25 @@
-[![Build status](https://img.shields.io/travis/localvoid/kivi.svg?style=flat-square)](https://travis-ci.org/localvoid/kivi)
-[![Npm version](https://img.shields.io/npm/v/kivi.svg?style=flat-square)](https://www.npmjs.com/package/kivi)
-[![Npm downloads](https://img.shields.io/npm/dm/kivi.svg?style=flat-square)](https://www.npmjs.com/package/kivi)
-[![License](https://img.shields.io/npm/l/kivi.svg?style=flat-square)](https://www.npmjs.com/package/kivi)
+Kivi project is all about winning benchmarks, I don't think that many of its benchmark specific "optimizations" are
+useful in real projects. It doesn't have really important feature for building reusable components, it is impossible
+to return Components as a root node for another component (HOCs that just wrap another components). This tradeoff
+was made to implement efficient event delegation because we need to map 1-1 DOM Nodes with Component instances.
+Its API is quite ugly, all API decisions were made to squeeze out the latest bits of performance, right now
+profiler reports are mostly dominated by "native" code.
 
-[Kivi](http://github.com/localvoid/kivi) is a javascript (TypeScript) library for building web user interfaces.
+This project was an inspiration for many other libraries, if you want to learn how to build a really fast web UI
+library, take a look at its source code. Code base are quite ugly, but most of the time it was made this way to win
+benchmarks.
 
-It provides Virtual DOM API for DOM manipulations, UI Components and Scheduler tightly integrated with UI Components.
+I don't think that tradeoffs that were made to win benchmarks are worth it, so I've created
+[ivi](https://ivijs.github.io/ivi) library, it is using all the good parts of the kivi library, and is all about
+developer productivity without any benchmark specific optimizations, it won't be able to win all benchmarks, but it
+really doesn't matter, because winning benchmarks is not just optimizations in a library, benchmark implementations
+for the fastest libraries are implemented in non-idiomatic ways, and libraries are mostly optimized for this
+non-idiomatic code that nobody would ever write. Some benchmark specific optimizations are actually would hurt
+real applications, I've tried to stay away from them in kivi, but I've noticed that other developers are okay with
+that and just want to get better numbers in benchmarks.
 
-Kivi API is designed specifically to provide fast bootstrap time (cold start) and fast hot updates, good debugging
-and profiling experience (preserving stack traces), good minification by advanced
-[javascript optimizing compilers](https://github.com/google/closure-compiler).
-
-[Kivi JSFiddle](https://jsfiddle.net/localvoid/42ofn4ud/)
+[ivi](https://ivijs.github.io/ivi) library is optimized for idiomatic code. It also fixes some long-standing issues
+that are common to all React-like libraries, like completely broken Contexts.
 
 ## Example
 
